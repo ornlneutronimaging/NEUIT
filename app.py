@@ -176,8 +176,13 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
     o_reso.add_layer(formula,
                      thickness,
                      density)
-
-    return str(o_reso.stack)
+    stack = o_reso.stack
+    p_stack = pprint.pformat(o_reso.stack)
+    layer = list(stack.keys())
+    for each_layer in stack.keys():
+        current_layer = stack[each_layer]
+        elements = current_layer['elements']
+    return 'Stack: {}\nLayer: {}\nelement: {}\n'.format(p_stack, layer, elements)
 
 
 # @app.callback(dash.dependencies.Output('page-content', 'children'),
