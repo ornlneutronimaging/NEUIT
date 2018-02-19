@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Neutron Resonance Calculator</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div style="color:#0000FF">
+    <h2>Sample info input:</h2>
+    <hr>
+</div>
+
+<form method=post action="">
+    {% for field in sample_form %}
+        <dd>{{ field.label }} {{ field|safe }}
+            {% if field.errors %}
+                <ul class=errors>
+                    {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}</ul>
+            {% endif %}</dd>
+    {% endfor %}
+    <input type=submit value=Submit></form>
+<hr>
+{% if total_trans != None %}
+    <p>Sample transmission at CG-1D:</p>
+    <p>{{ total_trans }} %</p>
+{#    <img src="{{ plot }}" alt="plot">#}
+{% endif %}
+<hr>
+{% if stack != None %}
+    <p>Sample stack info:</p>
+    <p>{{ stack }}</p>
+{#    <img src="{{ plot }}" alt="plot">#}
+{% endif %}
+
+</body>
+</html>

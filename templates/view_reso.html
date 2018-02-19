@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Neutron Resonance Calculator</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div style="color:#0000FF">
+    <h2>Sample info input:</h2>
+    <hr>
+</div>
+
+<form method=post action="">
+    {% for field in init_form %}
+{#        <dt>{{ field.name }}#}
+        <dd>{{ field.label }} {{ field|safe }}
+            {% if field.errors %}
+                <ul class=errors>
+                    {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}</ul>
+            {% endif %}</dd>
+    {% endfor %}
+    <hr>
+    {% for field in sample_form %}
+        <dd>{{ field.label }} {{ field|safe }}
+            {% if field.errors %}
+                <ul class=errors>
+                    {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}</ul>
+            {% endif %}</dd>
+    {% endfor %}
+    <input type=submit value=Submit></form>
+<hr>
+{% if result != None %}
+    <h4>Plot:</h4>
+    <p>{{ result }}</p>
+{#    <img src="{{ plot }}" alt="plot">#}
+{% endif %}
+
+</body>
+</html>
