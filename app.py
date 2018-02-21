@@ -20,80 +20,83 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import pprint
 
-# app_flask = flask.Flask(__name__)
-# app_dash = dash.Dash(__name__, server=app_flask, url_base_pathname='/dash_plot')
-
 app = dash.Dash(__name__)
 # app_flask = app.server
 
 
-app.layout = html.Div([
-    html.Button('Click Me', id='button'),
-    html.H3(id='button-clicks'),
+app.layout = html.Div(
+    [
+        html.Button('Click Me', id='button'),
+        html.H3(id='button-clicks'),
 
-    html.Hr(),
+        html.Hr(),
 
-    html.Label('Energy min. (eV)'),
-    dcc.Input(id='e_min', value=1, type='number', min=0.000001),
+        html.Label('Energy min. (eV)'),
+        dcc.Input(id='e_min', type='number', min=0.000001),
 
-    html.Label('Energy max. (eV)'),
-    dcc.Input(id='e_max', value=300, type='number', min='e_min', max=10000000),
+        html.Label('Energy max. (eV)'),
+        dcc.Input(id='e_max', type='number', min='e_min', max=10000000),
 
-    html.Label('Energy step (eV)'),
-    dcc.Input(id='e_step', value=0.1, type='number', min=0.0001),
+        html.Label('Energy step (eV)'),
+        dcc.Input(id='e_step', type='number', min=0.01),
 
-    html.Hr(),
+        html.Hr(),
 
-    html.Label('Chemical formula'),
-    dcc.Input(id='formula', value='Ag', type='text', minlength=1),
+        html.Label('Chemical formula'),
+        dcc.Input(id='formula', value='Ag', type='text', minlength=1),
 
-    html.Label('Thickness (mm)'),
-    dcc.Input(id='thickness', value=0.5, type='number', min=0),
+        html.Label('Thickness (mm)'),
+        dcc.Input(id='thickness', value=0.5, type='number', min=0),
 
-    html.Label('Density (g/cm3) *Input is optional for solid single element layer'),
-    dcc.Input(id='density', value=None, type='number', min=0, placeholder='Optional'),
+        html.Label('Density (g/cm3) *Input is optional for solid single element layer'),
+        dcc.Input(id='density', value=None, type='number', min=0, placeholder='Optional'),
 
-    # html.Label('Slider 1'),
-    # dcc.Slider(id='slider-1'),
-    html.Br(),
+        # html.Label('Slider 1'),
+        # dcc.Slider(id='slider-1'),
+        html.Br(),
 
-    html.Button('Submit', id='button-2'),
-    html.Hr(),
+        html.Button('Submit', id='button-2'),
 
-    html.Div(id='stack'),
-    html.Hr(),
+        # html.Button('Show plot', id='button-3'),
+        # html.Hr(),
+        html.Div(
+            [
+                html.Div(id='e_step_slider_container', style={'margin-top': 20}),
 
-    # html.Button('Show plot', id='button-3'),
-    # html.Hr(),
-    html.Div([
-        dcc.Slider(
-            id='e_step_slider',
-            min=0.0001,
-            max=1,
-            value=0.01,
-            dots=False,
-            step=0.0001,
-            updatemode='drag',
-            marks={i: '{}'.format(10 ** i) for i in range(5)},
-        ),
-        html.Div(id='e_step_slider_container', style={'margin-top': 20}),
+                dcc.Slider(
+                    id='e_step_slider',
+                    min=-2,
+                    max=1,
+                    value=-1,
+                    dots=False,
+                    step=0.005,
+                    # updatemode='drag',
+                    marks={i: '{}'.format(10 ** i) for i in range(-2, 2, 1)},
+                ),
 
+                html.Div(id='e_range_slider_container', style={'margin-top': 20}),
+
+                dcc.RangeSlider(id='e_range_slider',
+                                min=-5,
+                                max=5,
+                                value=[0, 2],
+                                allowCross=False,
+                                dots=False,
+                                step=0.01,
+                                marks={i: '{}'.format(10 ** i) for i in range(-5, 5, 1)},
+                                # updatemode='drag'
+                                ),
+            ]),
+
+        # html.Div(id='plot'),
         #
-        dcc.RangeSlider(id='e_range_slider',
-                        min=0,
-                        max=5,
-                        value=[1, 2],
-                        allowCross=False,
-                        dots=False,
-                        step=0.01,
-                        marks={i: '{}'.format(10 ** i) for i in range(5)},
-                        updatemode='drag'
-                        ),
-        html.Div(id='e_range_slider_container', style={'margin-top': 20}),
-    ]),
+        dcc.Graph(id='plot'),
+        html.Hr(),
 
-    dcc.Graph(id='plot'),
-])
+        html.Div(id='stack'),
+        html.Hr(),
+
+    ])
 
 
 def transform_value(value):
@@ -101,27 +104,118 @@ def transform_value(value):
 
 
 @app.callback(
+    Output('e_step', 'value'),
+    [
+        Input('e_step_slider', 'value'),
+    ])
+def update_e_step_from_slider(e_step_slider_value):
+    transformed_value = transform_value(e_step_slider_value)
+    return transformed_value
+
+
+@app.callback(
+    Output('e_min', 'value'),
+    [
+        Input('e_range_slider', 'value'),
+        # Input('e_min', 'value'),
+    ])
+def update_e_min_from_slider(e_range_slider_value):
+    transformed_value = [transform_value(v) for v in e_range_slider_value]
+    return transformed_value[0]
+
+
+@app.callback(
+    Output('e_max', 'value'),
+    [
+        Input('e_range_slider', 'value'),
+        # Input('e_max', 'value'),
+    ])
+def update_e_max_from_slider(e_range_slider_value):
+    transformed_value = [transform_value(v) for v in e_range_slider_value]
+    return transformed_value[1]
+
+
+# @app.callback(
+#     Output('e_step', 'value'),
+#     [
+#         Input('e_step_slider', 'value'),
+#         Input('e_step', 'value'),
+#
+#     ])
+# def update_e_step_from_slider(e_step_slider_value, e_step):
+#     transformed_value = transform_value(e_step_slider_value)
+#     if e_step != transformed_value:
+#         return transformed_value
+#     else:
+#         return e_step
+#
+#
+# @app.callback(
+#     Output('e_min', 'value'),
+#     [
+#         Input('e_range_slider', 'value'),
+#         Input('e_min', 'value'),
+#     ])
+# def update_e_min_from_slider(e_range_slider_value, e_min):
+#     transformed_value = [transform_value(v) for v in e_range_slider_value]
+#     if e_min != transformed_value[0]:
+#         return transformed_value[0]
+#     else:
+#         return e_min
+#
+#
+# @app.callback(
+#     Output('e_max', 'value'),
+#     [
+#         Input('e_range_slider', 'value'),
+#         Input('e_max', 'value'),
+#     ])
+# def update_e_max_from_slider(e_range_slider_value, e_max):
+#     transformed_value = [transform_value(v) for v in e_range_slider_value]
+#     if e_max != transformed_value[1]:
+#         return transformed_value[1]
+#     else:
+#         return e_max
+
+
+# @app.callback(
+#     Output('e_step_slider', 'value'),
+#     [
+#         Input('e_step_slider', 'value'),
+#         Input('e_step', 'value'),
+#     ])
+# def update_slider_from_e_step(e_step_slider_value, e_step):
+#     transformed_value = transform_value(e_step_slider_value)
+#     if e_step != transformed_value:
+#         return transformed_value
+#     else:
+#         return e_step
+
+
+@app.callback(
     Output('e_step_slider_container', 'children'),
-    [Input('e_step_slider', 'value')])
+    [
+        Input('e_step_slider', 'value'),
+    ])
 def update_output(value):
     transformed_value = transform_value(value)
-    return 'Linear Value: {}, Log Value: [{:0.2f}]'.format(
-        str(value),
-        transformed_value,
-        # transformed_value[
-    )
+    return [
+        html.P('Energy step: {:0.6f} eV'.format(transformed_value)),
+
+    ]
 
 
 @app.callback(
     Output('e_range_slider_container', 'children'),
-    [Input('e_range_slider', 'value')])
+    [
+        Input('e_range_slider', 'value'),
+    ])
 def update_output(value):
     transformed_value = [transform_value(v) for v in value]
-    return 'Linear Value: {}, Log Value: [{:0.2f}, {:0.2f}]'.format(
-        str(value),
-        transformed_value[0],
-        transformed_value[1]
-    )
+    return [
+        html.P('Energy Min.: {:0.6f} eV'.format(transformed_value[0])),
+        html.P('Energy Max.: {:0.6f} eV'.format(transformed_value[1])),
+    ]
 
 
 @app.callback(
@@ -134,13 +228,15 @@ def clicks(n_clicks):
 
 @app.callback(
     Output('stack', 'children'),
-    [Input('button-2', 'n_clicks'),
-     Input('e_min', 'value'),
-     Input('e_max', 'value'),
-     Input('e_step', 'value'),
-     Input('formula', 'value'),
-     Input('thickness', 'value'),
-     Input('density', 'value')])
+    [
+        Input('button-2', 'n_clicks'),
+        Input('e_min', 'value'),
+        Input('e_max', 'value'),
+        Input('e_step', 'value'),
+        Input('formula', 'value'),
+        Input('thickness', 'value'),
+        Input('density', 'value'),
+    ])
 def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
     if n_clicks is not None:
         o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
@@ -157,20 +253,33 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
         for each_layer in stack.keys():
             current_layer = stack[each_layer]
             elements = current_layer['elements']
-        return '{}\nStack: {}\nLayer: {}\nelement: {}\n'.format(n_clicks, p_stack, layer, elements)
+        return [
+            html.P("Stack: {}".format(p_stack)),
+            html.P("Layer: {}".format(layer)),
+            html.P("Element: {}".format(elements)),
+            html.P("Clicks: {}".format(n_clicks)),
+            html.P("e_min_slider: {}".format(e_min)),
+            html.P("e_max_slider: {}".format(e_max)),
+            html.P("e_step_slider: {}".format(e_step)),
+        ]
     else:
         return None
 
 
+# def update_value()
+
+
 @app.callback(
     Output('plot', 'figure'),
-    [Input('button-2', 'n_clicks'),
-     Input('e_min', 'value'),
-     Input('e_max', 'value'),
-     Input('e_step', 'value'),
-     Input('formula', 'value'),
-     Input('thickness', 'value'),
-     Input('density', 'value')])
+    [
+        Input('button-2', 'n_clicks'),
+        Input('e_min', 'value'),
+        Input('e_max', 'value'),
+        Input('e_step', 'value'),
+        Input('formula', 'value'),
+        Input('thickness', 'value'),
+        Input('density', 'value'),
+    ])
 def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density):
     if n_clicks is not None:
         o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
@@ -186,30 +295,6 @@ def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density):
         return plotly_fig
     else:
         return None
-
-
-# @app.callback(dash.dependencies.Output('page-content', 'children'),
-#               [dash.dependencies.Input('url', 'pathname')])
-# def display_page(pathname):
-#     return html.Div([
-#         html.H3('You are on page {}'.format(pathname)),
-#         html.Div(children='''
-#                 A web application framework for Python.
-#             '''),
-#
-#         dcc.Graph(
-#             id='example-graph',
-#             figure={
-#                 'data': [
-#                     {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
-#                     {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
-#                 ],
-#                 'layout': {
-#                     'title': 'Dash Data Visualization'
-#                 }
-#             }
-#         )
-#     ])
 
 
 app.css.append_css({
