@@ -3,15 +3,12 @@ from model import SampleForm
 import flask
 from flask import render_template, request
 from compute import init_reso, add_layer, load_beam_shape
-#
+from flask import Flask
 import io
 import os
 import matplotlib.pyplot as plt
 import base64
 from scipy.interpolate import interp1d
-#
-#
-# app = Flask(__name__)
 from ImagingReso.resonance import Resonance
 import numpy as np
 import dash
@@ -20,80 +17,105 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import pprint
 
+# Setup app
+server = Flask(__name__)
+server.secret_key = os.environ.get('secret_key', 'secret')
+
 app = dash.Dash(__name__)
-# app_flask = app.server
+app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 
-
+# Create app layout
 app.layout = html.Div(
     [
-        html.Button('Click Me', id='button'),
-        html.H3(id='button-clicks'),
-
+        # html.Button('Click Me', id='button'),
+        html.H3('ImagingReso'),
         html.Hr(),
 
-        html.Label('Energy min. (eV)'),
-        dcc.Input(id='e_min', type='number', min=0.000001),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.Label('Energy min. (eV)'),
+                        dcc.Input(id='e_min', type='number', min=1e-5),
 
-        html.Label('Energy max. (eV)'),
-        dcc.Input(id='e_max', type='number', min='e_min', max=10000000),
+                        html.Label('Energy max. (eV)'),
+                        dcc.Input(id='e_max', type='number', min='e_min', max=1e6),
 
-        html.Label('Energy step (eV)'),
-        dcc.Input(id='e_step', type='number', min=0.01),
+                        html.Label('Energy step (eV)'),
+                        dcc.Input(id='e_step', type='number', min=0.001),
+                    ],
+                    className='three columns'
+                ),
 
+                html.Div(
+                    [
+                        # html.Div(id='e_range_slider_container', style={'margin-top': 20}),
+
+                        dcc.RangeSlider(id='e_range_slider',
+                                        min=-5,
+                                        max=5,
+                                        value=[0, 2],
+                                        allowCross=False,
+                                        dots=False,
+                                        step=0.01,
+                                        marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)},
+                                        # updatemode='drag'
+                                        ),
+
+                        # html.Div(id='e_step_slider_container', style={'margin-top': 20}),
+                        html.Br(),
+                        html.Br(),
+
+                        dcc.Slider(
+                            id='e_step_slider',
+                            min=-3,
+                            max=0,
+                            value=-2,
+                            dots=False,
+                            step=0.005,
+                            # updatemode='drag',
+                            marks={i: '{} eV'.format(10 ** i) for i in range(-3, 1, 1)},
+                        ),
+                    ],
+                    className='seven columns'
+                ),
+            ],
+            className='row'
+        ),
         html.Hr(),
+        html.Div(
+            [
+                html.Label('Chemical formula'),
+                dcc.Input(id='formula', value='Ag', type='text', minlength=1),
 
-        html.Label('Chemical formula'),
-        dcc.Input(id='formula', value='Ag', type='text', minlength=1),
+                html.Label('Thickness (mm)'),
+                dcc.Input(id='thickness', value=0.5, type='number', min=0),
 
-        html.Label('Thickness (mm)'),
-        dcc.Input(id='thickness', value=0.5, type='number', min=0),
-
-        html.Label('Density (g/cm3) *Input is optional for solid single element layer'),
-        dcc.Input(id='density', value=None, type='number', min=0, placeholder='Optional'),
-
+                html.Label('Density (g/cm3) *Input is optional for solid single element layer'),
+                dcc.Input(id='density', value=None, type='number', min=0, placeholder='Optional'),
+            ]
+        ),
         # html.Label('Slider 1'),
         # dcc.Slider(id='slider-1'),
-        html.Br(),
-
-        html.Button('Submit', id='button-2'),
+        html.Div(
+            [
+                html.Button('Submit', id='button-2'),
+            ]
+        ),
 
         # html.Button('Show plot', id='button-3'),
         # html.Hr(),
-        html.Div(
-            [
-                html.Div(id='e_step_slider_container', style={'margin-top': 20}),
-
-                dcc.Slider(
-                    id='e_step_slider',
-                    min=-2,
-                    max=1,
-                    value=-1,
-                    dots=False,
-                    step=0.005,
-                    # updatemode='drag',
-                    marks={i: '{}'.format(10 ** i) for i in range(-2, 2, 1)},
-                ),
-
-                html.Div(id='e_range_slider_container', style={'margin-top': 20}),
-
-                dcc.RangeSlider(id='e_range_slider',
-                                min=-5,
-                                max=5,
-                                value=[0, 2],
-                                allowCross=False,
-                                dots=False,
-                                step=0.01,
-                                marks={i: '{}'.format(10 ** i) for i in range(-5, 5, 1)},
-                                # updatemode='drag'
-                                ),
-            ]),
-
         # html.Div(id='plot'),
         #
         dcc.Graph(id='plot'),
+        html.Div(id='result'),
         html.Hr(),
 
-        html.Div(id='stack'),
+        html.Div(
+            [
+                html.Div(id='stack'),
+            ],
+        ),
         html.Hr(),
 
     ])
@@ -192,38 +214,30 @@ def update_e_max_from_slider(e_range_slider_value):
 #         return e_step
 
 
-@app.callback(
-    Output('e_step_slider_container', 'children'),
-    [
-        Input('e_step_slider', 'value'),
-    ])
-def update_output(value):
-    transformed_value = transform_value(value)
-    return [
-        html.P('Energy step: {:0.6f} eV'.format(transformed_value)),
-
-    ]
-
-
-@app.callback(
-    Output('e_range_slider_container', 'children'),
-    [
-        Input('e_range_slider', 'value'),
-    ])
-def update_output(value):
-    transformed_value = [transform_value(v) for v in value]
-    return [
-        html.P('Energy Min.: {:0.6f} eV'.format(transformed_value[0])),
-        html.P('Energy Max.: {:0.6f} eV'.format(transformed_value[1])),
-    ]
-
-
-@app.callback(
-    Output('button-clicks', 'children'),
-    [Input('button', 'n_clicks')],
-)
-def clicks(n_clicks):
-    return 'Button has been clicked {} times'.format(n_clicks)
+# @app.callback(
+#     Output('e_step_slider_container', 'children'),
+#     [
+#         Input('e_step_slider', 'value'),
+#     ])
+# def update_output(value):
+#     transformed_value = transform_value(value)
+#     return [
+#         html.P('Energy step: {:0.6f} eV'.format(transformed_value)),
+#
+#     ]
+#
+#
+# @app.callback(
+#     Output('e_range_slider_container', 'children'),
+#     [
+#         Input('e_range_slider', 'value'),
+#     ])
+# def update_output(value):
+#     transformed_value = [transform_value(v) for v in value]
+#     return [
+#         html.P('Energy Min.: {:0.6f} eV'.format(transformed_value[0])),
+#         html.P('Energy Max.: {:0.6f} eV'.format(transformed_value[1])),
+#     ]
 
 
 @app.callback(
@@ -266,13 +280,10 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
         return None
 
 
-# def update_value()
-
-
 @app.callback(
     Output('plot', 'figure'),
     [
-        Input('button-2', 'n_clicks'),
+        # Input('button-2', 'n_clicks'),
         Input('e_min', 'value'),
         Input('e_max', 'value'),
         Input('e_step', 'value'),
@@ -280,26 +291,73 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
         Input('thickness', 'value'),
         Input('density', 'value'),
     ])
-def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density):
-    if n_clicks is not None:
-        o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-        if density is not None:
-            o_reso.add_layer(formula=formula,
-                             thickness=thickness,
-                             density=density)
-        else:
-            o_reso.add_layer(formula=formula,
-                             thickness=thickness)
-        plotly_fig = o_reso.plot(plotly=True, all_elements=True, all_isotopes=True)
-        plotly_fig.layout.showlegend = True
-        return plotly_fig
+def plot(e_min, e_max, e_step, formula, thickness, density):
+    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    if density is not None:
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness,
+                         density=density)
     else:
-        return None
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness)
+    plotly_fig = o_reso.plot(plotly=True, all_elements=True, all_isotopes=True)
+    plotly_fig.layout.showlegend = True
+    return plotly_fig
 
 
-app.css.append_css({
-    'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
-})
+# def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density):
+#     if n_clicks is not None:
+#         o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+#         if density is not None:
+#             o_reso.add_layer(formula=formula,
+#                              thickness=thickness,
+#                              density=density)
+#         else:
+#             o_reso.add_layer(formula=formula,
+#                              thickness=thickness)
+#         plotly_fig = o_reso.plot(plotly=True, all_elements=True, all_isotopes=True)
+#         plotly_fig.layout.showlegend = True
+#         return plotly_fig
+#     else:
+#         return None
+
+
+@app.callback(
+    Output('result', 'children'),
+    [
+        Input('formula', 'value'),
+        Input('thickness', 'value'),
+        Input('density', 'value'),
+    ])
+def calculate_transmission_cg1d(formula, thickness, density):
+    _main_path = os.path.abspath(os.path.dirname(__file__))
+    _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
+    df = load_beam_shape(_path_to_beam_shape)
+    o_reso = init_reso(e_min=0.00025,
+                       e_max=0.12525,
+                       e_step=0.000625)
+    if density is not None:
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness,
+                         density=density)
+    else:
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness)
+    # interpolate with the beam shape energy ()
+    interp_type = 'cubic'
+    energy = o_reso.total_signal['energy_eV']
+    trans = o_reso.total_signal['transmission']
+    interp_function = interp1d(x=energy, y=trans, kind=interp_type)
+    # add interpolated transmission value to beam shape df
+    trans = interp_function(df['energy_eV'])
+    # calculated transmitted flux
+    trans_flux = trans * df['flux']
+    stack = o_reso.stack
+    # stack = pprint.pformat(o_reso.stack)
+
+    _total_trans = sum(trans_flux) / sum(df['flux']) * 100
+    total_trans = round(_total_trans, 3)
+    return 'The neutron transmission at CG-1D: {} %'.format(total_trans)
 
 
 # @app.server.route('/reso_plot', methods=['GET', 'POST'])
@@ -336,7 +394,6 @@ app.css.append_css({
 #                            sample_form=sample_form,
 #                            result=result,
 #                            plot=plot)
-
 
 # @app_flask.route('/cg1d', methods=['GET', 'POST'])
 # def cg1d():
