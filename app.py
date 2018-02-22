@@ -99,6 +99,20 @@ app.layout = html.Div(
         # dcc.Slider(id='slider-1'),
         html.Div(
             [
+                dcc.RadioItems(id='y_type',
+                               options=[
+                                   {'label': 'Attenuation', 'value': 'attenuation'},
+                                   {'label': 'Transmission', 'value': 'transmission'},
+                                   {'label': 'Total cross-section', 'value': 'sigma'}
+                               ],
+                               value='attenuation',
+                               labelStyle={'display': 'inline-block'}
+                               )
+            ]
+        ),
+
+        html.Div(
+            [
                 html.Button('Submit', id='button-2'),
             ]
         ),
@@ -244,12 +258,14 @@ def update_e_max_from_slider(e_range_slider_value):
     Output('stack', 'children'),
     [
         Input('button-2', 'n_clicks'),
-        Input('e_min', 'value'),
-        Input('e_max', 'value'),
-        Input('e_step', 'value'),
-        Input('formula', 'value'),
-        Input('thickness', 'value'),
-        Input('density', 'value'),
+    ],
+    [
+        State('e_min', 'value'),
+        State('e_max', 'value'),
+        State('e_step', 'value'),
+        State('formula', 'value'),
+        State('thickness', 'value'),
+        State('density', 'value'),
     ])
 def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
     if n_clicks is not None:
@@ -283,15 +299,17 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
 @app.callback(
     Output('plot', 'figure'),
     [
-        # Input('button-2', 'n_clicks'),
-        Input('e_min', 'value'),
-        Input('e_max', 'value'),
-        Input('e_step', 'value'),
-        Input('formula', 'value'),
-        Input('thickness', 'value'),
-        Input('density', 'value'),
+        Input('button-2', 'n_clicks'),
+    ],
+    [
+        State('e_min', 'value'),
+        State('e_max', 'value'),
+        State('e_step', 'value'),
+        State('formula', 'value'),
+        State('thickness', 'value'),
+        State('density', 'value'),
     ])
-def plot(e_min, e_max, e_step, formula, thickness, density):
+def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density):
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
     if density is not None:
         o_reso.add_layer(formula=formula,
@@ -325,11 +343,15 @@ def plot(e_min, e_max, e_step, formula, thickness, density):
 @app.callback(
     Output('result', 'children'),
     [
-        Input('formula', 'value'),
-        Input('thickness', 'value'),
-        Input('density', 'value'),
+        Input('button-2', 'n_clicks'),
+    ],
+    [
+        State('formula', 'value'),
+        State('thickness', 'value'),
+        State('density', 'value'),
+        State('y_type', 'value'),
     ])
-def calculate_transmission_cg1d(formula, thickness, density):
+def calculate_transmission_cg1d(n_clicks, formula, thickness, density, y_type):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
     df = load_beam_shape(_path_to_beam_shape)
@@ -357,7 +379,10 @@ def calculate_transmission_cg1d(formula, thickness, density):
 
     _total_trans = sum(trans_flux) / sum(df['flux']) * 100
     total_trans = round(_total_trans, 3)
-    return 'The neutron transmission at CG-1D: {} %'.format(total_trans)
+    if y_type == 'transmission':
+        return html.P('The total neutron transmission at CG-1D: {} %'.format(total_trans))
+    else:
+        return html.P('The total neutron attenuation at CG-1D: {} %'.format(100 - total_trans))
 
 
 # @app.server.route('/reso_plot', methods=['GET', 'POST'])
