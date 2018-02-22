@@ -24,6 +24,13 @@ server.secret_key = os.environ.get('secret_key', 'secret')
 app = dash.Dash(__name__)
 app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 
+E_MIN = 1e-5
+E_MAX = 1e5
+E_STEP = 0.01
+E_STEP_MIN = 0.001
+E_STEP_MAX = 1
+
+
 # Create app layout
 app.layout = html.Div(
     [
@@ -36,13 +43,13 @@ app.layout = html.Div(
                 html.Div(
                     [
                         html.Label('Energy min. (eV)'),
-                        dcc.Input(id='e_min', type='number', min=1e-5),
+                        dcc.Input(id='e_min', type='number', value=1, min=1e-5),
 
                         html.Label('Energy max. (eV)'),
-                        dcc.Input(id='e_max', type='number', min='e_min', max=1e6),
+                        dcc.Input(id='e_max', type='number', value=100, min=1e-5, max=1e5),
 
                         html.Label('Energy step (eV)'),
-                        dcc.Input(id='e_step', type='number', min=0.001),
+                        dcc.Input(id='e_step', type='number', value=0.01, min=0.001, max=1),
                     ],
                     className='three columns'
                 ),
@@ -268,32 +275,34 @@ def update_e_max_from_slider(e_range_slider_value):
         State('density', 'value'),
     ])
 def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
-    if n_clicks is not None:
-        o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-        if density is not None:
-            o_reso.add_layer(formula=formula,
-                             thickness=thickness,
-                             density=density)
-        else:
-            o_reso.add_layer(formula=formula,
-                             thickness=thickness)
-        stack = o_reso.stack
-        p_stack = pprint.pformat(o_reso.stack)
-        layer = list(stack.keys())
-        for each_layer in stack.keys():
-            current_layer = stack[each_layer]
-            elements = current_layer['elements']
-        return [
-            html.P("Stack: {}".format(p_stack)),
-            html.P("Layer: {}".format(layer)),
-            html.P("Element: {}".format(elements)),
-            html.P("Clicks: {}".format(n_clicks)),
-            html.P("e_min_slider: {}".format(e_min)),
-            html.P("e_max_slider: {}".format(e_max)),
-            html.P("e_step_slider: {}".format(e_step)),
-        ]
+    # if n_clicks is not None:
+    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    if density is not None:
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness,
+                         density=density)
     else:
-        return None
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness)
+    stack = o_reso.stack
+    p_stack = pprint.pformat(o_reso.stack)
+    layer = list(stack.keys())
+    for each_layer in stack.keys():
+        current_layer = stack[each_layer]
+        elements = current_layer['elements']
+    return [
+        html.P("Stack: {}".format(p_stack)),
+        html.P("Layer: {}".format(layer)),
+        html.P("Element: {}".format(elements)),
+        html.P("Clicks: {}".format(n_clicks)),
+        html.P("e_min_slider: {}".format(e_min)),
+        html.P("e_max_slider: {}".format(e_max)),
+        html.P("e_step_slider: {}".format(e_step)),
+    ]
+
+
+# else:
+#     return None
 
 
 @app.callback(
