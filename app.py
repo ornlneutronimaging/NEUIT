@@ -30,7 +30,6 @@ E_STEP = 0.01
 E_STEP_MIN = 0.001
 E_STEP_MAX = 1
 
-
 # Create app layout
 app.layout = html.Div(
     [
@@ -117,10 +116,50 @@ app.layout = html.Div(
                                )
             ]
         ),
+        html.Div(
+            [
+                dcc.RadioItems(id='x_type',
+                               options=[
+                                   {'label': 'Energy', 'value': 'energy'},
+                                   {'label': 'Wavelength', 'value': 'lambda'},
+                                   {'label': 'Time', 'value': 'time'},
+                                   # {'label': 'Total cross-section', 'value': 'time'}
+                               ],
+                               value='energy',
+                               labelStyle={'display': 'inline-block'}
+                               )
+            ]
+        ),
+        html.Div(
+            [
+                dcc.RadioItems(id='time_unit',
+                               options=[
+                                   {'label': 's', 'value': 's'},
+                                   {'label': 'us', 'value': 'us'},
+                                   {'label': 'ns', 'value': 'ns'},
+                               ],
+                               value='us',
+                               labelStyle={'display': 'inline-block'}
+                               )
+            ]
+        ),
+        html.Div(
+            [
+                dcc.Checklist(id='log_scale',
+                              options=[
+                                  {'label': 'x in log', 'value': 'logx'},
+                                  {'label': 'y in log', 'value': 'logy'},
+                                  {'label': 'None', 'value': 'none'}
+                              ],
+                              values=['none'],
+                              labelStyle={'display': 'inline-block'}
+                              )
+            ]
+        ),
 
         html.Div(
             [
-                html.Button('Submit', id='button-2'),
+                html.Button('Submit', id='button_submit'),
             ]
         ),
 
@@ -264,7 +303,7 @@ def update_e_max_from_slider(e_range_slider_value):
 @app.callback(
     Output('stack', 'children'),
     [
-        Input('button-2', 'n_clicks'),
+        Input('button_submit', 'n_clicks'),
     ],
     [
         State('e_min', 'value'),
@@ -308,7 +347,7 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
 @app.callback(
     Output('plot', 'figure'),
     [
-        Input('button-2', 'n_clicks'),
+        Input('button_submit', 'n_clicks'),
     ],
     [
         State('e_min', 'value'),
@@ -317,8 +356,11 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
         State('formula', 'value'),
         State('thickness', 'value'),
         State('density', 'value'),
+        State('y_type', 'value'),
+        State('x_type', 'value'),
+        State('time_unit', 'value'),
     ])
-def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density):
+def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density, y_type, x_type, time_unit):
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
     if density is not None:
         o_reso.add_layer(formula=formula,
@@ -327,7 +369,8 @@ def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density):
     else:
         o_reso.add_layer(formula=formula,
                          thickness=thickness)
-    plotly_fig = o_reso.plot(plotly=True, all_elements=True, all_isotopes=True)
+    plotly_fig = o_reso.plot(plotly=True, y_axis=y_type, x_axis=x_type, time_unit=time_unit, all_elements=True,
+                             all_isotopes=True)
     plotly_fig.layout.showlegend = True
     return plotly_fig
 
@@ -352,7 +395,7 @@ def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density):
 @app.callback(
     Output('result', 'children'),
     [
-        Input('button-2', 'n_clicks'),
+        Input('button_submit', 'n_clicks'),
     ],
     [
         State('formula', 'value'),
