@@ -34,44 +34,92 @@ E_STEP_MAX = 1
 app.layout = html.Div(
     [
         # html.Button('Click Me', id='button'),
-        html.H3('ImagingReso'),
+        html.H1('ImagingReso'),
         html.Hr(),
 
         html.Div(
             [
                 html.Div(
                     [
-                        html.Label('Energy min. (eV)'),
-                        dcc.Input(id='e_min', type='number', value=1, min=1e-5),
+                        html.Div(
+                            [
+                                html.Label('Energy min. (eV)'),
+                                dcc.Input(id='e_min', type='number', value=1, min=0),
+                            ],
+                            className='four columns'
+                        ),
 
-                        html.Label('Energy max. (eV)'),
-                        dcc.Input(id='e_max', type='number', value=100, min=1e-5, max=1e5),
+                        html.Div(
+                            [
+                                html.Label('Energy max. (eV)'),
+                                dcc.Input(id='e_max', type='number', value=100, min=0, max=1e5),
+                            ],
+                            className='four columns'
+                        ),
+                        # html.Div(
+                        #     [
+                        #         dcc.RangeSlider(
+                        #             id='e_range_slider',
+                        #             min=-5,
+                        #             max=5,
+                        #             value=[0, 2],
+                        #             allowCross=False,
+                        #             dots=False,
+                        #             step=0.01,
+                        #             # updatemode='drag'
+                        #             marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)}),
+                        #     ], className='six columns'
+                        # ),
 
+                    ],
+                    className='row'
+                ),
+
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                dcc.RangeSlider(
+                                    id='e_range_slider',
+                                    min=-5,
+                                    max=5,
+                                    value=[0, 2],
+                                    allowCross=False,
+                                    dots=False,
+                                    step=0.01,
+                                    # updatemode='drag'
+                                    marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)},
+                                    # className='nine columns'
+                                ),
+                                html.Br(),
+                            ],
+                        ),
+                    ], className='row'
+                ),
+
+                html.Div(
+                    [
                         html.Label('Energy step (eV)'),
                         dcc.Input(id='e_step', type='number', value=0.01, min=0.001, max=1),
-                    ],
-                    className='three columns'
+                    ], className='row'
                 ),
 
                 html.Div(
                     [
                         # html.Div(id='e_range_slider_container', style={'margin-top': 20}),
 
-                        dcc.RangeSlider(id='e_range_slider',
-                                        min=-5,
-                                        max=5,
-                                        value=[0, 2],
-                                        allowCross=False,
-                                        dots=False,
-                                        step=0.01,
-                                        marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)},
-                                        # updatemode='drag'
-                                        ),
+                        # dcc.RangeSlider(id='e_range_slider',
+                        #                 min=-5,
+                        #                 max=5,
+                        #                 value=[0, 2],
+                        #                 allowCross=False,
+                        #                 dots=False,
+                        #                 step=0.01,
+                        #                 marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)},
+                        #                 # updatemode='drag'
+                        #                 ),
 
                         # html.Div(id='e_step_slider_container', style={'margin-top': 20}),
-                        html.Br(),
-                        html.Br(),
-
                         dcc.Slider(
                             id='e_step_slider',
                             min=-3,
@@ -83,11 +131,12 @@ app.layout = html.Div(
                             marks={i: '{} eV'.format(10 ** i) for i in range(-3, 1, 1)},
                         ),
                     ],
-                    className='seven columns'
+                    className='row'
                 ),
             ],
             className='row'
         ),
+
         html.Hr(),
         html.Div(
             [
@@ -95,10 +144,10 @@ app.layout = html.Div(
                 dcc.Input(id='formula', value='Ag', type='text', minlength=1),
 
                 html.Label('Thickness (mm)'),
-                dcc.Input(id='thickness', value=0.5, type='number', min=0),
+                dcc.Input(id='thickness', value=0.5, type='number', min=1e-9),
 
                 html.Label('Density (g/cm3) *Input is optional for solid single element layer'),
-                dcc.Input(id='density', value=None, type='number', min=0, placeholder='Optional'),
+                dcc.Input(id='density', value=None, type='number', min=1e-9, placeholder='Optional'),
             ]
         ),
         # html.Label('Slider 1'),
@@ -178,7 +227,7 @@ app.layout = html.Div(
         ),
         html.Hr(),
 
-    ])
+    ], className='ten columns offset-by-one')
 
 
 def transform_value(value):
