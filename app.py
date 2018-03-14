@@ -30,11 +30,44 @@ E_STEP = 0.01
 E_STEP_MIN = 0.001
 E_STEP_MAX = 1
 
+time_unit_options = {
+    'ns': 'ns',
+    'us': 'us',
+    's': 's',
+}
+
 # Create app layout
 app.layout = html.Div(
     [
-        # html.Button('Click Me', id='button'),
-        html.H1('ImagingReso'),
+        # Heading section
+        html.Div(
+            [
+                html.H1(
+                    children='ImagingReso',
+                    className='nine columns'
+                ),
+                html.Img(
+                    src="http://static1.squarespace.com/static/546fb494e4b08c59a7102fbc/t/591e105a6a496334b96b8e47/1497495757314/.png",
+                    className='three columns',
+                    style={
+                        'height': '7%',
+                        'width': '7%',
+                        'float': 'right',
+                        'position': 'relative',
+                        'padding-top': 0,
+                        'padding-right': 0
+                    },
+                ),
+                html.Div(
+                    children='''
+                        Dash: A web application framework for Python.
+                        ''',
+                    className='nine columns'
+                ),
+            ], className="row"
+        ),
+
+        # html.H1('ImagingReso'),
         html.Hr(),
 
         html.Div(
