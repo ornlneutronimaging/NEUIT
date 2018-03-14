@@ -46,7 +46,7 @@ app.layout = html.Div(
                                 html.Label('Energy min. (eV)'),
                                 dcc.Input(id='e_min', type='number', value=1, min=0),
                             ],
-                            className='four columns'
+                            className='six columns'
                         ),
 
                         html.Div(
@@ -54,46 +54,30 @@ app.layout = html.Div(
                                 html.Label('Energy max. (eV)'),
                                 dcc.Input(id='e_max', type='number', value=100, min=0, max=1e5),
                             ],
-                            className='four columns'
+                            className='six columns'
                         ),
-                        # html.Div(
-                        #     [
-                        #         dcc.RangeSlider(
-                        #             id='e_range_slider',
-                        #             min=-5,
-                        #             max=5,
-                        #             value=[0, 2],
-                        #             allowCross=False,
-                        #             dots=False,
-                        #             step=0.01,
-                        #             # updatemode='drag'
-                        #             marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)}),
-                        #     ], className='six columns'
-                        # ),
-
                     ],
                     className='row'
                 ),
 
                 html.Div(
                     [
-                        html.Div(
-                            [
-                                dcc.RangeSlider(
-                                    id='e_range_slider',
-                                    min=-5,
-                                    max=5,
-                                    value=[0, 2],
-                                    allowCross=False,
-                                    dots=False,
-                                    step=0.01,
-                                    # updatemode='drag'
-                                    marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)},
-                                    # className='nine columns'
-                                ),
-                                html.Br(),
-                            ],
+                        # html.Div(
+                        #     [
+                        dcc.RangeSlider(
+                            id='e_range_slider',
+                            min=-5,
+                            max=5,
+                            value=[0, 2],
+                            allowCross=False,
+                            dots=False,
+                            step=0.01,
+                            # updatemode='drag'
+                            marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)},
                         ),
+                        html.Br(),
+                        # ],
+                        # ),
                     ], className='row'
                 ),
 
@@ -106,20 +90,6 @@ app.layout = html.Div(
 
                 html.Div(
                     [
-                        # html.Div(id='e_range_slider_container', style={'margin-top': 20}),
-
-                        # dcc.RangeSlider(id='e_range_slider',
-                        #                 min=-5,
-                        #                 max=5,
-                        #                 value=[0, 2],
-                        #                 allowCross=False,
-                        #                 dots=False,
-                        #                 step=0.01,
-                        #                 marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)},
-                        #                 # updatemode='drag'
-                        #                 ),
-
-                        # html.Div(id='e_step_slider_container', style={'margin-top': 20}),
                         dcc.Slider(
                             id='e_step_slider',
                             min=-3,
@@ -144,7 +114,7 @@ app.layout = html.Div(
                 dcc.Input(id='formula', value='Ag', type='text', minlength=1),
 
                 html.Label('Thickness (mm)'),
-                dcc.Input(id='thickness', value=0.5, type='number', min=1e-9),
+                dcc.Input(id='thickness', value=0.5, type='number', min=1e-9, inputmode="numeric"),
 
                 html.Label('Density (g/cm3) *Input is optional for solid single element layer'),
                 dcc.Input(id='density', value=None, type='number', min=1e-9, placeholder='Optional'),
