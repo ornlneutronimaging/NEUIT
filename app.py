@@ -16,6 +16,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import pprint
+from ImagingReso._utilities import ev_to_angstroms
+from ImagingReso._utilities import ev_to_s
 
 # Setup app
 server = Flask(__name__)
@@ -58,92 +60,93 @@ app.layout = html.Div(
                         'padding-right': 0
                     },
                 ),
-                html.Div(
-                    children='''
-                        A web application for *Neutron Imaging*.
-                        ''',
-                    className='nine columns'
-                ),
             ], className="row"
+        ),
+        html.Div(
+            children='''
+                A web application for *Neutron Imaging*.
+                ''',
+            className='nine columns'
         ),
         html.Hr(),
 
         # Global parameters
         html.Div(
-            [  # Set input types (energy, lambda or TOF)
-                html.Div(
-                    [
-                        dcc.RadioItems(id='x_input_type',
-                                       options=[
-                                           {'label': 'Energy (eV)', 'value': 'energy'},
-                                           {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
-                                           {'label': 'Time-of_flight (\u03BCs)', 'value': 'time'},
-                                       ],
-                                       value='energy',
-                                       labelStyle={'display': 'inline-block'}
-                                       ),
-                        html.Div(id='tof_input')
-                    ]
-                ),
-                # Input boxes
+            [
+                # Range input
                 html.Div(
                     [
                         html.Div(
                             [
-                                html.P('Energy (eV)'),
-                                dcc.Input(id='e_min', type='number', value=1, min=0,
-                                          # placeholder='Min.',
-                                          inputmode='numeric',
-                                          step=1,
-                                          # className='six columns',
-                                          ),
-                                html.P('Energy (eV)'),
-                                dcc.Input(id='e_max', type='number', value=100, max=1e5,
-                                          inputmode='numeric',
-                                          step=1,
-                                          # className='six columns',
-                                          ),
+                                dcc.Checklist(id='check_energy',
+                                              options=[
+                                                  {'label': 'Range in energy (eV)', 'value': True, 'disabled': True},
+                                              ],
+                                              values=[True],
+                                              labelStyle={'display': 'inline-block'}
+                                              ),
+                                html.Div(
+                                    [
+                                        dcc.Input(id='e_min', type='number', value=1, min=0,
+                                                  inputmode='numeric',
+                                                  step=1,
+                                                  ),
+                                        dcc.Input(id='e_max', type='number', value=100, max=1e5,
+                                                  inputmode='numeric',
+                                                  step=1,
+                                                  ),
+                                    ]
+                                ),
                             ],
                             className='three columns',
                         ),
+
                         html.Div(
                             [
-                                html.P('Wavelength. (\u212B)'),
-                                dcc.Input(id='e_min', type='number', value=1, min=0,
-                                          # placeholder='Min.',
-                                          inputmode='numeric',
-                                          step=1,
-                                          # className='six columns',
-                                          ),
-                                html.P('Wavelength. (\u212B)'),
-                                dcc.Input(id='e_max', type='number', value=100, max=1e5,
-                                          inputmode='numeric',
-                                          step=1,
-                                          # className='six columns',
-                                          ),
+                                dcc.Checklist(id='check_lambda',
+                                              options=[
+                                                  {'label': 'Wavelength (\u212B)', 'value': True},
+                                              ],
+                                              values=[],
+                                              labelStyle={'display': 'inline-block'}
+                                              ),
+                                html.Div(id='range_lambda'),
                             ],
                             className='three columns',
                         ),
+
                         html.Div(
                             [
-                                html.P('TOF (\u03BCs)'),
-                                dcc.Input(id='e_min', type='number', value=1, min=0,
-                                          # placeholder='Min.',
-                                          inputmode='numeric',
-                                          step=1,
-                                          # className='six columns',
-                                          ),
-                                html.P('TOF (\u03BCs)'),
-                                dcc.Input(id='e_max', type='number', value=100, max=1e5,
-                                          inputmode='numeric',
-                                          step=1,
-                                          # className='six columns',
-                                          ),
+
+                                dcc.Checklist(id='check_tof',
+                                              options=[
+                                                  {'label': 'Time-of-flight (\u03BCs)', 'value': True},
+                                              ],
+                                              values=[],
+                                              labelStyle={'display': 'inline-block'}
+                                              ),
+                                html.Div(id='range_tof'),
                             ],
                             className='three columns',
                         ),
+
+                        html.Div(
+                            [
+                                html.P('Source-to-detector (m)'),
+                                html.P('(only needed for TOF)'),
+                                dcc.Input(id='distance', type='number', value=16.45, min=1,
+                                          inputmode='numeric',
+                                          step=0.25,
+                                          # size=5
+                                          # className='six columns',
+                                          )
+                            ],
+                            className='three columns',
+                        ),
+
                     ], className='row',
                 ),
+
                 # Energy slider
                 dcc.RangeSlider(
                     id='e_range_slider',
@@ -155,124 +158,53 @@ app.layout = html.Div(
                     step=0.01,
                     # updatemode='drag'
                     marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)},
-                    className='row'
+                    className='row',
                 ),
+                html.Br(),
+
                 # Step input
                 html.Div(
                     [
                         html.Div(
                             [
-                                # html.P('Step (eV)'),
-                                dcc.Input(id='e_min', type='number', value=1, min=0,
-                                          # placeholder='Min.',
-                                          inputmode='numeric',
-                                          step=1,
-                                          # className='six columns',
-                                          ),
-                            ],
-                            className='three columns',
+                                html.P('Step in energy (eV)'),
+                                # dcc.Input(id='e_step', type='number', value=0.01, min=0.001, max=1),
+                                dcc.Dropdown(
+                                    id='e_step',
+                                    options=[
+                                        {'label': '0.001', 'value': 0.001},
+                                        {'label': '0.01', 'value': 0.01},
+                                        {'label': '0.1', 'value': 0.1},
+                                        {'label': '1', 'value': 1},
+                                        {'label': '10', 'value': 10},
+                                        {'label': '100', 'value': 100},
+                                    ],
+                                    value=0.01,
+                                    searchable=False,
+                                    clearable=False,
+                                    # placeholder="Pick a step size",
+                                )
+                            ], className='three columns'
                         ),
-                        html.Div(
-                            [
-                                # html.P('Wavelength. (\u212B)'),
-                                dcc.Input(id='e_min', type='number', value=1, min=0,
-                                          # placeholder='Min.',
-                                          inputmode='numeric',
-                                          step=1,
-                                          # className='six columns',
-                                          ),
-                            ],
-                            className='three columns',
-                        ),
-                        html.Div(
-                            [
-                                # html.P('TOF (\u03BCs)'),
-                                dcc.Input(id='e_min', type='number', value=1, min=0,
-                                          # placeholder='Min.',
-                                          inputmode='numeric',
-                                          step=1,
-                                          # className='six columns',
-                                          ),
-                            ],
-                            className='three columns',
-                        ),
-                    ], className='row',
+                    ], className='row'
                 ),
 
+                # dcc.Slider(
+                #     id='e_step_slider',
+                #     min=-3,
+                #     max=0,
+                #     value=-2,
+                #     dots=False,
+                #     step=0.005,
+                #     # updatemode='drag',
+                #     marks={i: '{} eV'.format(10 ** i) for i in range(-3, 1, 1)},
+                # ),
             ]
         ),
 
-        html.Div(
-            [
-                html.Div(
-                    [
-                        html.Div(
-                            [
-                                # html.P('Energy min. (eV)'),
-                                # dcc.Input(id='e_min', type='number', value=1, min=0),
-                            ],
-                            className='six columns'
-                        ),
-
-                        html.Div(
-                            [
-                                # html.Label('Energy max. (eV)'),
-                                # dcc.Input(id='e_max', type='number', value=100, min=0, max=1e5),
-                            ],
-                            className='six columns'
-                        ),
-                    ],
-                    className='row'
-                ),
-
-                html.Div(
-                    [
-                        # html.Div(
-                        #     [
-                        dcc.RangeSlider(
-                            id='e_range_slider',
-                            min=-5,
-                            max=5,
-                            value=[0, 2],
-                            allowCross=False,
-                            dots=False,
-                            step=0.01,
-                            # updatemode='drag'
-                            marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)},
-                        ),
-                        html.Br(),
-                        # ],
-                        # ),
-                    ], className='row'
-                ),
-
-                html.Div(
-                    [
-                        html.Label('Energy step (eV)'),
-                        dcc.Input(id='e_step', type='number', value=0.01, min=0.001, max=1),
-                    ], className='row'
-                ),
-
-                html.Div(
-                    [
-                        dcc.Slider(
-                            id='e_step_slider',
-                            min=-3,
-                            max=0,
-                            value=-2,
-                            dots=False,
-                            step=0.005,
-                            # updatemode='drag',
-                            marks={i: '{} eV'.format(10 ** i) for i in range(-3, 1, 1)},
-                        ),
-                    ],
-                    className='row'
-                ),
-            ],
-            className='row'
-        ),
-
         html.Hr(),
+
+        # Sample input
         html.Div(
             [
                 html.Label('Chemical formula'),
@@ -370,13 +302,44 @@ def transform_value(value):
 
 
 @app.callback(
-    Output('e_step', 'value'),
+    Output('range_lambda', 'children'),
     [
-        Input('e_step_slider', 'value'),
+        Input('check_lambda', 'values'),
+        Input('e_min', 'value'),
+        Input('e_max', 'value'),
     ])
-def update_e_step_from_slider(e_step_slider_value):
-    transformed_value = transform_value(e_step_slider_value)
-    return transformed_value
+def show_range_in_lambda(boo, e_min, e_max):
+    print(boo)
+    if boo:
+        lambda_1 = ev_to_angstroms(array=e_min)
+        lambda_2 = ev_to_angstroms(array=e_max)
+        return html.Div(
+            [
+                dcc.Input(id='lambda_1', type='number', value=lambda_1, inputmode='numeric', step=0.01),
+                dcc.Input(id='tambda_2', type='number', value=lambda_2, inputmode='numeric', step=0.01),
+            ]
+        )
+
+
+@app.callback(
+    Output('range_tof', 'children'),
+    [
+        Input('check_tof', 'values'),
+        Input('distance', 'value'),
+        Input('e_min', 'value'),
+        Input('e_max', 'value'),
+    ])
+def show_range_in_tof(boo, distance, e_min, e_max):
+    print(boo)
+    if boo:
+        tof_1 = ev_to_s(array=e_min, source_to_detector_m=distance, offset_us=0) * 1e6
+        tof_2 = ev_to_s(array=e_max, source_to_detector_m=distance, offset_us=0) * 1e6
+        return html.Div(
+            [
+                dcc.Input(id='tof_1', type='number', value=tof_1, inputmode='numeric', step=1),
+                dcc.Input(id='tof_2', type='number', value=tof_2, inputmode='numeric', step=1),
+            ]
+        )
 
 
 @app.callback(
