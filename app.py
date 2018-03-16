@@ -18,6 +18,7 @@ from dash.dependencies import Input, Output, State
 import pprint
 from ImagingReso._utilities import ev_to_angstroms
 from ImagingReso._utilities import ev_to_s
+import math
 
 # Setup app
 server = Flask(__name__)
@@ -174,7 +175,7 @@ app.layout = html.Div(
                                     dots=False,
                                     step=0.01,
                                     # updatemode='drag'
-                                    marks={i: '{} eV'.format(10 ** i) for i in range(-5, 7, 1)},
+                                    marks={i: '{} eV'.format(pow(10, i)) for i in range(-5, 7, 1)},
                                     className='row',
                                 ),
                             ], className='nine columns'
@@ -279,8 +280,8 @@ app.layout = html.Div(
     ], className='ten columns offset-by-one')
 
 
-def transform_value(value):
-    return 10 ** value
+# def transform_value(value):
+#     return 10 ** value
 
 
 @app.callback(
@@ -326,116 +327,41 @@ def show_range_in_tof(boo, distance, e_min, e_max):
     Output('e_min', 'value'),
     [
         Input('e_range_slider', 'value'),
-        Input('e_min', 'value'),
     ])
-def update_e_min_from_slider(slider, min_input):
-    transformed_value = [transform_value(v) for v in slider]
+def update_e_min_from_slider(slider):
+    transformed_value = [pow(10, v) for v in slider]
     _min = transformed_value[0]
-    if _min != min_input:
-        return _min
+    # if _min != min_input:
+    #     return _min
+    return _min
 
 
 @app.callback(
     Output('e_max', 'value'),
     [
         Input('e_range_slider', 'value'),
-        Input('e_max', 'value'),
     ])
-def update_e_max_from_slider(slider, max_input):
-    transformed_value = [transform_value(v) for v in slider]
+def update_e_max_from_slider(slider):
+    transformed_value = [pow(10, v) for v in slider]
     _max = transformed_value[1]
-    if _max != max_input:
-        return _max
+    # if _max != max_input:
+    #     return _max
+    return _max
 
 
 # @app.callback(
 #     Output('e_range_slider', 'value'),
 #     [
-#         Input('e_range_slider', 'value'),
 #         Input('e_min', 'value'),
 #         Input('e_max', 'value'),
 #     ])
-# def update_slider_from_input(slider_value, e_min, e_max):
-#     transformed_value = [math.pow(10, v) for v in slider_value]
-#     _min = transformed_value[0]
-#     _max = transformed_value[1]
-#     if _min != e_min:
-#         min_slider = math.log10(e_min)
-#     else:
-#         min_slider = slider_value[0]
-#     if _max != e_max:
-#         max_slider = math.log10(e_max)
-#     else:
-#         max_slider = slider_value[1]
+# def update_slider_from_input(e_min, e_max):
+#     # transformed_value = [math.pow(10, v) for v in slider_value]
+#     # _min = transformed_value[0]
+#     # _max = transformed_value[1]
+#     min_slider = math.log10(e_min)
+#     max_slider = math.log10(e_max)
 #     return [min_slider, max_slider]
-
-
-# @app.callback(
-#     Output('e_min', 'value'),
-#     [
-#         Input('e_range_slider', 'value'),
-#         Input('e_min', 'value'),
-#     ])
-# def update_e_min_from_slider(e_range_slider_value, e_min):
-#     transformed_value = [transform_value(v) for v in e_range_slider_value]
-#     if e_min != transformed_value[0]:
-#         return transformed_value[0]
-#     else:
-#         return e_min
-#
-#
-# @app.callback(
-#     Output('e_max', 'value'),
-#     [
-#         Input('e_range_slider', 'value'),
-#         Input('e_max', 'value'),
-#     ])
-# def update_e_max_from_slider(e_range_slider_value, e_max):
-#     transformed_value = [transform_value(v) for v in e_range_slider_value]
-#     if e_max != transformed_value[1]:
-#         return transformed_value[1]
-#     else:
-#         return e_max
-
-
-# @app.callback(
-#     Output('e_step_slider', 'value'),
-#     [
-#         Input('e_step_slider', 'value'),
-#         Input('e_step', 'value'),
-#     ])
-# def update_slider_from_e_step(e_step_slider_value, e_step):
-#     transformed_value = transform_value(e_step_slider_value)
-#     if e_step != transformed_value:
-#         return transformed_value
-#     else:
-#         return e_step
-
-
-# @app.callback(
-#     Output('e_step_slider_container', 'children'),
-#     [
-#         Input('e_step_slider', 'value'),
-#     ])
-# def update_output(value):
-#     transformed_value = transform_value(value)
-#     return [
-#         html.P('Energy step: {:0.6f} eV'.format(transformed_value)),
-#
-#     ]
-#
-#
-# @app.callback(
-#     Output('e_range_slider_container', 'children'),
-#     [
-#         Input('e_range_slider', 'value'),
-#     ])
-# def update_output(value):
-#     transformed_value = [transform_value(v) for v in value]
-#     return [
-#         html.P('Energy Min.: {:0.6f} eV'.format(transformed_value[0])),
-#         html.P('Energy Max.: {:0.6f} eV'.format(transformed_value[1])),
-#     ]
 
 
 @app.callback(
