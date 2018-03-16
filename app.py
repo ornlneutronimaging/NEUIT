@@ -60,15 +60,147 @@ app.layout = html.Div(
                 ),
                 html.Div(
                     children='''
-                        Dash: A web application framework for Python.
+                        A web application for *Neutron Imaging*.
                         ''',
                     className='nine columns'
                 ),
             ], className="row"
         ),
-
-        # html.H1('ImagingReso'),
         html.Hr(),
+
+        # Global parameters
+        html.Div(
+            [  # Set input types (energy, lambda or TOF)
+                html.Div(
+                    [
+                        dcc.RadioItems(id='x_input_type',
+                                       options=[
+                                           {'label': 'Energy (eV)', 'value': 'energy'},
+                                           {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
+                                           {'label': 'Time-of_flight (\u03BCs)', 'value': 'time'},
+                                       ],
+                                       value='energy',
+                                       labelStyle={'display': 'inline-block'}
+                                       ),
+                        html.Div(id='tof_input')
+                    ]
+                ),
+                # Input boxes
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                html.P('Energy (eV)'),
+                                dcc.Input(id='e_min', type='number', value=1, min=0,
+                                          # placeholder='Min.',
+                                          inputmode='numeric',
+                                          step=1,
+                                          # className='six columns',
+                                          ),
+                                html.P('Energy (eV)'),
+                                dcc.Input(id='e_max', type='number', value=100, max=1e5,
+                                          inputmode='numeric',
+                                          step=1,
+                                          # className='six columns',
+                                          ),
+                            ],
+                            className='three columns',
+                        ),
+                        html.Div(
+                            [
+                                html.P('Wavelength. (\u212B)'),
+                                dcc.Input(id='e_min', type='number', value=1, min=0,
+                                          # placeholder='Min.',
+                                          inputmode='numeric',
+                                          step=1,
+                                          # className='six columns',
+                                          ),
+                                html.P('Wavelength. (\u212B)'),
+                                dcc.Input(id='e_max', type='number', value=100, max=1e5,
+                                          inputmode='numeric',
+                                          step=1,
+                                          # className='six columns',
+                                          ),
+                            ],
+                            className='three columns',
+                        ),
+                        html.Div(
+                            [
+                                html.P('TOF (\u03BCs)'),
+                                dcc.Input(id='e_min', type='number', value=1, min=0,
+                                          # placeholder='Min.',
+                                          inputmode='numeric',
+                                          step=1,
+                                          # className='six columns',
+                                          ),
+                                html.P('TOF (\u03BCs)'),
+                                dcc.Input(id='e_max', type='number', value=100, max=1e5,
+                                          inputmode='numeric',
+                                          step=1,
+                                          # className='six columns',
+                                          ),
+                            ],
+                            className='three columns',
+                        ),
+                    ], className='row',
+                ),
+                # Energy slider
+                dcc.RangeSlider(
+                    id='e_range_slider',
+                    min=-5,
+                    max=5,
+                    value=[0, 2],
+                    allowCross=False,
+                    dots=False,
+                    step=0.01,
+                    # updatemode='drag'
+                    marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)},
+                    className='row'
+                ),
+                # Step input
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                # html.P('Step (eV)'),
+                                dcc.Input(id='e_min', type='number', value=1, min=0,
+                                          # placeholder='Min.',
+                                          inputmode='numeric',
+                                          step=1,
+                                          # className='six columns',
+                                          ),
+                            ],
+                            className='three columns',
+                        ),
+                        html.Div(
+                            [
+                                # html.P('Wavelength. (\u212B)'),
+                                dcc.Input(id='e_min', type='number', value=1, min=0,
+                                          # placeholder='Min.',
+                                          inputmode='numeric',
+                                          step=1,
+                                          # className='six columns',
+                                          ),
+                            ],
+                            className='three columns',
+                        ),
+                        html.Div(
+                            [
+                                # html.P('TOF (\u03BCs)'),
+                                dcc.Input(id='e_min', type='number', value=1, min=0,
+                                          # placeholder='Min.',
+                                          inputmode='numeric',
+                                          step=1,
+                                          # className='six columns',
+                                          ),
+                            ],
+                            className='three columns',
+                        ),
+                    ], className='row',
+                ),
+
+            ]
+        ),
 
         html.Div(
             [
@@ -76,16 +208,16 @@ app.layout = html.Div(
                     [
                         html.Div(
                             [
-                                html.Label('Energy min. (eV)'),
-                                dcc.Input(id='e_min', type='number', value=1, min=0),
+                                # html.P('Energy min. (eV)'),
+                                # dcc.Input(id='e_min', type='number', value=1, min=0),
                             ],
                             className='six columns'
                         ),
 
                         html.Div(
                             [
-                                html.Label('Energy max. (eV)'),
-                                dcc.Input(id='e_max', type='number', value=100, min=0, max=1e5),
+                                # html.Label('Energy max. (eV)'),
+                                # dcc.Input(id='e_max', type='number', value=100, min=0, max=1e5),
                             ],
                             className='six columns'
                         ),
@@ -150,7 +282,7 @@ app.layout = html.Div(
                 dcc.Input(id='thickness', value=0.5, type='number', min=1e-9, inputmode="numeric"),
 
                 html.Label('Density (g/cm3) *Input is optional for solid single element layer'),
-                dcc.Input(id='density', value=None, type='number', min=1e-9, placeholder='Optional'),
+                dcc.Input(id='density', value='', type='number', min=1e-9, placeholder='Optional'),
             ]
         ),
         # html.Label('Slider 1'),
