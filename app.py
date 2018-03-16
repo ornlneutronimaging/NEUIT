@@ -165,7 +165,8 @@ app.layout = html.Div(
                         html.Div(
                             [
                                 # Energy slider
-                                html.P('Energy range slider'),
+                                # html.P('Energy range slider'),
+                                html.Br(),
                                 dcc.RangeSlider(
                                     id='e_range_slider',
                                     min=-5,
