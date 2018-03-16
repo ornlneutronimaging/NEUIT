@@ -26,18 +26,6 @@ server.secret_key = os.environ.get('secret_key', 'secret')
 app = dash.Dash(__name__)
 app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 
-E_MIN = 1e-5
-E_MAX = 1e5
-E_STEP = 0.01
-E_STEP_MIN = 0.001
-E_STEP_MAX = 1
-
-time_unit_options = {
-    'ns': 'ns',
-    'us': 'us',
-    's': 's',
-}
-
 # Create app layout
 app.layout = html.Div(
     [
@@ -66,10 +54,9 @@ app.layout = html.Div(
             children='''
                 A web application for *Neutron Imaging*.
                 ''',
-            className='nine columns'
+            className='row'
         ),
-        html.Hr(),
-
+        html.H3('Global parameters'),
         # Global parameters
         html.Div(
             [
@@ -80,7 +67,7 @@ app.layout = html.Div(
                             [
                                 dcc.Checklist(id='check_energy',
                                               options=[
-                                                  {'label': 'Range in energy (eV)', 'value': True, 'disabled': True},
+                                                  {'label': 'Energy (eV)', 'value': True, 'disabled': True},
                                               ],
                                               values=[True],
                                               labelStyle={'display': 'inline-block'}
@@ -133,10 +120,10 @@ app.layout = html.Div(
                         html.Div(
                             [
                                 html.P('Source-to-detector (m)'),
-                                html.P('(only needed for TOF)'),
+                                # html.P('(ONLY for TOF)'),
                                 dcc.Input(id='distance', type='number', value=16.45, min=1,
                                           inputmode='numeric',
-                                          step=0.25,
+                                          step=0.01,
                                           # size=5
                                           # className='six columns',
                                           )
@@ -147,20 +134,7 @@ app.layout = html.Div(
                     ], className='row',
                 ),
 
-                # Energy slider
-                dcc.RangeSlider(
-                    id='e_range_slider',
-                    min=-5,
-                    max=5,
-                    value=[0, 2],
-                    allowCross=False,
-                    dots=False,
-                    step=0.01,
-                    # updatemode='drag'
-                    marks={i: '{} eV'.format(10 ** i) for i in range(-5, 6, 1)},
-                    className='row',
-                ),
-                html.Br(),
+                # html.Br(),
 
                 # Step input
                 html.Div(
@@ -186,35 +160,44 @@ app.layout = html.Div(
                                 )
                             ], className='three columns'
                         ),
+
+                        html.Div(
+                            [
+                                # Energy slider
+                                html.P('Energy range slider'),
+                                dcc.RangeSlider(
+                                    id='e_range_slider',
+                                    min=-5,
+                                    max=6,
+                                    value=[0, 2],
+                                    allowCross=False,
+                                    dots=False,
+                                    step=0.01,
+                                    # updatemode='drag'
+                                    marks={i: '{} eV'.format(10 ** i) for i in range(-5, 7, 1)},
+                                    className='row',
+                                ),
+                            ], className='nine columns'
+                        ),
                     ], className='row'
                 ),
-
-                # dcc.Slider(
-                #     id='e_step_slider',
-                #     min=-3,
-                #     max=0,
-                #     value=-2,
-                #     dots=False,
-                #     step=0.005,
-                #     # updatemode='drag',
-                #     marks={i: '{} eV'.format(10 ** i) for i in range(-3, 1, 1)},
-                # ),
             ]
         ),
 
-        html.Hr(),
+        html.H3('Sample info'),
 
         # Sample input
         html.Div(
             [
-                html.Label('Chemical formula'),
+                html.P('Chemical formula'),
                 dcc.Input(id='formula', value='Ag', type='text', minlength=1),
 
-                html.Label('Thickness (mm)'),
-                dcc.Input(id='thickness', value=0.5, type='number', min=1e-9, inputmode="numeric"),
+                html.P('Thickness (mm)'),
+                dcc.Input(id='thickness', value=0.5, type='number', min=1e-9, inputmode="numeric", step=0.01),
 
-                html.Label('Density (g/cm3) *Input is optional for solid single element layer'),
-                dcc.Input(id='density', value='', type='number', min=1e-9, placeholder='Optional'),
+                html.P('Density (g/cm3)'),
+                # html.P('(Input is optional only for solid single element layer)'),
+                dcc.Input(id='density', type='number', min=1e-9, placeholder='Optional if standard', step=0.001),
             ]
         ),
         # html.Label('Slider 1'),
@@ -239,7 +222,6 @@ app.layout = html.Div(
                                    {'label': 'Energy', 'value': 'energy'},
                                    {'label': 'Wavelength', 'value': 'lambda'},
                                    {'label': 'Time', 'value': 'time'},
-                                   # {'label': 'Total cross-section', 'value': 'time'}
                                ],
                                value='energy',
                                labelStyle={'display': 'inline-block'}
@@ -309,7 +291,6 @@ def transform_value(value):
         Input('e_max', 'value'),
     ])
 def show_range_in_lambda(boo, e_min, e_max):
-    print(boo)
     if boo:
         lambda_1 = ev_to_angstroms(array=e_min)
         lambda_2 = ev_to_angstroms(array=e_max)
@@ -330,7 +311,6 @@ def show_range_in_lambda(boo, e_min, e_max):
         Input('e_max', 'value'),
     ])
 def show_range_in_tof(boo, distance, e_min, e_max):
-    print(boo)
     if boo:
         tof_1 = ev_to_s(array=e_min, source_to_detector_m=distance, offset_us=0) * 1e6
         tof_2 = ev_to_s(array=e_max, source_to_detector_m=distance, offset_us=0) * 1e6
@@ -346,39 +326,50 @@ def show_range_in_tof(boo, distance, e_min, e_max):
     Output('e_min', 'value'),
     [
         Input('e_range_slider', 'value'),
-        # Input('e_min', 'value'),
+        Input('e_min', 'value'),
     ])
-def update_e_min_from_slider(e_range_slider_value):
-    transformed_value = [transform_value(v) for v in e_range_slider_value]
-    return transformed_value[0]
+def update_e_min_from_slider(slider, min_input):
+    transformed_value = [transform_value(v) for v in slider]
+    _min = transformed_value[0]
+    if _min != min_input:
+        return _min
 
 
 @app.callback(
     Output('e_max', 'value'),
     [
         Input('e_range_slider', 'value'),
-        # Input('e_max', 'value'),
+        Input('e_max', 'value'),
     ])
-def update_e_max_from_slider(e_range_slider_value):
-    transformed_value = [transform_value(v) for v in e_range_slider_value]
-    return transformed_value[1]
+def update_e_max_from_slider(slider, max_input):
+    transformed_value = [transform_value(v) for v in slider]
+    _max = transformed_value[1]
+    if _max != max_input:
+        return _max
 
 
 # @app.callback(
-#     Output('e_step', 'value'),
+#     Output('e_range_slider', 'value'),
 #     [
-#         Input('e_step_slider', 'value'),
-#         Input('e_step', 'value'),
-#
+#         Input('e_range_slider', 'value'),
+#         Input('e_min', 'value'),
+#         Input('e_max', 'value'),
 #     ])
-# def update_e_step_from_slider(e_step_slider_value, e_step):
-#     transformed_value = transform_value(e_step_slider_value)
-#     if e_step != transformed_value:
-#         return transformed_value
+# def update_slider_from_input(slider_value, e_min, e_max):
+#     transformed_value = [math.pow(10, v) for v in slider_value]
+#     _min = transformed_value[0]
+#     _max = transformed_value[1]
+#     if _min != e_min:
+#         min_slider = math.log10(e_min)
 #     else:
-#         return e_step
-#
-#
+#         min_slider = slider_value[0]
+#     if _max != e_max:
+#         max_slider = math.log10(e_max)
+#     else:
+#         max_slider = slider_value[1]
+#     return [min_slider, max_slider]
+
+
 # @app.callback(
 #     Output('e_min', 'value'),
 #     [
