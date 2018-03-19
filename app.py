@@ -37,18 +37,18 @@ app.layout = html.Div(
                     children='ImagingReso',
                     className='nine columns'
                 ),
-                html.Img(
-                    src="http://static1.squarespace.com/static/546fb494e4b08c59a7102fbc/t/591e105a6a496334b96b8e47/1497495757314/.png",
-                    className='three columns',
-                    style={
-                        'height': '7%',
-                        'width': '7%',
-                        'float': 'right',
-                        'position': 'relative',
-                        'padding-top': 0,
-                        'padding-right': 0
-                    },
-                ),
+                # html.Img(
+                #     src="http://static1.squarespace.com/static/546fb494e4b08c59a7102fbc/t/591e105a6a496334b96b8e47/1497495757314/.png",
+                #     className='three columns',
+                #     style={
+                #         'height': '7%',
+                #         'width': '7%',
+                #         'float': 'right',
+                #         'position': 'relative',
+                #         'padding-top': 0,
+                #         'padding-right': 0
+                #     },
+                # ),
             ], className="row"
         ),
         html.Div(
@@ -86,7 +86,7 @@ app.layout = html.Div(
                                     ]
                                 ),
                             ],
-                            className='two columns',
+                            className='two and half columns',
                         ),
 
                         html.Div(
@@ -100,7 +100,7 @@ app.layout = html.Div(
                                               ),
                                 html.Div(id='range_lambda'),
                             ],
-                            className='two columns',
+                            className='two and half columns',
                         ),
 
                         html.Div(
@@ -115,7 +115,7 @@ app.layout = html.Div(
                                               ),
                                 html.Div(id='range_tof'),
                             ],
-                            className='two columns',
+                            className='two and half columns',
                         ),
 
                         html.Div(
@@ -129,7 +129,7 @@ app.layout = html.Div(
                                           # className='six columns',
                                           )
                             ],
-                            className='two columns',
+                            className='two and half columns',
                         ),
 
                     ], className='row',
@@ -418,16 +418,6 @@ def disable_logx_when_not_plot_sigma(y_type):
             {'label': 'Loglog', 'value': 'loglog'},
         ]
     return options
-
-
-# @app.callback(
-#     Output('show_iso', 'values'),
-#     [
-#         Input('y_type', 'value'),
-#     ])
-# def enable_iso_when_plot_sigma(y_type):
-#     if y_type == 'sigma':
-#         return [True]
 
 
 @app.callback(
