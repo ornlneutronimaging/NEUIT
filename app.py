@@ -203,41 +203,60 @@ app.layout = html.Div(
 
                 html.Div(
                     [
-                        html.P(id='text', children='1', className='one columns'),
-                        dcc.Input(id='formula', value='Ag', type='text', minlength=1, className='two columns'),
-                        dcc.Input(id='thickness', value=0.5, type='number', min=0, inputmode="numeric",
-                                  step=0.01, className='two columns'),
-                        dcc.Input(id='density', type='number', min=0, step=0.001, className='two columns'),
-                        dcc.Checklist(id='omit_density',
-                                      options=[
-                                          {'value': True}
-                                      ],
-                                      values=[True],
-                                      # labelStyle={'display': 'inline-block'},
+                        html.P(id='text_1', children='1', className='one columns'),
+                        dcc.Input(id='formula_1', value='Ag', type='text', minlength=1, className='two columns'),
+                        dcc.Input(id='thickness_1', value=0.5, type='number', min=0, inputmode="numeric",
+                                  step=0.001, className='two columns'),
+                        dcc.Input(id='density_1', type='number', min=0, step=0.001, className='two columns'),
+                        dcc.Checklist(id='omit_density_1', options=[{'value': True}], values=[True],
                                       className='two columns'),
                     ], className='row'
                 ),
 
-                html.Div(id='more_sample'),
+                html.Div(
+                    [
+                        html.P(id='text_2', children='2', className='one columns'),
+                        dcc.Input(id='formula_2', type='text', minlength=1, className='two columns'),
+                        dcc.Input(id='thickness_2', type='number', min=0, inputmode="numeric",
+                                  step=0.001, className='two columns'),
+                        dcc.Input(id='density_2', type='number', min=0, step=0.001, className='two columns'),
+                        dcc.Checklist(id='omit_density_2', options=[{'value': True}], values=[True],
+                                      className='two columns'),
+                    ], className='row'
+                ),
+
+                html.Div(
+                    [
+                        html.P(id='text_3', children='3', className='one columns'),
+                        dcc.Input(id='formula_3', type='text', minlength=1, className='two columns'),
+                        dcc.Input(id='thickness_3', type='number', min=0, inputmode="numeric",
+                                  step=0.001, className='two columns'),
+                        dcc.Input(id='density_3', type='number', min=0, step=0.001, className='two columns'),
+                        dcc.Checklist(id='omit_density_3', options=[{'value': True}], values=[True],
+                                      className='two columns'),
+                    ], className='row'
+                ),
+
+                # html.Div(id='more_sample'),
 
                 html.P(
                     'NOTE: density can be omitted ONLY if the input sample is under standard condition and contains 1 element.'
                 ),
+
+                html.Div(
+
+                ),
+
                 html.Div(
                     [
-                        html.Button('Add layer', id='button_add', className='three columns'),
-                        html.Button('Delete layer', id='button_del', className='three columns'),
+                        # html.Button('Add layer', id='button_add', className='three columns'),
+                        # html.Button('Delete layer', id='button_del', className='three columns'),
                         html.Button('Submit', id='button_submit', className='three columns'),
                     ], className='row'
                 ),
             ]
         ),
 
-        # html.Div(
-        #     [
-        #         html.Button('Submit', id='button_submit', className='three columns'),
-        #     ], className='row'
-        # ),
         html.Hr(),
         # Transmission at CG-1D
         html.Div(id='result'),
@@ -392,94 +411,8 @@ def disable_logx_when_not_plot_sigma(y_type):
     return options
 
 
-@app.callback(Output('more_sample', 'children'),
-              [
-                  Input('button_add', 'n_clicks'),
-                  Input('button_del', 'n_clicks'),
-                  # Input('button_reset', 'n_clicks'),
-              ])
-def more_layer(n_add, n_del):
-    if n_add is None:
-        n_add = 0
-    if n_del is None:
-        n_del = 0
-    if n_del > n_add:
-        n_diff = n_del - n_add
-        n_add = n_add + n_diff
-    n_row = n_add - n_del
-
-    div_list = []
-    for n in range(n_row):
-        current_div = html.Div(
-            [
-                html.P(id='text_' + str(n + 1), children=str(n + 2), className='one columns'),
-                dcc.Input(id='formula_' + str(n + 1), type='text', minlength=1, className='two columns'),
-                dcc.Input(id='thickness_' + str(n + 1), type='number', min=0, inputmode="numeric",
-                          step=0.01, className='two columns'),
-                dcc.Input(id='density_' + str(n + 1), type='number', min=0, step=0.001,
-                          className='two columns'),
-                dcc.Checklist(id='omit_density_' + str(n + 1),
-                              options=[{'value': True}],
-                              values=[True],
-                              labelStyle={'display': 'inline-block'},
-                              className='two columns'),
-            ], className='row', id='layer_' + str(n + 1),
-        )
-        div_list.append(current_div)
-    return div_list
-
-
 @app.callback(
-    Output('stack', 'children'),
-    [
-        Input('button_add', 'n_clicks'),
-        Input('button_del', 'n_clicks'),
-        Input('button_submit', 'n_clicks'),
-    ],
-    [
-        State('e_min', 'value'),
-        State('e_max', 'value'),
-        State('e_step', 'value'),
-        State('formula', 'value'),
-        State('thickness', 'value'),
-        State('density', 'value'),
-        State('omit_density', 'values'),
-        State('more_sample', 'children'),
-    ])
-def compute(n_add, n_del, n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_density, children):
-    # if n_clicks is not None:
-    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-
-    # if density is not None:
-    if omit_density:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness)
-    else:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness,
-                         density=density)
-    stack = o_reso.stack
-    p_stack = pprint.pformat(o_reso.stack)
-    layer = list(stack.keys())
-    for each_layer in stack.keys():
-        current_layer = stack[each_layer]
-        elements = current_layer['elements']
-        pprint.pprint(children)
-    return [
-        html.P("Stack: {}".format(p_stack)),
-        html.P("Layer: {}".format(layer)),
-        html.P("Element: {}".format(elements)),
-        html.P("Submit clicks: {}".format(n_clicks)),
-        html.P("Add clicks: {}".format(n_add)),
-        html.P("Del clicks: {}".format(n_del)),
-        html.P("e_min_slider: {}".format(e_min)),
-        html.P("e_max_slider: {}".format(e_max)),
-        html.P("e_step_slider: {}".format(e_step)),
-    ]
-
-
-@app.callback(
-    Output('density', 'value'),
+    Output('density_1', 'value'),
     [
         Input('button_submit', 'n_clicks'),
     ],
@@ -487,10 +420,10 @@ def compute(n_add, n_del, n_clicks, e_min, e_max, e_step, formula, thickness, de
         State('e_min', 'value'),
         State('e_max', 'value'),
         State('e_step', 'value'),
-        State('formula', 'value'),
-        State('thickness', 'value'),
-        State('density', 'value'),
-        State('omit_density', 'values'),
+        State('formula_1', 'value'),
+        State('thickness_1', 'value'),
+        State('density_1', 'value'),
+        State('omit_density_1', 'values'),
     ])
 def upadate_density(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_density):
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
@@ -520,10 +453,10 @@ def upadate_density(n_clicks, e_min, e_max, e_step, formula, thickness, density,
         State('e_min', 'value'),
         State('e_max', 'value'),
         State('e_step', 'value'),
-        State('formula', 'value'),
-        State('thickness', 'value'),
-        State('density', 'value'),
-        State('omit_density', 'values'),
+        State('formula_1', 'value'),
+        State('thickness_1', 'value'),
+        State('density_1', 'value'),
+        State('omit_density_1', 'values'),
         State('distance', 'value'),
     ])
 def plot(n_clicks,
@@ -580,36 +513,19 @@ def plot(n_clicks,
         )
 
 
-# def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density):
-#     if n_clicks is not None:
-#         o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-#         if density is not None:
-#             o_reso.add_layer(formula=formula,
-#                              thickness=thickness,
-#                              density=density)
-#         else:
-#             o_reso.add_layer(formula=formula,
-#                              thickness=thickness)
-#         plotly_fig = o_reso.plot(plotly=True, all_elements=True, all_isotopes=True)
-#         plotly_fig.layout.showlegend = True
-#         return plotly_fig
-#     else:
-#         return None
-
-
 @app.callback(
     Output('result', 'children'),
     [
         Input('button_submit', 'n_clicks'),
     ],
     [
-        State('formula', 'value'),
-        State('thickness', 'value'),
-        State('density', 'value'),
+        State('formula_1', 'value'),
+        State('thickness_1', 'value'),
+        State('density_1', 'value'),
+        State('omit_density_1', 'values'),
         State('y_type', 'value'),
-        State('omit_density', 'values'),
     ])
-def calculate_transmission_cg1d(n_clicks, formula, thickness, density, y_type, omit_density):
+def calculate_transmission_cg1d(n_clicks, formula, thickness, density, omit_density, y_type):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
     df = load_beam_shape(_path_to_beam_shape)
@@ -671,6 +587,91 @@ def build_plot():
     plot_url = base64.b64encode(img.getvalue()).decode()
 
     return '<img src="data:image/png;base64,{}">'.format(plot_url)
+
+
+@app.callback(
+    Output('stack', 'children'),
+    [
+        # Input('button_add', 'n_clicks'),
+        # Input('button_del', 'n_clicks'),
+        Input('button_submit', 'n_clicks'),
+    ],
+    [
+        State('e_min', 'value'),
+        State('e_max', 'value'),
+        State('e_step', 'value'),
+        State('formula_1', 'value'),
+        State('thickness_1', 'value'),
+        State('density_1', 'value'),
+        State('omit_density_1', 'values'),
+        # State('more_sample', 'value'),
+    ])
+def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_density):
+    # if n_clicks is not None:
+    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+
+    # if density is not None:
+    if omit_density:
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness)
+    else:
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness,
+                         density=density)
+    stack = o_reso.stack
+    p_stack = pprint.pformat(o_reso.stack)
+    layer = list(stack.keys())
+    for each_layer in stack.keys():
+        current_layer = stack[each_layer]
+        elements = current_layer['elements']
+        # pprint.pprint(children[0]['props']['children'][3]['props'])
+    return [
+        html.P("Stack: {}".format(p_stack)),
+        html.P("Layer: {}".format(layer)),
+        html.P("Element: {}".format(elements)),
+        html.P("Submit clicks: {}".format(n_clicks)),
+        # html.P("Add clicks: {}".format(n_add)),
+        # html.P("Del clicks: {}".format(n_del)),
+        html.P("e_min_slider: {}".format(e_min)),
+        html.P("e_max_slider: {}".format(e_max)),
+        html.P("e_step_slider: {}".format(e_step)),
+    ]
+
+# @app.callback(Output('more_sample', 'children'),
+#               [
+#                   Input('button_add', 'n_clicks'),
+#                   Input('button_del', 'n_clicks'),
+#                   # Input('button_reset', 'n_clicks'),
+#               ])
+# def more_layer(n_add, n_del):
+#     if n_add is None:
+#         n_add = 0
+#     if n_del is None:
+#         n_del = 0
+#     if n_del > n_add:
+#         n_diff = n_del - n_add
+#         n_add = n_add + n_diff
+#     n_row = n_add - n_del
+#     n_row = n_row + 1
+#     div_list = []
+#     for n in range(n_row):
+#         current_div = html.Div(
+#             [
+#                 html.P(id='text_' + str(n + 1), children=str(n + 1), className='one columns'),
+#                 dcc.Input(id='formula_' + str(n + 1), type='text', minlength=1, className='two columns'),
+#                 dcc.Input(id='thickness_' + str(n + 1), type='number', min=0, inputmode="numeric",
+#                           step=0.01, className='two columns'),
+#                 dcc.Input(id='density_' + str(n + 1), type='number', min=0, step=0.001, value=1,
+#                           className='two columns'),
+#                 dcc.Checklist(id='omit_density_' + str(n + 1),
+#                               options=[{'value': True}],
+#                               values=[True],
+#                               labelStyle={'display': 'inline-block'},
+#                               className='two columns'),
+#             ], className='row', id='layer_' + str(n + 1),
+#         )
+#         div_list.append(current_div)
+#     return div_list
 
 
 if __name__ == '__main__':
