@@ -86,7 +86,7 @@ app.layout = html.Div(
                                     ]
                                 ),
                             ],
-                            className='three columns',
+                            className='two columns',
                         ),
 
                         html.Div(
@@ -100,7 +100,7 @@ app.layout = html.Div(
                                               ),
                                 html.Div(id='range_lambda'),
                             ],
-                            className='three columns',
+                            className='two columns',
                         ),
 
                         html.Div(
@@ -115,7 +115,7 @@ app.layout = html.Div(
                                               ),
                                 html.Div(id='range_tof'),
                             ],
-                            className='three columns',
+                            className='two columns',
                         ),
 
                         html.Div(
@@ -129,7 +129,7 @@ app.layout = html.Div(
                                           # className='six columns',
                                           )
                             ],
-                            className='three columns',
+                            className='two columns',
                         ),
 
                     ], className='row',
@@ -159,7 +159,7 @@ app.layout = html.Div(
                                     clearable=False,
                                     # placeholder="Pick a step size",
                                 )
-                            ], className='three columns'
+                            ], className='two columns'
                         ),
 
                         html.Div(
@@ -179,7 +179,7 @@ app.layout = html.Div(
                                     marks={i: '{} eV'.format(pow(10, i)) for i in range(-5, 7, 1)},
                                     className='row',
                                 ),
-                            ], className='nine columns'
+                            ], className='eight columns'
                         ),
                     ], className='row'
                 ),
@@ -191,110 +191,119 @@ app.layout = html.Div(
         # Sample input
         html.Div(
             [
-                html.P('Chemical formula'),
-                dcc.Input(id='formula', value='Ag', type='text', minlength=1),
+                html.Div(
+                    [
+                        html.P('Layer', className='one columns'),
+                        html.P('Chemical formula', className='two columns'),
+                        html.P('Thickness (mm)', className='two columns'),
+                        html.P('Density (g/cm^3)', className='two columns'),
+                        html.P('Omit density?', className='two columns'),
+                    ], className='row',
+                ),
 
-                html.P('Thickness (mm)'),
-                dcc.Input(id='thickness', value=0.5, type='number', min=0, inputmode="numeric", step=0.01),
+                html.Div(
+                    [
+                        html.P(id='text', children='1', className='one columns'),
+                        dcc.Input(id='formula', value='Ag', type='text', minlength=1, className='two columns'),
+                        dcc.Input(id='thickness', value=0.5, type='number', min=0, inputmode="numeric",
+                                  step=0.01, className='two columns'),
+                        dcc.Input(id='density', type='number', min=0, step=0.001, className='two columns'),
+                        dcc.Checklist(id='omit_density',
+                                      options=[
+                                          {'value': True}
+                                      ],
+                                      values=[True],
+                                      # labelStyle={'display': 'inline-block'},
+                                      className='two columns'),
+                    ], className='row'
+                ),
 
-                html.P('Density (g/cm^3)'),
-                # html.P('(Input is optional only for solid single element layer)'),
-                dcc.Input(id='density', type='number', min=0,
-                          # placeholder='Optional if standard',
-                          step=0.001),
-                dcc.Checklist(id='omit_density',
-                              options=[
-                                  {'label': 'Omit density input', 'value': True},
-                              ],
-                              values=[True],
-                              labelStyle={'display': 'inline-block'}
-                              ),
+                html.Div(id='more_sample'),
+
                 html.P(
-                    'NOTE: density can be omitted if the input sample is under standard condition and contains ONLY 1 element.')
+                    'NOTE: density can be omitted ONLY if the input sample is under standard condition and contains 1 element.'
+                ),
+                html.Div(
+                    [
+                        html.Button('Add layer', id='button_add', className='three columns'),
+                        html.Button('Delete layer', id='button_del', className='three columns'),
+                        html.Button('Submit', id='button_submit', className='three columns'),
+                    ], className='row'
+                ),
             ]
         ),
-        # html.Label('Slider 1'),
-        # dcc.Slider(id='slider-1'),
-        html.Div(
-            [
-                dcc.RadioItems(id='y_type',
-                               options=[
-                                   {'label': 'Attenuation', 'value': 'attenuation'},
-                                   {'label': 'Transmission', 'value': 'transmission'},
-                                   {'label': 'Total cross-section', 'value': 'sigma'}
-                               ],
-                               value='attenuation',
-                               labelStyle={'display': 'inline-block'}
-                               )
-            ]
-        ),
-        html.Div(
-            [
-                dcc.RadioItems(id='x_type',
-                               options=[
-                                   {'label': 'Energy', 'value': 'energy'},
-                                   {'label': 'Wavelength', 'value': 'lambda'},
-                                   {'label': 'Time', 'value': 'time'},
-                               ],
-                               value='energy',
-                               labelStyle={'display': 'inline-block'}
-                               )
-            ]
-        ),
+
         # html.Div(
         #     [
-        #         dcc.RadioItems(id='time_unit',
-        #                        options=[
-        #                            {'label': 's', 'value': 's'},
-        #                            {'label': 'us', 'value': 'us'},
-        #                            {'label': 'ns', 'value': 'ns'},
-        #                        ],
-        #                        value='us',
-        #                        labelStyle={'display': 'inline-block'}
-        #                        )
-        #     ]
+        #         html.Button('Submit', id='button_submit', className='three columns'),
+        #     ], className='row'
         # ),
-        html.Div(
-            [
-                dcc.RadioItems(id='plot_scale',
-                               options=[
-                                   {'label': 'Linear', 'value': 'linear'},
-                                   {'label': 'Log x', 'value': 'logx'},
-                                   {'label': 'Log y', 'value': 'logy'},
-                                   {'label': 'Loglog', 'value': 'loglog'},
-                               ],
-                               value='linear',
-                               labelStyle={'display': 'inline-block'}
-                               )
-            ]
-        ),
-
-        html.Div(
-            [
-                html.Button('Submit', id='button_submit'),
-            ]
-        ),
-
-        # html.Button('Show plot', id='button-3'),
-        # html.Hr(),
-        # html.Div(id='plot'),
-        #
-        dcc.Graph(id='plot'),
-        html.Div(id='result'),
         html.Hr(),
+        # Transmission at CG-1D
+        html.Div(id='result'),
+        # Plot
+        html.Div(id='plot'),
+        # Plot control buttons
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.P('X options: ', className='two columns'),
+                        dcc.RadioItems(id='x_type',
+                                       options=[
+                                           {'label': 'Energy', 'value': 'energy'},
+                                           {'label': 'Wavelength', 'value': 'lambda'},
+                                           {'label': 'Time', 'value': 'time'},
+                                       ],
+                                       value='energy',
+                                       labelStyle={'display': 'inline-block'},
+                                       className='six columns',
+                                       )
+                    ], className='row'
+                ),
+                html.Div(
+                    [
+                        html.P('Y options: ', className='two columns'),
+                        dcc.RadioItems(id='y_type',
+                                       options=[
+                                           {'label': 'Attenuation', 'value': 'attenuation'},
+                                           {'label': 'Transmission', 'value': 'transmission'},
+                                           {'label': 'Total cross-section', 'value': 'sigma'}
+                                       ],
+                                       value='attenuation',
+                                       labelStyle={'display': 'inline-block'},
+                                       className='six columns',
+                                       )
+                    ], className='row'
+                ),
+                html.Div(
+                    [
+                        html.P('Scale options: ', className='two columns'),
+                        dcc.RadioItems(id='plot_scale',
+                                       options=[
+                                           {'label': 'Linear', 'value': 'linear'},
+                                           {'label': 'Log x', 'value': 'logx'},
+                                           {'label': 'Log y', 'value': 'logy'},
+                                           {'label': 'Loglog', 'value': 'loglog'},
+                                       ],
+                                       value='linear',
+                                       labelStyle={'display': 'inline-block'},
+                                       className='six columns',
+                                       )
+                    ], className='row'
+                ),
+            ]
+        ),
 
+        # Debug region
+        html.Hr(),
         html.Div(
             [
                 html.Div(id='stack'),
             ],
         ),
-        html.Hr(),
-
-    ], className='ten columns offset-by-one')
-
-
-# def transform_value(value):
-#     return 10 ** value
+    ], className='ten columns offset-by-one'
+)
 
 
 @app.callback(
@@ -362,24 +371,69 @@ def update_e_max_from_slider(slider):
     return _max
 
 
-# @app.callback(
-#     Output('e_range_slider', 'value'),
-#     [
-#         Input('e_min', 'value'),
-#         Input('e_max', 'value'),
-#     ])
-# def update_slider_from_input(e_min, e_max):
-#     # transformed_value = [math.pow(10, v) for v in slider_value]
-#     # _min = transformed_value[0]
-#     # _max = transformed_value[1]
-#     min_slider = math.log10(e_min)
-#     max_slider = math.log10(e_max)
-#     return [min_slider, max_slider]
+@app.callback(
+    Output('plot_scale', 'options'),
+    [
+        Input('y_type', 'value'),
+    ])
+def disable_logx_when_not_plot_sigma(y_type):
+    if y_type != 'sigma':
+        options = [
+            {'label': 'Linear', 'value': 'linear'},
+            {'label': 'Log x', 'value': 'logx'},
+        ]
+    else:
+        options = [
+            {'label': 'Linear', 'value': 'linear'},
+            {'label': 'Log x', 'value': 'logx'},
+            {'label': 'Log y', 'value': 'logy'},
+            {'label': 'Loglog', 'value': 'loglog'},
+        ]
+    return options
+
+
+@app.callback(Output('more_sample', 'children'),
+              [
+                  Input('button_add', 'n_clicks'),
+                  Input('button_del', 'n_clicks'),
+                  # Input('button_reset', 'n_clicks'),
+              ])
+def more_layer(n_add, n_del):
+    if n_add is None:
+        n_add = 0
+    if n_del is None:
+        n_del = 0
+    if n_del > n_add:
+        n_diff = n_del - n_add
+        n_add = n_add + n_diff
+    n_row = n_add - n_del
+
+    div_list = []
+    for n in range(n_row):
+        current_div = html.Div(
+            [
+                html.P(id='text_' + str(n + 1), children=str(n + 2), className='one columns'),
+                dcc.Input(id='formula_' + str(n + 1), type='text', minlength=1, className='two columns'),
+                dcc.Input(id='thickness_' + str(n + 1), type='number', min=0, inputmode="numeric",
+                          step=0.01, className='two columns'),
+                dcc.Input(id='density_' + str(n + 1), type='number', min=0, step=0.001,
+                          className='two columns'),
+                dcc.Checklist(id='omit_density_' + str(n + 1),
+                              options=[{'value': True}],
+                              values=[True],
+                              labelStyle={'display': 'inline-block'},
+                              className='two columns'),
+            ], className='row', id='layer_' + str(n + 1),
+        )
+        div_list.append(current_div)
+    return div_list
 
 
 @app.callback(
     Output('stack', 'children'),
     [
+        Input('button_add', 'n_clicks'),
+        Input('button_del', 'n_clicks'),
         Input('button_submit', 'n_clicks'),
     ],
     [
@@ -390,8 +444,9 @@ def update_e_max_from_slider(slider):
         State('thickness', 'value'),
         State('density', 'value'),
         State('omit_density', 'values'),
+        State('more_sample', 'children'),
     ])
-def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_density):
+def compute(n_add, n_del, n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_density, children):
     # if n_clicks is not None:
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
 
@@ -409,11 +464,14 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_de
     for each_layer in stack.keys():
         current_layer = stack[each_layer]
         elements = current_layer['elements']
+        pprint.pprint(children)
     return [
         html.P("Stack: {}".format(p_stack)),
         html.P("Layer: {}".format(layer)),
         html.P("Element: {}".format(elements)),
-        html.P("Clicks: {}".format(n_clicks)),
+        html.P("Submit clicks: {}".format(n_clicks)),
+        html.P("Add clicks: {}".format(n_add)),
+        html.P("Del clicks: {}".format(n_del)),
         html.P("e_min_slider: {}".format(e_min)),
         html.P("e_max_slider: {}".format(e_max)),
         html.P("e_step_slider: {}".format(e_step)),
@@ -435,15 +493,7 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_de
         State('omit_density', 'values'),
     ])
 def upadate_density(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_density):
-    # if n_clicks is not None:
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-    # if density is not None:
-    #     o_reso.add_layer(formula=formula,
-    #                      thickness=thickness,
-    #                      density=density)
-    # else:
-    #     o_reso.add_layer(formula=formula,
-    #                      thickness=thickness)
     if omit_density:
         o_reso.add_layer(formula=formula,
                          thickness=thickness)
@@ -454,13 +504,17 @@ def upadate_density(n_clicks, e_min, e_max, e_step, formula, thickness, density,
     stack = o_reso.stack
     for each_layer in stack.keys():
         _density = stack[each_layer]['density']['value']
-    return _density
+    if n_clicks is not None:
+        return _density
 
 
 @app.callback(
-    Output('plot', 'figure'),
+    Output('plot', 'children'),
     [
         Input('button_submit', 'n_clicks'),
+        Input('y_type', 'value'),
+        Input('x_type', 'value'),
+        Input('plot_scale', 'value'),
     ],
     [
         State('e_min', 'value'),
@@ -469,13 +523,23 @@ def upadate_density(n_clicks, e_min, e_max, e_step, formula, thickness, density,
         State('formula', 'value'),
         State('thickness', 'value'),
         State('density', 'value'),
-        State('y_type', 'value'),
-        State('x_type', 'value'),
-        State('plot_scale', 'value'),
-        State('distance', 'value'),
         State('omit_density', 'values'),
+        State('distance', 'value'),
     ])
-def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density, y_type, x_type, plot_scale, distance_m, omit_density):
+def plot(n_clicks,
+         y_type,
+         x_type,
+         plot_scale,
+         e_min,
+         e_max,
+         e_step,
+         formula,
+         thickness,
+         density,
+         omit_density,
+         distance_m,
+         ):
+    n = n_clicks
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
     if omit_density:
         o_reso.add_layer(formula=formula,
@@ -506,7 +570,14 @@ def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density, y_type, x_
                              all_isotopes=True,
                              source_to_detector_m=distance_m)
     plotly_fig.layout.showlegend = True
-    return plotly_fig
+
+    if n_clicks is not None:
+        return html.Div(
+            [
+                html.H4('Plot'),
+                dcc.Graph(id='reso_plot', figure=plotly_fig)
+            ]
+        )
 
 
 # def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density):
@@ -568,83 +639,25 @@ def calculate_transmission_cg1d(n_clicks, formula, thickness, density, y_type, o
 
     _total_trans = sum(trans_flux) / sum(df['flux']) * 100
     total_trans = round(_total_trans, 3)
-    if y_type == 'transmission':
-        return html.P('The total neutron transmission at CG-1D: {} %'.format(total_trans))
-    else:
-        return html.P('The total neutron attenuation at CG-1D: {} %'.format(100 - total_trans))
+    if n_clicks is not None:
+        if y_type == 'transmission':
+            return html.Div(
+                [
+                    # html.H3('Result'),
+                    html.H4('Sample transmission'),
+                    html.P('The total neutron transmission at CG-1D: {} %'.format(total_trans))
+                ]
+            )
+        else:
+            return html.Div(
+                [
+                    # html.H3('Result'),
+                    html.H4('Sample attenuation'),
+                    html.P('The total neutron attenuation at CG-1D: {} %'.format(100 - total_trans))
+                ]
+            )
 
 
-# @app.server.route('/reso_plot', methods=['GET', 'POST'])
-# def index():
-#     init_form = InitForm(request.form)
-#     sample_form = SampleForm(request.form)
-#     if request.method == 'POST':
-#
-#         if init_form.validate() and sample_form.validate():
-#             o_reso = init_reso(init_form.e_min.data,
-#                                init_form.e_max.data,
-#                                init_form.e_step.data)
-#             o_reso.add_layer(sample_form.formula.data,
-#                              sample_form.thickness.data,
-#                              sample_form.density.data)
-#         result = o_reso.stack
-#         plot = o_reso.plot(plotly=True)
-#         # pprint.pprint(plot)
-#         # app_dash.layout = html.Div(children=[
-#         #     html.H1(children='Resonance Plot'),
-#         #
-#         #     html.Div(children='''
-#         #             A web application for resonance imaging.
-#         #         '''),
-#         #
-#         #     dcc.Graph(plot)
-#         # ])
-#     else:
-#         result = None
-#         plot = None
-#
-#     return render_template('view_reso.html',
-#                            init_form=init_form,
-#                            sample_form=sample_form,
-#                            result=result,
-#                            plot=plot)
-
-# @app_flask.route('/cg1d', methods=['GET', 'POST'])
-# def cg1d():
-#     sample_form = SampleForm(request.form)
-#     _main_path = os.path.abspath(os.path.dirname(__file__))
-#     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
-#     df = load_beam_shape(_path_to_beam_shape)
-#     if request.method == 'POST' and sample_form.validate():
-#         o_reso = init_reso(e_min=0.00025,
-#                            e_max=0.12525,
-#                            e_step=0.000625)
-#         o_reso.add_layer(sample_form.formula.data,
-#                          sample_form.thickness.data,
-#                          sample_form.density.data)
-#         # interpolate with the beam shape energy ()
-#         interp_type = 'cubic'
-#         energy = o_reso.total_signal['energy_eV']
-#         trans = o_reso.total_signal['transmission']
-#         interp_function = interp1d(x=energy, y=trans, kind=interp_type)
-#         # add interpolated transmission value to beam shape df
-#         trans = interp_function(df['energy_eV'])
-#         # calculated transmitted flux
-#         trans_flux = trans * df['flux']
-#         stack = o_reso.stack
-#         # stack = pprint.pformat(o_reso.stack)
-#
-#         _total_trans = sum(trans_flux) / sum(df['flux']) * 100
-#         total_trans = round(_total_trans, 3)
-#     else:
-#         total_trans = None
-#         stack = None
-#     return render_template('view_cg1d.html',
-#                            sample_form=sample_form,
-#                            total_trans=total_trans,
-#                            stack=stack)
-#
-#
 @app.server.route('/plot')
 def build_plot():
     img = io.BytesIO()
