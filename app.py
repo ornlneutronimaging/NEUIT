@@ -195,11 +195,22 @@ app.layout = html.Div(
                 dcc.Input(id='formula', value='Ag', type='text', minlength=1),
 
                 html.P('Thickness (mm)'),
-                dcc.Input(id='thickness', value=0.5, type='number', min=1e-9, inputmode="numeric", step=0.01),
+                dcc.Input(id='thickness', value=0.5, type='number', min=0, inputmode="numeric", step=0.01),
 
-                html.P('Density (g/cm3)'),
+                html.P('Density (g/cm^3)'),
                 # html.P('(Input is optional only for solid single element layer)'),
-                dcc.Input(id='density', type='number', min=1e-9, placeholder='Optional if standard', step=0.001),
+                dcc.Input(id='density', type='number', min=0,
+                          # placeholder='Optional if standard',
+                          step=0.001),
+                dcc.Checklist(id='omit_density',
+                              options=[
+                                  {'label': 'Omit density input', 'value': True},
+                              ],
+                              values=[True],
+                              labelStyle={'display': 'inline-block'}
+                              ),
+                html.P(
+                    'NOTE: density can be omitted if the input sample is under standard condition and contains ONLY 1 element.')
             ]
         ),
         # html.Label('Slider 1'),
@@ -230,30 +241,31 @@ app.layout = html.Div(
                                )
             ]
         ),
+        # html.Div(
+        #     [
+        #         dcc.RadioItems(id='time_unit',
+        #                        options=[
+        #                            {'label': 's', 'value': 's'},
+        #                            {'label': 'us', 'value': 'us'},
+        #                            {'label': 'ns', 'value': 'ns'},
+        #                        ],
+        #                        value='us',
+        #                        labelStyle={'display': 'inline-block'}
+        #                        )
+        #     ]
+        # ),
         html.Div(
             [
-                dcc.RadioItems(id='time_unit',
+                dcc.RadioItems(id='plot_scale',
                                options=[
-                                   {'label': 's', 'value': 's'},
-                                   {'label': 'us', 'value': 'us'},
-                                   {'label': 'ns', 'value': 'ns'},
+                                   {'label': 'Linear', 'value': 'linear'},
+                                   {'label': 'Log x', 'value': 'logx'},
+                                   {'label': 'Log y', 'value': 'logy'},
+                                   {'label': 'Loglog', 'value': 'loglog'},
                                ],
-                               value='us',
+                               value='linear',
                                labelStyle={'display': 'inline-block'}
                                )
-            ]
-        ),
-        html.Div(
-            [
-                dcc.Checklist(id='log_scale',
-                              options=[
-                                  {'label': 'x in log', 'value': 'logx'},
-                                  {'label': 'y in log', 'value': 'logy'},
-                                  {'label': 'None', 'value': 'none'}
-                              ],
-                              values=['none'],
-                              labelStyle={'display': 'inline-block'}
-                              )
             ]
         ),
 
@@ -377,17 +389,20 @@ def update_e_max_from_slider(slider):
         State('formula', 'value'),
         State('thickness', 'value'),
         State('density', 'value'),
+        State('omit_density', 'values'),
     ])
-def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
+def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_density):
     # if n_clicks is not None:
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-    if density is not None:
+
+    # if density is not None:
+    if omit_density:
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness)
+    else:
         o_reso.add_layer(formula=formula,
                          thickness=thickness,
                          density=density)
-    else:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness)
     stack = o_reso.stack
     p_stack = pprint.pformat(o_reso.stack)
     layer = list(stack.keys())
@@ -405,8 +420,41 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
     ]
 
 
-# else:
-#     return None
+@app.callback(
+    Output('density', 'value'),
+    [
+        Input('button_submit', 'n_clicks'),
+    ],
+    [
+        State('e_min', 'value'),
+        State('e_max', 'value'),
+        State('e_step', 'value'),
+        State('formula', 'value'),
+        State('thickness', 'value'),
+        State('density', 'value'),
+        State('omit_density', 'values'),
+    ])
+def upadate_density(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_density):
+    # if n_clicks is not None:
+    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    # if density is not None:
+    #     o_reso.add_layer(formula=formula,
+    #                      thickness=thickness,
+    #                      density=density)
+    # else:
+    #     o_reso.add_layer(formula=formula,
+    #                      thickness=thickness)
+    if omit_density:
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness)
+    else:
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness,
+                         density=density)
+    stack = o_reso.stack
+    for each_layer in stack.keys():
+        _density = stack[each_layer]['density']['value']
+    return _density
 
 
 @app.callback(
@@ -423,19 +471,40 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density):
         State('density', 'value'),
         State('y_type', 'value'),
         State('x_type', 'value'),
-        State('time_unit', 'value'),
+        State('plot_scale', 'value'),
+        State('distance', 'value'),
+        State('omit_density', 'values'),
     ])
-def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density, y_type, x_type, time_unit):
+def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density, y_type, x_type, plot_scale, distance_m, omit_density):
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-    if density is not None:
+    if omit_density:
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness)
+    else:
         o_reso.add_layer(formula=formula,
                          thickness=thickness,
                          density=density)
+    if plot_scale == 'logx':
+        _log_x = True
+        _log_y = False
+    elif plot_scale == 'logy':
+        _log_x = False
+        _log_y = True
+    elif plot_scale == 'loglog':
+        _log_x = True
+        _log_y = True
     else:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness)
-    plotly_fig = o_reso.plot(plotly=True, y_axis=y_type, x_axis=x_type, time_unit=time_unit, all_elements=True,
-                             all_isotopes=True)
+        _log_x = False
+        _log_y = False
+    plotly_fig = o_reso.plot(plotly=True,
+                             y_axis=y_type,
+                             x_axis=x_type,
+                             time_unit='us',
+                             logy=_log_y,
+                             logx=_log_x,
+                             all_elements=True,
+                             all_isotopes=True,
+                             source_to_detector_m=distance_m)
     plotly_fig.layout.showlegend = True
     return plotly_fig
 
@@ -467,21 +536,24 @@ def plot(n_clicks, e_min, e_max, e_step, formula, thickness, density, y_type, x_
         State('thickness', 'value'),
         State('density', 'value'),
         State('y_type', 'value'),
+        State('omit_density', 'values'),
     ])
-def calculate_transmission_cg1d(n_clicks, formula, thickness, density, y_type):
+def calculate_transmission_cg1d(n_clicks, formula, thickness, density, y_type, omit_density):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
     df = load_beam_shape(_path_to_beam_shape)
     o_reso = init_reso(e_min=0.00025,
                        e_max=0.12525,
                        e_step=0.000625)
-    if density is not None:
+    if density == 0:
+        density = None
+    if omit_density:
+        o_reso.add_layer(formula=formula,
+                         thickness=thickness)
+    else:
         o_reso.add_layer(formula=formula,
                          thickness=thickness,
                          density=density)
-    else:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness)
     # interpolate with the beam shape energy ()
     interp_type = 'cubic'
     energy = o_reso.total_signal['energy_eV']
