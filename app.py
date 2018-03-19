@@ -260,8 +260,6 @@ app.layout = html.Div(
         html.Hr(),
         # Transmission at CG-1D
         html.Div(id='result'),
-        # Plot
-        html.Div(id='plot'),
         # Plot control buttons
         html.Div(
             [
@@ -311,8 +309,19 @@ app.layout = html.Div(
                                        )
                     ], className='row'
                 ),
+                html.Div(
+                    [
+                        html.P('Show isotope: ', className='two columns'),
+                        dcc.Checklist(id='show_iso',
+                                      options=[{'value': True}], values=[],
+                                      className='six columns',
+                                      )
+                    ], className='row'
+                ),
             ]
         ),
+        # Plot
+        html.Div(id='plot'),
 
         # Debug region
         html.Hr(),
@@ -411,6 +420,16 @@ def disable_logx_when_not_plot_sigma(y_type):
     return options
 
 
+# @app.callback(
+#     Output('show_iso', 'values'),
+#     [
+#         Input('y_type', 'value'),
+#     ])
+# def enable_iso_when_plot_sigma(y_type):
+#     if y_type == 'sigma':
+#         return [True]
+
+
 @app.callback(
     Output('density_1', 'value'),
     [
@@ -420,23 +439,87 @@ def disable_logx_when_not_plot_sigma(y_type):
         State('e_min', 'value'),
         State('e_max', 'value'),
         State('e_step', 'value'),
-        State('formula_1', 'value'),
-        State('thickness_1', 'value'),
-        State('density_1', 'value'),
-        State('omit_density_1', 'values'),
+        State('formula_1', 'value'), State('thickness_1', 'value'),
+        State('density_1', 'value'), State('omit_density_1', 'values'),
     ])
-def upadate_density(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_density):
+def upadate_density(n_clicks, e_min, e_max, e_step,
+                    formula_1, thickness_1, density_1, omit_density_1,
+                    ):
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-    if omit_density:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness)
+    if omit_density_1:
+        o_reso.add_layer(formula=formula_1,
+                         thickness=thickness_1)
     else:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness,
-                         density=density)
+        o_reso.add_layer(formula=formula_1,
+                         thickness=thickness_1,
+                         density=density_1)
     stack = o_reso.stack
-    for each_layer in stack.keys():
-        _density = stack[each_layer]['density']['value']
+    # for each_layer in stack.keys():
+    #     _density = stack[each_layer]['density']['value']
+    layer = list(stack.keys())
+    _density = stack[layer[0]]['density']['value']
+    if n_clicks is not None:
+        return _density
+
+
+@app.callback(
+    Output('density_2', 'value'),
+    [
+        Input('button_submit', 'n_clicks'),
+    ],
+    [
+        State('e_min', 'value'),
+        State('e_max', 'value'),
+        State('e_step', 'value'),
+        State('formula_2', 'value'), State('thickness_2', 'value'),
+        State('density_2', 'value'), State('omit_density_2', 'values'),
+    ])
+def upadate_density(n_clicks, e_min, e_max, e_step,
+                    formula_2, thickness_2, density_2, omit_density_2,
+                    ):
+    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    if formula_2 is not None and thickness_2 is not None:
+        if omit_density_2:
+            o_reso.add_layer(formula=formula_2,
+                             thickness=thickness_2)
+        else:
+            o_reso.add_layer(formula=formula_2,
+                             thickness=thickness_2,
+                             density=density_2)
+    stack = o_reso.stack
+    layer = list(stack.keys())
+    _density = stack[layer[0]]['density']['value']
+    if n_clicks is not None:
+        return _density
+
+
+@app.callback(
+    Output('density_3', 'value'),
+    [
+        Input('button_submit', 'n_clicks'),
+    ],
+    [
+        State('e_min', 'value'),
+        State('e_max', 'value'),
+        State('e_step', 'value'),
+        State('formula_3', 'value'), State('thickness_3', 'value'),
+        State('density_3', 'value'), State('omit_density_3', 'values'),
+    ])
+def upadate_density(n_clicks, e_min, e_max, e_step,
+                    formula_3, thickness_3, density_3, omit_density_3,
+                    ):
+    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    if formula_3 is not None and thickness_3 is not None:
+        if omit_density_3:
+            o_reso.add_layer(formula=formula_3,
+                             thickness=thickness_3)
+        else:
+            o_reso.add_layer(formula=formula_3,
+                             thickness=thickness_3,
+                             density=density_3)
+    stack = o_reso.stack
+    layer = list(stack.keys())
+    _density = stack[layer[0]]['density']['value']
     if n_clicks is not None:
         return _density
 
@@ -448,39 +531,51 @@ def upadate_density(n_clicks, e_min, e_max, e_step, formula, thickness, density,
         Input('y_type', 'value'),
         Input('x_type', 'value'),
         Input('plot_scale', 'value'),
+        Input('show_iso', 'values'),
     ],
     [
         State('e_min', 'value'),
         State('e_max', 'value'),
         State('e_step', 'value'),
-        State('formula_1', 'value'),
-        State('thickness_1', 'value'),
-        State('density_1', 'value'),
-        State('omit_density_1', 'values'),
         State('distance', 'value'),
+        State('formula_1', 'value'), State('thickness_1', 'value'),
+        State('density_1', 'value'), State('omit_density_1', 'values'),
+        State('formula_2', 'value'), State('thickness_2', 'value'),
+        State('density_2', 'value'), State('omit_density_2', 'values'),
+        State('formula_3', 'value'), State('thickness_3', 'value'),
+        State('density_3', 'value'), State('omit_density_3', 'values'),
     ])
 def plot(n_clicks,
-         y_type,
-         x_type,
-         plot_scale,
-         e_min,
-         e_max,
-         e_step,
-         formula,
-         thickness,
-         density,
-         omit_density,
-         distance_m,
+         y_type, x_type, plot_scale, show_iso,
+         e_min, e_max, e_step, distance_m,
+         formula_1, thickness_1, density_1, omit_density_1,
+         formula_2, thickness_2, density_2, omit_density_2,
+         formula_3, thickness_3, density_3, omit_density_3,
          ):
-    n = n_clicks
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-    if omit_density:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness)
+    if omit_density_1:
+        o_reso.add_layer(formula=formula_1,
+                         thickness=thickness_1)
     else:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness,
-                         density=density)
+        o_reso.add_layer(formula=formula_1,
+                         thickness=thickness_1,
+                         density=density_1)
+    if formula_2 is not None and thickness_2 is not None:
+        if omit_density_2:
+            o_reso.add_layer(formula=formula_2,
+                             thickness=thickness_2)
+        else:
+            o_reso.add_layer(formula=formula_2,
+                             thickness=thickness_2,
+                             density=density_2)
+    if formula_3 is not None and thickness_3 is not None:
+        if omit_density_3:
+            o_reso.add_layer(formula=formula_3,
+                             thickness=thickness_3)
+        else:
+            o_reso.add_layer(formula=formula_3,
+                             thickness=thickness_3,
+                             density=density_3)
     if plot_scale == 'logx':
         _log_x = True
         _log_y = False
@@ -493,6 +588,8 @@ def plot(n_clicks,
     else:
         _log_x = False
         _log_y = False
+    if show_iso is None:
+        show_iso = False
     plotly_fig = o_reso.plot(plotly=True,
                              y_axis=y_type,
                              x_axis=x_type,
@@ -500,14 +597,13 @@ def plot(n_clicks,
                              logy=_log_y,
                              logx=_log_x,
                              all_elements=True,
-                             all_isotopes=True,
+                             all_isotopes=show_iso,
                              source_to_detector_m=distance_m)
     plotly_fig.layout.showlegend = True
 
     if n_clicks is not None:
         return html.Div(
             [
-                html.H4('Plot'),
                 dcc.Graph(id='reso_plot', figure=plotly_fig)
             ]
         )
@@ -519,28 +615,48 @@ def plot(n_clicks,
         Input('button_submit', 'n_clicks'),
     ],
     [
-        State('formula_1', 'value'),
-        State('thickness_1', 'value'),
-        State('density_1', 'value'),
-        State('omit_density_1', 'values'),
         State('y_type', 'value'),
+        State('formula_1', 'value'), State('thickness_1', 'value'),
+        State('density_1', 'value'), State('omit_density_1', 'values'),
+        State('formula_2', 'value'), State('thickness_2', 'value'),
+        State('density_2', 'value'), State('omit_density_2', 'values'),
+        State('formula_3', 'value'), State('thickness_3', 'value'),
+        State('density_3', 'value'), State('omit_density_3', 'values'),
     ])
-def calculate_transmission_cg1d(n_clicks, formula, thickness, density, omit_density, y_type):
+def calculate_transmission_cg1d(n_clicks, y_type,
+                                formula_1, thickness_1, density_1, omit_density_1,
+                                formula_2, thickness_2, density_2, omit_density_2,
+                                formula_3, thickness_3, density_3, omit_density_3,
+                                ):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
     df = load_beam_shape(_path_to_beam_shape)
     o_reso = init_reso(e_min=0.00025,
                        e_max=0.12525,
                        e_step=0.000625)
-    if density == 0:
-        density = None
-    if omit_density:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness)
+    if omit_density_1:
+        o_reso.add_layer(formula=formula_1,
+                         thickness=thickness_1)
     else:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness,
-                         density=density)
+        o_reso.add_layer(formula=formula_1,
+                         thickness=thickness_1,
+                         density=density_1)
+    if formula_2 is not None and thickness_2 is not None:
+        if omit_density_2:
+            o_reso.add_layer(formula=formula_2,
+                             thickness=thickness_2)
+        else:
+            o_reso.add_layer(formula=formula_2,
+                             thickness=thickness_2,
+                             density=density_2)
+    if formula_3 is not None and thickness_3 is not None:
+        if omit_density_3:
+            o_reso.add_layer(formula=formula_3,
+                             thickness=thickness_3)
+        else:
+            o_reso.add_layer(formula=formula_3,
+                             thickness=thickness_3,
+                             density=density_3)
     # interpolate with the beam shape energy ()
     interp_type = 'cubic'
     energy = o_reso.total_signal['energy_eV']
@@ -574,21 +690,6 @@ def calculate_transmission_cg1d(n_clicks, formula, thickness, density, omit_dens
             )
 
 
-@app.server.route('/plot')
-def build_plot():
-    img = io.BytesIO()
-
-    y = [1, 2, 3, 4, 5]
-    x = [0, 2, 1, 3, 4]
-    plt.plot(x, y)
-    plt.savefig(img, format='png')
-    img.seek(0)
-
-    plot_url = base64.b64encode(img.getvalue()).decode()
-
-    return '<img src="data:image/png;base64,{}">'.format(plot_url)
-
-
 @app.callback(
     Output('stack', 'children'),
     [
@@ -600,24 +701,46 @@ def build_plot():
         State('e_min', 'value'),
         State('e_max', 'value'),
         State('e_step', 'value'),
-        State('formula_1', 'value'),
-        State('thickness_1', 'value'),
-        State('density_1', 'value'),
-        State('omit_density_1', 'values'),
+        State('formula_1', 'value'), State('thickness_1', 'value'),
+        State('density_1', 'value'), State('omit_density_1', 'values'),
+        State('formula_2', 'value'), State('thickness_2', 'value'),
+        State('density_2', 'value'), State('omit_density_2', 'values'),
+        State('formula_3', 'value'), State('thickness_3', 'value'),
+        State('density_3', 'value'), State('omit_density_3', 'values'),
         # State('more_sample', 'value'),
     ])
-def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_density):
+def compute(n_clicks, e_min, e_max, e_step,
+            formula_1, thickness_1, density_1, omit_density_1,
+            formula_2, thickness_2, density_2, omit_density_2,
+            formula_3, thickness_3, density_3, omit_density_3,
+            ):
     # if n_clicks is not None:
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
 
     # if density is not None:
-    if omit_density:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness)
+    if omit_density_1:
+        o_reso.add_layer(formula=formula_1,
+                         thickness=thickness_1)
     else:
-        o_reso.add_layer(formula=formula,
-                         thickness=thickness,
-                         density=density)
+        o_reso.add_layer(formula=formula_1,
+                         thickness=thickness_1,
+                         density=density_1)
+    if formula_2 is not None and thickness_2 is not None:
+        if omit_density_2:
+            o_reso.add_layer(formula=formula_2,
+                             thickness=thickness_2)
+        else:
+            o_reso.add_layer(formula=formula_2,
+                             thickness=thickness_2,
+                             density=density_2)
+    if formula_3 is not None and thickness_3 is not None:
+        if omit_density_3:
+            o_reso.add_layer(formula=formula_3,
+                             thickness=thickness_3)
+        else:
+            o_reso.add_layer(formula=formula_3,
+                             thickness=thickness_3,
+                             density=density_3)
     stack = o_reso.stack
     p_stack = pprint.pformat(o_reso.stack)
     layer = list(stack.keys())
@@ -636,6 +759,7 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_de
         html.P("e_max_slider: {}".format(e_max)),
         html.P("e_step_slider: {}".format(e_step)),
     ]
+
 
 # @app.callback(Output('more_sample', 'children'),
 #               [
@@ -673,6 +797,19 @@ def compute(n_clicks, e_min, e_max, e_step, formula, thickness, density, omit_de
 #         div_list.append(current_div)
 #     return div_list
 
+# @app.server.route('/plot')
+# def build_plot():
+#     img = io.BytesIO()
+#
+#     y = [1, 2, 3, 4, 5]
+#     x = [0, 2, 1, 3, 4]
+#     plt.plot(x, y)
+#     plt.savefig(img, format='png')
+#     img.seek(0)
+#
+#     plot_url = base64.b64encode(img.getvalue()).decode()
+#
+#     return '<img src="data:image/png;base64,{}">'.format(plot_url)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
