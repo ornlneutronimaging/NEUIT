@@ -290,15 +290,15 @@ is currently supported and more evaluated databases will be added in the future.
                                         html.P('X options: '),
                                         dcc.RadioItems(id='x_type',
                                                        options=[
-                                                           {'label': 'Energy', 'value': 'energy'},
-                                                           {'label': 'Wavelength', 'value': 'lambda'},
-                                                           {'label': 'Time', 'value': 'time'},
+                                                           {'label': 'Energy (eV)', 'value': 'energy'},
+                                                           {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
+                                                           {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
                                                        ],
                                                        value='energy',
                                                        # labelStyle={'display': 'inline-block'},
                                                        # className='six columns',
                                                        )
-                                    ], className='three columns'
+                                    ], className='four columns'
                                 ),
                                 html.Div(
                                     [
@@ -307,13 +307,13 @@ is currently supported and more evaluated databases will be added in the future.
                                                        options=[
                                                            {'label': 'Attenuation', 'value': 'attenuation'},
                                                            {'label': 'Transmission', 'value': 'transmission'},
-                                                           {'label': 'Total cross-section', 'value': 'sigma'}
+                                                           {'label': 'Total cross-section (barn)', 'value': 'sigma'}
                                                        ],
                                                        value='attenuation',
                                                        # labelStyle={'display': 'inline-block'},
                                                        # className='six columns',
                                                        )
-                                    ], className='three columns'
+                                    ], className='four columns'
                                 ),
                             ], className='row'
                         ),
@@ -334,7 +334,7 @@ is currently supported and more evaluated databases will be added in the future.
                                                        # labelStyle={'display': 'inline-block'},
                                                        # className='six columns',
                                                        )
-                                    ], className='three columns'
+                                    ], className='four columns'
                                 ),
                                 html.Div(
                                     [
@@ -343,7 +343,7 @@ is currently supported and more evaluated databases will be added in the future.
                                                       options=[{'value': True}], values=[],
                                                       # className='six columns',
                                                       )
-                                    ], className='three columns'
+                                    ], className='four columns'
                                 ),
                             ], className='row'
                         ),
