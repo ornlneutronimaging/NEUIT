@@ -51,10 +51,12 @@ app.layout = html.Div(
                 # ),
             ], className="row"
         ),
-        dcc.Markdown('''
+        html.Div(
+            [
+                dcc.Markdown('''
 A web application for **Neutron Imaging**.
 '''),
-        dcc.Markdown('''
+                dcc.Markdown('''
 
 *[ImagingReso](http://imagingreso.readthedocs.io/en/latest/)*
 is an open-source Python library that simulates the neutron
@@ -69,6 +71,8 @@ online database. [Evaluated Nuclear Data File](http://www.nndc.bnl.gov/exfor/end
 ([ENDF/B-VII.1](https://www.sciencedirect.com/science/article/pii/S009037521100113X)) 
 is currently supported and more evaluated databases will be added in the future.
 '''),
+            ],
+        ),
         html.H3('Global parameters'),
         # Global parameters
         html.Div(
@@ -740,12 +744,12 @@ def calculate_transmission_cg1d(n_clicks, y_type,
         State('density_3', 'value'), State('omit_density_3', 'values'),
         # State('more_sample', 'value'),
     ])
-def compute(n_clicks,
-            # e_min, e_max, e_step,
-            formula_1, thickness_1, density_1, omit_density_1,
-            formula_2, thickness_2, density_2, omit_density_2,
-            formula_3, thickness_3, density_3, omit_density_3,
-            ):
+def stack(n_clicks,
+          # e_min, e_max, e_step,
+          formula_1, thickness_1, density_1, omit_density_1,
+          formula_2, thickness_2, density_2, omit_density_2,
+          formula_3, thickness_3, density_3, omit_density_3,
+          ):
     # if n_clicks is not None:
     o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
 
@@ -780,17 +784,18 @@ def compute(n_clicks,
         current_layer = stack[each_layer]
         elements = current_layer['elements']
         # pprint.pprint(children[0]['props']['children'][3]['props'])
-    return [
-        html.P("Stack: {}".format(p_stack)),
-        html.P("Layer: {}".format(layer)),
-        html.P("Element: {}".format(elements)),
-        html.P("Submit clicks: {}".format(n_clicks)),
-        # html.P("Add clicks: {}".format(n_add)),
-        # html.P("Del clicks: {}".format(n_del)),
-        # html.P("e_min_slider: {}".format(e_min)),
-        # html.P("e_max_slider: {}".format(e_max)),
-        # html.P("e_step_slider: {}".format(e_step)),
-    ]
+    if n_clicks is not None:
+        return [
+            html.P("Stack: {}".format(p_stack)),
+            html.P("Layer: {}".format(layer)),
+            html.P("Element: {}".format(elements)),
+            html.P("Submit clicks: {}".format(n_clicks)),
+            # html.P("Add clicks: {}".format(n_add)),
+            # html.P("Del clicks: {}".format(n_del)),
+            # html.P("e_min_slider: {}".format(e_min)),
+            # html.P("e_max_slider: {}".format(e_max)),
+            # html.P("e_step_slider: {}".format(e_step)),
+        ]
 
 
 # @app.callback(Output('more_sample', 'children'),
