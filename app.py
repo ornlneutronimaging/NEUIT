@@ -54,7 +54,7 @@ app.layout = html.Div(
         html.Div(
             [
                 dcc.Markdown('''
-A web application for **Neutron Imaging**.
+A web application for **Neutron Resonance Imaging**.
 '''),
                 dcc.Markdown('''
 
@@ -264,8 +264,8 @@ is currently supported and more evaluated databases will be added in the future.
                         # html.Button('Add layer', id='button_add', className='three columns'),
                         # html.Button('Delete layer', id='button_del', className='three columns'),
                         html.Button('Submit', id='button_submit', className='three columns'),
-                        html.Button('Export to clipboard', id='button_export', className='three columns'),
-                        html.Div(id='export_done', className='three columns'),
+                        # html.Button('Export to clipboard', id='button_export', className='three columns'),
+                        # html.Div(id='export_done', className='three columns'),
                     ], className='row'
                 ),
             ]
@@ -344,6 +344,13 @@ is currently supported and more evaluated databases will be added in the future.
                                                       )
                                     ], className='four columns'
                                 ),
+                            ], className='row'
+                        ),
+                        html.Br(),
+                        html.Div(
+                            [
+                                html.Button('Export to clipboard', id='button_export', className='four columns'),
+                                html.Div(id='export_done', className='four columns'),
                             ], className='row'
                         ),
                     ], className='six columns'
@@ -817,7 +824,7 @@ def show_stack(n_clicks,
             elements_in_current_layer = o_stack[each_layer]['elements']
             current_div = html.Div(
                 [
-                    html.P("Layer {}: {}".format(i+1, each_layer)),
+                    html.P("Layer {}: {}".format(i + 1, each_layer)),
                     html.P("Elements: {}".format(elements_in_current_layer)),
                     html.P("Submit clicks: {}".format(n_clicks)),
                 ], className='row', id='layer_' + each_layer,
