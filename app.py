@@ -426,30 +426,30 @@ def disable_logx_when_not_plot_sigma(y_type):
         Input('button_submit', 'n_clicks'),
     ],
     [
-        State('e_min', 'value'),
-        State('e_max', 'value'),
-        State('e_step', 'value'),
+        # State('e_min', 'value'),
+        # State('e_max', 'value'),
+        # State('e_step', 'value'),
         State('formula_1', 'value'), State('thickness_1', 'value'),
         State('density_1', 'value'), State('omit_density_1', 'values'),
     ])
-def upadate_density(n_clicks, e_min, e_max, e_step,
+def upadate_density(n_clicks,
+                    # e_min, e_max, e_step,
                     formula_1, thickness_1, density_1, omit_density_1,
                     ):
-    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-    if omit_density_1:
-        o_reso.add_layer(formula=formula_1,
-                         thickness=thickness_1)
-    else:
-        o_reso.add_layer(formula=formula_1,
-                         thickness=thickness_1,
-                         density=density_1)
-    stack = o_reso.stack
-    # for each_layer in stack.keys():
-    #     _density = stack[each_layer]['density']['value']
-    layer = list(stack.keys())
-    _density = stack[layer[0]]['density']['value']
-    if n_clicks is not None:
-        return _density
+    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
+    if formula_1 is not None and thickness_1 is not None:
+        if omit_density_1:
+            o_reso.add_layer(formula=formula_1,
+                             thickness=thickness_1)
+        else:
+            o_reso.add_layer(formula=formula_1,
+                             thickness=thickness_1,
+                             density=density_1)
+        stack = o_reso.stack
+        layer = list(stack.keys())
+        _density = stack[layer[0]]['density']['value']
+        if n_clicks is not None:
+            return _density
 
 
 @app.callback(
@@ -458,16 +458,17 @@ def upadate_density(n_clicks, e_min, e_max, e_step,
         Input('button_submit', 'n_clicks'),
     ],
     [
-        State('e_min', 'value'),
-        State('e_max', 'value'),
-        State('e_step', 'value'),
+        # State('e_min', 'value'),
+        # State('e_max', 'value'),
+        # State('e_step', 'value'),
         State('formula_2', 'value'), State('thickness_2', 'value'),
         State('density_2', 'value'), State('omit_density_2', 'values'),
     ])
-def upadate_density(n_clicks, e_min, e_max, e_step,
+def upadate_density(n_clicks,
+                    # e_min, e_max, e_step,
                     formula_2, thickness_2, density_2, omit_density_2,
                     ):
-    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
     if formula_2 is not None and thickness_2 is not None:
         if omit_density_2:
             o_reso.add_layer(formula=formula_2,
@@ -476,11 +477,11 @@ def upadate_density(n_clicks, e_min, e_max, e_step,
             o_reso.add_layer(formula=formula_2,
                              thickness=thickness_2,
                              density=density_2)
-    stack = o_reso.stack
-    layer = list(stack.keys())
-    _density = stack[layer[0]]['density']['value']
-    if n_clicks is not None:
-        return _density
+        stack = o_reso.stack
+        layer = list(stack.keys())
+        _density = stack[layer[0]]['density']['value']
+        if n_clicks is not None:
+            return _density
 
 
 @app.callback(
@@ -489,16 +490,17 @@ def upadate_density(n_clicks, e_min, e_max, e_step,
         Input('button_submit', 'n_clicks'),
     ],
     [
-        State('e_min', 'value'),
-        State('e_max', 'value'),
-        State('e_step', 'value'),
+        # State('e_min', 'value'),
+        # State('e_max', 'value'),
+        # State('e_step', 'value'),
         State('formula_3', 'value'), State('thickness_3', 'value'),
         State('density_3', 'value'), State('omit_density_3', 'values'),
     ])
-def upadate_density(n_clicks, e_min, e_max, e_step,
+def upadate_density(n_clicks,
+                    # e_min, e_max, e_step,
                     formula_3, thickness_3, density_3, omit_density_3,
                     ):
-    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
     if formula_3 is not None and thickness_3 is not None:
         if omit_density_3:
             o_reso.add_layer(formula=formula_3,
@@ -507,11 +509,11 @@ def upadate_density(n_clicks, e_min, e_max, e_step,
             o_reso.add_layer(formula=formula_3,
                              thickness=thickness_3,
                              density=density_3)
-    stack = o_reso.stack
-    layer = list(stack.keys())
-    _density = stack[layer[0]]['density']['value']
-    if n_clicks is not None:
-        return _density
+        stack = o_reso.stack
+        layer = list(stack.keys())
+        _density = stack[layer[0]]['density']['value']
+        if n_clicks is not None:
+            return _density
 
 
 @app.callback(
@@ -688,9 +690,9 @@ def calculate_transmission_cg1d(n_clicks, y_type,
         Input('button_submit', 'n_clicks'),
     ],
     [
-        State('e_min', 'value'),
-        State('e_max', 'value'),
-        State('e_step', 'value'),
+        # State('e_min', 'value'),
+        # State('e_max', 'value'),
+        # State('e_step', 'value'),
         State('formula_1', 'value'), State('thickness_1', 'value'),
         State('density_1', 'value'), State('omit_density_1', 'values'),
         State('formula_2', 'value'), State('thickness_2', 'value'),
@@ -699,13 +701,14 @@ def calculate_transmission_cg1d(n_clicks, y_type,
         State('density_3', 'value'), State('omit_density_3', 'values'),
         # State('more_sample', 'value'),
     ])
-def compute(n_clicks, e_min, e_max, e_step,
+def compute(n_clicks,
+            # e_min, e_max, e_step,
             formula_1, thickness_1, density_1, omit_density_1,
             formula_2, thickness_2, density_2, omit_density_2,
             formula_3, thickness_3, density_3, omit_density_3,
             ):
     # if n_clicks is not None:
-    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
 
     # if density is not None:
     if omit_density_1:
@@ -745,9 +748,9 @@ def compute(n_clicks, e_min, e_max, e_step,
         html.P("Submit clicks: {}".format(n_clicks)),
         # html.P("Add clicks: {}".format(n_add)),
         # html.P("Del clicks: {}".format(n_del)),
-        html.P("e_min_slider: {}".format(e_min)),
-        html.P("e_max_slider: {}".format(e_max)),
-        html.P("e_step_slider: {}".format(e_step)),
+        # html.P("e_min_slider: {}".format(e_min)),
+        # html.P("e_max_slider: {}".format(e_max)),
+        # html.P("e_step_slider: {}".format(e_step)),
     ]
 
 
