@@ -194,7 +194,9 @@ is currently supported and more evaluated databases will be added in the future.
                 ),
             ]
         ),
-
+        dcc.Markdown('''
+NOTE: Pick a suitable energy step base on the energy range selected.
+'''),
         html.H3('Sample info'),
 
         # Sample input
@@ -251,19 +253,16 @@ is currently supported and more evaluated databases will be added in the future.
 
                 # html.Div(id='more_sample'),
 
-                html.P(
-                    'NOTE: density can be omitted ONLY if the input sample is under standard condition and contains 1 element.'
-                ),
-
-                html.Div(
-
-                ),
+                dcc.Markdown('''
+NOTE: density can be omitted ONLY if the input sample is 
+under standard condition and contains 1 element.
+                '''),
 
                 html.Div(
                     [
                         # html.Button('Add layer', id='button_add', className='three columns'),
                         # html.Button('Delete layer', id='button_del', className='three columns'),
-                        html.Button('Submit', id='button_submit', className='three columns'),
+                        html.Button('Submit', id='button_submit', className='two columns'),
                         # html.Button('Export to clipboard', id='button_export', className='three columns'),
                         # html.Div(id='export_done', className='three columns'),
                     ], className='row'
@@ -757,7 +756,7 @@ def calculate_transmission_cg1d(n_clicks, y_type,
                 [
                     # html.H3('Result'),
                     html.H4('Sample transmission'),
-                    html.P('The total neutron transmission at CG-1D: {} %'.format(total_trans))
+                    html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(total_trans))
                 ]
             )
         else:
@@ -765,7 +764,7 @@ def calculate_transmission_cg1d(n_clicks, y_type,
                 [
                     # html.H3('Result'),
                     html.H4('Sample attenuation'),
-                    html.P('The total neutron attenuation at CG-1D: {} %'.format(100 - total_trans))
+                    html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(100 - total_trans))
                 ]
             )
 
