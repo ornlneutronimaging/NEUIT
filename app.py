@@ -359,7 +359,7 @@ is currently supported and more evaluated databases will be added in the future.
             ],
         ),
         dcc.Markdown('''
-#### Cite this work:
+#### Publication
  
 Yuxuan Zhang and Jean Bilheux, (2017), ImagingReso: A Tool for Neutron Resonance Imaging, Journal of Open Source Software, 2(19), 407,
 [doi:10.21105/joss.00407](http://joss.theoj.org/papers/997d09281a9d76e95f4ec4d3279eeb8c)
