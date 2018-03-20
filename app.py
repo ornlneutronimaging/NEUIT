@@ -51,12 +51,24 @@ app.layout = html.Div(
                 # ),
             ], className="row"
         ),
-        html.Div(
-            children='''
-                A web application for *Neutron Imaging*.
-                ''',
-            className='row'
-        ),
+        dcc.Markdown('''
+A web application for **Neutron Imaging**.
+'''),
+        dcc.Markdown('''
+
+*[ImagingReso](http://imagingreso.readthedocs.io/en/latest/)*
+is an open-source Python library that simulates the neutron
+resonance signal for neutron imaging measurements. By defining the sample
+information such as density, thickness in the neutron path, and isotopic
+ratios of the elemental composition of the material, this package plots
+the expected resonance peaks for a selected neutron energy range.
+
+The energy dependent cross-section data used in this library are from
+[National Nuclear Data Center](http://www.nndc.bnl.gov/), a published
+online database. [Evaluated Nuclear Data File](http://www.nndc.bnl.gov/exfor/endf00.jsp)
+([ENDF/B-VII.1](https://www.sciencedirect.com/science/article/pii/S009037521100113X)) 
+is currently supported and more evaluated databases will be added in future.
+'''),
         html.H3('Global parameters'),
         # Global parameters
         html.Div(
@@ -263,65 +275,79 @@ app.layout = html.Div(
         # Plot control buttons
         html.Div(
             [
+                # Plot
+                html.Div(id='plot', className='six columns'),
+
                 html.Div(
                     [
-                        html.P('X options: ', className='two columns'),
-                        dcc.RadioItems(id='x_type',
-                                       options=[
-                                           {'label': 'Energy', 'value': 'energy'},
-                                           {'label': 'Wavelength', 'value': 'lambda'},
-                                           {'label': 'Time', 'value': 'time'},
-                                       ],
-                                       value='energy',
-                                       labelStyle={'display': 'inline-block'},
-                                       className='six columns',
-                                       )
-                    ], className='row'
+                        html.Div(
+                            [
+                                html.Div(
+                                    [
+                                        html.P('X options: '),
+                                        dcc.RadioItems(id='x_type',
+                                                       options=[
+                                                           {'label': 'Energy', 'value': 'energy'},
+                                                           {'label': 'Wavelength', 'value': 'lambda'},
+                                                           {'label': 'Time', 'value': 'time'},
+                                                       ],
+                                                       value='energy',
+                                                       # labelStyle={'display': 'inline-block'},
+                                                       # className='six columns',
+                                                       )
+                                    ], className='three columns'
+                                ),
+                                html.Div(
+                                    [
+                                        html.P('Y options: '),
+                                        dcc.RadioItems(id='y_type',
+                                                       options=[
+                                                           {'label': 'Attenuation', 'value': 'attenuation'},
+                                                           {'label': 'Transmission', 'value': 'transmission'},
+                                                           {'label': 'Total cross-section', 'value': 'sigma'}
+                                                       ],
+                                                       value='attenuation',
+                                                       # labelStyle={'display': 'inline-block'},
+                                                       # className='six columns',
+                                                       )
+                                    ], className='three columns'
+                                ),
+                            ], className='row'
+                        ),
+                        html.Br(),
+                        html.Div(
+                            [
+                                html.Div(
+                                    [
+                                        html.P('Scale options: '),
+                                        dcc.RadioItems(id='plot_scale',
+                                                       options=[
+                                                           {'label': 'Linear', 'value': 'linear'},
+                                                           {'label': 'Log x', 'value': 'logx'},
+                                                           {'label': 'Log y', 'value': 'logy'},
+                                                           {'label': 'Loglog', 'value': 'loglog'},
+                                                       ],
+                                                       value='linear',
+                                                       # labelStyle={'display': 'inline-block'},
+                                                       # className='six columns',
+                                                       )
+                                    ], className='three columns'
+                                ),
+                                html.Div(
+                                    [
+                                        html.P('Show isotope: '),
+                                        dcc.Checklist(id='show_iso',
+                                                      options=[{'value': True}], values=[],
+                                                      # className='six columns',
+                                                      )
+                                    ], className='three columns'
+                                ),
+                            ], className='row'
+                        ),
+                    ], className='six columns'
                 ),
-                html.Div(
-                    [
-                        html.P('Y options: ', className='two columns'),
-                        dcc.RadioItems(id='y_type',
-                                       options=[
-                                           {'label': 'Attenuation', 'value': 'attenuation'},
-                                           {'label': 'Transmission', 'value': 'transmission'},
-                                           {'label': 'Total cross-section', 'value': 'sigma'}
-                                       ],
-                                       value='attenuation',
-                                       labelStyle={'display': 'inline-block'},
-                                       className='six columns',
-                                       )
-                    ], className='row'
-                ),
-                html.Div(
-                    [
-                        html.P('Scale options: ', className='two columns'),
-                        dcc.RadioItems(id='plot_scale',
-                                       options=[
-                                           {'label': 'Linear', 'value': 'linear'},
-                                           {'label': 'Log x', 'value': 'logx'},
-                                           {'label': 'Log y', 'value': 'logy'},
-                                           {'label': 'Loglog', 'value': 'loglog'},
-                                       ],
-                                       value='linear',
-                                       labelStyle={'display': 'inline-block'},
-                                       className='six columns',
-                                       )
-                    ], className='row'
-                ),
-                html.Div(
-                    [
-                        html.P('Show isotope: ', className='two columns'),
-                        dcc.Checklist(id='show_iso',
-                                      options=[{'value': True}], values=[],
-                                      className='six columns',
-                                      )
-                    ], className='row'
-                ),
-            ]
+            ], className='row'
         ),
-        # Plot
-        html.Div(id='plot'),
 
         # Debug region
         html.Hr(),
@@ -330,6 +356,12 @@ app.layout = html.Div(
                 html.Div(id='stack'),
             ],
         ),
+        dcc.Markdown('''
+#### Cite this work:
+ 
+Yuxuan Zhang and Jean Bilheux, (2017), ImagingReso: A Tool for Neutron Resonance Imaging, Journal of Open Source Software, 2(19), 407,
+[doi:10.21105/joss.00407](http://joss.theoj.org/papers/997d09281a9d76e95f4ec4d3279eeb8c)
+'''),
     ], className='ten columns offset-by-one'
 )
 
