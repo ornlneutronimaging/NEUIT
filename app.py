@@ -67,7 +67,7 @@ The energy dependent cross-section data used in this library are from
 [National Nuclear Data Center](http://www.nndc.bnl.gov/), a published
 online database. [Evaluated Nuclear Data File](http://www.nndc.bnl.gov/exfor/endf00.jsp)
 ([ENDF/B-VII.1](https://www.sciencedirect.com/science/article/pii/S009037521100113X)) 
-is currently supported and more evaluated databases will be added in future.
+is currently supported and more evaluated databases will be added in the future.
 '''),
         html.H3('Global parameters'),
         # Global parameters
@@ -379,8 +379,10 @@ def show_range_in_lambda(boo, e_min, e_max):
         lambda_2 = ev_to_angstroms(array=e_max)
         return html.Div(
             [
-                dcc.Input(id='lambda_1', type='number', value=lambda_1, inputmode='numeric', step=0.01),
-                dcc.Input(id='tambda_2', type='number', value=lambda_2, inputmode='numeric', step=0.01),
+                # dcc.Input(id='lambda_1', type='number', value=lambda_1, inputmode='numeric', step=0.01),
+                # dcc.Input(id='lambda_2', type='number', value=lambda_2, inputmode='numeric', step=0.01),
+                html.P(lambda_1, style={'marginBottom': 5, 'marginTop': 5}),
+                html.P(lambda_2, style={'marginBottom': 5, 'marginTop': 15}),
             ]
         )
 
@@ -399,8 +401,10 @@ def show_range_in_tof(boo, distance, e_min, e_max):
         tof_2 = ev_to_s(array=e_max, source_to_detector_m=distance, offset_us=0) * 1e6
         return html.Div(
             [
-                dcc.Input(id='tof_1', type='number', value=tof_1, inputmode='numeric', step=1),
-                dcc.Input(id='tof_2', type='number', value=tof_2, inputmode='numeric', step=1),
+                # dcc.Input(id='tof_1', type='number', value=tof_1, inputmode='numeric', step=1),
+                # dcc.Input(id='tof_2', type='number', value=tof_2, inputmode='numeric', step=1),
+                html.P(tof_1, style={'marginBottom': 5, 'marginTop': 5}),
+                html.P(tof_2, style={'marginBottom': 5, 'marginTop': 15}),
             ]
         )
 
