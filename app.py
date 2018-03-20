@@ -141,8 +141,6 @@ is currently supported and more evaluated databases will be added in the future.
                                 dcc.Input(id='distance', type='number', value=16.45, min=1,
                                           inputmode='numeric',
                                           step=0.01,
-                                          # size=5
-                                          # className='six columns',
                                           )
                             ],
                             className='two and half columns',
@@ -151,15 +149,12 @@ is currently supported and more evaluated databases will be added in the future.
                     ], className='row',
                 ),
 
-                # html.Br(),
-
                 # Step input
                 html.Div(
                     [
                         html.Div(
                             [
                                 html.P('Step in energy (eV)'),
-                                # dcc.Input(id='e_step', type='number', value=0.01, min=0.001, max=1),
                                 dcc.Dropdown(
                                     id='e_step',
                                     options=[
@@ -173,7 +168,6 @@ is currently supported and more evaluated databases will be added in the future.
                                     value=0.01,
                                     searchable=False,
                                     clearable=False,
-                                    # placeholder="Pick a step size",
                                 )
                             ], className='two columns'
                         ),
@@ -181,7 +175,6 @@ is currently supported and more evaluated databases will be added in the future.
                         html.Div(
                             [
                                 # Energy slider
-                                # html.P('Energy range slider'),
                                 html.Br(),
                                 dcc.RangeSlider(
                                     id='e_range_slider',
@@ -273,10 +266,6 @@ is currently supported and more evaluated databases will be added in the future.
                         html.Button('Submit', id='button_submit', className='three columns'),
                         html.Button('Export to clipboard', id='button_export', className='three columns'),
                         html.Div(id='export_done', className='three columns'),
-                        # dcc.Checklist(id='export_to_clipboard',
-                        #               options=[{'label': 'Export to clipboard', 'value': True}],
-                        #               values=[],
-                        #               className='three columns'),
                     ], className='row'
                 ),
             ]
@@ -777,29 +766,21 @@ def calculate_transmission_cg1d(n_clicks, y_type,
 @app.callback(
     Output('stack', 'children'),
     [
-        # Input('button_add', 'n_clicks'),
-        # Input('button_del', 'n_clicks'),
         Input('button_submit', 'n_clicks'),
     ],
     [
-        # State('e_min', 'value'),
-        # State('e_max', 'value'),
-        # State('e_step', 'value'),
         State('formula_1', 'value'), State('thickness_1', 'value'),
         State('density_1', 'value'), State('omit_density_1', 'values'),
         State('formula_2', 'value'), State('thickness_2', 'value'),
         State('density_2', 'value'), State('omit_density_2', 'values'),
         State('formula_3', 'value'), State('thickness_3', 'value'),
         State('density_3', 'value'), State('omit_density_3', 'values'),
-        # State('more_sample', 'value'),
     ])
 def show_stack(n_clicks,
-               # e_min, e_max, e_step,
                formula_1, thickness_1, density_1, omit_density_1,
                formula_2, thickness_2, density_2, omit_density_2,
                formula_3, thickness_3, density_3, omit_density_3,
                ):
-    # if n_clicks is not None:
     o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
 
     # if density is not None:
@@ -827,24 +808,22 @@ def show_stack(n_clicks,
                              thickness=thickness_3,
                              density=density_3)
     o_stack = o_reso.stack
-    # p_stack = pprint.pformat(o_reso.stack)
-    # layer = list(stack.keys())
     if n_clicks is not None:
-        for each_layer in o_stack.keys():
-            current_layer = o_stack[each_layer]
-            elements = current_layer['elements']
-            # pprint.pprint(children[0]['props']['children'][3]['props'])
-            return [
-                html.P("Stack: {}".format(o_stack)),
-                html.P("Layer: {}".format(each_layer)),
-                html.P("Element: {}".format(elements)),
-                html.P("Submit clicks: {}".format(n_clicks)),
-                # html.P("Add clicks: {}".format(n_add)),
-                # html.P("Del clicks: {}".format(n_del)),
-                # html.P("e_min_slider: {}".format(e_min)),
-                # html.P("e_max_slider: {}".format(e_max)),
-                # html.P("e_step_slider: {}".format(e_step)),
-            ]
+        # div_list = [html.H4('Stack details:'),
+        #             html.P("Stack: {}".format(o_stack))]
+        div_list = [html.H4('Stack info')]
+        layers = list(o_stack.keys())
+        for i, each_layer in enumerate(layers):
+            elements_in_current_layer = o_stack[each_layer]['elements']
+            current_div = html.Div(
+                [
+                    html.P("Layer {}: {}".format(i+1, each_layer)),
+                    html.P("Elements: {}".format(elements_in_current_layer)),
+                    html.P("Submit clicks: {}".format(n_clicks)),
+                ], className='row', id='layer_' + each_layer,
+            )
+            div_list.append(current_div)
+        return div_list
 
 
 # @app.callback(Output('more_sample', 'children'),
