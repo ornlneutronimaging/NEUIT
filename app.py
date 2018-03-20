@@ -1,24 +1,16 @@
-from model import InitForm
-from model import SampleForm
-import flask
-from flask import render_template, request
-from compute import init_reso, add_layer, load_beam_shape
-from flask import Flask
-import io
 import os
-import matplotlib.pyplot as plt
-import base64
-from scipy.interpolate import interp1d
-from ImagingReso.resonance import Resonance
-import numpy as np
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output, State
-import pprint
 from ImagingReso._utilities import ev_to_angstroms
 from ImagingReso._utilities import ev_to_s
-import math
+from ImagingReso.resonance import Resonance
+from dash.dependencies import Input, Output, State
+from flask import Flask
+from scipy.interpolate import interp1d
+
+from compute import init_reso, load_beam_shape
 
 # Setup app
 server = Flask(__name__)
