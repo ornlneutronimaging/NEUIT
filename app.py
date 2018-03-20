@@ -781,12 +781,12 @@ def stack(n_clicks,
     # p_stack = pprint.pformat(o_reso.stack)
     # layer = list(stack.keys())
     if n_clicks is not None:
-        html.P("Stack: {}".format(o_stack)),
         for each_layer in o_stack.keys():
             current_layer = o_stack[each_layer]
             elements = current_layer['elements']
             # pprint.pprint(children[0]['props']['children'][3]['props'])
             return [
+                html.P("Stack: {}".format(o_stack)),
                 html.P("Layer: {}".format(each_layer)),
                 html.P("Element: {}".format(elements)),
                 html.P("Submit clicks: {}".format(n_clicks)),
