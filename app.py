@@ -215,7 +215,8 @@ is currently supported and more evaluated databases will be added in the future.
 
                 html.Div(
                     [
-                        html.P(id='text_1', children='1', className='one columns'),
+                        html.P(id='text_1', children='1', className='one columns',
+                               style={'marginBottom': 5, 'marginTop': 5}),
                         dcc.Input(id='formula_1', value='Ag', type='text', minlength=1, className='two columns'),
                         dcc.Input(id='thickness_1', value=0.5, type='number', min=0, inputmode="numeric",
                                   step=0.001, className='two columns'),
@@ -227,7 +228,8 @@ is currently supported and more evaluated databases will be added in the future.
 
                 html.Div(
                     [
-                        html.P(id='text_2', children='2', className='one columns'),
+                        html.P(id='text_2', children='2', className='one columns',
+                               style={'marginBottom': 5, 'marginTop': 5}),
                         dcc.Input(id='formula_2', type='text', minlength=1, className='two columns'),
                         dcc.Input(id='thickness_2', type='number', min=0, inputmode="numeric",
                                   step=0.001, className='two columns'),
@@ -239,7 +241,8 @@ is currently supported and more evaluated databases will be added in the future.
 
                 html.Div(
                     [
-                        html.P(id='text_3', children='3', className='one columns'),
+                        html.P(id='text_3', children='3', className='one columns',
+                               style={'marginBottom': 5, 'marginTop': 5}),
                         dcc.Input(id='formula_3', type='text', minlength=1, className='two columns'),
                         dcc.Input(id='thickness_3', type='number', min=0, inputmode="numeric",
                                   step=0.001, className='two columns'),
@@ -381,8 +384,8 @@ def show_range_in_lambda(boo, e_min, e_max):
             [
                 # dcc.Input(id='lambda_1', type='number', value=lambda_1, inputmode='numeric', step=0.01),
                 # dcc.Input(id='lambda_2', type='number', value=lambda_2, inputmode='numeric', step=0.01),
-                html.P(lambda_1, style={'marginBottom': 5, 'marginTop': 5}),
-                html.P(lambda_2, style={'marginBottom': 5, 'marginTop': 15}),
+                html.P(lambda_1, style={'marginBottom': 5, 'marginTop': 10}),
+                html.P(lambda_2, style={'marginBottom': 5, 'marginTop': 10}),
             ]
         )
 
@@ -403,8 +406,8 @@ def show_range_in_tof(boo, distance, e_min, e_max):
             [
                 # dcc.Input(id='tof_1', type='number', value=tof_1, inputmode='numeric', step=1),
                 # dcc.Input(id='tof_2', type='number', value=tof_2, inputmode='numeric', step=1),
-                html.P(tof_1, style={'marginBottom': 5, 'marginTop': 5}),
-                html.P(tof_2, style={'marginBottom': 5, 'marginTop': 15}),
+                html.P(tof_1, style={'marginBottom': 5, 'marginTop': 10}),
+                html.P(tof_2, style={'marginBottom': 5, 'marginTop': 10}),
             ]
         )
 
