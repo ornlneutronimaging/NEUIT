@@ -777,25 +777,25 @@ def stack(n_clicks,
             o_reso.add_layer(formula=formula_3,
                              thickness=thickness_3,
                              density=density_3)
-    stack = o_reso.stack
-    p_stack = pprint.pformat(o_reso.stack)
-    layer = list(stack.keys())
-    for each_layer in stack.keys():
-        current_layer = stack[each_layer]
-        elements = current_layer['elements']
-        # pprint.pprint(children[0]['props']['children'][3]['props'])
+    o_stack = o_reso.stack
+    # p_stack = pprint.pformat(o_reso.stack)
+    # layer = list(stack.keys())
     if n_clicks is not None:
-        return [
-            html.P("Stack: {}".format(p_stack)),
-            html.P("Layer: {}".format(layer)),
-            html.P("Element: {}".format(elements)),
-            html.P("Submit clicks: {}".format(n_clicks)),
-            # html.P("Add clicks: {}".format(n_add)),
-            # html.P("Del clicks: {}".format(n_del)),
-            # html.P("e_min_slider: {}".format(e_min)),
-            # html.P("e_max_slider: {}".format(e_max)),
-            # html.P("e_step_slider: {}".format(e_step)),
-        ]
+        html.P("Stack: {}".format(o_stack)),
+        for each_layer in o_stack.keys():
+            current_layer = o_stack[each_layer]
+            elements = current_layer['elements']
+            # pprint.pprint(children[0]['props']['children'][3]['props'])
+            return [
+                html.P("Layer: {}".format(each_layer)),
+                html.P("Element: {}".format(elements)),
+                html.P("Submit clicks: {}".format(n_clicks)),
+                # html.P("Add clicks: {}".format(n_add)),
+                # html.P("Del clicks: {}".format(n_del)),
+                # html.P("e_min_slider: {}".format(e_min)),
+                # html.P("e_max_slider: {}".format(e_max)),
+                # html.P("e_step_slider: {}".format(e_step)),
+            ]
 
 
 # @app.callback(Output('more_sample', 'children'),
