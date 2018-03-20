@@ -271,6 +271,12 @@ is currently supported and more evaluated databases will be added in the future.
                         # html.Button('Add layer', id='button_add', className='three columns'),
                         # html.Button('Delete layer', id='button_del', className='three columns'),
                         html.Button('Submit', id='button_submit', className='three columns'),
+                        html.Button('Export to clipboard', id='button_export', className='three columns'),
+                        html.Div(id='export_done', className='three columns'),
+                        # dcc.Checklist(id='export_to_clipboard',
+                        #               options=[{'label': 'Export to clipboard', 'value': True}],
+                        #               values=[],
+                        #               className='three columns'),
                     ], className='row'
                 ),
             ]
@@ -424,8 +430,6 @@ def show_range_in_tof(boo, distance, e_min, e_max):
 def update_e_min_from_slider(slider):
     transformed_value = [pow(10, v) for v in slider]
     _min = transformed_value[0]
-    # if _min != min_input:
-    #     return _min
     return _min
 
 
@@ -437,8 +441,6 @@ def update_e_min_from_slider(slider):
 def update_e_max_from_slider(slider):
     transformed_value = [pow(10, v) for v in slider]
     _max = transformed_value[1]
-    # if _max != max_input:
-    #     return _max
     return _max
 
 
@@ -469,14 +471,10 @@ def disable_logx_when_not_plot_sigma(y_type):
         Input('button_submit', 'n_clicks'),
     ],
     [
-        # State('e_min', 'value'),
-        # State('e_max', 'value'),
-        # State('e_step', 'value'),
         State('formula_1', 'value'), State('thickness_1', 'value'),
         State('density_1', 'value'), State('omit_density_1', 'values'),
     ])
 def upadate_density(n_clicks,
-                    # e_min, e_max, e_step,
                     formula_1, thickness_1, density_1, omit_density_1,
                     ):
     o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
@@ -501,14 +499,10 @@ def upadate_density(n_clicks,
         Input('button_submit', 'n_clicks'),
     ],
     [
-        # State('e_min', 'value'),
-        # State('e_max', 'value'),
-        # State('e_step', 'value'),
         State('formula_2', 'value'), State('thickness_2', 'value'),
         State('density_2', 'value'), State('omit_density_2', 'values'),
     ])
 def upadate_density(n_clicks,
-                    # e_min, e_max, e_step,
                     formula_2, thickness_2, density_2, omit_density_2,
                     ):
     o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
@@ -533,14 +527,10 @@ def upadate_density(n_clicks,
         Input('button_submit', 'n_clicks'),
     ],
     [
-        # State('e_min', 'value'),
-        # State('e_max', 'value'),
-        # State('e_step', 'value'),
         State('formula_3', 'value'), State('thickness_3', 'value'),
         State('density_3', 'value'), State('omit_density_3', 'values'),
     ])
 def upadate_density(n_clicks,
-                    # e_min, e_max, e_step,
                     formula_3, thickness_3, density_3, omit_density_3,
                     ):
     o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
@@ -580,8 +570,7 @@ def upadate_density(n_clicks,
         State('formula_3', 'value'), State('thickness_3', 'value'),
         State('density_3', 'value'), State('omit_density_3', 'values'),
     ])
-def plot(n_clicks,
-         y_type, x_type, plot_scale, show_iso,
+def plot(n_submit, y_type, x_type, plot_scale, show_iso,
          e_min, e_max, e_step, distance_m,
          formula_1, thickness_1, density_1, omit_density_1,
          formula_2, thickness_2, density_2, omit_density_2,
@@ -635,13 +624,76 @@ def plot(n_clicks,
                              all_isotopes=show_iso,
                              source_to_detector_m=distance_m)
     plotly_fig.layout.showlegend = True
-
-    if n_clicks is not None:
+    if n_submit is not None:
         return html.Div(
             [
                 dcc.Graph(id='reso_plot', figure=plotly_fig)
             ]
         )
+
+
+@app.callback(
+    Output('export_done', 'children'),
+    [
+        Input('button_export', 'n_clicks'),
+    ],
+    [
+        State('y_type', 'value'),
+        State('x_type', 'value'),
+        State('show_iso', 'values'),
+        State('e_min', 'value'),
+        State('e_max', 'value'),
+        State('e_step', 'value'),
+        State('distance', 'value'),
+        State('formula_1', 'value'), State('thickness_1', 'value'),
+        State('density_1', 'value'), State('omit_density_1', 'values'),
+        State('formula_2', 'value'), State('thickness_2', 'value'),
+        State('density_2', 'value'), State('omit_density_2', 'values'),
+        State('formula_3', 'value'), State('thickness_3', 'value'),
+        State('density_3', 'value'), State('omit_density_3', 'values'),
+    ])
+def export(n_export_to_clipboard,
+           y_type, x_type, show_iso,
+           e_min, e_max, e_step, distance_m,
+           formula_1, thickness_1, density_1, omit_density_1,
+           formula_2, thickness_2, density_2, omit_density_2,
+           formula_3, thickness_3, density_3, omit_density_3,
+           ):
+    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    if omit_density_1:
+        o_reso.add_layer(formula=formula_1,
+                         thickness=thickness_1)
+    else:
+        o_reso.add_layer(formula=formula_1,
+                         thickness=thickness_1,
+                         density=density_1)
+    if formula_2 is not None and thickness_2 is not None:
+        if omit_density_2:
+            o_reso.add_layer(formula=formula_2,
+                             thickness=thickness_2)
+        else:
+            o_reso.add_layer(formula=formula_2,
+                             thickness=thickness_2,
+                             density=density_2)
+    if formula_3 is not None and thickness_3 is not None:
+        if omit_density_3:
+            o_reso.add_layer(formula=formula_3,
+                             thickness=thickness_3)
+        else:
+            o_reso.add_layer(formula=formula_3,
+                             thickness=thickness_3,
+                             density=density_3)
+    if show_iso is None:
+        show_iso = False
+
+    if n_export_to_clipboard is not None:
+        o_reso.export(y_axis=y_type,
+                      x_axis=x_type,
+                      time_unit='us',
+                      all_elements=True,
+                      all_isotopes=show_iso,
+                      source_to_detector_m=distance_m)
+        return html.P('Export done.', style={'marginBottom': 10, 'marginTop': 5})
 
 
 @app.callback(
@@ -701,9 +753,6 @@ def calculate_transmission_cg1d(n_clicks, y_type,
     trans = interp_function(df['energy_eV'])
     # calculated transmitted flux
     trans_flux = trans * df['flux']
-    stack = o_reso.stack
-    # stack = pprint.pformat(o_reso.stack)
-
     _total_trans = sum(trans_flux) / sum(df['flux']) * 100
     total_trans = round(_total_trans, 3)
     if n_clicks is not None:
@@ -744,12 +793,12 @@ def calculate_transmission_cg1d(n_clicks, y_type,
         State('density_3', 'value'), State('omit_density_3', 'values'),
         # State('more_sample', 'value'),
     ])
-def stack(n_clicks,
-          # e_min, e_max, e_step,
-          formula_1, thickness_1, density_1, omit_density_1,
-          formula_2, thickness_2, density_2, omit_density_2,
-          formula_3, thickness_3, density_3, omit_density_3,
-          ):
+def show_stack(n_clicks,
+               # e_min, e_max, e_step,
+               formula_1, thickness_1, density_1, omit_density_1,
+               formula_2, thickness_2, density_2, omit_density_2,
+               formula_3, thickness_3, density_3, omit_density_3,
+               ):
     # if n_clicks is not None:
     o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
 
