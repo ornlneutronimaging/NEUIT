@@ -108,25 +108,21 @@ is currently supported and more evaluated databases will be added in the future.
                         id='range_table'
                     ),
                 ]),
+
                 html.Div(
                     [
-                        html.Div(
-                            [
-                                html.Br(),
-                                # html.P('Source-to-detector (m)'),
-                                dcc.Markdown('''Source-to-detector (m)'''),
-                                dcc.Input(id='distance', type='number', value=16.45, min=1,
-                                          inputmode='numeric',
-                                          step=0.01,
-                                          ),
-                                dcc.Markdown(
-                                    '''NOTE: Please ignore the above input field if **NOT** interested in display of time-of-flight (TOF).'''),
-                            ],
-                            # className='two columns',
-                        ),
-
+                        html.Br(),
+                        # html.P('Source-to-detector (m)'),
+                        dcc.Markdown('''Source-to-detector (m)'''),
+                        dcc.Input(id='distance', type='number', value=16.45, min=1,
+                                  inputmode='numeric',
+                                  step=0.01,
+                                  ),
+                        dcc.Markdown(
+                            '''NOTE: Please ignore the above input field if **NOT** interested in display of time-of-flight (TOF).'''),
                     ], className='row',
                 ),
+
                 # Step input
                 html.H6('Energy step:'),
                 html.Div(
@@ -146,7 +142,6 @@ is currently supported and more evaluated databases will be added in the future.
                             clearable=False,
                             className='three columns',
                         ),
-                        # html.P('(eV)', style={'marginBottom': 5, 'marginTop': 10})
                     ], className='row'
                 ),
                 dcc.Markdown('''NOTE: Pick a suitable energy step base on the energy range selected.'''),
@@ -185,7 +180,7 @@ is currently supported and more evaluated databases will be added in the future.
         # Plot control buttons
         html.Div(
             [
-                html.H6('Plot options:'),
+                html.H5('Plot options:'),
                 html.Div(
                     [
                         html.Div(
@@ -198,7 +193,6 @@ is currently supported and more evaluated databases will be added in the future.
                                                    {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
                                                ],
                                                value='energy',
-                                               # labelStyle={'display': 'inline-block'},
                                                )
                             ], className=col_3
                         ),
@@ -212,8 +206,6 @@ is currently supported and more evaluated databases will be added in the future.
                                                    {'label': 'Total cross-section (barn)', 'value': 'sigma'}
                                                ],
                                                value='attenuation',
-                                               # labelStyle={'display': 'inline-block'},
-
                                                )
                             ], className=col_3
                         ),
@@ -228,7 +220,6 @@ is currently supported and more evaluated databases will be added in the future.
                                                    {'label': 'Loglog', 'value': 'loglog'},
                                                ],
                                                value='linear',
-                                               # labelStyle={'display': 'inline-block'},
                                                )
                             ], className=col_3
                         ),
@@ -246,7 +237,6 @@ is currently supported and more evaluated databases will be added in the future.
                 # Plot
                 html.Div(id='plot'),
                 html.Div(id='export_done'),
-
             ]
         ),
 
@@ -488,17 +478,19 @@ def calculate_transmission_cg1d(n_clicks, y_type, sample_tb_rows):
         if y_type == 'transmission':
             return html.Div(
                 [
-                    # html.H3('Result'),
-                    html.H4('Sample transmission'),
-                    html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(total_trans))
+                    html.H3('Result'),
+                    html.H5('Sample transmission:'),
+                    html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(total_trans)),
+                    html.Hr()
                 ]
             )
         else:
             return html.Div(
                 [
-                    # html.H3('Result'),
-                    html.H4('Sample attenuation'),
-                    html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(100 - total_trans))
+                    html.H3('Result'),
+                    html.H5('Sample attenuation:'),
+                    html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(100 - total_trans)),
+                    html.Hr()
                 ]
             )
 
@@ -533,43 +525,6 @@ def show_stack(n_clicks, sample_tb_rows):
             )
             div_list.append(current_div)
         return div_list
-
-
-# @app.callback(Output('more_sample', 'children'),
-#               [
-#                   Input('button_add', 'n_clicks'),
-#                   Input('button_del', 'n_clicks'),
-#                   # Input('button_reset', 'n_clicks'),
-#               ])
-# def more_layer(n_add, n_del):
-#     if n_add is None:
-#         n_add = 0
-#     if n_del is None:
-#         n_del = 0
-#     if n_del > n_add:
-#         n_diff = n_del - n_add
-#         n_add = n_add + n_diff
-#     n_row = n_add - n_del
-#     n_row = n_row + 1
-#     div_list = []
-#     for n in range(n_row):
-#         current_div = html.Div(
-#             [
-#                 html.P(id='text_' + str(n + 1), children=str(n + 1), className='one columns'),
-#                 dcc.Input(id='formula_' + str(n + 1), type='text', minlength=1, className='two columns'),
-#                 dcc.Input(id='thickness_' + str(n + 1), type='number', min=0, inputmode="numeric",
-#                           step=0.01, className='two columns'),
-#                 dcc.Input(id='density_' + str(n + 1), type='number', min=0, step=0.001, value=1,
-#                           className='two columns'),
-#                 dcc.Checklist(id='omit_density_' + str(n + 1),
-#                               options=[{'value': True}],
-#                               values=[True],
-#                               labelStyle={'display': 'inline-block'},
-#                               className='two columns'),
-#             ], className='row', id='layer_' + str(n + 1),
-#         )
-#         div_list.append(current_div)
-#     return div_list
 
 # @app.server.route('/plot')
 # def build_plot():
