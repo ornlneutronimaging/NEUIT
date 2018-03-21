@@ -112,7 +112,6 @@ is currently supported and more evaluated databases will be added in the future.
                 html.Div(
                     [
                         html.Br(),
-                        # html.P('Source-to-detector (m)'),
                         dcc.Markdown('''Source-to-detector (m)'''),
                         dcc.Input(id='distance', type='number', value=16.45, min=1,
                                   inputmode='numeric',
@@ -301,22 +300,19 @@ def add_del_row(n_add, n_del, sample_tb_rows):
         df_sample_tb['Thickness (mm)'] = ['']
     if 'Density (g/cm^3)' not in df_sample_tb.columns:
         df_sample_tb['Density (g/cm^3)'] = ['']
-    print(df_sample_tb)
-    # _formula_list = list(df_sample_tb['Chemical formula'])
-    # _thickness_list = list(df_sample_tb['Thickness (mm)'])
-    # _density_list = list(df_sample_tb['Density (g/cm^3)'])
-    # for n in range(n_add):
-    #     _formula_list.append('')
-    #     _thickness_list.append('')
-    #     _density_list.append('')
-    # for n in range(n_del):
-    #     _formula_list.remove('')
-    #     _thickness_list.remove('')
-    #     _density_list.remove('')
+    n_layer = len(df_sample_tb['Chemical formula'])
+    _formula_list = list(df_sample_tb['Chemical formula'])
+    _thickness_list = list(df_sample_tb['Thickness (mm)'])
+    _density_list = list(df_sample_tb['Density (g/cm^3)'])
     n_row = n_add - n_del + 1
-    _formula_list = [''] * n_row
-    _thickness_list = [''] * n_row
-    _density_list = [''] * n_row
+    if n_row > n_layer:
+        _formula_list.append('')
+        _thickness_list.append('')
+        _density_list.append('')
+    elif n_row < n_layer:
+        _formula_list.pop()
+        _thickness_list.pop()
+        _density_list.pop()
     _df_sample = pd.DataFrame({
         'Chemical formula': _formula_list,
         'Thickness (mm)': _thickness_list,
@@ -510,21 +506,22 @@ def show_stack(n_clicks, sample_tb_rows):
                                         sample_tb_df=df_sample_tb)
     o_stack = o_reso.stack
     if n_clicks is not None:
-        # div_list = [html.H4('Stack details:'),
-        #             html.P("Stack: {}".format(o_stack))]
-        div_list = [html.H4('Stack info')]
+        div_list = [html.H4('Stack info'),
+                    html.P("Stack: {}".format(o_stack))]
         layers = list(o_stack.keys())
         for i, each_layer in enumerate(layers):
             elements_in_current_layer = o_stack[each_layer]['elements']
             current_div = html.Div(
                 [
                     html.P("Layer {}: {}".format(i + 1, each_layer)),
+                    html.P("Thickness: {} {}".format(o_stack[each_layer]['thickness']['value'], o_stack[each_layer]['thickness']['units'])),
+                    html.P("Density: {} {}".format(o_stack[each_layer]['density']['value'], o_stack[each_layer]['density']['units'])),
                     html.P("Elements: {}".format(elements_in_current_layer)),
-                    html.P("Submit clicks: {}".format(n_clicks)),
                 ], className='row', id='layer_' + each_layer,
             )
             div_list.append(current_div)
         return div_list
+
 
 # @app.server.route('/plot')
 # def build_plot():
