@@ -19,11 +19,6 @@ def init_reso(e_min, e_max, e_step):
     return o_reso
 
 
-def add_layer(o_reso, layer, thickness_mm, density_gcm3):
-    o_reso.add_layer(formula=layer, thickness=thickness_mm, density=density_gcm3)
-    return o_reso
-
-
 def load_beam_shape(relative_path_to_beam_shape):
     # _path_to_beam_shape = 'static/instrument_file/beam_shape_cg1d.txt'
     # Load beam shape from static
@@ -37,3 +32,17 @@ def load_beam_shape(relative_path_to_beam_shape):
     energy_list = ir_util.angstroms_to_ev(df['wavelength_A'])
     df.insert(1, 'energy_eV', energy_list)
     return df
+
+
+def unpack_tb_df_and_add_layer(o_reso, sample_tb_df):
+    num_layer = len(sample_tb_df['Chemical formula'])
+    for i in range(num_layer):
+        if sample_tb_df['Chemical formula'][i] != '' and sample_tb_df['Thickness (mm)'][i] != '':
+            if sample_tb_df['Density (g/cm^3)'][i] == '':
+                o_reso.add_layer(formula=sample_tb_df['Chemical formula'][i],
+                                 thickness=float(sample_tb_df['Thickness (mm)'][i]))
+            else:
+                o_reso.add_layer(formula=sample_tb_df['Chemical formula'][i],
+                                 density=float(sample_tb_df['Density (g/cm^3)'][i]),
+                                 thickness=float(sample_tb_df['Thickness (mm)'][i]))
+    return o_reso

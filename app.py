@@ -11,7 +11,7 @@ import dash_table_experiments as dt
 from flask import Flask
 from scipy.interpolate import interp1d
 
-from compute import init_reso, load_beam_shape
+from compute import init_reso, load_beam_shape, unpack_tb_df_and_add_layer
 import pandas as pd
 import numpy as np
 
@@ -23,11 +23,19 @@ app = dash.Dash(__name__)
 app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 
 df_range = pd.DataFrame({
-    'Energy (eV)': [np.NaN, np.NaN],
+    'Energy (eV)': [1, 100],
     'Wavelength (\u212B)': [np.NaN, np.NaN],
     'Time-of-flight (\u03BCs)': [np.NaN, np.NaN],
 })
 
+df_sample = pd.DataFrame({
+    'Chemical formula': [''],
+    'Thickness (mm)': [''],
+    'Density (g/cm^3)': [''],
+})
+
+col_3 = 'three columns'
+col_6 = 'six columns'
 # Create app layout
 app.layout = html.Div(
     [
@@ -66,7 +74,7 @@ is currently supported and more evaluated databases will be added in the future.
         html.Div(
             [
                 # Range input
-                html.H5('Energy range:'),
+                html.H6('Energy slider:'),
                 html.Div(
                     [
                         # Energy slider
@@ -85,63 +93,42 @@ is currently supported and more evaluated databases will be added in the future.
                     ], className='row'
                 ),
                 html.Br(),
-                html.Div(
-                    [
-                        html.Div(
-                            [
-                                html.P('Energy (eV)'),
-                                html.P(id='e_min'),
-                                html.P(id='e_max'),
-                            ],
-                            className='two columns',
-                        ),
-
-                        html.Div(
-                            [
-                                html.P('Wavelength (\u212B)'),
-                                html.Div(id='range_lambda'),
-                            ],
-                            className='two columns',
-                        ),
-
-                        html.Div(
-                            [
-                                html.P('Time-of-flight (\u03BCs)'),
-                                html.Div(id='range_tof'),
-                            ],
-                            className='two columns',
-
-                        ),
-
-                        html.Div(
-                            [
-                                html.P('Source-to-detector (m)'),
-                                # html.P('(ONLY for TOF)'),
-                                dcc.Input(id='distance', type='number', value=16.45, min=1,
-                                          inputmode='numeric',
-                                          step=0.01,
-                                          ),
-                            ],
-                            className='two columns',
-                        ),
-
-                    ], className='row',
-                ),
+                html.Br(),
+                html.H6('Range selected:'),
                 html.Div([
                     dt.DataTable(
                         rows=df_range.to_dict('records'),
                         # optional - sets the order of columns
-                        columns=sorted(df_range.columns),
+                        columns=df_range.columns,
+                        # sortColumn=False,
                         editable=False,
                         row_selectable=False,
                         filterable=False,
-                        sortable=False,
+                        sortable=True,
                         id='range_table'
                     ),
                 ]),
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                html.Br(),
+                                # html.P('Source-to-detector (m)'),
+                                dcc.Markdown('''Source-to-detector (m)'''),
+                                dcc.Input(id='distance', type='number', value=16.45, min=1,
+                                          inputmode='numeric',
+                                          step=0.01,
+                                          ),
+                                dcc.Markdown(
+                                    '''NOTE: Please ignore the above input field if **NOT** interested in display of time-of-flight (TOF).'''),
+                            ],
+                            # className='two columns',
+                        ),
 
+                    ], className='row',
+                ),
                 # Step input
-                html.H5('Energy step:'),
+                html.H6('Energy step:'),
                 html.Div(
                     [
                         dcc.Dropdown(
@@ -157,87 +144,39 @@ is currently supported and more evaluated databases will be added in the future.
                             value=0.01,
                             searchable=False,
                             clearable=False,
-                            className='two columns',
+                            className='three columns',
                         ),
                         # html.P('(eV)', style={'marginBottom': 5, 'marginTop': 10})
-                        dcc.Markdown('''
-NOTE: Pick a suitable energy step base on the energy range selected.
-''', className='six columns'),
                     ], className='row'
                 ),
+                dcc.Markdown('''NOTE: Pick a suitable energy step base on the energy range selected.'''),
             ]
         ),
         html.H3('Sample info'),
 
         # Sample input
-        html.Div(
-            [
-                html.Div(
-                    [
-                        html.P('Layer', className='one columns'),
-                        html.P('Chemical formula', className='two columns'),
-                        html.P('Thickness (mm)', className='two columns'),
-                        html.P('Density (g/cm^3)', className='two columns'),
-                        html.P('Omit density?', className='two columns'),
-                    ], className='row',
-                ),
+        html.Div([
+            html.Div(
+                [
+                    html.Button('+', id='button_add'),
+                    html.Button('-', id='button_del'),
+                ], className='row'
+            ),
 
-                html.Div(
-                    [
-                        html.P(id='text_1', children='1', className='one columns',
-                               style={'marginBottom': 5, 'marginTop': 5}),
-                        dcc.Input(id='formula_1', value='Ag', type='text', minlength=1, className='two columns'),
-                        dcc.Input(id='thickness_1', value=0.5, type='number', min=0, inputmode="numeric",
-                                  step=0.001, className='two columns'),
-                        dcc.Input(id='density_1', type='number', min=0, step=0.001, className='two columns'),
-                        dcc.Checklist(id='omit_density_1', options=[{'value': True}], values=[True],
-                                      className='two columns'),
-                    ], className='row'
-                ),
-
-                html.Div(
-                    [
-                        html.P(id='text_2', children='2', className='one columns',
-                               style={'marginBottom': 5, 'marginTop': 5}),
-                        dcc.Input(id='formula_2', type='text', minlength=1, className='two columns'),
-                        dcc.Input(id='thickness_2', type='number', min=0, inputmode="numeric",
-                                  step=0.001, className='two columns'),
-                        dcc.Input(id='density_2', type='number', min=0, step=0.001, className='two columns'),
-                        dcc.Checklist(id='omit_density_2', options=[{'value': True}], values=[True],
-                                      className='two columns'),
-                    ], className='row'
-                ),
-
-                html.Div(
-                    [
-                        html.P(id='text_3', children='3', className='one columns',
-                               style={'marginBottom': 5, 'marginTop': 5}),
-                        dcc.Input(id='formula_3', type='text', minlength=1, className='two columns'),
-                        dcc.Input(id='thickness_3', type='number', min=0, inputmode="numeric",
-                                  step=0.001, className='two columns'),
-                        dcc.Input(id='density_3', type='number', min=0, step=0.001, className='two columns'),
-                        dcc.Checklist(id='omit_density_3', options=[{'value': True}], values=[True],
-                                      className='two columns'),
-                    ], className='row'
-                ),
-
-                # html.Div(id='more_sample'),
-
-                dcc.Markdown('''
-NOTE: density can be omitted ONLY if the input sample is 
-under standard condition and contains 1 element.
-                '''),
-
-                html.Div(
-                    [
-                        # html.Button('Add layer', id='button_add', className='three columns'),
-                        # html.Button('Delete layer', id='button_del', className='three columns'),
-                        html.Button('Submit', id='button_submit', className='two columns'),
-                        # html.Button('Export to clipboard', id='button_export', className='three columns'),
-                        # html.Div(id='export_done', className='three columns'),
-                    ], className='row'
-                ),
-            ]
+            dt.DataTable(
+                rows=df_sample.to_dict('records'),
+                # optional - sets the order of columns
+                columns=df_sample.columns,
+                editable=True,
+                row_selectable=False,
+                filterable=False,
+                sortable=False,
+                id='sample_table'
+            ),
+            dcc.Markdown(
+                '''NOTE: density input can be omitted (leave as blank) only if the input formula is single element, density available [here](http://periodictable.com/Properties/A/Density.al.html) will be used.'''),
+            html.Button('Submit', id='button_submit'),
+        ]
         ),
 
         html.Hr(),
@@ -246,85 +185,69 @@ under standard condition and contains 1 element.
         # Plot control buttons
         html.Div(
             [
-                # Plot
-                html.Div(id='plot', className='six columns'),
-
+                html.H6('Plot options:'),
                 html.Div(
                     [
                         html.Div(
                             [
-                                html.Div(
-                                    [
-                                        html.P('X options: '),
-                                        dcc.RadioItems(id='x_type',
-                                                       options=[
-                                                           {'label': 'Energy (eV)', 'value': 'energy'},
-                                                           {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
-                                                           {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
-                                                       ],
-                                                       value='energy',
-                                                       # labelStyle={'display': 'inline-block'},
-                                                       # className='six columns',
-                                                       )
-                                    ], className='four columns'
-                                ),
-                                html.Div(
-                                    [
-                                        html.P('Y options: '),
-                                        dcc.RadioItems(id='y_type',
-                                                       options=[
-                                                           {'label': 'Attenuation', 'value': 'attenuation'},
-                                                           {'label': 'Transmission', 'value': 'transmission'},
-                                                           {'label': 'Total cross-section (barn)', 'value': 'sigma'}
-                                                       ],
-                                                       value='attenuation',
-                                                       # labelStyle={'display': 'inline-block'},
-                                                       # className='six columns',
-                                                       )
-                                    ], className='four columns'
-                                ),
-                            ], className='row'
+                                html.P('X options: '),
+                                dcc.RadioItems(id='x_type',
+                                               options=[
+                                                   {'label': 'Energy (eV)', 'value': 'energy'},
+                                                   {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
+                                                   {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
+                                               ],
+                                               value='energy',
+                                               # labelStyle={'display': 'inline-block'},
+                                               )
+                            ], className=col_3
                         ),
-                        html.Br(),
                         html.Div(
                             [
-                                html.Div(
-                                    [
-                                        html.P('Scale options: '),
-                                        dcc.RadioItems(id='plot_scale',
-                                                       options=[
-                                                           {'label': 'Linear', 'value': 'linear'},
-                                                           {'label': 'Log x', 'value': 'logx'},
-                                                           {'label': 'Log y', 'value': 'logy'},
-                                                           {'label': 'Loglog', 'value': 'loglog'},
-                                                       ],
-                                                       value='linear',
-                                                       # labelStyle={'display': 'inline-block'},
-                                                       # className='six columns',
-                                                       )
-                                    ], className='four columns'
-                                ),
-                                html.Div(
-                                    [
-                                        html.P('Show isotope: '),
-                                        dcc.Checklist(id='show_iso',
-                                                      options=[{'value': True}], values=[],
-                                                      # className='six columns',
-                                                      )
-                                    ], className='four columns'
-                                ),
-                            ], className='row'
+                                html.P('Y options: '),
+                                dcc.RadioItems(id='y_type',
+                                               options=[
+                                                   {'label': 'Attenuation', 'value': 'attenuation'},
+                                                   {'label': 'Transmission', 'value': 'transmission'},
+                                                   {'label': 'Total cross-section (barn)', 'value': 'sigma'}
+                                               ],
+                                               value='attenuation',
+                                               # labelStyle={'display': 'inline-block'},
+
+                                               )
+                            ], className=col_3
                         ),
-                        html.Br(),
                         html.Div(
                             [
-                                html.Button('Export to clipboard', id='button_export', className='four columns'),
-                                html.Div(id='export_done', className='four columns'),
-                            ], className='row'
+                                html.P('Scale options: '),
+                                dcc.RadioItems(id='plot_scale',
+                                               options=[
+                                                   {'label': 'Linear', 'value': 'linear'},
+                                                   {'label': 'Log x', 'value': 'logx'},
+                                                   {'label': 'Log y', 'value': 'logy'},
+                                                   {'label': 'Loglog', 'value': 'loglog'},
+                                               ],
+                                               value='linear',
+                                               # labelStyle={'display': 'inline-block'},
+                                               )
+                            ], className=col_3
                         ),
-                    ], className='six columns'
+                        html.Div(
+                            [
+                                html.P('Show isotope: '),
+                                dcc.Checklist(id='show_iso',
+                                              options=[{'value': True}], values=[],
+                                              ),
+                                html.Button('Export to clipboard', id='button_export'),
+                            ], className=col_3
+                        ),
+                    ], className='row'
                 ),
-            ], className='row'
+                # Plot
+                html.Div(id='plot'),
+                html.Div(id='export_done'),
+
+            ]
         ),
 
         # Debug region
@@ -368,69 +291,48 @@ def show_range_table(slider, distance):
 
 
 @app.callback(
-    Output('range_lambda', 'children'),
+    Output('sample_table', 'rows'),
     [
-        # Input('check_lambda', 'values'),
-        Input('e_min', 'children'),
-        Input('e_max', 'children'),
-    ])
-def show_range_in_lambda(e_min, e_max):
-    # if boo:
-    lambda_1 = round(ev_to_angstroms(array=e_min), 4)
-    lambda_2 = round(ev_to_angstroms(array=e_max), 4)
-    return html.Div(
-        [
-            # dcc.Input(id='lambda_1', type='number', value=lambda_1, inputmode='numeric', step=0.01),
-            # dcc.Input(id='lambda_2', type='number', value=lambda_2, inputmode='numeric', step=0.01),
-            html.P(lambda_1, style={'marginBottom': 5, 'marginTop': 10}),
-            html.P(lambda_2, style={'marginBottom': 5, 'marginTop': 10}),
-        ]
-    )
-
-
-@app.callback(
-    Output('range_tof', 'children'),
+        Input('button_add', 'n_clicks'),
+        Input('button_del', 'n_clicks'),
+    ],
     [
-        # Input('check_tof', 'values'),
-        Input('distance', 'value'),
-        Input('e_min', 'children'),
-        Input('e_max', 'children'),
+        State('sample_table', 'rows'),
     ])
-def show_range_in_tof(distance, e_min, e_max):
-    # if boo:
-    tof_1 = round(ev_to_s(array=e_min, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
-    tof_2 = round(ev_to_s(array=e_max, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
-    return html.Div(
-        [
-            # dcc.Input(id='tof_1', type='number', value=tof_1, inputmode='numeric', step=1),
-            # dcc.Input(id='tof_2', type='number', value=tof_2, inputmode='numeric', step=1),
-            html.P(tof_1, style={'marginBottom': 5, 'marginTop': 10}),
-            html.P(tof_2, style={'marginBottom': 5, 'marginTop': 10}),
-        ]
-    )
-
-
-@app.callback(
-    Output('e_min', 'children'),
-    [
-        Input('e_range_slider', 'value'),
-    ])
-def update_e_min_from_slider(slider):
-    transformed_value = [pow(10, v) for v in slider]
-    _min = transformed_value[0]
-
-    return round(_min, 5)
-
-
-@app.callback(
-    Output('e_max', 'children'),
-    [
-        Input('e_range_slider', 'value'),
-    ])
-def update_e_max_from_slider(slider):
-    transformed_value = [pow(10, v) for v in slider]
-    _max = transformed_value[1]
-    return round(_max, 5)
+def add_del_row(n_add, n_del, sample_tb_rows):
+    if n_add is None:
+        n_add = 0
+    if n_del is None:
+        n_del = 0
+    df_sample_tb = pd.DataFrame(sample_tb_rows)
+    if 'Chemical formula' not in df_sample_tb.columns:
+        df_sample_tb['Chemical formula'] = ['']
+    if 'Thickness (mm)' not in df_sample_tb.columns:
+        df_sample_tb['Thickness (mm)'] = ['']
+    if 'Density (g/cm^3)' not in df_sample_tb.columns:
+        df_sample_tb['Density (g/cm^3)'] = ['']
+    print(df_sample_tb)
+    # _formula_list = list(df_sample_tb['Chemical formula'])
+    # _thickness_list = list(df_sample_tb['Thickness (mm)'])
+    # _density_list = list(df_sample_tb['Density (g/cm^3)'])
+    # for n in range(n_add):
+    #     _formula_list.append('')
+    #     _thickness_list.append('')
+    #     _density_list.append('')
+    # for n in range(n_del):
+    #     _formula_list.remove('')
+    #     _thickness_list.remove('')
+    #     _density_list.remove('')
+    n_row = n_add - n_del + 1
+    _formula_list = [''] * n_row
+    _thickness_list = [''] * n_row
+    _density_list = [''] * n_row
+    _df_sample = pd.DataFrame({
+        'Chemical formula': _formula_list,
+        'Thickness (mm)': _thickness_list,
+        'Density (g/cm^3)': _density_list,
+    })
+    return _df_sample.to_dict('records')
 
 
 @app.callback(
@@ -455,90 +357,6 @@ def disable_logx_when_not_plot_sigma(y_type):
 
 
 @app.callback(
-    Output('density_1', 'value'),
-    [
-        Input('button_submit', 'n_clicks'),
-    ],
-    [
-        State('formula_1', 'value'), State('thickness_1', 'value'),
-        State('density_1', 'value'), State('omit_density_1', 'values'),
-    ])
-def upadate_density(n_clicks,
-                    formula_1, thickness_1, density_1, omit_density_1,
-                    ):
-    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
-    if formula_1 is not None and thickness_1 is not None:
-        if omit_density_1:
-            o_reso.add_layer(formula=formula_1,
-                             thickness=thickness_1)
-        else:
-            o_reso.add_layer(formula=formula_1,
-                             thickness=thickness_1,
-                             density=density_1)
-        stack = o_reso.stack
-        layer = list(stack.keys())
-        _density = stack[layer[0]]['density']['value']
-        if n_clicks is not None:
-            return _density
-
-
-@app.callback(
-    Output('density_2', 'value'),
-    [
-        Input('button_submit', 'n_clicks'),
-    ],
-    [
-        State('formula_2', 'value'), State('thickness_2', 'value'),
-        State('density_2', 'value'), State('omit_density_2', 'values'),
-    ])
-def upadate_density(n_clicks,
-                    formula_2, thickness_2, density_2, omit_density_2,
-                    ):
-    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
-    if formula_2 is not None and thickness_2 is not None:
-        if omit_density_2:
-            o_reso.add_layer(formula=formula_2,
-                             thickness=thickness_2)
-        else:
-            o_reso.add_layer(formula=formula_2,
-                             thickness=thickness_2,
-                             density=density_2)
-        stack = o_reso.stack
-        layer = list(stack.keys())
-        _density = stack[layer[0]]['density']['value']
-        if n_clicks is not None:
-            return _density
-
-
-@app.callback(
-    Output('density_3', 'value'),
-    [
-        Input('button_submit', 'n_clicks'),
-    ],
-    [
-        State('formula_3', 'value'), State('thickness_3', 'value'),
-        State('density_3', 'value'), State('omit_density_3', 'values'),
-    ])
-def upadate_density(n_clicks,
-                    formula_3, thickness_3, density_3, omit_density_3,
-                    ):
-    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
-    if formula_3 is not None and thickness_3 is not None:
-        if omit_density_3:
-            o_reso.add_layer(formula=formula_3,
-                             thickness=thickness_3)
-        else:
-            o_reso.add_layer(formula=formula_3,
-                             thickness=thickness_3,
-                             density=density_3)
-        stack = o_reso.stack
-        layer = list(stack.keys())
-        _density = stack[layer[0]]['density']['value']
-        if n_clicks is not None:
-            return _density
-
-
-@app.callback(
     Output('plot', 'children'),
     [
         Input('button_submit', 'n_clicks'),
@@ -548,72 +366,47 @@ def upadate_density(n_clicks,
         Input('show_iso', 'values'),
     ],
     [
-        State('e_min', 'children'),
-        State('e_max', 'children'),
+        State('range_table', 'rows'),
         State('e_step', 'value'),
         State('distance', 'value'),
-        State('formula_1', 'value'), State('thickness_1', 'value'),
-        State('density_1', 'value'), State('omit_density_1', 'values'),
-        State('formula_2', 'value'), State('thickness_2', 'value'),
-        State('density_2', 'value'), State('omit_density_2', 'values'),
-        State('formula_3', 'value'), State('thickness_3', 'value'),
-        State('density_3', 'value'), State('omit_density_3', 'values'),
+        State('sample_table', 'rows'),
     ])
 def plot(n_submit, y_type, x_type, plot_scale, show_iso,
-         e_min, e_max, e_step, distance_m,
-         formula_1, thickness_1, density_1, omit_density_1,
-         formula_2, thickness_2, density_2, omit_density_2,
-         formula_3, thickness_3, density_3, omit_density_3,
+         range_tb_rows, e_step, distance_m,
+         sample_tb_rows,
          ):
-    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-    if omit_density_1:
-        o_reso.add_layer(formula=formula_1,
-                         thickness=thickness_1)
-    else:
-        o_reso.add_layer(formula=formula_1,
-                         thickness=thickness_1,
-                         density=density_1)
-    if formula_2 is not None and thickness_2 is not None:
-        if omit_density_2:
-            o_reso.add_layer(formula=formula_2,
-                             thickness=thickness_2)
-        else:
-            o_reso.add_layer(formula=formula_2,
-                             thickness=thickness_2,
-                             density=density_2)
-    if formula_3 is not None and thickness_3 is not None:
-        if omit_density_3:
-            o_reso.add_layer(formula=formula_3,
-                             thickness=thickness_3)
-        else:
-            o_reso.add_layer(formula=formula_3,
-                             thickness=thickness_3,
-                             density=density_3)
-    if plot_scale == 'logx':
-        _log_x = True
-        _log_y = False
-    elif plot_scale == 'logy':
-        _log_x = False
-        _log_y = True
-    elif plot_scale == 'loglog':
-        _log_x = True
-        _log_y = True
-    else:
-        _log_x = False
-        _log_y = False
-    if show_iso is None:
-        show_iso = False
-    plotly_fig = o_reso.plot(plotly=True,
-                             y_axis=y_type,
-                             x_axis=x_type,
-                             time_unit='us',
-                             logy=_log_y,
-                             logx=_log_x,
-                             all_elements=True,
-                             all_isotopes=show_iso,
-                             source_to_detector_m=distance_m)
-    plotly_fig.layout.showlegend = True
     if n_submit is not None:
+        df_range_tb = pd.DataFrame(range_tb_rows)
+        e_min = df_range_tb['Energy (eV)'][0]
+        e_max = df_range_tb['Energy (eV)'][1]
+        o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+        df_sample_tb = pd.DataFrame(sample_tb_rows)
+        o_reso = unpack_tb_df_and_add_layer(o_reso=o_reso,
+                                            sample_tb_df=df_sample_tb)
+        if plot_scale == 'logx':
+            _log_x = True
+            _log_y = False
+        elif plot_scale == 'logy':
+            _log_x = False
+            _log_y = True
+        elif plot_scale == 'loglog':
+            _log_x = True
+            _log_y = True
+        else:
+            _log_x = False
+            _log_y = False
+        if show_iso is None:
+            show_iso = False
+        plotly_fig = o_reso.plot(plotly=True,
+                                 y_axis=y_type,
+                                 x_axis=x_type,
+                                 time_unit='us',
+                                 logy=_log_y,
+                                 logx=_log_x,
+                                 all_elements=True,
+                                 all_isotopes=show_iso,
+                                 source_to_detector_m=distance_m)
+        plotly_fig.layout.showlegend = True
         return html.Div(
             [
                 dcc.Graph(id='reso_plot', figure=plotly_fig)
@@ -630,48 +423,24 @@ def plot(n_submit, y_type, x_type, plot_scale, show_iso,
         State('y_type', 'value'),
         State('x_type', 'value'),
         State('show_iso', 'values'),
-        State('e_min', 'children'),
-        State('e_max', 'children'),
+        State('range_table', 'rows'),
         State('e_step', 'value'),
         State('distance', 'value'),
-        State('formula_1', 'value'), State('thickness_1', 'value'),
-        State('density_1', 'value'), State('omit_density_1', 'values'),
-        State('formula_2', 'value'), State('thickness_2', 'value'),
-        State('density_2', 'value'), State('omit_density_2', 'values'),
-        State('formula_3', 'value'), State('thickness_3', 'value'),
-        State('density_3', 'value'), State('omit_density_3', 'values'),
+        State('sample_table', 'rows'),
     ])
 def export(n_export_to_clipboard,
            y_type, x_type, show_iso,
-           e_min, e_max, e_step, distance_m,
-           formula_1, thickness_1, density_1, omit_density_1,
-           formula_2, thickness_2, density_2, omit_density_2,
-           formula_3, thickness_3, density_3, omit_density_3,
+           range_tb_rows, e_step, distance_m,
+           sample_tb_rows
            ):
+    df_range_tb = pd.DataFrame(range_tb_rows)
+    e_min = df_range_tb['Energy (eV)'][0]
+    e_max = df_range_tb['Energy (eV)'][1]
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-    if omit_density_1:
-        o_reso.add_layer(formula=formula_1,
-                         thickness=thickness_1)
-    else:
-        o_reso.add_layer(formula=formula_1,
-                         thickness=thickness_1,
-                         density=density_1)
-    if formula_2 is not None and thickness_2 is not None:
-        if omit_density_2:
-            o_reso.add_layer(formula=formula_2,
-                             thickness=thickness_2)
-        else:
-            o_reso.add_layer(formula=formula_2,
-                             thickness=thickness_2,
-                             density=density_2)
-    if formula_3 is not None and thickness_3 is not None:
-        if omit_density_3:
-            o_reso.add_layer(formula=formula_3,
-                             thickness=thickness_3)
-        else:
-            o_reso.add_layer(formula=formula_3,
-                             thickness=thickness_3,
-                             density=density_3)
+    df_sample_tb = pd.DataFrame(sample_tb_rows)
+    o_reso = unpack_tb_df_and_add_layer(o_reso=o_reso,
+                                        sample_tb_df=df_sample_tb)
+
     if show_iso is None:
         show_iso = False
 
@@ -692,47 +461,18 @@ def export(n_export_to_clipboard,
     ],
     [
         State('y_type', 'value'),
-        State('formula_1', 'value'), State('thickness_1', 'value'),
-        State('density_1', 'value'), State('omit_density_1', 'values'),
-        State('formula_2', 'value'), State('thickness_2', 'value'),
-        State('density_2', 'value'), State('omit_density_2', 'values'),
-        State('formula_3', 'value'), State('thickness_3', 'value'),
-        State('density_3', 'value'), State('omit_density_3', 'values'),
+        State('sample_table', 'rows'),
     ])
-def calculate_transmission_cg1d(n_clicks, y_type,
-                                formula_1, thickness_1, density_1, omit_density_1,
-                                formula_2, thickness_2, density_2, omit_density_2,
-                                formula_3, thickness_3, density_3, omit_density_3,
-                                ):
+def calculate_transmission_cg1d(n_clicks, y_type, sample_tb_rows):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
     df = load_beam_shape(_path_to_beam_shape)
     o_reso = init_reso(e_min=0.00025,
                        e_max=0.12525,
                        e_step=0.000625)
-    if omit_density_1:
-        o_reso.add_layer(formula=formula_1,
-                         thickness=thickness_1)
-    else:
-        o_reso.add_layer(formula=formula_1,
-                         thickness=thickness_1,
-                         density=density_1)
-    if formula_2 is not None and thickness_2 is not None:
-        if omit_density_2:
-            o_reso.add_layer(formula=formula_2,
-                             thickness=thickness_2)
-        else:
-            o_reso.add_layer(formula=formula_2,
-                             thickness=thickness_2,
-                             density=density_2)
-    if formula_3 is not None and thickness_3 is not None:
-        if omit_density_3:
-            o_reso.add_layer(formula=formula_3,
-                             thickness=thickness_3)
-        else:
-            o_reso.add_layer(formula=formula_3,
-                             thickness=thickness_3,
-                             density=density_3)
+    df_sample_tb = pd.DataFrame(sample_tb_rows)
+    o_reso = unpack_tb_df_and_add_layer(o_reso=o_reso,
+                                        sample_tb_df=df_sample_tb)
     # interpolate with the beam shape energy ()
     interp_type = 'cubic'
     energy = o_reso.total_signal['energy_eV']
@@ -769,44 +509,13 @@ def calculate_transmission_cg1d(n_clicks, y_type,
         Input('button_submit', 'n_clicks'),
     ],
     [
-        State('formula_1', 'value'), State('thickness_1', 'value'),
-        State('density_1', 'value'), State('omit_density_1', 'values'),
-        State('formula_2', 'value'), State('thickness_2', 'value'),
-        State('density_2', 'value'), State('omit_density_2', 'values'),
-        State('formula_3', 'value'), State('thickness_3', 'value'),
-        State('density_3', 'value'), State('omit_density_3', 'values'),
+        State('sample_table', 'rows'),
     ])
-def show_stack(n_clicks,
-               formula_1, thickness_1, density_1, omit_density_1,
-               formula_2, thickness_2, density_2, omit_density_2,
-               formula_3, thickness_3, density_3, omit_density_3,
-               ):
+def show_stack(n_clicks, sample_tb_rows):
     o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
-
-    # if density is not None:
-    if omit_density_1:
-        o_reso.add_layer(formula=formula_1,
-                         thickness=thickness_1)
-    else:
-        o_reso.add_layer(formula=formula_1,
-                         thickness=thickness_1,
-                         density=density_1)
-    if formula_2 is not None and thickness_2 is not None:
-        if omit_density_2:
-            o_reso.add_layer(formula=formula_2,
-                             thickness=thickness_2)
-        else:
-            o_reso.add_layer(formula=formula_2,
-                             thickness=thickness_2,
-                             density=density_2)
-    if formula_3 is not None and thickness_3 is not None:
-        if omit_density_3:
-            o_reso.add_layer(formula=formula_3,
-                             thickness=thickness_3)
-        else:
-            o_reso.add_layer(formula=formula_3,
-                             thickness=thickness_3,
-                             density=density_3)
+    df_sample_tb = pd.DataFrame(sample_tb_rows)
+    o_reso = unpack_tb_df_and_add_layer(o_reso=o_reso,
+                                        sample_tb_df=df_sample_tb)
     o_stack = o_reso.stack
     if n_clicks is not None:
         # div_list = [html.H4('Stack details:'),
