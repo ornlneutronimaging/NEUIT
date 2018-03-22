@@ -37,7 +37,6 @@ df_range = pd.DataFrame({
     tof_name: [np.NaN, np.NaN],
 })
 
-
 df_sample = pd.DataFrame({
     chem_name: ['Ag'],
     thick_name: ['1'],
@@ -534,15 +533,16 @@ def show_stack(n_clicks, sample_tb_rows):
             layer_dict[density_name] = o_stack[layer]['density']['value']
             # layer_dict['Elements'] = elements_in_current_layer
             _df_layer = pd.DataFrame([layer_dict])
-            current_layer_list.append(dt.DataTable(rows=_df_layer.to_dict('records'),
-                                                   # optional - sets the order of columns
-                                                   columns=_df_layer.columns,
-                                                   editable=False,
-                                                   row_selectable=False,
-                                                   filterable=False,
-                                                   sortable=False,
-                                                   # id='sample_table'
-                                                   ))
+            current_layer_list.append(
+                dt.DataTable(rows=_df_layer.to_dict('records'),
+                             # optional - sets the order of columns
+                             columns=_df_layer.columns,
+                             editable=False,
+                             row_selectable=False,
+                             filterable=False,
+                             sortable=False,
+                             # id='sample_table'
+                             ))
 
             for e, ele in enumerate(elements_in_current_layer):
                 _iso_list = o_stack[layer][ele]['isotopes']['list']
@@ -554,15 +554,16 @@ def show_stack(n_clicks, sample_tb_rows):
                 for i, iso in enumerate(_iso_list):
                     iso_dict[iso] = _iso_ratios[i]
                 _df_iso = pd.DataFrame([iso_dict])
-                current_layer_list.append(dt.DataTable(rows=_df_iso.to_dict('records'),
-                                                       # optional - sets the order of columns
-                                                       columns=_df_iso.columns,
-                                                       editable=False,
-                                                       row_selectable=False,
-                                                       filterable=False,
-                                                       sortable=False,
-                                                       # id='sample_table'
-                                                       ))
+                current_layer_list.append(
+                    dt.DataTable(rows=_df_iso.to_dict('records'),
+                                 # optional - sets the order of columns
+                                 columns=_df_iso.columns,
+                                 editable=False,
+                                 row_selectable=False,
+                                 filterable=False,
+                                 sortable=False,
+                                 # id='sample_table'
+                                 ))
 
             div_list.append(html.Div(current_layer_list))
         return div_list
