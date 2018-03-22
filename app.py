@@ -233,9 +233,14 @@ is currently supported and more evaluated databases will be added in the future.
                         ),
                         html.Div(
                             [
-                                html.P('Show isotope: '),
-                                dcc.Checklist(id='show_iso',
-                                              options=[{'value': True}], values=[],
+                                html.P('Show options: '),
+                                dcc.Checklist(id='show_opt',
+                                              options=[
+                                                  {'label': 'Total', 'value': 'total'},
+                                                  {'label': 'Layer', 'value': 'layer'},
+                                                  {'label': 'Element', 'value': 'ele'},
+                                                  {'label': 'Isotope', 'value': 'iso'},
+                                              ], values=['ele'],
                                               ),
                             ], className=col_3
                         ),
@@ -358,7 +363,7 @@ def disable_logx_when_not_plot_sigma(y_type):
         Input('y_type', 'value'),
         Input('x_type', 'value'),
         Input('plot_scale', 'value'),
-        Input('show_iso', 'values'),
+        Input('show_opt', 'values'),
     ],
     [
         State('range_table', 'rows'),
@@ -366,11 +371,12 @@ def disable_logx_when_not_plot_sigma(y_type):
         State('distance', 'value'),
         State('sample_table', 'rows'),
     ])
-def plot(n_submit, y_type, x_type, plot_scale, show_iso,
+def plot(n_submit, y_type, x_type, plot_scale, show_opt,
          range_tb_rows, e_step, distance_m,
          sample_tb_rows,
          ):
     if n_submit is not None:
+
         df_range_tb = pd.DataFrame(range_tb_rows)
         e_min = df_range_tb['Energy (eV)'][0]
         e_max = df_range_tb['Energy (eV)'][1]
@@ -390,15 +396,27 @@ def plot(n_submit, y_type, x_type, plot_scale, show_iso,
         else:
             _log_x = False
             _log_y = False
-        if show_iso is None:
-            show_iso = False
+        show_total = False
+        show_layer = False
+        show_ele = False
+        show_iso = False
+        if 'total' in show_opt:
+            show_total = True
+        if 'layer' in show_opt:
+            show_layer = True
+        if 'ele' in show_opt:
+            show_ele = True
+        if 'iso' in show_opt:
+            show_iso = True
         plotly_fig = o_reso.plot(plotly=True,
                                  y_axis=y_type,
                                  x_axis=x_type,
                                  time_unit='us',
                                  logy=_log_y,
                                  logx=_log_x,
-                                 all_elements=True,
+                                 mixed=show_total,
+                                 all_layers=show_layer,
+                                 all_elements=show_ele,
                                  all_isotopes=show_iso,
                                  source_to_detector_m=distance_m)
         plotly_fig.layout.showlegend = True
@@ -417,14 +435,14 @@ def plot(n_submit, y_type, x_type, plot_scale, show_iso,
     [
         State('y_type', 'value'),
         State('x_type', 'value'),
-        State('show_iso', 'values'),
+        State('show_opt', 'values'),
         State('range_table', 'rows'),
         State('e_step', 'value'),
         State('distance', 'value'),
         State('sample_table', 'rows'),
     ])
 def export(n_export_to_clipboard,
-           y_type, x_type, show_iso,
+           y_type, x_type, show_opt,
            range_tb_rows, e_step, distance_m,
            sample_tb_rows
            ):
@@ -436,14 +454,26 @@ def export(n_export_to_clipboard,
     o_reso = unpack_tb_df_and_add_layer(o_reso=o_reso,
                                         sample_tb_df=df_sample_tb)
 
-    if show_iso is None:
-        show_iso = False
+    show_total = False
+    show_layer = False
+    show_ele = False
+    show_iso = False
+    if 'total' in show_opt:
+        show_total = True
+    if 'layer' in show_opt:
+        show_layer = True
+    if 'ele' in show_opt:
+        show_ele = True
+    if 'iso' in show_opt:
+        show_iso = True
 
     if n_export_to_clipboard is not None:
         o_reso.export(y_axis=y_type,
                       x_axis=x_type,
                       time_unit='us',
-                      all_elements=True,
+                      mixed=show_total,
+                      all_layers=show_layer,
+                      all_elements=show_ele,
                       all_isotopes=show_iso,
                       source_to_detector_m=distance_m)
         return html.P('Data copied.', style={'marginBottom': 10, 'marginTop': 5})
