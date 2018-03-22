@@ -23,16 +23,25 @@ server.secret_key = os.environ.get('secret_key', 'secret')
 app = dash.Dash(__name__)
 app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
 
+energy_name = 'Energy (eV)'
+wave_name = 'Wavelength (\u212B)'
+tof_name = 'Time-of-flight (\u03BCs)'
+chem_name = 'Chemical formula'
+thick_name = 'Thickness (mm)'
+density_name = 'Density (g/cm^3)'
+ele_name = 'Element'
+
 df_range = pd.DataFrame({
-    'Energy (eV)': [1, 100],
-    'Wavelength (\u212B)': [np.NaN, np.NaN],
-    'Time-of-flight (\u03BCs)': [np.NaN, np.NaN],
+    energy_name: [1, 100],
+    wave_name: [np.NaN, np.NaN],
+    tof_name: [np.NaN, np.NaN],
 })
 
+
 df_sample = pd.DataFrame({
-    'Chemical formula': ['Ag'],
-    'Thickness (mm)': ['1'],
-    'Density (g/cm^3)': [''],
+    chem_name: ['Ag'],
+    thick_name: ['1'],
+    density_name: [''],
 })
 
 col_3 = 'three columns'
@@ -240,7 +249,7 @@ is currently supported and more evaluated databases will be added in the future.
             ]
         ),
 
-        # Debug region
+        # Stack display
         html.Hr(),
         html.Div(
             [
@@ -273,9 +282,9 @@ def show_range_table(slider, distance):
     tof_1 = round(ev_to_s(array=e_min, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
     tof_2 = round(ev_to_s(array=e_max, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
     _df_range = pd.DataFrame({
-        'Energy (eV)': [e_min, e_max],
-        'Wavelength (\u212B)': [lambda_1, lambda_2],
-        'Time-of-flight (\u03BCs)': [tof_1, tof_2],
+        energy_name: [e_min, e_max],
+        wave_name: [lambda_1, lambda_2],
+        tof_name: [tof_1, tof_2],
     })
     return _df_range.to_dict('records')
 
@@ -295,16 +304,16 @@ def add_del_row(n_add, n_del, sample_tb_rows):
     if n_del is None:
         n_del = 0
     df_sample_tb = pd.DataFrame(sample_tb_rows)
-    if 'Chemical formula' not in df_sample_tb.columns:
-        df_sample_tb['Chemical formula'] = ['']
-    if 'Thickness (mm)' not in df_sample_tb.columns:
-        df_sample_tb['Thickness (mm)'] = ['']
-    if 'Density (g/cm^3)' not in df_sample_tb.columns:
-        df_sample_tb['Density (g/cm^3)'] = ['']
-    n_layer = len(df_sample_tb['Chemical formula'])
-    _formula_list = list(df_sample_tb['Chemical formula'])
-    _thickness_list = list(df_sample_tb['Thickness (mm)'])
-    _density_list = list(df_sample_tb['Density (g/cm^3)'])
+    if chem_name not in df_sample_tb.columns:
+        df_sample_tb[chem_name] = ['']
+    if thick_name not in df_sample_tb.columns:
+        df_sample_tb[thick_name] = ['']
+    if density_name not in df_sample_tb.columns:
+        df_sample_tb[density_name] = ['']
+    n_layer = len(df_sample_tb[chem_name])
+    _formula_list = list(df_sample_tb[chem_name])
+    _thickness_list = list(df_sample_tb[thick_name])
+    _density_list = list(df_sample_tb[density_name])
     n_row = n_add - n_del + 1
     if n_row > n_layer:
         _formula_list.append('')
@@ -315,9 +324,9 @@ def add_del_row(n_add, n_del, sample_tb_rows):
         _thickness_list.pop()
         _density_list.pop()
     _df_sample = pd.DataFrame({
-        'Chemical formula': _formula_list,
-        'Thickness (mm)': _thickness_list,
-        'Density (g/cm^3)': _density_list,
+        chem_name: _formula_list,
+        thick_name: _thickness_list,
+        density_name: _density_list,
     })
     return _df_sample.to_dict('records')
 
@@ -421,8 +430,8 @@ def export(n_export_to_clipboard,
            sample_tb_rows
            ):
     df_range_tb = pd.DataFrame(range_tb_rows)
-    e_min = df_range_tb['Energy (eV)'][0]
-    e_max = df_range_tb['Energy (eV)'][1]
+    e_min = df_range_tb[energy_name][0]
+    e_max = df_range_tb[energy_name][1]
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
     df_sample_tb = pd.DataFrame(sample_tb_rows)
     o_reso = unpack_tb_df_and_add_layer(o_reso=o_reso,
@@ -438,7 +447,7 @@ def export(n_export_to_clipboard,
                       all_elements=True,
                       all_isotopes=show_iso,
                       source_to_detector_m=distance_m)
-        return html.P('Export done.', style={'marginBottom': 10, 'marginTop': 5})
+        return html.P('Data copied.', style={'marginBottom': 10, 'marginTop': 5})
 
 
 @app.callback(
@@ -501,34 +510,46 @@ def calculate_transmission_cg1d(n_clicks, y_type, sample_tb_rows):
         State('sample_table', 'rows'),
     ])
 def show_stack(n_clicks, sample_tb_rows):
-    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
-    df_sample_tb = pd.DataFrame(sample_tb_rows)
-    o_reso = unpack_tb_df_and_add_layer(o_reso=o_reso,
-                                        sample_tb_df=df_sample_tb)
-    o_stack = o_reso.stack
-    pprint.pprint(o_stack)
-    # stack_str = pprint.pformat(o_stack)
     if n_clicks is not None:
+        o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
+        df_sample_tb = pd.DataFrame(sample_tb_rows)
+        o_reso = unpack_tb_df_and_add_layer(o_reso=o_reso,
+                                            sample_tb_df=df_sample_tb)
+        o_stack = o_reso.stack
+        pprint.pprint(o_stack)
+        # stack_str = pprint.pformat(o_stack)
         div_list = [html.H4('Stack info'),
                     # html.P("Stack: {}".format(o_stack)),
                     ]
         layers = list(o_stack.keys())
+        layer_dict = {}
         for l, layer in enumerate(layers):
             elements_in_current_layer = o_stack[layer]['elements']
             l_str = str(l + 1)
             current_layer_list = [
                 html.P("Layer {}: {}".format(l_str, layer)),
-                html.P("Thickness: {} {}".format(o_stack[layer]['thickness']['value'],
-                                                 o_stack[layer]['thickness']['units'])),
-                html.P("Density: {} {}".format(o_stack[layer]['density']['value'],
-                                               o_stack[layer]['density']['units'])),
             ]
+            # layer_dict['Layer ' + l_str] = layer
+            layer_dict[thick_name] = o_stack[layer]['thickness']['value']
+            layer_dict[density_name] = o_stack[layer]['density']['value']
+            # layer_dict['Elements'] = elements_in_current_layer
+            _df_layer = pd.DataFrame([layer_dict])
+            current_layer_list.append(dt.DataTable(rows=_df_layer.to_dict('records'),
+                                                   # optional - sets the order of columns
+                                                   columns=_df_layer.columns,
+                                                   editable=False,
+                                                   row_selectable=False,
+                                                   filterable=False,
+                                                   sortable=False,
+                                                   # id='sample_table'
+                                                   ))
+
             for e, ele in enumerate(elements_in_current_layer):
                 _iso_list = o_stack[layer][ele]['isotopes']['list']
                 _iso_ratios = o_stack[layer][ele]['isotopes']['isotopic_ratio']
-                current_layer_list.append(html.P("Element: {}".format(ele)))
-                current_layer_list.append(html.P("Isotopes: {}".format(_iso_list)))
-                current_layer_list.append(html.P("Isotopic ratios: {}".format(_iso_ratios)))
+                # current_layer_list.append(html.H6("Element: {}".format(ele)))
+                # current_layer_list.append(html.P("Isotopes: "))
+                # iso_dict = {ele_name: ele}
                 iso_dict = {}
                 for i, iso in enumerate(_iso_list):
                     iso_dict[iso] = _iso_ratios[i]
