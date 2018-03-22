@@ -14,6 +14,7 @@ from scipy.interpolate import interp1d
 from compute import init_reso, load_beam_shape, unpack_tb_df_and_add_layer
 import pandas as pd
 import numpy as np
+import pprint
 
 # Setup app
 server = Flask(__name__)
@@ -29,8 +30,8 @@ df_range = pd.DataFrame({
 })
 
 df_sample = pd.DataFrame({
-    'Chemical formula': [''],
-    'Thickness (mm)': [''],
+    'Chemical formula': ['Ag'],
+    'Thickness (mm)': ['1'],
     'Density (g/cm^3)': [''],
 })
 
@@ -86,7 +87,7 @@ is currently supported and more evaluated databases will be added in the future.
                             allowCross=False,
                             dots=False,
                             step=0.01,
-                            # updatemode='drag'
+                            updatemode='drag',
                             marks={i: '{} eV'.format(pow(10, i)) for i in range(-5, 7, 1)},
                             className='ten columns offset-by-one',
                         ),
@@ -228,13 +229,13 @@ is currently supported and more evaluated databases will be added in the future.
                                 dcc.Checklist(id='show_iso',
                                               options=[{'value': True}], values=[],
                                               ),
-                                html.Button('Export to clipboard', id='button_export'),
                             ], className=col_3
                         ),
                     ], className='row'
                 ),
                 # Plot
                 html.Div(id='plot'),
+                html.Button('Export to clipboard', id='button_export'),
                 html.Div(id='export_done'),
             ]
         ),
@@ -505,21 +506,44 @@ def show_stack(n_clicks, sample_tb_rows):
     o_reso = unpack_tb_df_and_add_layer(o_reso=o_reso,
                                         sample_tb_df=df_sample_tb)
     o_stack = o_reso.stack
+    pprint.pprint(o_stack)
+    # stack_str = pprint.pformat(o_stack)
     if n_clicks is not None:
         div_list = [html.H4('Stack info'),
-                    html.P("Stack: {}".format(o_stack))]
+                    # html.P("Stack: {}".format(o_stack)),
+                    ]
         layers = list(o_stack.keys())
-        for i, each_layer in enumerate(layers):
-            elements_in_current_layer = o_stack[each_layer]['elements']
-            current_div = html.Div(
-                [
-                    html.P("Layer {}: {}".format(i + 1, each_layer)),
-                    html.P("Thickness: {} {}".format(o_stack[each_layer]['thickness']['value'], o_stack[each_layer]['thickness']['units'])),
-                    html.P("Density: {} {}".format(o_stack[each_layer]['density']['value'], o_stack[each_layer]['density']['units'])),
-                    html.P("Elements: {}".format(elements_in_current_layer)),
-                ], className='row', id='layer_' + each_layer,
-            )
-            div_list.append(current_div)
+        for l, layer in enumerate(layers):
+            elements_in_current_layer = o_stack[layer]['elements']
+            l_str = str(l + 1)
+            current_layer_list = [
+                html.P("Layer {}: {}".format(l_str, layer)),
+                html.P("Thickness: {} {}".format(o_stack[layer]['thickness']['value'],
+                                                 o_stack[layer]['thickness']['units'])),
+                html.P("Density: {} {}".format(o_stack[layer]['density']['value'],
+                                               o_stack[layer]['density']['units'])),
+            ]
+            for e, ele in enumerate(elements_in_current_layer):
+                _iso_list = o_stack[layer][ele]['isotopes']['list']
+                _iso_ratios = o_stack[layer][ele]['isotopes']['isotopic_ratio']
+                current_layer_list.append(html.P("Element: {}".format(ele)))
+                current_layer_list.append(html.P("Isotopes: {}".format(_iso_list)))
+                current_layer_list.append(html.P("Isotopic ratios: {}".format(_iso_ratios)))
+                iso_dict = {}
+                for i, iso in enumerate(_iso_list):
+                    iso_dict[iso] = _iso_ratios[i]
+                _df_iso = pd.DataFrame([iso_dict])
+                current_layer_list.append(dt.DataTable(rows=_df_iso.to_dict('records'),
+                                                       # optional - sets the order of columns
+                                                       columns=_df_iso.columns,
+                                                       editable=False,
+                                                       row_selectable=False,
+                                                       filterable=False,
+                                                       sortable=False,
+                                                       # id='sample_table'
+                                                       ))
+
+            div_list.append(html.Div(current_layer_list))
         return div_list
 
 
