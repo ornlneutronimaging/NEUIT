@@ -1,17 +1,6 @@
-import glob
-import os
-import time
-import io
-import base64
-import pandas as pd
-import numpy as np
-
-import matplotlib.pyplot as plt
-from numpy import exp, cos, linspace
-
-from ImagingReso.resonance import Resonance
 import ImagingReso._utilities as ir_util
-from scipy.interpolate import interp1d
+import pandas as pd
+from ImagingReso.resonance import Resonance
 
 
 def init_reso(e_min, e_max, e_step):

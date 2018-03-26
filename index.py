@@ -1,7 +1,7 @@
-from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table_experiments as dt
+from dash.dependencies import Input, Output
 
 from app import app
 from apps import app1, app2
@@ -29,12 +29,12 @@ Web applications for **Neutron Imaging**.
         html.H6('Tools available:'),
         dcc.Link('1. Cold neutron transmission', href='/apps/cg1d'),
         html.Br(),
-        dcc.Link('2. Neutron resonances', href='/apps/venus'),
+        dcc.Link('2. Neutron resonance', href='/apps/venus'),
         dcc.Markdown('''
 #### Introduction
 
 Tools available here are build upon *[ImagingReso](http://imagingreso.readthedocs.io/en/latest/)*
-and using *[Dash](https://dash.plot.ly/)* as framework. 
+and using *[Dash](https://dash.plot.ly/)* framework. 
 
 *ImagingReso* is an open-source Python library that simulates the neutron
 resonance signal for neutron imaging measurements. By defining the sample
@@ -42,7 +42,7 @@ information such as density, thickness in the neutron path, and isotopic
 ratios of the elemental composition of the material, this package plots
 the expected resonance peaks for a selected neutron energy range.
 
-The energy dependent cross-section data used in this library are from
+The energy dependent cross-section data used are from
 [National Nuclear Data Center](http://www.nndc.bnl.gov/), a published
 online database. [Evaluated Nuclear Data File](http://www.nndc.bnl.gov/exfor/endf00.jsp)
 ([ENDF/B-VII.1](https://www.sciencedirect.com/science/article/pii/S009037521100113X)) 

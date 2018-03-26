@@ -1,19 +1,18 @@
 import os
+import pprint
 
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table_experiments as dt
+import numpy as np
+import pandas as pd
 from ImagingReso._utilities import ev_to_angstroms
 from ImagingReso._utilities import ev_to_s
 from ImagingReso.resonance import Resonance
 from dash.dependencies import Input, Output, State
-import dash_table_experiments as dt
 from scipy.interpolate import interp1d
 
 from _utilities import init_reso, load_beam_shape, unpack_tb_df_and_add_layer
-import pandas as pd
-import numpy as np
-import pprint
-
 from app import app
 
 energy_name = 'Energy (eV)'
@@ -38,14 +37,78 @@ df_sample = pd.DataFrame({
 
 col_3 = 'three columns'
 col_6 = 'six columns'
-# Create app layout
+
+# Plot control buttons
+plot_option_div = html.Div(
+    [
+        html.Hr(),
+        html.H3('Result'),
+        html.H5('Plot:'),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.P('X options: '),
+                        dcc.RadioItems(id='x_type',
+                                       options=[
+                                           {'label': 'Energy (eV)', 'value': 'energy'},
+                                           {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
+                                           {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
+                                       ],
+                                       value='energy',
+                                       )
+                    ], className=col_3
+                ),
+                html.Div(
+                    [
+                        html.P('Y options: '),
+                        dcc.RadioItems(id='y_type',
+                                       options=[
+                                           {'label': 'Attenuation', 'value': 'attenuation'},
+                                           {'label': 'Transmission', 'value': 'transmission'},
+                                           {'label': 'Total cross-section (barn)', 'value': 'sigma'}
+                                       ],
+                                       value='attenuation',
+                                       )
+                    ], className=col_3
+                ),
+                html.Div(
+                    [
+                        html.P('Scale options: '),
+                        dcc.RadioItems(id='plot_scale',
+                                       options=[
+                                           {'label': 'Linear', 'value': 'linear'},
+                                           {'label': 'Log x', 'value': 'logx'},
+                                       ],
+                                       value='linear',
+                                       )
+                    ], className=col_3
+                ),
+                html.Div(
+                    [
+                        html.P('Show options: '),
+                        dcc.Checklist(id='show_opt',
+                                      options=[
+                                          {'label': 'Total', 'value': 'total'},
+                                          {'label': 'Layer', 'value': 'layer'},
+                                          {'label': 'Element', 'value': 'ele'},
+                                          {'label': 'Isotope', 'value': 'iso'},
+                                      ], values=['ele'],
+                                      ),
+                    ], className=col_3
+                ),
+            ], className='row'
+        ),
+    ]
+),
+
+# Create app2 layout
 layout = html.Div(
     [
         dcc.Link('Home', href='/'),
         html.Br(),
         dcc.Link('Cold neutron transmission', href='/apps/cg1d'),
-        html.H1('Neutron resonances'),
-        html.H3('Energy parameters'),
+        html.H1('Neutron resonance'),
         # Global parameters
         html.Div(
             [
@@ -120,12 +183,13 @@ layout = html.Div(
                                                   inputmode='numeric',
                                                   step=0.01,
                                                   className='nine columns'),
-                                        html.P('(m)', className='one column'),
+                                        html.P('(m)', className='one column',
+                                               style={'marginBottom': 10, 'marginTop': 5}),
                                     ], className='row'
                                 ),
                                 dcc.Markdown(
                                     '''NOTE: Please ignore the above input field if **NOT** interested in display of time-of-flight (TOF).'''),
-                            ], className='six columns',
+                            ], className='seven columns',
                         ),
                     ], className='row',
                 ),
@@ -158,76 +222,11 @@ layout = html.Div(
         ]
         ),
 
-        # Plot control buttons
-        html.Div(
-            [
-                html.H5('Plot options:'),
-                html.Div(
-                    [
-                        html.Div(
-                            [
-                                html.P('X options: '),
-                                dcc.RadioItems(id='x_type',
-                                               options=[
-                                                   {'label': 'Energy (eV)', 'value': 'energy'},
-                                                   {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
-                                                   {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
-                                               ],
-                                               value='energy',
-                                               )
-                            ], className=col_3
-                        ),
-                        html.Div(
-                            [
-                                html.P('Y options: '),
-                                dcc.RadioItems(id='y_type',
-                                               options=[
-                                                   {'label': 'Attenuation', 'value': 'attenuation'},
-                                                   {'label': 'Transmission', 'value': 'transmission'},
-                                                   {'label': 'Total cross-section (barn)', 'value': 'sigma'}
-                                               ],
-                                               value='attenuation',
-                                               )
-                            ], className=col_3
-                        ),
-                        html.Div(
-                            [
-                                html.P('Scale options: '),
-                                dcc.RadioItems(id='plot_scale',
-                                               options=[
-                                                   {'label': 'Linear', 'value': 'linear'},
-                                                   {'label': 'Log x', 'value': 'logx'},
-                                                   {'label': 'Log y', 'value': 'logy'},
-                                                   {'label': 'Loglog', 'value': 'loglog'},
-                                               ],
-                                               value='linear',
-                                               )
-                            ], className=col_3
-                        ),
-                        html.Div(
-                            [
-                                html.P('Show options: '),
-                                dcc.Checklist(id='show_opt',
-                                              options=[
-                                                  {'label': 'Total', 'value': 'total'},
-                                                  {'label': 'Layer', 'value': 'layer'},
-                                                  {'label': 'Element', 'value': 'ele'},
-                                                  {'label': 'Isotope', 'value': 'iso'},
-                                              ], values=['ele'],
-                                              ),
-                            ], className=col_3
-                        ),
-                    ], className='row'
-                ),
-                # Plot
-                html.Div(id='plot'),
-                html.Button('Export plot data to clipboard', id='button_export'),
-                html.Div(id='export_done'),
-            ]
-        ),
+        # Plot
+        html.Div(id='plot_options'),
+        html.Div(id='plot'),
 
         # Stack display
-        html.Hr(),
         html.Div(
             [
                 # Transmission at CG-1D
@@ -310,20 +309,32 @@ def add_del_row(n_add, n_del, sample_tb_rows):
     [
         Input('y_type', 'value'),
     ])
-def disable_logx_when_not_plot_sigma(y_type):
-    if y_type != 'sigma':
-        options = [
-            {'label': 'Linear', 'value': 'linear'},
-            {'label': 'Log x', 'value': 'logx'},
-        ]
-    else:
+def enable_logx_when_not_plot_sigma(y_type):
+    if y_type == 'sigma':
         options = [
             {'label': 'Linear', 'value': 'linear'},
             {'label': 'Log x', 'value': 'logx'},
             {'label': 'Log y', 'value': 'logy'},
             {'label': 'Loglog', 'value': 'loglog'},
         ]
+    else:
+        options = [
+            {'label': 'Linear', 'value': 'linear'},
+            {'label': 'Log x', 'value': 'logx'},
+        ]
     return options
+
+
+@app.callback(
+    Output('plot_options', 'children'),
+    [
+        Input('button_submit', 'n_clicks'),
+    ])
+def show_plot_options(n_submit):
+    if n_submit is not None:
+        return plot_option_div
+    else:
+        return html.Div(plot_option_div, style={'display': 'none'})
 
 
 @app.callback(
@@ -392,7 +403,11 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         plotly_fig.layout.showlegend = True
         return html.Div(
             [
-                dcc.Graph(id='reso_plot', figure=plotly_fig)
+                dcc.Graph(id='reso_plot', figure=plotly_fig),
+                html.Div([
+                    html.Button('Export plot data to clipboard', id='button_export'),
+                    html.Div(id='export_done'),
+                ], className='row'),
             ]
         )
 
@@ -423,7 +438,6 @@ def export(n_export_to_clipboard,
     df_sample_tb = pd.DataFrame(sample_tb_rows)
     o_reso = unpack_tb_df_and_add_layer(o_reso=o_reso,
                                         sample_tb_df=df_sample_tb)
-
     show_total = False
     show_layer = False
     show_ele = False
@@ -446,7 +460,12 @@ def export(n_export_to_clipboard,
                       all_elements=show_ele,
                       all_isotopes=show_iso,
                       source_to_detector_m=distance_m)
-        return html.P('Data copied.', style={'marginBottom': 10, 'marginTop': 5})
+        if n_export_to_clipboard == 1:
+            return html.P('Data copied {} time.'.format(n_export_to_clipboard),
+                          style={'marginBottom': 10, 'marginTop': 5})
+        else:
+            return html.P('Data copied {} times.'.format(n_export_to_clipboard),
+                          style={'marginBottom': 10, 'marginTop': 5})
 
 
 @app.callback(

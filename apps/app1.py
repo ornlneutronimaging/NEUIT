@@ -1,16 +1,15 @@
 import os
+import pprint
 
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table_experiments as dt
+import pandas as pd
 from ImagingReso.resonance import Resonance
 from dash.dependencies import Input, Output, State
-import dash_table_experiments as dt
 from scipy.interpolate import interp1d
 
 from _utilities import init_reso, load_beam_shape, unpack_tb_df_and_add_layer
-import pandas as pd
-import pprint
-
 from app import app
 
 energy_name = 'Energy (eV)'
@@ -35,7 +34,7 @@ layout = html.Div(
     [
         dcc.Link('Home', href='/'),
         html.Br(),
-        dcc.Link('Neutron resonances', href='/apps/venus'),
+        dcc.Link('Neutron resonance', href='/apps/venus'),
         html.H1('Cold neutron transmission'),
         html.H3('Sample info'),
 
