@@ -8,12 +8,16 @@ from ImagingReso._utilities import ev_to_s
 from dash.dependencies import Input, Output, State
 
 from _utilities import init_reso_from_tb, unpack_sample_tb_df_and_add_layer, \
-    add_del_tb_rows, form_stack_table, plot_option_div, calculate_transmission_cg1d
+    add_del_tb_rows, form_stack_table, plot_option_div, calculate_transmission_cg1d, classify_neutron
 from app import app
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
+speed_name = 'Speed (m/s)'
 tof_name = 'Time-of-flight (\u03BCs)'
+class_name = 'Neutron classification'
+range_tb_header = [energy_name, wave_name, speed_name, tof_name, class_name]
+
 chem_name = 'Chemical formula'
 thick_name = 'Thickness (mm)'
 density_name = 'Density (g/cm\u00B3)'
@@ -65,19 +69,7 @@ layout = html.Div(
                 ),
                 html.Br(),
                 # html.H6('Range selected:'),
-                html.Div([
-                    dt.DataTable(
-                        rows=df_range.to_dict('records'),
-                        # optional - sets the order of columns
-                        columns=[energy_name, wave_name, tof_name],
-                        # sortColumn=False,
-                        editable=False,
-                        row_selectable=False,
-                        filterable=False,
-                        sortable=True,
-                        id='range_table'
-                    ),
-                ]),
+                html.Div(id='range_table_div'),
                 html.Div(
                     [
                         # Step input
@@ -174,7 +166,7 @@ layout = html.Div(
 
 
 @app.callback(
-    Output('range_table', 'rows'),
+    Output('range_table', 'children'),
     [
         Input('e_range_slider', 'value'),
         Input('distance', 'value'),
@@ -187,12 +179,26 @@ def show_range_table(slider, distance):
     lambda_2 = round(ev_to_angstroms(array=e_max), 4)
     tof_1 = round(ev_to_s(array=e_min, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
     tof_2 = round(ev_to_s(array=e_max, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
+    v_1 = round(1e6 * distance / tof_1, 2)
+    v_2 = round(1e6 * distance / tof_2, 2)
+    class_1 = classify_neutron(v_1)
+    class_2 = classify_neutron(v_2)
     _df_range = pd.DataFrame({
         energy_name: [e_min, e_max],
         wave_name: [lambda_1, lambda_2],
+        speed_name: [v_1, v_2],
         tof_name: [tof_1, tof_2],
+        class_name: [class_1, class_2],
     })
-    return _df_range.to_dict('records')
+
+    return dt.DataTable(
+        rows=_df_range.to_dict('records'),
+        columns=range_tb_header,
+        editable=False,
+        row_selectable=False,
+        filterable=False,
+        sortable=True,
+        id='range_table')
 
 
 @app.callback(
@@ -374,9 +380,10 @@ def export(n_export_to_clipboard,
     [
         State('y_type', 'value'),
         State('sample_table', 'rows'),
+        State('app1_iso_table', 'rows'),
     ])
-def calculate_transmission(n_clicks, y_type, sample_tb_rows):
-    total_trans = calculate_transmission_cg1d(sample_tb_rows)
+def calculate_transmission(n_clicks, y_type, sample_tb_rows, iso_tb_rows):
+    total_trans = calculate_transmission_cg1d(sample_tb_rows, iso_tb_rows)
     if n_clicks is not None:
         if y_type == 'transmission':
             return html.Div(

@@ -24,6 +24,24 @@ col_3 = 'three columns'
 col_6 = 'six columns'
 
 
+def classify_neutron(speed):
+    """
+
+    :param speed: m/s
+    :return:
+    """
+    if speed <= 6.9:
+        return 'Ultra-cold'
+    elif 6.9 < speed <= 437:
+        return 'Cold'
+    elif 437 < speed <= 2187:
+        return 'Thermal'
+    elif 2187 < speed < 13832:
+        return 'Epithermal'
+    else:
+        return 'Epithermal'
+
+
 def init_reso_from_tb(range_tb_rows, e_step):
     df_range_tb = pd.DataFrame(range_tb_rows)
     e_min = df_range_tb[energy_name][0]
