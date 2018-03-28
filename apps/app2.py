@@ -69,8 +69,6 @@ layout = html.Div(
                     ], className='row'
                 ),
                 html.Br(),
-                # html.H6('Range selected:'),
-                # html.Div(id='range_table_div'),
                 html.Div([
                     dt.DataTable(
                         rows=df_range.to_dict('records'),

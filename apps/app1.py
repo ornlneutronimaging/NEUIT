@@ -4,7 +4,7 @@ import dash_table_experiments as dt
 import pandas as pd
 from dash.dependencies import Input, Output, State
 
-from _utilities import add_del_tb_rows, form_stack_table, form_iso_table, calculate_transmission_cg1d
+from _utilities import add_del_tb_rows, form_stack_table, form_iso_table, calculate_transmission_cg1d, iso_table_header
 from app import app
 
 energy_name = 'Energy (eV)'
@@ -103,9 +103,15 @@ def show_iso_table(iso_check, sample_tb_rows):
     if not iso_check:
         return html.Div(dt.DataTable(rows=[{}], id='app1_iso_table'), style={'display': 'none'})
     else:
-
-        iso_table = form_iso_table(sample_tb_rows)
-        return iso_table
+        _df = form_iso_table(sample_tb_rows)
+        return dt.DataTable(rows=_df.to_dict('records'),
+                            columns=iso_table_header,
+                            editable=True,
+                            # row_selectable=True,
+                            filterable=True,
+                            sortable=True,
+                            id='app1_iso_table'
+                            )
 
 
 @app.callback(

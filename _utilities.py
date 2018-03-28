@@ -80,10 +80,10 @@ def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
 
 
 def unpack_iso_tb_df_and_update(o_reso, iso_tb_df):
-    if layer_name in iso_tb_df.columns:
-        print(iso_tb_df[layer_name])
+    if layer_name not in iso_tb_df.columns:
+        print('No isotopic ratio input')
     else:
-        print('000000000000')
+        print(set(iso_tb_df[layer_name]))
     return o_reso
 
 
@@ -125,9 +125,9 @@ def calculate_transmission_cg1d(sample_tb_rows, iso_tb_rows):
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
     df = load_beam_shape(_path_to_beam_shape)
     o_reso = Resonance(energy_min=0.00025, energy_max=0.12525, energy_step=0.000625)
+
     df_sample_tb = pd.DataFrame(sample_tb_rows)
     df_iso_tb = pd.DataFrame(iso_tb_rows)
-
     o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
     o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb)
 
@@ -151,7 +151,7 @@ def form_stack_table(sample_tb_rows):
     o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso,
                                                sample_tb_df=df_sample_tb)
     o_stack = o_reso.stack
-    pprint.pprint(o_stack)
+    # pprint.pprint(o_stack)
     div_list = []
     layers = list(o_stack.keys())
     layer_dict = {}
@@ -225,14 +225,8 @@ def form_iso_table(sample_tb_rows):
              'Isotopic ratio': iso_ratio_list,
              }
     _df = pd.DataFrame(_dict)
-    iso_table = dt.DataTable(rows=_df.to_dict('records'),
-                             columns=iso_table_header,
-                             editable=True,
-                             # row_selectable=True,
-                             filterable=True,
-                             sortable=True,
-                             )
-    return iso_table
+
+    return _df
 
 
 # Plot control buttons
