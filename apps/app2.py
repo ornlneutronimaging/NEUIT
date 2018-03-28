@@ -8,7 +8,8 @@ from ImagingReso._utilities import ev_to_s
 from dash.dependencies import Input, Output, State
 
 from _utilities import init_reso_from_tb, unpack_sample_tb_df_and_add_layer, \
-    add_del_tb_rows, form_stack_table, plot_option_div, calculate_transmission_cg1d, classify_neutron
+    add_del_tb_rows, form_stack_table, plot_option_div, \
+    calculate_transmission_cg1d, classify_neutron, form_iso_table
 from app import app
 
 energy_name = 'Energy (eV)'
@@ -69,7 +70,19 @@ layout = html.Div(
                 ),
                 html.Br(),
                 # html.H6('Range selected:'),
-                html.Div(id='range_table_div'),
+                # html.Div(id='range_table_div'),
+                html.Div([
+                    dt.DataTable(
+                        rows=df_range.to_dict('records'),
+                        # optional - sets the order of columns
+                        columns=range_tb_header,
+                        editable=False,
+                        row_selectable=False,
+                        filterable=False,
+                        sortable=True,
+                        id='range_table'
+                    ),
+                ]),
                 html.Div(
                     [
                         # Step input
@@ -144,6 +157,12 @@ layout = html.Div(
             dcc.Markdown(
                 '''NOTE: density input can be omitted (leave as blank) only if the input formula is single element,
                  density available [here](http://periodictable.com/Properties/A/Density.al.html) will be used.'''),
+            html.Div(id='iso_input'),
+            dcc.Checklist(id='iso_check',
+                          options=[
+                              {'label': 'Modify isotopic ratios', 'value': True},
+                          ], values=[],
+                          ),
             html.Button('Submit', id='button_submit'),
         ]
         ),
@@ -166,7 +185,7 @@ layout = html.Div(
 
 
 @app.callback(
-    Output('range_table', 'children'),
+    Output('range_table', 'rows'),
     [
         Input('e_range_slider', 'value'),
         Input('distance', 'value'),
@@ -190,15 +209,15 @@ def show_range_table(slider, distance):
         tof_name: [tof_1, tof_2],
         class_name: [class_1, class_2],
     })
-
-    return dt.DataTable(
-        rows=_df_range.to_dict('records'),
-        columns=range_tb_header,
-        editable=False,
-        row_selectable=False,
-        filterable=False,
-        sortable=True,
-        id='range_table')
+    return _df_range.to_dict('records')
+    # return dt.DataTable(
+    #     rows=_df_range.to_dict('records'),
+    #     columns=range_tb_header,
+    #     editable=False,
+    #     row_selectable=False,
+    #     filterable=False,
+    #     sortable=True,
+    #     id='range_table')
 
 
 @app.callback(
@@ -213,6 +232,21 @@ def show_range_table(slider, distance):
 def add_del_row(n_add, n_del, sample_tb_rows):
     _df_sample = add_del_tb_rows(n_add, n_del, sample_tb_rows)
     return _df_sample.to_dict('records')
+
+
+@app.callback(
+    Output('iso_input', 'children'),
+    [
+        Input('iso_check', 'values'),
+        Input('sample_table', 'rows'),
+    ])
+def show_iso_table(iso_check, sample_tb_rows):
+    if not iso_check:
+        return html.Div(dt.DataTable(rows=[{}], id='iso_table'), style={'display': 'none'})
+    else:
+
+        iso_table = form_iso_table(sample_tb_rows)
+        return iso_table
 
 
 @app.callback(
@@ -380,7 +414,7 @@ def export(n_export_to_clipboard,
     [
         State('y_type', 'value'),
         State('sample_table', 'rows'),
-        State('app1_iso_table', 'rows'),
+        State('iso_table', 'rows'),
     ])
 def calculate_transmission(n_clicks, y_type, sample_tb_rows, iso_tb_rows):
     total_trans = calculate_transmission_cg1d(sample_tb_rows, iso_tb_rows)
