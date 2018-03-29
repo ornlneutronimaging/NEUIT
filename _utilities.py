@@ -48,7 +48,6 @@ def classify_neutron(energy_ev):
         return 'Ultra-fast'
 
 
-
 def init_reso_from_tb(range_tb_rows, e_step):
     df_range_tb = pd.DataFrame(range_tb_rows)
     e_min = df_range_tb[energy_name][0]
