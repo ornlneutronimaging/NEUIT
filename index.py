@@ -67,8 +67,10 @@ def display_page(pathname):
         return app1.layout
     elif pathname == '/apps/venus':
         return app2.layout
-    else:
+    elif pathname == '/':
         return index_page
+    else:
+        return '404: URL not found'
 
 
 if __name__ == '__main__':
