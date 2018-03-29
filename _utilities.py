@@ -83,7 +83,17 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df):
     if layer_name not in iso_tb_df.columns:
         print('No isotopic ratio input')
     else:
-        print(set(iso_tb_df[layer_name]))
+        layer_list = list(o_reso.stack.keys())
+        for each_layer in layer_list:
+            element_list = o_reso.stack[each_layer]['elements']
+            for each_ele in element_list:
+                _ele_ratio_list = []
+                for i in range(len(iso_tb_df)):
+                    if each_layer == iso_tb_df[layer_name][i] and each_ele == iso_tb_df[ele_name][i]:
+                        _ele_ratio_list.append(float(iso_tb_df[iso_ratio_name][i]))
+                # print(each_ele)
+                # print(_ele_ratio_list)
+                o_reso.set_isotopic_ratio(compound=each_layer, element=each_ele, list_ratio=_ele_ratio_list)
     return o_reso
 
 
@@ -120,7 +130,7 @@ def add_del_tb_rows(n_add, n_del, sample_tb_rows):
     return _df_sample
 
 
-def calculate_transmission_cg1d(sample_tb_rows, iso_tb_rows):
+def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
     df = load_beam_shape(_path_to_beam_shape)
@@ -142,16 +152,8 @@ def calculate_transmission_cg1d(sample_tb_rows, iso_tb_rows):
     trans_flux = trans * df['flux']
     _total_trans = sum(trans_flux) / sum(df['flux']) * 100
     total_trans = round(_total_trans, 3)
-    return total_trans
 
-
-def form_stack_table(sample_tb_rows):
-    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
-    df_sample_tb = pd.DataFrame(sample_tb_rows)
-    o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso,
-                                               sample_tb_df=df_sample_tb)
     o_stack = o_reso.stack
-    # pprint.pprint(o_stack)
     div_list = []
     layers = list(o_stack.keys())
     layer_dict = {}
@@ -196,7 +198,66 @@ def form_stack_table(sample_tb_rows):
 
         div_list.append(html.Div(current_layer_list))
         div_list.append(html.Br())
-    return div_list
+
+    return total_trans, div_list
+
+
+# def form_stack_table(sample_tb_rows, iso_tb_rows):
+#     o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
+#
+#     df_sample_tb = pd.DataFrame(sample_tb_rows)
+#     df_iso_tb = pd.DataFrame(iso_tb_rows)
+#
+#     o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
+#     o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb)
+#     # pprint.pprint(__o_reso.stack)
+#
+#     o_stack = o_reso.stack
+#     div_list = []
+#     layers = list(o_stack.keys())
+#     layer_dict = {}
+#     for l, layer in enumerate(layers):
+#         elements_in_current_layer = o_stack[layer]['elements']
+#         l_str = str(l + 1)
+#         current_layer_list = [
+#             html.P("Layer {}: {}".format(l_str, layer)),
+#         ]
+#         layer_dict[thick_name] = o_stack[layer]['thickness']['value']
+#         layer_dict[density_name] = o_stack[layer]['density']['value']
+#         _df_layer = pd.DataFrame([layer_dict])
+#         current_layer_list.append(
+#             dt.DataTable(rows=_df_layer.to_dict('records'),
+#                          columns=[thick_name, density_name],
+#                          editable=False,
+#                          row_selectable=False,
+#                          filterable=False,
+#                          sortable=False,
+#                          # id='sample_table'
+#                          ))
+#
+#         for e, ele in enumerate(elements_in_current_layer):
+#             _iso_list = o_stack[layer][ele]['isotopes']['list']
+#             _iso_ratios = o_stack[layer][ele]['isotopes']['isotopic_ratio']
+#             # current_layer_list.append(html.H6("Element: {}".format(ele)))
+#             # current_layer_list.append(html.P("Isotopes: "))
+#             # iso_dict = {ele_name: ele}
+#             iso_dict = {}
+#             for i, iso in enumerate(_iso_list):
+#                 iso_dict[iso] = _iso_ratios[i]
+#             _df_iso = pd.DataFrame([iso_dict])
+#             current_layer_list.append(
+#                 dt.DataTable(rows=_df_iso.to_dict('records'),
+#                              columns=_df_iso.columns,
+#                              editable=False,
+#                              row_selectable=False,
+#                              filterable=False,
+#                              sortable=False,
+#                              # id='sample_table'
+#                              ))
+#
+#         div_list.append(html.Div(current_layer_list))
+#         div_list.append(html.Br())
+#     return div_list
 
 
 def form_iso_table(sample_tb_rows):

@@ -4,7 +4,7 @@ import dash_table_experiments as dt
 import pandas as pd
 from dash.dependencies import Input, Output, State
 
-from _utilities import add_del_tb_rows, form_stack_table, form_iso_table, calculate_transmission_cg1d, iso_table_header
+from _utilities import add_del_tb_rows, form_iso_table, calculate_transmission_cg1d_and_form_stack_table, iso_table_header
 from app import app
 
 energy_name = 'Energy (eV)'
@@ -69,12 +69,6 @@ layout = html.Div(
 
         # Transmission at CG-1D
         html.Div(id='app1_result'),
-        # Stack display
-        html.Div(
-            [
-                html.Div(id='app1_stack'),
-            ],
-        ),
     ]
 )
 
@@ -123,9 +117,9 @@ def show_iso_table(iso_check, sample_tb_rows):
         State('app1_sample_table', 'rows'),
         State('app1_iso_table', 'rows'),
     ])
-def calculate_transmission(n_clicks, sample_tb_rows, iso_tb_rows):
-    total_trans = calculate_transmission_cg1d(sample_tb_rows, iso_tb_rows)
+def output(n_clicks, sample_tb_rows, iso_tb_rows):
     if n_clicks is not None:
+        total_trans, div_list = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows)
         return html.Div(
             [
                 html.Hr(),
@@ -134,19 +128,23 @@ def calculate_transmission(n_clicks, sample_tb_rows, iso_tb_rows):
                 html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(total_trans)),
                 html.H5('Attenuation:'),
                 html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(100 - total_trans)),
+                html.Div([html.H5('Sample stack:'), html.Div(div_list)])
             ]
         )
 
 
-@app.callback(
-    Output('app1_stack', 'children'),
-    [
-        Input('app1_button_submit', 'n_clicks'),
-    ],
-    [
-        State('app1_sample_table', 'rows'),
-    ])
-def show_stack(n_clicks, sample_tb_rows):
-    if n_clicks is not None:
-        div_list = form_stack_table(sample_tb_rows)
-        return html.Div([html.H5('Sample stack:'), html.Div(div_list)])
+# @app.callback(
+#     Output('app1_stack', 'children'),
+#     [
+#         Input('app1_button_submit', 'n_clicks'),
+#     ],
+#     [
+#         State('app1_sample_table', 'rows'),
+#         State('app1_iso_table', 'rows'),
+#     ])
+# def show_stack(n_clicks, sample_tb_rows, iso_tb_rows):
+#     # def show_stack(n_clicks, sample_tb_rows):
+#     if n_clicks is not None:
+#         # div_list = form_stack_table(sample_tb_rows)
+#         div_list = form_stack_table(sample_tb_rows, iso_tb_rows)
+#         return html.Div([html.H5('Sample stack:'), html.Div(div_list)])

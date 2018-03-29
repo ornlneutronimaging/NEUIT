@@ -8,8 +8,8 @@ from ImagingReso._utilities import ev_to_s
 from dash.dependencies import Input, Output, State
 
 from _utilities import init_reso_from_tb, unpack_sample_tb_df_and_add_layer, \
-    add_del_tb_rows, form_stack_table, plot_option_div, \
-    calculate_transmission_cg1d, classify_neutron, form_iso_table
+    add_del_tb_rows, plot_option_div, \
+    calculate_transmission_cg1d_and_form_stack_table, classify_neutron, form_iso_table, iso_table_header, unpack_iso_tb_df_and_update
 from app import app
 
 energy_name = 'Energy (eV)'
@@ -242,9 +242,15 @@ def show_iso_table(iso_check, sample_tb_rows):
     if not iso_check:
         return html.Div(dt.DataTable(rows=[{}], id='iso_table'), style={'display': 'none'})
     else:
-
-        iso_table = form_iso_table(sample_tb_rows)
-        return iso_table
+        _df = form_iso_table(sample_tb_rows)
+        return dt.DataTable(rows=_df.to_dict('records'),
+                            columns=iso_table_header,
+                            editable=True,
+                            # row_selectable=True,
+                            filterable=True,
+                            sortable=True,
+                            id='iso_table'
+                            )
 
 
 @app.callback(
@@ -294,16 +300,20 @@ def show_plot_options(n_submit):
         State('e_step', 'value'),
         State('distance', 'value'),
         State('sample_table', 'rows'),
+        State('iso_table', 'rows'),
     ])
 def plot(n_submit, y_type, x_type, plot_scale, show_opt,
          range_tb_rows, e_step, distance_m,
-         sample_tb_rows,
+         sample_tb_rows, iso_tb_rows
          ):
     if n_submit is not None:
         o_reso = init_reso_from_tb(range_tb_rows, e_step)
+
         df_sample_tb = pd.DataFrame(sample_tb_rows)
-        o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso,
-                                                   sample_tb_df=df_sample_tb)
+        df_iso_tb = pd.DataFrame(iso_tb_rows)
+        o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
+        o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb)
+
         if plot_scale == 'logx':
             _log_x = True
             _log_y = False
@@ -364,16 +374,20 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         State('e_step', 'value'),
         State('distance', 'value'),
         State('sample_table', 'rows'),
+        State('iso_table', 'rows'),
     ])
 def export(n_export_to_clipboard,
            y_type, x_type, show_opt,
            range_tb_rows, e_step, distance_m,
-           sample_tb_rows
+           sample_tb_rows, iso_tb_rows
            ):
     o_reso = init_reso_from_tb(range_tb_rows, e_step)
+
     df_sample_tb = pd.DataFrame(sample_tb_rows)
-    o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso,
-                                               sample_tb_df=df_sample_tb)
+    df_iso_tb = pd.DataFrame(iso_tb_rows)
+    o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
+    o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb)
+
     show_total = False
     show_layer = False
     show_ele = False
@@ -414,32 +428,21 @@ def export(n_export_to_clipboard,
         State('sample_table', 'rows'),
         State('iso_table', 'rows'),
     ])
-def calculate_transmission(n_clicks, y_type, sample_tb_rows, iso_tb_rows):
-    total_trans = calculate_transmission_cg1d(sample_tb_rows, iso_tb_rows)
+def output(n_clicks, y_type, sample_tb_rows, iso_tb_rows):
     if n_clicks is not None:
+        total_trans, div_list = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows)
         if y_type == 'transmission':
             return html.Div(
                 [
                     html.H5('Sample transmission:'),
                     html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(total_trans)),
+                    html.Div([html.H5('Sample stack:'), html.Div(div_list)])
                 ])
         else:
             return html.Div(
                 [
                     html.H5('Sample attenuation:'),
                     html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(100 - total_trans)),
+                    html.Div([html.H5('Sample stack:'), html.Div(div_list)])
                 ])
 
-
-@app.callback(
-    Output('stack', 'children'),
-    [
-        Input('button_submit', 'n_clicks'),
-    ],
-    [
-        State('sample_table', 'rows'),
-    ])
-def show_stack(n_clicks, sample_tb_rows):
-    if n_clicks is not None:
-        div_list = form_stack_table(sample_tb_rows)
-        return html.Div([html.H5('Sample stack:'), html.Div(div_list)])
