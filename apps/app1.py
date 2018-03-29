@@ -134,18 +134,3 @@ def output(n_clicks, sample_tb_rows, iso_tb_rows):
             ]
         )
 
-# @app.callback(
-#     Output('app1_stack', 'children'),
-#     [
-#         Input('app1_button_submit', 'n_clicks'),
-#     ],
-#     [
-#         State('app1_sample_table', 'rows'),
-#         State('app1_iso_table', 'rows'),
-#     ])
-# def show_stack(n_clicks, sample_tb_rows, iso_tb_rows):
-#     # def show_stack(n_clicks, sample_tb_rows):
-#     if n_clicks is not None:
-#         # div_list = form_stack_table(sample_tb_rows)
-#         div_list = form_stack_table(sample_tb_rows, iso_tb_rows)
-#         return html.Div([html.H5('Sample stack:'), html.Div(div_list)])

@@ -57,7 +57,6 @@ def init_reso_from_tb(range_tb_rows, e_step):
 
 
 def load_beam_shape(relative_path_to_beam_shape):
-    # _path_to_beam_shape = 'static/instrument_file/beam_shape_cg1d.txt'
     # Load beam shape from static
     df = pd.read_csv(relative_path_to_beam_shape, sep='\t', skiprows=0)
     df.columns = ['wavelength_A', 'flux']
@@ -97,8 +96,6 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df):
                 for i in range(len(iso_tb_df)):
                     if each_layer == iso_tb_df[layer_name][i] and each_ele == iso_tb_df[ele_name][i]:
                         _ele_ratio_list.append(float(iso_tb_df[iso_ratio_name][i]))
-                # print(each_ele)
-                # print(_ele_ratio_list)
                 o_reso.set_isotopic_ratio(compound=each_layer, element=each_ele, list_ratio=_ele_ratio_list)
     return o_reso
 
@@ -185,9 +182,6 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
         for e, ele in enumerate(elements_in_current_layer):
             _iso_list = o_stack[layer][ele]['isotopes']['list']
             _iso_ratios = o_stack[layer][ele]['isotopes']['isotopic_ratio']
-            # current_layer_list.append(html.H6("Element: {}".format(ele)))
-            # current_layer_list.append(html.P("Isotopes: "))
-            # iso_dict = {ele_name: ele}
             iso_dict = {}
             for i, iso in enumerate(_iso_list):
                 iso_dict[iso] = round(_iso_ratios[i], 4)
@@ -199,7 +193,6 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
                              row_selectable=False,
                              filterable=False,
                              sortable=False,
-                             # id='sample_table'
                              ))
 
         div_list.append(html.Div(current_layer_list))
