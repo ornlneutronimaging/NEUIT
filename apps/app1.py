@@ -6,7 +6,7 @@ from dash.dependencies import Input, Output, State
 
 from _utilities import add_del_tb_rows, form_iso_table, calculate_transmission_cg1d_and_form_stack_table, \
     iso_table_header
-from app import app
+from _app import app
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'

@@ -11,7 +11,7 @@ from _utilities import init_reso_from_tb, unpack_sample_tb_df_and_add_layer, \
     add_del_tb_rows, plot_option_div, \
     calculate_transmission_cg1d_and_form_stack_table, classify_neutron, form_iso_table, iso_table_header, \
     unpack_iso_tb_df_and_update
-from app import app
+from _app import app
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
