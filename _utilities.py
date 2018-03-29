@@ -24,22 +24,29 @@ col_3 = 'three columns'
 col_6 = 'six columns'
 
 
-def classify_neutron(speed):
+def classify_neutron(energy_ev):
     """
 
-    :param speed: m/s
+    :param energy_ev:
     :return:
     """
-    if speed <= 6.9:
+    assert energy_ev >= 0
+    e = energy_ev
+    if 0 < e <= 2.5e-7:
         return 'Ultra-cold'
-    elif 6.9 < speed <= 437:
+    elif 2.5e-7 < e < 0.025:
         return 'Cold'
-    elif 437 < speed <= 2187:
+    elif 0.025 <= e <= 0.2:
         return 'Thermal'
-    elif 2187 < speed < 13832:
+    elif 0.2 < e < 900:
         return 'Epithermal'
-    else:
-        return 'Epithermal'
+    elif 900 < e <= 0.5e6:
+        return 'Intermediate'
+    elif 0.5e6 < e <= 20e6:
+        return 'Fast'
+    elif 20e6 < e:
+        return 'Ultra-fast'
+
 
 
 def init_reso_from_tb(range_tb_rows, e_step):
@@ -184,7 +191,7 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
             # iso_dict = {ele_name: ele}
             iso_dict = {}
             for i, iso in enumerate(_iso_list):
-                iso_dict[iso] = _iso_ratios[i]
+                iso_dict[iso] = round(_iso_ratios[i], 4)
             _df_iso = pd.DataFrame([iso_dict])
             current_layer_list.append(
                 dt.DataTable(rows=_df_iso.to_dict('records'),
@@ -200,64 +207,6 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
         div_list.append(html.Br())
 
     return total_trans, div_list
-
-
-# def form_stack_table(sample_tb_rows, iso_tb_rows):
-#     o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
-#
-#     df_sample_tb = pd.DataFrame(sample_tb_rows)
-#     df_iso_tb = pd.DataFrame(iso_tb_rows)
-#
-#     o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
-#     o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb)
-#     # pprint.pprint(__o_reso.stack)
-#
-#     o_stack = o_reso.stack
-#     div_list = []
-#     layers = list(o_stack.keys())
-#     layer_dict = {}
-#     for l, layer in enumerate(layers):
-#         elements_in_current_layer = o_stack[layer]['elements']
-#         l_str = str(l + 1)
-#         current_layer_list = [
-#             html.P("Layer {}: {}".format(l_str, layer)),
-#         ]
-#         layer_dict[thick_name] = o_stack[layer]['thickness']['value']
-#         layer_dict[density_name] = o_stack[layer]['density']['value']
-#         _df_layer = pd.DataFrame([layer_dict])
-#         current_layer_list.append(
-#             dt.DataTable(rows=_df_layer.to_dict('records'),
-#                          columns=[thick_name, density_name],
-#                          editable=False,
-#                          row_selectable=False,
-#                          filterable=False,
-#                          sortable=False,
-#                          # id='sample_table'
-#                          ))
-#
-#         for e, ele in enumerate(elements_in_current_layer):
-#             _iso_list = o_stack[layer][ele]['isotopes']['list']
-#             _iso_ratios = o_stack[layer][ele]['isotopes']['isotopic_ratio']
-#             # current_layer_list.append(html.H6("Element: {}".format(ele)))
-#             # current_layer_list.append(html.P("Isotopes: "))
-#             # iso_dict = {ele_name: ele}
-#             iso_dict = {}
-#             for i, iso in enumerate(_iso_list):
-#                 iso_dict[iso] = _iso_ratios[i]
-#             _df_iso = pd.DataFrame([iso_dict])
-#             current_layer_list.append(
-#                 dt.DataTable(rows=_df_iso.to_dict('records'),
-#                              columns=_df_iso.columns,
-#                              editable=False,
-#                              row_selectable=False,
-#                              filterable=False,
-#                              sortable=False,
-#                              # id='sample_table'
-#                              ))
-#
-#         div_list.append(html.Div(current_layer_list))
-#         div_list.append(html.Br())
-#     return div_list
 
 
 def form_iso_table(sample_tb_rows):
@@ -278,7 +227,7 @@ def form_iso_table(sample_tb_rows):
                 lay_list.append(each_layer)
                 ele_list.append(each_ele)
                 iso_list.append(each_iso)
-                iso_ratio_list.append(current_iso_ratio_list[i])
+                iso_ratio_list.append(round(current_iso_ratio_list[i], 4))
 
     _dict = {'Layer': lay_list,
              'Element': ele_list,

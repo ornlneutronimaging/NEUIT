@@ -9,7 +9,8 @@ from dash.dependencies import Input, Output, State
 
 from _utilities import init_reso_from_tb, unpack_sample_tb_df_and_add_layer, \
     add_del_tb_rows, plot_option_div, \
-    calculate_transmission_cg1d_and_form_stack_table, classify_neutron, form_iso_table, iso_table_header, unpack_iso_tb_df_and_update
+    calculate_transmission_cg1d_and_form_stack_table, classify_neutron, form_iso_table, iso_table_header, \
+    unpack_iso_tb_df_and_update
 from app import app
 
 energy_name = 'Energy (eV)'
@@ -198,8 +199,8 @@ def show_range_table(slider, distance):
     tof_2 = round(ev_to_s(array=e_max, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
     v_1 = round(1e6 * distance / tof_1, 2)
     v_2 = round(1e6 * distance / tof_2, 2)
-    class_1 = classify_neutron(v_1)
-    class_2 = classify_neutron(v_2)
+    class_1 = classify_neutron(e_min)
+    class_2 = classify_neutron(e_max)
     _df_range = pd.DataFrame({
         energy_name: [e_min, e_max],
         wave_name: [lambda_1, lambda_2],
@@ -208,14 +209,6 @@ def show_range_table(slider, distance):
         class_name: [class_1, class_2],
     })
     return _df_range.to_dict('records')
-    # return dt.DataTable(
-    #     rows=_df_range.to_dict('records'),
-    #     columns=range_tb_header,
-    #     editable=False,
-    #     row_selectable=False,
-    #     filterable=False,
-    #     sortable=True,
-    #     id='range_table')
 
 
 @app.callback(
@@ -445,4 +438,3 @@ def output(n_clicks, y_type, sample_tb_rows, iso_tb_rows):
                     html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(100 - total_trans)),
                     html.Div([html.H5('Sample stack:'), html.Div(div_list)])
                 ])
-

@@ -4,7 +4,8 @@ import dash_table_experiments as dt
 import pandas as pd
 from dash.dependencies import Input, Output, State
 
-from _utilities import add_del_tb_rows, form_iso_table, calculate_transmission_cg1d_and_form_stack_table, iso_table_header
+from _utilities import add_del_tb_rows, form_iso_table, calculate_transmission_cg1d_and_form_stack_table, \
+    iso_table_header
 from app import app
 
 energy_name = 'Energy (eV)'
@@ -105,7 +106,8 @@ def show_iso_table(iso_check, sample_tb_rows):
                             filterable=True,
                             sortable=True,
                             id='app1_iso_table'
-                            )
+                            ),
+        # dcc.Markdown("""NOTE: please only edit the 'Isotopic ratio' column.""")
 
 
 @app.callback(
@@ -131,7 +133,6 @@ def output(n_clicks, sample_tb_rows, iso_tb_rows):
                 html.Div([html.H5('Sample stack:'), html.Div(div_list)])
             ]
         )
-
 
 # @app.callback(
 #     Output('app1_stack', 'children'),
