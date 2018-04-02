@@ -4,9 +4,9 @@ import dash_table_experiments as dt
 import pandas as pd
 from dash.dependencies import Input, Output, State
 
+from _app import app
 from _utilities import add_del_tb_rows, form_iso_table, calculate_transmission_cg1d_and_form_stack_table, \
     iso_table_header
-from _app import app
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
@@ -102,6 +102,10 @@ def show_iso_table(iso_check, sample_tb_rows):
         return dt.DataTable(rows=_df.to_dict('records'),
                             columns=iso_table_header,
                             editable=True,
+                            # editable={layer_name: False,
+                            #           ele_name: False,
+                            #           iso_name: True,
+                            #           },
                             # row_selectable=True,
                             filterable=True,
                             sortable=True,
@@ -127,10 +131,9 @@ def output(n_clicks, sample_tb_rows, iso_tb_rows):
                 html.Hr(),
                 html.H3('Result'),
                 html.H5('Transmission:'),
-                html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(total_trans)),
+                html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(round(total_trans, 3))),
                 html.H5('Attenuation:'),
-                html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(100 - total_trans)),
+                html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(round(100 - total_trans, 3))),
                 html.Div([html.H5('Sample stack:'), html.Div(div_list)])
             ]
         )
-

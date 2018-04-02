@@ -7,11 +7,11 @@ from ImagingReso._utilities import ev_to_angstroms
 from ImagingReso._utilities import ev_to_s
 from dash.dependencies import Input, Output, State
 
+from _app import app
 from _utilities import init_reso_from_tb, unpack_sample_tb_df_and_add_layer, \
     add_del_tb_rows, plot_option_div, \
     calculate_transmission_cg1d_and_form_stack_table, classify_neutron, form_iso_table, iso_table_header, \
     unpack_iso_tb_df_and_update
-from _app import app
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
@@ -428,13 +428,13 @@ def output(n_clicks, y_type, sample_tb_rows, iso_tb_rows):
             return html.Div(
                 [
                     html.H5('Sample transmission:'),
-                    html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(total_trans)),
+                    html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(round(total_trans, 3))),
                     html.Div([html.H5('Sample stack:'), html.Div(div_list)])
                 ])
         else:
             return html.Div(
                 [
                     html.H5('Sample attenuation:'),
-                    html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(100 - total_trans)),
+                    html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(round(100 - total_trans, 3))),
                     html.Div([html.H5('Sample stack:'), html.Div(div_list)])
                 ])

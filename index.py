@@ -34,7 +34,7 @@ Web applications for **Neutron Imaging**.
 #### Introduction
 
 Tools available here are build upon *[ImagingReso](http://imagingreso.readthedocs.io/en/latest/)*
-and using *[Dash](https://dash.plot.ly/)* framework. 
+using *[Dash](https://dash.plot.ly/)* framework. 
 
 *ImagingReso* is an open-source Python library that simulates the neutron
 resonance signal for neutron imaging measurements. By defining the sample

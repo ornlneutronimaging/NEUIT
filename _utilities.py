@@ -1,12 +1,12 @@
+import os
+
 import ImagingReso._utilities as ir_util
-import pandas as pd
-from ImagingReso.resonance import Resonance
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table_experiments as dt
-import os
+import pandas as pd
+from ImagingReso.resonance import Resonance
 from scipy.interpolate import interp1d
-import pprint
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
@@ -154,7 +154,7 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
     # calculated transmitted flux
     trans_flux = trans * df['flux']
     _total_trans = sum(trans_flux) / sum(df['flux']) * 100
-    total_trans = round(_total_trans, 3)
+    # total_trans = round(_total_trans, 3)
 
     o_stack = o_reso.stack
     div_list = []
@@ -198,7 +198,7 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
         div_list.append(html.Div(current_layer_list))
         div_list.append(html.Br())
 
-    return total_trans, div_list
+    return _total_trans, div_list
 
 
 def form_iso_table(sample_tb_rows):
