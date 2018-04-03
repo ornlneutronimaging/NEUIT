@@ -2,7 +2,7 @@ import dash
 
 app = dash.Dash()
 server = app.server
-app.config.supress_callback_exceptions = True
+app.config.suppress_callback_exceptions = True
 
 external_css = [
     'https://codepen.io/chriddyp/pen/bWLwgP.css',
