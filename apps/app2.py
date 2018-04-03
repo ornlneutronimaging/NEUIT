@@ -6,7 +6,6 @@ import pandas as pd
 from ImagingReso._utilities import ev_to_angstroms
 from ImagingReso._utilities import ev_to_s
 from dash.dependencies import Input, Output, State
-import pprint
 from _app import app
 from _utilities import init_reso_from_tb, unpack_sample_tb_df_and_add_layer, \
     add_del_tb_rows, plot_option_div, \
