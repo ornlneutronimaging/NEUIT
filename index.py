@@ -6,6 +6,7 @@ from dash.dependencies import Input, Output
 from _app import app, server
 from apps import app1, app2
 
+server = server
 app.layout = html.Div(
     [
         dcc.Location(id='url', refresh=False),
