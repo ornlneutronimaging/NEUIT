@@ -3,10 +3,8 @@ import dash_html_components as html
 import dash_table_experiments as dt
 from dash.dependencies import Input, Output
 
-from _app import app
+from _app import app, server
 from apps import app1, app2
-
-server = app.server
 
 app.layout = html.Div(
     [
@@ -28,7 +26,7 @@ index_page = html.Div(
         dcc.Markdown('''
 Web applications for **Neutron Imaging**.
 '''),
-        html.H6('Tools available:'),
+        html.H6('Tools available are:'),
         dcc.Link('1. Cold neutron transmission', href='/apps/cg1d'),
         html.Br(),
         dcc.Link('2. Neutron resonance', href='/apps/venus'),
