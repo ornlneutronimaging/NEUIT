@@ -155,12 +155,12 @@ layout = html.Div(
             dcc.Markdown(
                 '''NOTE: density input can be omitted (leave as blank) only if the input formula is single element,
                  density available [here](http://periodictable.com/Properties/A/Density.al.html) will be used.'''),
-            html.Div(id='iso_input'),
             dcc.Checklist(id='iso_check',
                           options=[
                               {'label': 'Modify isotopic ratios', 'value': True},
                           ], values=[],
                           ),
+            html.Div(id='iso_input'),
             html.Button('Submit', id='button_submit'),
         ]
         ),
