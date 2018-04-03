@@ -4,7 +4,7 @@ import dash_table_experiments as dt
 import pandas as pd
 from dash.dependencies import Input, Output, State
 
-from _app import app
+from app import app
 from _utilities import add_del_tb_rows, form_iso_table, calculate_transmission_cg1d_and_form_stack_table, \
     iso_table_header
 
