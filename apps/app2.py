@@ -197,8 +197,8 @@ def show_range_table(slider, distance):
     lambda_2 = round(ev_to_angstroms(array=e_max), 4)
     tof_1 = round(ev_to_s(array=e_min, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
     tof_2 = round(ev_to_s(array=e_max, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
-    v_1 = round(1e6 * distance / tof_1, 2)
-    v_2 = round(1e6 * distance / tof_2, 2)
+    v_1 = round(1e4 * 1.383 * np.sqrt(e_min), 2)
+    v_2 = round(1e4 * 1.383 * np.sqrt(e_max), 2)
     class_1 = classify_neutron(e_min)
     class_2 = classify_neutron(e_max)
     _df_range = pd.DataFrame({
