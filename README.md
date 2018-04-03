@@ -1,3 +1,3 @@
-# web_flask
+# NeuWeb
 
-A prototype of a web transmission calculator
+A prototype of a web sample estimator for neutron imaging
