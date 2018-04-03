@@ -3,10 +3,8 @@ import dash_html_components as html
 import dash_table_experiments as dt
 from dash.dependencies import Input, Output
 
-from _app import app
+from app import app
 from apps import app1, app2
-
-server = app.server
 
 app.layout = html.Div(
     [
