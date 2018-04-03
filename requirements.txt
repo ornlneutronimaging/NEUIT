@@ -4,6 +4,7 @@ dash-html-components
 dash-renderer
 dash-table-experiments
 plotly
+matplotlib
 ImagingReso >= 1.6.3
 pandas
 numpy

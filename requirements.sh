@@ -6,6 +6,7 @@ pip install dash-core-components  # Supercharged components
 pip install dash-table-experiments  # Interactive table components
 pip install plotly
 pip install ImagingReso
+pip install matplotlib
 pip install pandas
 pip install numpy
 pip install scipy
