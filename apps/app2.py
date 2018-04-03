@@ -345,7 +345,7 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         plotly_fig.layout.autosize = True
         plotly_fig.layout.height = 600
         plotly_fig.layout.width = 900
-        plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 0, 't': 15}
+        plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
 
         return html.Div(
             [
