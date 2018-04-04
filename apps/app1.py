@@ -87,18 +87,6 @@ layout = html.Div(
 
 
 @app.callback(
-    Output('app1_iso_input', 'style'),
-    [
-        Input('app1_iso_check', 'values'),
-    ])
-def show_hide_iso_table(iso_changed):
-    if iso_changed:
-        return {'display': 'block'}
-    else:
-        return {'display': 'none'}
-
-
-@app.callback(
     Output('app1_sample_table', 'rows'),
     [
         Input('app1_button_add', 'n_clicks'),
@@ -120,6 +108,18 @@ def add_del_row(n_add, n_del, sample_tb_rows):
 def update_iso_table(sample_tb_rows):
     _df = form_iso_table(sample_tb_rows)
     return _df.to_dict('records')
+
+
+@app.callback(
+    Output('app1_iso_input', 'style'),
+    [
+        Input('app1_iso_check', 'values'),
+    ])
+def show_hide_iso_table(iso_changed):
+    if iso_changed:
+        return {'display': 'block'}
+    else:
+        return {'display': 'none'}
 
 
 @app.callback(
