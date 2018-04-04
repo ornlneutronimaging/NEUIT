@@ -138,7 +138,8 @@ layout = html.Div(
                               {'label': 'Modify isotopic ratios', 'value': True},
                           ], values=[],
                           ),
-            html.Div([dt.DataTable(rows=[{}],
+            html.Button('Submit', id='button_submit'),
+            html.Div([dt.DataTable(rows=iso_tb_df_default.to_dict('records'),
                                    columns=iso_table_header,
                                    editable=True,
                                    # editable={layer_name: False,
@@ -153,10 +154,9 @@ layout = html.Div(
                       ],
                      id='iso_input',
                      # style={'display': 'block'},
-                     style={'display': 'none'},
-                     # style={'visibility': 'hidden'},
+                     # style={'display': 'none'},
+                     style={'visibility': 'hidden'},
                      ),
-            html.Button('Submit', id='button_submit'),
         ]
         ),
 
