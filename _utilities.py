@@ -175,7 +175,8 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
             html.P("Layer {}: {}".format(l_str, layer)),
         ]
         layer_dict[thick_name] = o_stack[layer]['thickness']['value']
-        layer_dict[density_name] = round(o_stack[layer]['density']['value'], 4)
+        layer_dict[density_name] = o_stack[layer]['density']['value']
+        # layer_dict[density_name] = round(o_stack[layer]['density']['value'], 4)
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
             dt.DataTable(rows=_df_layer.to_dict('records'),
