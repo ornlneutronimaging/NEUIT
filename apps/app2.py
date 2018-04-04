@@ -1,28 +1,9 @@
-import dash_core_components as dcc
-import dash_html_components as html
-import dash_table_experiments as dt
 import numpy as np
-import pandas as pd
 from ImagingReso._utilities import ev_to_angstroms
 from ImagingReso._utilities import ev_to_s
 from dash.dependencies import Input, Output, State
 from _app import app
-from _utilities import init_reso_from_tb, unpack_sample_tb_df_and_add_layer, \
-    add_del_tb_rows, plot_option_div, \
-    calculate_transmission_cg1d_and_form_stack_table, classify_neutron, form_iso_table, iso_table_header, \
-    unpack_iso_tb_df_and_update
-
-energy_name = 'Energy (eV)'
-wave_name = 'Wavelength (\u212B)'
-speed_name = 'Speed (m/s)'
-tof_name = 'Time-of-flight (\u03BCs)'
-class_name = 'Neutron classification'
-range_tb_header = [energy_name, wave_name, speed_name, tof_name, class_name]
-
-chem_name = 'Chemical formula'
-thick_name = 'Thickness (mm)'
-density_name = 'Density (g/cm\u00B3)'
-ele_name = 'Element'
+from _utilities import *
 
 df_range = pd.DataFrame({
     energy_name: [1, 100],
@@ -35,9 +16,6 @@ df_sample = pd.DataFrame({
     thick_name: ['1'],
     density_name: [''],
 })
-
-col_3 = 'three columns'
-col_6 = 'six columns'
 
 # Create app2 layout
 layout = html.Div(
@@ -145,7 +123,7 @@ layout = html.Div(
             dt.DataTable(
                 rows=df_sample.to_dict('records'),
                 # optional - sets the order of columns
-                columns=[chem_name, thick_name, density_name],
+                columns=sample_tb_header,
                 editable=True,
                 row_selectable=False,
                 filterable=False,
@@ -160,7 +138,24 @@ layout = html.Div(
                               {'label': 'Modify isotopic ratios', 'value': True},
                           ], values=[],
                           ),
-            html.Div(id='iso_input'),
+            html.Div([dt.DataTable(rows=[{}],
+                                   columns=iso_table_header,
+                                   editable=True,
+                                   # editable={layer_name: False,
+                                   #           ele_name: False,
+                                   #           iso_name: True,
+                                   #           },
+                                   # row_selectable=True,
+                                   filterable=True,
+                                   sortable=True,
+                                   id='iso_table'),
+                      dcc.Markdown("""NOTE: please edit **only** the 'Isotopic ratio' column."""),
+                      ],
+                     id='iso_input',
+                     # style={'display': 'block'},
+                     style={'display': 'none'},
+                     # style={'visibility': 'hidden'},
+                     ),
             html.Button('Submit', id='button_submit'),
         ]
         ),
@@ -225,24 +220,25 @@ def add_del_row(n_add, n_del, sample_tb_rows):
 
 
 @app.callback(
-    Output('iso_input', 'children'),
+    Output('iso_table', 'rows'),
     [
-        Input('iso_check', 'values'),
         Input('sample_table', 'rows'),
     ])
-def show_iso_table(iso_check, sample_tb_rows):
-    if not iso_check:
-        return html.Div(dt.DataTable(rows=[{}], id='iso_table'), style={'display': 'none'})
+def update_iso_table(sample_tb_rows):
+    _df = form_iso_table(sample_tb_rows)
+    return _df.to_dict('records')
+
+
+@app.callback(
+    Output('iso_input', 'style'),
+    [
+        Input('iso_check', 'values'),
+    ])
+def show_hide_iso_table(iso_changed):
+    if iso_changed:
+        return {'display': 'block'}
     else:
-        _df = form_iso_table(sample_tb_rows)
-        return dt.DataTable(rows=_df.to_dict('records'),
-                            columns=iso_table_header,
-                            editable=True,
-                            # row_selectable=True,
-                            filterable=True,
-                            sortable=True,
-                            id='iso_table'
-                            )
+        return {'display': 'none'}
 
 
 @app.callback(
@@ -293,18 +289,19 @@ def show_plot_options(n_submit):
         State('distance', 'value'),
         State('sample_table', 'rows'),
         State('iso_table', 'rows'),
+        State('iso_check', 'values'),
     ])
 def plot(n_submit, y_type, x_type, plot_scale, show_opt,
          range_tb_rows, e_step, distance_m,
-         sample_tb_rows, iso_tb_rows
-         ):
+         sample_tb_rows, iso_tb_rows,
+         iso_changed):
     if n_submit is not None:
         o_reso = init_reso_from_tb(range_tb_rows, e_step)
 
         df_sample_tb = pd.DataFrame(sample_tb_rows)
         df_iso_tb = pd.DataFrame(iso_tb_rows)
         o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
-        o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb)
+        o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb, iso_changed=iso_changed)
 
         if plot_scale == 'logx':
             _log_x = True
@@ -372,18 +369,19 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         State('distance', 'value'),
         State('sample_table', 'rows'),
         State('iso_table', 'rows'),
+        State('iso_check', 'values'),
     ])
 def export(n_export_to_clipboard,
            y_type, x_type, show_opt,
            range_tb_rows, e_step, distance_m,
-           sample_tb_rows, iso_tb_rows
-           ):
+           sample_tb_rows, iso_tb_rows,
+           iso_changed):
     o_reso = init_reso_from_tb(range_tb_rows, e_step)
 
     df_sample_tb = pd.DataFrame(sample_tb_rows)
     df_iso_tb = pd.DataFrame(iso_tb_rows)
     o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
-    o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb)
+    o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb, iso_changed=iso_changed)
 
     show_total = False
     show_layer = False
@@ -424,10 +422,13 @@ def export(n_export_to_clipboard,
         State('y_type', 'value'),
         State('sample_table', 'rows'),
         State('iso_table', 'rows'),
+        State('iso_check', 'values'),
     ])
-def output(n_clicks, y_type, sample_tb_rows, iso_tb_rows):
+def output(n_clicks, y_type, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_clicks is not None:
-        total_trans, div_list = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows)
+        total_trans, div_list = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows,
+                                                                                 iso_tb_rows,
+                                                                                 iso_changed)
         if y_type == 'transmission':
             return html.Div(
                 [

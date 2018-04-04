@@ -1,12 +1,7 @@
-import dash_core_components as dcc
-import dash_html_components as html
-import dash_table_experiments as dt
-import pandas as pd
 from dash.dependencies import Input, Output, State
 
 from _app import app
-from _utilities import add_del_tb_rows, form_iso_table, calculate_transmission_cg1d_and_form_stack_table, \
-    iso_table_header
+from _utilities import *
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
@@ -21,9 +16,6 @@ df_sample = pd.DataFrame({
     thick_name: ['2'],
     density_name: ['1'],
 })
-
-col_3 = 'three columns'
-col_6 = 'six columns'
 
 # Create app layout
 layout = html.Div(
@@ -47,7 +39,7 @@ layout = html.Div(
                 dt.DataTable(
                     rows=df_sample.to_dict('records'),
                     # optional - sets the order of columns
-                    columns=[chem_name, thick_name, density_name],
+                    columns=sample_tb_header,
                     editable=True,
                     row_selectable=False,
                     filterable=False,
@@ -64,7 +56,24 @@ layout = html.Div(
                                   {'label': 'Modify isotopic ratios', 'value': True},
                               ], values=[],
                               ),
-                html.Div(id='app1_iso_input'),
+                html.Div([dt.DataTable(rows=[{}],
+                                       columns=iso_table_header,
+                                       editable=True,
+                                       # editable={layer_name: False,
+                                       #           ele_name: False,
+                                       #           iso_name: True,
+                                       #           },
+                                       # row_selectable=True,
+                                       filterable=True,
+                                       sortable=True,
+                                       id='app1_iso_table'),
+                          dcc.Markdown("""NOTE: please edit **only** the 'Isotopic ratio' column."""),
+                          ],
+                         id='app1_iso_input',
+                         # style={'display': 'block'},
+                         style={'display': 'none'},
+                         # style={'visibility': 'hidden'},
+                         ),
                 html.Button('Submit', id='app1_button_submit'),
             ]
         ),
@@ -73,6 +82,18 @@ layout = html.Div(
         html.Div(id='app1_result'),
     ]
 )
+
+
+@app.callback(
+    Output('app1_iso_input', 'style'),
+    [
+        Input('app1_iso_check', 'values'),
+    ])
+def show_hide_iso_table(iso_changed):
+    if iso_changed:
+        return {'display': 'block'}
+    else:
+        return {'display': 'none'}
 
 
 @app.callback(
@@ -90,29 +111,13 @@ def add_del_row(n_add, n_del, sample_tb_rows):
 
 
 @app.callback(
-    Output('app1_iso_input', 'children'),
+    Output('app1_iso_table', 'rows'),
     [
-        Input('app1_iso_check', 'values'),
         Input('app1_sample_table', 'rows'),
     ])
-def show_iso_table(iso_check, sample_tb_rows):
-    if not iso_check:
-        return html.Div(dt.DataTable(rows=[{}], id='app1_iso_table'), style={'display': 'none'})
-    else:
-        _df = form_iso_table(sample_tb_rows)
-        return dt.DataTable(rows=_df.to_dict('records'),
-                            columns=iso_table_header,
-                            editable=True,
-                            # editable={layer_name: False,
-                            #           ele_name: False,
-                            #           iso_name: True,
-                            #           },
-                            # row_selectable=True,
-                            filterable=True,
-                            sortable=True,
-                            id='app1_iso_table'
-                            ),
-        # dcc.Markdown("""NOTE: please only edit the 'Isotopic ratio' column.""")
+def update_iso_table(sample_tb_rows):
+    _df = form_iso_table(sample_tb_rows)
+    return _df.to_dict('records')
 
 
 @app.callback(
@@ -123,10 +128,13 @@ def show_iso_table(iso_check, sample_tb_rows):
     [
         State('app1_sample_table', 'rows'),
         State('app1_iso_table', 'rows'),
+        State('app1_iso_check', 'values'),
     ])
-def output(n_clicks, sample_tb_rows, iso_tb_rows):
+def output(n_clicks, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_clicks is not None:
-        total_trans, div_list = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows)
+        total_trans, div_list = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows,
+                                                                                 iso_tb_rows,
+                                                                                 iso_changed)
         return html.Div(
             [
                 html.Hr(),

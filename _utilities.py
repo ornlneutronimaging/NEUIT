@@ -10,16 +10,23 @@ from scipy.interpolate import interp1d
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
+speed_name = 'Speed (m/s)'
 tof_name = 'Time-of-flight (\u03BCs)'
+class_name = 'Neutron classification'
+range_tb_header = [energy_name, wave_name, speed_name, tof_name, class_name]
+
 chem_name = 'Chemical formula'
 thick_name = 'Thickness (mm)'
 density_name = 'Density (g/cm\u00B3)'
+sample_tb_header = [chem_name, thick_name, density_name]
+
 layer_name = 'Layer'
 ele_name = 'Element'
 iso_name = 'Isotope'
 iso_ratio_name = 'Isotopic ratio'
 iso_table_header = [layer_name, ele_name, iso_name, iso_ratio_name]
-
+iso_tb_rows_default = [{ele_name: None, iso_name: None, iso_ratio_name: None, layer_name: None}]
+iso_tb_df_default = pd.DataFrame(iso_tb_rows_default)
 col_3 = 'three columns'
 col_6 = 'six columns'
 
@@ -84,9 +91,10 @@ def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
     return o_reso
 
 
-def unpack_iso_tb_df_and_update(o_reso, iso_tb_df):
-    if layer_name not in iso_tb_df.columns:
-        print('No isotopic ratio input')
+def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
+    # if layer_name not in iso_tb_df.columns:
+    if len(iso_changed) == 0:
+        return o_reso
     else:
         layer_list = list(o_reso.stack.keys())
         for each_layer in layer_list:
@@ -97,7 +105,7 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df):
                     if each_layer == iso_tb_df[layer_name][i] and each_ele == iso_tb_df[ele_name][i]:
                         _ele_ratio_list.append(float(iso_tb_df[iso_ratio_name][i]))
                 o_reso.set_isotopic_ratio(compound=each_layer, element=each_ele, list_ratio=_ele_ratio_list)
-    return o_reso
+        return o_reso
 
 
 def add_del_tb_rows(n_add, n_del, sample_tb_rows):
@@ -133,18 +141,18 @@ def add_del_tb_rows(n_add, n_del, sample_tb_rows):
     return _df_sample
 
 
-def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows):
+def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows, iso_changed):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
     df = load_beam_shape(_path_to_beam_shape)
-    o_reso = Resonance(energy_min=0.00025, energy_max=0.12525, energy_step=0.000625)
+    __o_reso = Resonance(energy_min=0.00025, energy_max=0.12525, energy_step=0.000625)
 
     df_sample_tb = pd.DataFrame(sample_tb_rows)
+    _o_reso = unpack_sample_tb_df_and_add_layer(o_reso=__o_reso, sample_tb_df=df_sample_tb)
     df_iso_tb = pd.DataFrame(iso_tb_rows)
-    o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
-    o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb)
+    o_reso = unpack_iso_tb_df_and_update(o_reso=_o_reso, iso_tb_df=df_iso_tb, iso_changed=iso_changed)
 
-    # interpolate with the beam shape energy ()
+    # interpolate with the beam shape energy
     interp_type = 'cubic'
     energy = o_reso.total_signal['energy_eV']
     trans = o_reso.total_signal['transmission']
@@ -167,7 +175,7 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
             html.P("Layer {}: {}".format(l_str, layer)),
         ]
         layer_dict[thick_name] = o_stack[layer]['thickness']['value']
-        layer_dict[density_name] = o_stack[layer]['density']['value']
+        layer_dict[density_name] = round(o_stack[layer]['density']['value'], 4)
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
             dt.DataTable(rows=_df_layer.to_dict('records'),
