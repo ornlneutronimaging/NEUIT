@@ -4,7 +4,6 @@ from ImagingReso._utilities import ev_to_s
 from dash.dependencies import Input, Output, State
 from _app import app
 from _utilities import *
-import pprint
 
 df_range = pd.DataFrame({
     energy_name: [1, 100],
