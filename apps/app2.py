@@ -85,7 +85,7 @@ layout = html.Div(
                                 ),
                                 dcc.Markdown(
                                     '''NOTE: Pick a suitable energy step base on the energy range selected.'''),
-                            ], className='five columns',
+                            ], className='five columns', style={'verticalAlign': 'middle'},
                         ),
                         html.Div(
                             [
@@ -97,8 +97,10 @@ layout = html.Div(
                                                   step=0.01,
                                                   className='nine columns'),
                                         html.P('(m)', className='one column',
-                                               style={'marginBottom': 10, 'marginTop': 5}),
-                                    ], className='row'
+                                               style={'marginBottom': 10, 'marginTop': 5},
+                                               # style={'verticalAlign': 'middle'},
+                                               ),
+                                    ], className='row', style={'verticalAlign': 'middle'},
                                 ),
                                 dcc.Markdown(
                                     '''NOTE: Please ignore the above input field if **NOT** 
@@ -164,8 +166,20 @@ layout = html.Div(
         ),
 
         # Plot
-        html.Div(id='plot_options', children=plot_option_div, style={'display': 'none'}),
-        html.Div(id='plot'),
+        html.Div(
+            [
+                html.Div(id='plot_options', children=plot_option_div),
+                html.Div(
+                    [
+                        html.Button('Export to clipboard', id='button_export', style={'display': 'inline-block'}),
+                        html.Div(id='export_done', style={'display': 'inline-block'}),
+                    ], className='row'
+                ),
+                html.Div(id='plot'),
+            ],
+            id='plot_div',
+            style={'display': 'none'}
+        ),
 
         # Stack display
         html.Div(
@@ -222,6 +236,22 @@ def add_del_row(n_add, n_del, sample_tb_rows):
     return _df_sample.to_dict('records')
 
 
+# @app.callback(
+#     Output('sample_table', 'rows'),
+#     [
+#         Input('button_add', 'n_clicks'),
+#         Input('button_del', 'n_clicks'),
+#     ],
+#     [
+#         State('button_add', 'n_clicks_previous'),
+#         State('button_del', 'n_clicks_previous'),
+#         State('sample_table', 'rows'),
+#     ])
+# def add_del_row(n_add, n_del, n_add_pre, n_del_pre, sample_tb_rows):
+#     _df_sample = add_del_tb_rows(n_add, n_del, n_add_pre, n_del_pre, sample_tb_rows)
+#     return _df_sample.to_dict('records')
+
+
 @app.callback(
     Output('iso_table', 'rows'),
     [
@@ -266,7 +296,7 @@ def enable_logx_when_not_plot_sigma(y_type):
 
 
 @app.callback(
-    Output('plot_options', 'style'),
+    Output('plot_div', 'style'),
     [
         Input('button_submit', 'n_clicks'),
     ])
@@ -354,10 +384,6 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         return html.Div(
             [
                 dcc.Graph(id='reso_plot', figure=plotly_fig, className='container'),
-                html.Div([
-                    html.Button('Export plot data to clipboard', id='button_export'),
-                    html.Div(id='export_done'),
-                ], className='row'),
             ]
         )
 

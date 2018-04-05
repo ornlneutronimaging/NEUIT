@@ -141,6 +141,39 @@ def add_del_tb_rows(n_add, n_del, sample_tb_rows):
     return _df_sample
 
 
+# def add_del_tb_rows(n_add, n_del, n_add_pre, n_del_pre, sample_tb_rows):
+#     if n_add is None:
+#         n_add = 0
+#     if n_del is None:
+#         n_del = 0
+#     df_sample_tb = pd.DataFrame(sample_tb_rows)
+#     if chem_name not in df_sample_tb.columns:
+#         df_sample_tb[chem_name] = ['']
+#     if thick_name not in df_sample_tb.columns:
+#         df_sample_tb[thick_name] = ['']
+#     if density_name not in df_sample_tb.columns:
+#         df_sample_tb[density_name] = ['']
+#     # n_layer = len(df_sample_tb[chem_name])
+#     _formula_list = list(df_sample_tb[chem_name])
+#     _thickness_list = list(df_sample_tb[thick_name])
+#     _density_list = list(df_sample_tb[density_name])
+#     print('add clicks now: {}  pre:{}'.format(n_add, n_add_pre))
+#     print('del clicks now: {}  pre:{}'.format(n_del, n_del_pre))
+#     if n_add != n_add_pre:
+#         _formula_list.append('')
+#         _thickness_list.append('')
+#         _density_list.append('')
+#     if n_del != n_del_pre:
+#         _formula_list.pop()
+#         _thickness_list.pop()
+#         _density_list.pop()
+#     _df_sample = pd.DataFrame({
+#         chem_name: _formula_list,
+#         thick_name: _thickness_list,
+#         density_name: _density_list,
+#     })
+#     return _df_sample
+
 def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows, iso_changed):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
@@ -305,3 +338,4 @@ plot_option_div = html.Div(
         ),
     ]
 ),
+

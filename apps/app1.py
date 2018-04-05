@@ -103,6 +103,22 @@ def add_del_row(n_add, n_del, sample_tb_rows):
     return _df_sample.to_dict('records')
 
 
+# @app.callback(
+#     Output('app1_sample_table', 'rows'),
+#     [
+#         Input('app1_button_add', 'n_clicks'),
+#         Input('app1_button_del', 'n_clicks'),
+#     ],
+#     [
+#         State('app1_button_add', 'n_clicks_previous'),
+#         State('app1_button_del', 'n_clicks_previous'),
+#         State('app1_sample_table', 'rows'),
+#     ])
+# def add_del_row(n_add, n_del, n_add_pre, n_del_pre, sample_tb_rows):
+#     _df_sample = add_del_tb_rows(n_add, n_del, n_add_pre, n_del_pre, sample_tb_rows)
+#     return _df_sample.to_dict('records')
+
+
 @app.callback(
     Output('app1_iso_table', 'rows'),
     [
