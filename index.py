@@ -7,7 +7,7 @@ from _app import app
 from apps import app1, app2
 
 import matplotlib as mpl
-mpl.use('agg')
+mpl.use('agg')  # this is to fix the matplotlib backend
 
 server = app.server
 
