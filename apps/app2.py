@@ -4,6 +4,7 @@ from ImagingReso._utilities import ev_to_s
 from dash.dependencies import Input, Output, State
 from _app import app
 from _utilities import *
+import pprint
 
 df_range = pd.DataFrame({
     energy_name: [1, 100],
@@ -164,7 +165,7 @@ layout = html.Div(
         ),
 
         # Plot
-        html.Div(id='plot_options'),
+        html.Div(id='plot_options', children=plot_option_div, style={'display': 'none'}),
         html.Div(id='plot'),
 
         # Stack display
@@ -266,15 +267,15 @@ def enable_logx_when_not_plot_sigma(y_type):
 
 
 @app.callback(
-    Output('plot_options', 'children'),
+    Output('plot_options', 'style'),
     [
         Input('button_submit', 'n_clicks'),
     ])
 def show_plot_options(n_submit):
     if n_submit is not None:
-        return plot_option_div
+        return {'display': 'block'}
     else:
-        return html.Div(plot_option_div, style={'display': 'none'})
+        return {'display': 'none'}
 
 
 @app.callback(
@@ -346,6 +347,10 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         plotly_fig.layout.height = 600
         plotly_fig.layout.width = 900
         plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
+        plotly_fig.layout.xaxis1.tickfont.size = 15
+        plotly_fig.layout.xaxis1.titlefont.size = 18
+        plotly_fig.layout.yaxis1.tickfont.size = 15
+        plotly_fig.layout.yaxis1.titlefont.size = 18
 
         return html.Div(
             [

@@ -281,6 +281,8 @@ plot_option_div = html.Div(
                                        options=[
                                            {'label': 'Linear', 'value': 'linear'},
                                            {'label': 'Log x', 'value': 'logx'},
+                                           {'label': 'Log y', 'value': 'logy'},
+                                           {'label': 'Loglog', 'value': 'loglog'},
                                        ],
                                        value='linear',
                                        )
