@@ -5,6 +5,9 @@ from dash.dependencies import Input, Output
 
 from _app import app
 from apps import app1, app2
+import matplotlib as mpl
+
+mpl.use('agg')
 
 app.layout = html.Div(
     [
