@@ -3,11 +3,11 @@ import dash_html_components as html
 import dash_table_experiments as dt
 from dash.dependencies import Input, Output
 
-from _app import app
-from apps import app1, app2
-
 import matplotlib as mpl
 mpl.use('agg')  # this is to fix the matplotlib backend
+
+from _app import app
+from apps import app1, app2
 
 server = app.server
 
