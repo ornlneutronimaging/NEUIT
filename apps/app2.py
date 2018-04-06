@@ -105,7 +105,7 @@ layout = html.Div(
                                 dcc.Markdown(
                                     '''NOTE: Please ignore the above input field if **NOT** 
                                     interested in display of time-of-flight (TOF).'''),
-                            ], className='seven columns',
+                            ], className=col_6,
                         ),
                     ], className='row',
                 ),
