@@ -4,6 +4,7 @@ import dash_table_experiments as dt
 from dash.dependencies import Input, Output
 
 import matplotlib as mpl
+
 mpl.use('agg')  # this is to fix the matplotlib backend
 
 from _app import app
@@ -25,12 +26,10 @@ index_page = html.Div(
         # Heading section
         html.Div(
             [
-                html.H1('NeuWeb'),
+                html.H1('ONIST'),
             ], className="row"
         ),
-        dcc.Markdown('''
-Web applications for **Neutron Imaging**.
-'''),
+        dcc.Markdown('''**O**nline **N**eutron **I**maging **S**imulation **T**ools'''),
         html.H6('Tools available are:'),
         dcc.Link('1. Cold neutron transmission', href='/apps/cg1d'),
         html.Br(),

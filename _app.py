@@ -3,7 +3,7 @@ import dash
 app = dash.Dash()
 server = app.server
 app.config.suppress_callback_exceptions = True
-app.title = 'NeuWeb'
+app.title = 'ONIST'
 
 external_css = [
     'https://codepen.io/chriddyp/pen/bWLwgP.css',
