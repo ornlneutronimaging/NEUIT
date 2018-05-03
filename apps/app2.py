@@ -280,7 +280,7 @@ def show_hide_iso_table(iso_changed):
         Input('y_type', 'value'),
     ])
 def enable_logx_when_not_plot_sigma(y_type):
-    if y_type == 'sigma':
+    if y_type[:5] == 'sigma':
         options = [
             {'label': 'Linear', 'value': 'linear'},
             {'label': 'Log x', 'value': 'logx'},
