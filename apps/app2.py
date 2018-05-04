@@ -71,7 +71,8 @@ layout = html.Div(
                                         dcc.Dropdown(
                                             id='e_step',
                                             options=[
-                                                {'label': '0.001 (eV)', 'value': 0.001},
+                                                {'label': '0.001 (eV)  (NOT recommended if energy range > 10 eV)',
+                                                 'value': 0.001},
                                                 {'label': '0.01 (eV)', 'value': 0.01},
                                                 {'label': '0.1 (eV)', 'value': 0.1},
                                                 {'label': '1 (eV)', 'value': 1},
