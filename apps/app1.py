@@ -73,11 +73,8 @@ layout = html.Div(
                                      id='app1_iso_table'),
                     ],
                     id='app1_iso_input',
-                    # style={'display': 'block'},
-                    # style={'display': 'none',
-                    #        'width': '100%',
-                    #        },
                     style={'visibility': 'hidden'},
+                    # style={'display': 'none'},
                 ),
                 html.Button('Submit', id='app1_button_submit'),
             ]

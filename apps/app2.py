@@ -3,6 +3,7 @@ from ImagingReso._utilities import ev_to_angstroms
 from ImagingReso._utilities import ev_to_s
 from dash.dependencies import Input, Output, State
 from _app import app
+import urllib.parse
 from _utilities import *
 
 df_range = pd.DataFrame({
@@ -157,9 +158,8 @@ layout = html.Div(
                                  id='iso_table'),
                 ],
                 id='iso_input',
-                # style={'display': 'block'},
-                # style={'display': 'none'},
                 style={'visibility': 'hidden'},
+                # style={'display': 'none'},
             ),
             html.Button('Submit', id='button_submit'),
         ]
@@ -171,8 +171,14 @@ layout = html.Div(
                 html.Div(id='plot_options', children=plot_option_div),
                 html.Div(
                     [
-                        html.Button('Export to clipboard', id='button_export', style={'display': 'inline-block'}),
-                        html.Div(id='export_done', style={'display': 'inline-block'}),
+                        html.A(
+                            'Download Plot Data',
+                            id='download_link',
+                            download="plot_data.csv",
+                            href="",
+                            target="_blank",
+                            style={'display': 'inline-block'},
+                        ),
                     ], className='row'
                 ),
                 html.Div(id='plot'),
@@ -389,14 +395,14 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
 
 
 @app.callback(
-    Output('export_done', 'children'),
+    Output('download_link', 'href'),
     [
-        Input('button_export', 'n_clicks'),
+        Input('button_submit', 'n_clicks'),
+        Input('y_type', 'value'),
+        Input('x_type', 'value'),
+        Input('show_opt', 'values'),
     ],
     [
-        State('y_type', 'value'),
-        State('x_type', 'value'),
-        State('show_opt', 'values'),
         State('range_table', 'rows'),
         State('e_step', 'value'),
         State('distance', 'value'),
@@ -404,11 +410,11 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         State('iso_table', 'rows'),
         State('iso_check', 'values'),
     ])
-def export(n_export_to_clipboard,
-           y_type, x_type, show_opt,
-           range_tb_rows, e_step, distance_m,
-           sample_tb_rows, iso_tb_rows,
-           iso_changed):
+def download_plot_data(n_submit,
+                       y_type, x_type, show_opt,
+                       range_tb_rows, e_step, distance_m,
+                       sample_tb_rows, iso_tb_rows,
+                       iso_changed):
     o_reso = init_reso_from_tb(range_tb_rows, e_step)
 
     df_sample_tb = pd.DataFrame(sample_tb_rows)
@@ -429,21 +435,18 @@ def export(n_export_to_clipboard,
     if 'iso' in show_opt:
         show_iso = True
 
-    if n_export_to_clipboard is not None:
-        o_reso.export(y_axis=y_type,
-                      x_axis=x_type,
-                      time_unit='us',
-                      mixed=show_total,
-                      all_layers=show_layer,
-                      all_elements=show_ele,
-                      all_isotopes=show_iso,
-                      source_to_detector_m=distance_m)
-        if n_export_to_clipboard == 1:
-            return html.P('Data copied {} time.'.format(n_export_to_clipboard),
-                          style={'marginBottom': 10, 'marginTop': 5})
-        else:
-            return html.P('Data copied {} times.'.format(n_export_to_clipboard),
-                          style={'marginBottom': 10, 'marginTop': 5})
+    # if n_link_click is not None:
+    df = o_reso.export(y_axis=y_type,
+                       x_axis=x_type,
+                       time_unit='us',
+                       mixed=show_total,
+                       all_layers=show_layer,
+                       all_elements=show_ele,
+                       all_isotopes=show_iso,
+                       source_to_detector_m=distance_m)
+    csv_string = df.to_csv(index=False, encoding='utf-8')
+    csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
+    return csv_string
 
 
 @app.callback(

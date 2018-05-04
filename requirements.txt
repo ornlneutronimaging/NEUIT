@@ -5,7 +5,7 @@ dash-renderer
 dash-table-experiments
 plotly
 matplotlib
-ImagingReso >= 1.6.3
+ImagingReso >= 1.6.7
 pandas
 numpy
 scipy

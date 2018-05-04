@@ -60,6 +60,7 @@ def init_reso_from_tb(range_tb_rows, e_step):
     e_min = df_range_tb[energy_name][0]
     e_max = df_range_tb[energy_name][1]
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    print(e_step)
     return o_reso
 
 
