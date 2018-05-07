@@ -1,3 +1,3 @@
-# NeuWeb
+# ONIST
 
-A prototype of a web sample estimator for neutron imaging.
+**O**nline **N**eutron **I**maging **S**imulation **T**ools.
