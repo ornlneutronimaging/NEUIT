@@ -10,3 +10,4 @@ pip install matplotlib
 pip install pandas
 pip install numpy
 pip install scipy
+pip install gunicorn

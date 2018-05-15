@@ -9,3 +9,4 @@ ImagingReso >= 1.6.7
 pandas
 numpy
 scipy
+gunicorn
