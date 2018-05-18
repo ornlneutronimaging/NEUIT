@@ -301,7 +301,7 @@ plot_option_div = html.Div(
                                        options=[
                                            {'label': 'Attenuation', 'value': 'attenuation'},
                                            {'label': 'Transmission', 'value': 'transmission'},
-                                           {'label': "Cross-section", 'value': 'sigma'},
+                                           {'label': "Cross-section (weighted)", 'value': 'sigma'},
                                            {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
                                        ],
                                        value='attenuation',
