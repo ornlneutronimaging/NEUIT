@@ -1,4 +1,6 @@
 import numpy as np
+import flask
+import io
 from ImagingReso._utilities import ev_to_angstroms
 from ImagingReso._utilities import ev_to_s
 from dash.dependencies import Input, Output, State
@@ -17,6 +19,8 @@ df_sample = pd.DataFrame({
     thick_name: ['1'],
     density_name: [''],
 })
+
+plot_data_filename = "plot_data.csv"
 
 # Create app2 layout
 layout = html.Div(
@@ -165,7 +169,7 @@ layout = html.Div(
             html.Button('Submit', id='button_submit'),
         ]
         ),
-
+        html.A('Download test', id='my-link'),
         # Plot
         html.Div(
             [
@@ -175,7 +179,7 @@ layout = html.Div(
                         html.A(
                             'Download Plot Data',
                             id='download_link',
-                            download="plot_data.csv",
+                            download=plot_data_filename,
                             href="",
                             target="_blank",
                             style={'display': 'inline-block'},
@@ -395,6 +399,28 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         )
 
 
+@app.callback(Output('my-link', 'href'), [Input('e_step', 'value')])
+def update_link(value):
+    return '/dash/urlToDownload?value={}'.format(value)
+
+
+@app.server.route('/dash/urlToDownload')
+def download_csv():
+    value = flask.request.args.get('value')
+    # create a dynamic csv or file here using `StringIO`
+    # (instead of writing to the file system)
+    str_io = io.StringIO()
+    str_io.write('You have selected {}'.format(value))
+    mem = io.BytesIO()
+    mem.write(str_io.getvalue().encode('utf-8'))
+    mem.seek(0)
+    str_io.close()
+    return flask.send_file(mem,
+                           mimetype='text/csv',
+                           attachment_filename='downloadFile.csv',
+                           as_attachment=True)
+
+
 @app.callback(
     Output('download_link', 'href'),
     [
@@ -444,7 +470,8 @@ def download_plot_data(n_submit,
                        all_layers=show_layer,
                        all_elements=show_ele,
                        all_isotopes=show_iso,
-                       source_to_detector_m=distance_m)
+                       source_to_detector_m=distance_m,
+                       output_type='df')
     csv_string = df.to_csv(index=False, encoding='utf-8')
     csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
     return csv_string

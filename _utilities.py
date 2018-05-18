@@ -60,7 +60,6 @@ def init_reso_from_tb(range_tb_rows, e_step):
     e_min = df_range_tb[energy_name][0]
     e_max = df_range_tb[energy_name][1]
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
-    print(e_step)
     return o_reso
 
 
@@ -302,8 +301,8 @@ plot_option_div = html.Div(
                                        options=[
                                            {'label': 'Attenuation', 'value': 'attenuation'},
                                            {'label': 'Transmission', 'value': 'transmission'},
-                                           {'label': "Cal'ed total X-section", 'value': 'sigma'},
-                                           {'label': 'Raw total X-section', 'value': 'sigma_raw'},
+                                           {'label': "Cross-section", 'value': 'sigma'},
+                                           {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
                                        ],
                                        value='attenuation',
                                        )
