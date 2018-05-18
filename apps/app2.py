@@ -167,7 +167,7 @@ layout = html.Div(
             html.Button('Submit', id='button_submit'),
         ]
         ),
-        html.A('Download test', id='my-link'),
+
         # Plot
         html.Div(
             [
