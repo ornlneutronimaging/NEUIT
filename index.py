@@ -53,10 +53,25 @@ online database. [Evaluated Nuclear Data File](http://www.nndc.bnl.gov/exfor/end
 is currently supported and more evaluated databases will be added in the future.
 '''),
         dcc.Markdown('''
-#### Publication
+#### Acknowledgments
+
+This work is based upon research sponsored by the Laboratory Directed Research and
+Development Program of Oak Ridge National Laboratory, managed by UT-Battelle LLC for
+the US Department of Energy. This research used resources at the Spallation Neutron Source,
+a DOE Office of Science User Facility operated by Oak Ridge National Laboratory.
+'''),
+        dcc.Markdown('''
+#### Cite our work
 
 Yuxuan Zhang and Jean Bilheux, (2017), ImagingReso: A Tool for Neutron Resonance Imaging, Journal of Open Source Software, 2(19), 407,
 [doi:10.21105/joss.00407](http://joss.theoj.org/papers/997d09281a9d76e95f4ec4d3279eeb8c)
+'''),
+        dcc.Markdown('''
+#### Contact us
+
+Yuxuan (Shawn) Zhang -- zhangy6@ornl.gov
+
+Jean Bilheux -- bilheuxjm@ornl.gov
 '''),
     ]
 )
