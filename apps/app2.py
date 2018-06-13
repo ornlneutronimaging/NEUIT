@@ -139,7 +139,7 @@ layout = html.Div(
             dcc.Markdown(
                 '''NOTE: density input can be omitted (leave as blank) only if the input formula is single element,
                  density available [here](http://periodictable.com/Properties/A/Density.al.html) will be used.'''),
-            dcc.Checklist(id='iso_check',
+            dcc.Checklist(id='iso_modified',
                           options=[
                               {'label': 'Modify isotopic ratios', 'value': True},
                           ], values=[],
@@ -174,6 +174,11 @@ layout = html.Div(
                 html.Div(id='plot_options', children=plot_option_div),
                 html.Div(
                     [
+                        dcc.Checklist(id='export_clip',
+                                      options=[
+                                          {'label': 'Clipboard', 'value': False},
+                                      ], values=[],
+                                      ),
                         html.A(
                             'Download Plot Data',
                             id='download_link',
@@ -274,7 +279,7 @@ def update_iso_table(sample_tb_rows):
 @app.callback(
     Output('iso_input', 'style'),
     [
-        Input('iso_check', 'values'),
+        Input('iso_modified', 'values'),
     ])
 def show_hide_iso_table(iso_changed):
     if iso_changed:
@@ -331,7 +336,7 @@ def show_plot_options(n_submit):
         State('distance', 'value'),
         State('sample_table', 'rows'),
         State('iso_table', 'rows'),
-        State('iso_check', 'values'),
+        State('iso_modified', 'values'),
     ])
 def plot(n_submit, y_type, x_type, plot_scale, show_opt,
          range_tb_rows, e_step, distance_m,
@@ -404,6 +409,7 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         Input('y_type', 'value'),
         Input('x_type', 'value'),
         Input('show_opt', 'values'),
+        Input('export_clip', 'values'),
     ],
     [
         State('range_table', 'rows'),
@@ -411,13 +417,13 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         State('distance', 'value'),
         State('sample_table', 'rows'),
         State('iso_table', 'rows'),
-        State('iso_check', 'values'),
+        State('iso_modified', 'values'),
     ])
-def download_plot_data(n_submit,
-                       y_type, x_type, show_opt,
-                       range_tb_rows, e_step, distance_m,
-                       sample_tb_rows, iso_tb_rows,
-                       iso_changed):
+def export_plot_data(n_submit,
+                     y_type, x_type, show_opt, export_clip,
+                     range_tb_rows, e_step, distance_m,
+                     sample_tb_rows, iso_tb_rows,
+                     iso_changed):
     o_reso = init_reso_from_tb(range_tb_rows, e_step)
 
     df_sample_tb = pd.DataFrame(sample_tb_rows)
@@ -437,6 +443,10 @@ def download_plot_data(n_submit,
         show_ele = True
     if 'iso' in show_opt:
         show_iso = True
+    if export_clip:
+        _type = 'clip'
+    else:
+        _type = 'df'
 
     # if n_link_click is not None:
     df = o_reso.export(y_axis=y_type,
@@ -447,7 +457,8 @@ def download_plot_data(n_submit,
                        all_elements=show_ele,
                        all_isotopes=show_iso,
                        source_to_detector_m=distance_m,
-                       output_type='df')
+                       output_type=_type)
+    # if export_type == 'download':
     csv_string = df.to_csv(index=False, encoding='utf-8')
     csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
     return csv_string
@@ -462,7 +473,7 @@ def download_plot_data(n_submit,
         State('y_type', 'value'),
         State('sample_table', 'rows'),
         State('iso_table', 'rows'),
-        State('iso_check', 'values'),
+        State('iso_modified', 'values'),
     ])
 def output(n_clicks, y_type, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_clicks is not None:
