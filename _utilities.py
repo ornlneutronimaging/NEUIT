@@ -331,7 +331,8 @@ plot_option_div = html.Div(
                                           {'label': 'Layer', 'value': 'layer'},
                                           {'label': 'Element', 'value': 'ele'},
                                           {'label': 'Isotope', 'value': 'iso'},
-                                      ], values=['iso'],
+                                      ],
+                                      values=['iso'],
                                       ),
                     ], className=col_3
                 ),

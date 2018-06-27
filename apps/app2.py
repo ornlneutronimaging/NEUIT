@@ -310,6 +310,27 @@ def enable_logx_when_not_plot_sigma(y_type):
 
 
 @app.callback(
+    Output('show_opt', 'options'),
+    [
+        Input('y_type', 'value'),
+    ])
+def disable_total_layer_when_plotting_sigma(y_type):
+    if y_type[:5] != 'sigma':
+        options = [
+            {'label': 'Total', 'value': 'total'},
+            {'label': 'Layer', 'value': 'layer'},
+            {'label': 'Element', 'value': 'ele'},
+            {'label': 'Isotope', 'value': 'iso'},
+        ]
+    else:
+        options = [
+            {'label': 'Element', 'value': 'ele'},
+            {'label': 'Isotope', 'value': 'iso'},
+        ]
+    return options
+
+
+@app.callback(
     Output('plot_div', 'style'),
     [
         Input('button_submit', 'n_clicks'),
