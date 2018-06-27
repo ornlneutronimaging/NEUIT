@@ -121,8 +121,8 @@ layout = html.Div(
         html.Div([
             html.Div(
                 [
-                    html.Button('+', id='button_add'),
-                    html.Button('-', id='button_del'),
+                    html.Button('+', id='button_add', n_clicks_timestamp=1),
+                    html.Button('-', id='button_del', n_clicks_timestamp=0),
                 ], className='row'
             ),
 
@@ -236,20 +236,6 @@ def show_range_table(slider, distance):
     return _df_range.to_dict('records')
 
 
-@app.callback(
-    Output('sample_table', 'rows'),
-    [
-        Input('button_add', 'n_clicks'),
-        Input('button_del', 'n_clicks'),
-    ],
-    [
-        State('sample_table', 'rows'),
-    ])
-def add_del_row(n_add, n_del, sample_tb_rows):
-    _df_sample = add_del_tb_rows(n_add, n_del, sample_tb_rows)
-    return _df_sample.to_dict('records')
-
-
 # @app.callback(
 #     Output('sample_table', 'rows'),
 #     [
@@ -257,13 +243,25 @@ def add_del_row(n_add, n_del, sample_tb_rows):
 #         Input('button_del', 'n_clicks'),
 #     ],
 #     [
-#         State('button_add', 'n_clicks_previous'),
-#         State('button_del', 'n_clicks_previous'),
 #         State('sample_table', 'rows'),
 #     ])
-# def add_del_row(n_add, n_del, n_add_pre, n_del_pre, sample_tb_rows):
-#     _df_sample = add_del_tb_rows(n_add, n_del, n_add_pre, n_del_pre, sample_tb_rows)
+# def add_del_row(n_add, n_del, sample_tb_rows):
+#     _df_sample = add_del_tb_rows(n_add, n_del, sample_tb_rows)
 #     return _df_sample.to_dict('records')
+
+
+@app.callback(
+    Output('sample_table', 'rows'),
+    [
+        Input('button_add', 'n_clicks_timestamp'),
+        Input('button_del', 'n_clicks_timestamp'),
+    ],
+    [
+        State('sample_table', 'rows'),
+    ])
+def add_del_row(n_add_time, n_del_time, sample_tb_rows):
+    _df_sample = add_del_tb_rows(n_add_time=n_add_time, n_del_time=n_del_time, sample_tb_rows=sample_tb_rows)
+    return _df_sample.to_dict('records')
 
 
 @app.callback(
@@ -481,7 +479,7 @@ def export_plot_data(n_submit,
                        output_type=_type)
     # if export_type == 'download':
     csv_string = df.to_csv(index=False, encoding='utf-8')
-    csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
+    csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
     return csv_string
 
 

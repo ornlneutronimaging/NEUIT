@@ -31,8 +31,8 @@ layout = html.Div(
             [
                 html.Div(
                     [
-                        html.Button('+', id='app1_button_add'),
-                        html.Button('-', id='app1_button_del'),
+                        html.Button('+', id='app1_button_add', n_clicks_timestamp=1),
+                        html.Button('-', id='app1_button_del', n_clicks_timestamp=0),
                     ], className='row'
                 ),
 
@@ -89,31 +89,15 @@ layout = html.Div(
 @app.callback(
     Output('app1_sample_table', 'rows'),
     [
-        Input('app1_button_add', 'n_clicks'),
-        Input('app1_button_del', 'n_clicks'),
+        Input('app1_button_add', 'n_clicks_timestamp'),
+        Input('app1_button_del', 'n_clicks_timestamp'),
     ],
     [
         State('app1_sample_table', 'rows'),
     ])
-def add_del_row(n_add, n_del, sample_tb_rows):
-    _df_sample = add_del_tb_rows(n_add, n_del, sample_tb_rows)
+def add_del_row(n_add_time, n_del_time, sample_tb_rows):
+    _df_sample = add_del_tb_rows(n_add_time=n_add_time, n_del_time=n_del_time, sample_tb_rows=sample_tb_rows)
     return _df_sample.to_dict('records')
-
-
-# @app.callback(
-#     Output('app1_sample_table', 'rows'),
-#     [
-#         Input('app1_button_add', 'n_clicks'),
-#         Input('app1_button_del', 'n_clicks'),
-#     ],
-#     [
-#         State('app1_button_add', 'n_clicks_previous'),
-#         State('app1_button_del', 'n_clicks_previous'),
-#         State('app1_sample_table', 'rows'),
-#     ])
-# def add_del_row(n_add, n_del, n_add_pre, n_del_pre, sample_tb_rows):
-#     _df_sample = add_del_tb_rows(n_add, n_del, n_add_pre, n_del_pre, sample_tb_rows)
-#     return _df_sample.to_dict('records')
 
 
 @app.callback(
