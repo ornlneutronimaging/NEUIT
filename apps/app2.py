@@ -121,7 +121,7 @@ layout = html.Div(
         html.Div([
             html.Div(
                 [
-                    html.Button('+', id='button_add', n_clicks_timestamp=1),
+                    html.Button('+', id='button_add', n_clicks_timestamp=0),
                     html.Button('-', id='button_del', n_clicks_timestamp=0),
                 ], className='row'
             ),
