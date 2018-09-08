@@ -67,7 +67,7 @@ Yuxuan Zhang and Jean Bilheux, (2017), ImagingReso: A Tool for Neutron Resonance
 [doi:10.21105/joss.00407](http://joss.theoj.org/papers/997d09281a9d76e95f4ec4d3279eeb8c)
 '''),
         dcc.Markdown('''
-#### Contact us
+#### Contact
 
 Yuxuan (Shawn) Zhang -- zhangy6@ornl.gov
 
