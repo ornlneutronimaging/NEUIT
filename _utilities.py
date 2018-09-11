@@ -110,20 +110,24 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
 
 def add_del_tb_rows(n_add_time, n_del_time, sample_tb_rows):
     df_sample_tb = pd.DataFrame(sample_tb_rows)
-    if chem_name not in df_sample_tb.columns:
-        df_sample_tb[chem_name] = ['']
-    if thick_name not in df_sample_tb.columns:
-        df_sample_tb[thick_name] = ['']
-    if density_name not in df_sample_tb.columns:
-        df_sample_tb[density_name] = ['']
-    # n_layer = len(df_sample_tb[chem_name])
+    for _each in [chem_name, thick_name, density_name]:
+        if _each not in df_sample_tb.columns:
+            df_sample_tb[_each] = ['']
+            _in = False
+        else:
+            _in = True
     _formula_list = list(df_sample_tb[chem_name])
     _thickness_list = list(df_sample_tb[thick_name])
     _density_list = list(df_sample_tb[density_name])
     if n_add_time > n_del_time:
-        _formula_list.append('')
-        _thickness_list.append('')
-        _density_list.append('')
+        if _in:
+            _formula_list.append('')
+            _thickness_list.append('')
+            _density_list.append('')
+    elif n_add_time == n_del_time:
+        _formula_list = _formula_list
+        _thickness_list = _thickness_list
+        _density_list = _density_list
     else:
         _formula_list.pop()
         _thickness_list.pop()
