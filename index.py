@@ -26,10 +26,10 @@ index_page = html.Div(
         # Heading section
         html.Div(
             [
-                html.H1('NIT'),
+                html.H1('NEUIT'),
             ], className="row"
         ),
-        dcc.Markdown('''**N**eutron **I**maging **T**oolbox'''),
+        dcc.Markdown('''**NEU**tron **I**maging **T**oolbox'''),
         html.H6('Tools available are:'),
         dcc.Link('1. Cold neutron transmission', href='/apps/cg1d'),
         html.Br(),

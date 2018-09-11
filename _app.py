@@ -5,7 +5,7 @@ app = dash.Dash()
 server = app.server
 server.secret_key = os.environ.get('secret_key', 'secret')
 app.config.suppress_callback_exceptions = True
-app.title = 'NIT'
+app.title = 'NEUIT'
 
 external_css = [
     'https://codepen.io/chriddyp/pen/bWLwgP.css',
