@@ -31,8 +31,10 @@ layout = html.Div(
             [
                 html.Div(
                     [
-                        html.Button('+', id='app1_button_add', n_clicks_timestamp=0),
-                        html.Button('-', id='app1_button_del', n_clicks_timestamp=0),
+                        html.Button('+', id='app1_button_add', n_clicks=0),
+                        html.Button('-', id='app1_button_del', n_clicks=0),
+                        # html.Button('+', id='app1_button_add', n_clicks_timestamp=0),
+                        # html.Button('-', id='app1_button_del', n_clicks_timestamp=0),
                     ], className='row'
                 ),
 
@@ -82,21 +84,46 @@ layout = html.Div(
 
         # Transmission at CG-1D
         html.Div(id='app1_result'),
+        # Hidden Div to handle button action
+        html.Div([
+            html.Div(id='app1_clicked_button', children='del:0 add:0 tog:0 last:nan', style={'display': 'none'})
+        ]),
+        html.Div(id='app1_display_clicked', children=""),
     ]
 )
 
 
 @app.callback(
+    Output('app1_clicked_button', 'children'),
+    [
+        Input('app1_button_add', 'n_clicks'),
+        Input('app1_button_del', 'n_clicks')
+    ],
+    [
+        State('app1_clicked_button', 'children')
+    ])
+def updated_clicked(add_clicks, del_clicks, prev_clicks):
+    prev_clicks = dict([i.split(':') for i in prev_clicks.split(' ')])
+    last_clicked = 'nan'
+    if del_clicks > int(prev_clicks['del']):
+        last_clicked = 'del'
+    elif add_clicks > int(prev_clicks['add']):
+        last_clicked = 'add'
+    cur_clicks = 'del:{} add:{} last:{}'.format(del_clicks, add_clicks, last_clicked)
+    return cur_clicks
+
+
+@app.callback(
     Output('app1_sample_table', 'rows'),
     [
-        Input('app1_button_add', 'n_clicks_timestamp'),
-        Input('app1_button_del', 'n_clicks_timestamp'),
+        Input('app1_clicked_button', 'children'),
     ],
     [
         State('app1_sample_table', 'rows'),
     ])
-def add_del_row(n_add_time, n_del_time, sample_tb_rows):
-    _df_sample = add_del_tb_rows(n_add_time=n_add_time, n_del_time=n_del_time, sample_tb_rows=sample_tb_rows)
+def add_del_row(clicked, sample_tb_rows):
+    last_clicked = clicked[-3:]
+    _df_sample = add_del_tb_rows(add_or_del=last_clicked, sample_tb_rows=sample_tb_rows)
     return _df_sample.to_dict('records')
 
 

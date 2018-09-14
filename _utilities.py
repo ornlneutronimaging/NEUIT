@@ -108,7 +108,7 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
         return o_reso
 
 
-def add_del_tb_rows(n_add_time, n_del_time, sample_tb_rows):
+def add_del_tb_rows(add_or_del, sample_tb_rows):
     df_sample_tb = pd.DataFrame(sample_tb_rows)
     for _each in [chem_name, thick_name, density_name]:
         if _each not in df_sample_tb.columns:
@@ -119,25 +119,57 @@ def add_del_tb_rows(n_add_time, n_del_time, sample_tb_rows):
     _formula_list = list(df_sample_tb[chem_name])
     _thickness_list = list(df_sample_tb[thick_name])
     _density_list = list(df_sample_tb[density_name])
-    if n_add_time > n_del_time:
+    if add_or_del == 'add':
         if _in:
             _formula_list.append('')
             _thickness_list.append('')
             _density_list.append('')
-    elif n_add_time == n_del_time:
-        _formula_list = _formula_list
-        _thickness_list = _thickness_list
-        _density_list = _density_list
-    else:
+    elif add_or_del == 'del':
         _formula_list.pop()
         _thickness_list.pop()
         _density_list.pop()
+    else:
+        _formula_list = _formula_list
+        _thickness_list = _thickness_list
+        _density_list = _density_list
     _df_sample = pd.DataFrame({
         chem_name: _formula_list,
         thick_name: _thickness_list,
         density_name: _density_list,
     })
     return _df_sample
+
+
+# def add_del_tb_rows(n_add_time, n_del_time, sample_tb_rows):
+#     df_sample_tb = pd.DataFrame(sample_tb_rows)
+#     for _each in [chem_name, thick_name, density_name]:
+#         if _each not in df_sample_tb.columns:
+#             df_sample_tb[_each] = ['']
+#             _in = False
+#         else:
+#             _in = True
+#     _formula_list = list(df_sample_tb[chem_name])
+#     _thickness_list = list(df_sample_tb[thick_name])
+#     _density_list = list(df_sample_tb[density_name])
+#     if n_add_time > n_del_time:
+#         if _in:
+#             _formula_list.append('')
+#             _thickness_list.append('')
+#             _density_list.append('')
+#     elif n_add_time == n_del_time:
+#         _formula_list = _formula_list
+#         _thickness_list = _thickness_list
+#         _density_list = _density_list
+#     else:
+#         _formula_list.pop()
+#         _thickness_list.pop()
+#         _density_list.pop()
+#     _df_sample = pd.DataFrame({
+#         chem_name: _formula_list,
+#         thick_name: _thickness_list,
+#         density_name: _density_list,
+#     })
+#     return _df_sample
 
 
 def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows, iso_changed):
