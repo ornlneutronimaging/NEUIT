@@ -258,7 +258,8 @@ def updated_clicked(add_clicks, del_clicks, prev_clicks):
         last_clicked = 'del'
     elif add_clicks > int(prev_clicks['add']):
         last_clicked = 'add'
-    cur_clicks = 'del:{} add:{} last:{}'.format(del_clicks, add_clicks, last_clicked)
+    cur_clicks = 'add:{} del:{} last:{}'.format(add_clicks, del_clicks, last_clicked)
+    print(cur_clicks)
     return cur_clicks
 
 
