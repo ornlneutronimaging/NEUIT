@@ -50,7 +50,7 @@ layout = html.Div(
                 ),
                 dcc.Markdown(
                     '''NOTE: density input can be omitted (leave as blank) 
-                    only if the input formula is single element, density available
+                    only if the input formula is single element, natural density available
                     [here](http://periodictable.com/Properties/A/Density.al.html) will be used.'''),
                 # Input table for isotopic ratios
                 dcc.Checklist(id='app1_iso_check',
