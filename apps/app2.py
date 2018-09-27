@@ -138,10 +138,7 @@ layout = html.Div(
                 sortable=False,
                 id='sample_table'
             ),
-            dcc.Markdown(
-                '''NOTE: density input can be omitted (leave as blank) 
-                only if the input formula is single element, natural density available
-                [here](http://periodictable.com/Properties/A/Density.al.html) will be used.'''),
+            markdown_sample,
             dcc.Checklist(id='iso_modified',
                           options=[
                               {'label': 'Modify isotopic ratios', 'value': True},
@@ -149,8 +146,7 @@ layout = html.Div(
                           ),
             html.Div(
                 [
-                    dcc.Markdown("""NOTE: Please edit **ONLY** the 'Isotopic ratio' column.
-                        Editing of 'Sample info' will **RESET** contents in isotope table."""),
+                    markdown_iso,
                     dt.DataTable(rows=iso_tb_df_default.to_dict('records'),
                                  columns=iso_table_header,
                                  editable=True,

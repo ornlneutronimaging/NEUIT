@@ -271,6 +271,14 @@ def form_iso_table(sample_tb_rows):
     return _df
 
 
+markdown_sample = dcc.Markdown(
+    '''NOTE: formula is case sensitive, density input can be omitted (leave as blank) 
+    only if the input formula is single element, natural density available
+    [here](http://periodictable.com/Properties/A/Density.al.html) will be used.''')
+
+markdown_iso = dcc.Markdown("""NOTE: Please edit **ONLY** the 'Isotopic ratio' column.
+                        Editing of 'Sample info' will **RESET** contents in isotope table.""")
+
 # Plot control buttons
 plot_option_div = html.Div(
     [
@@ -338,4 +346,3 @@ plot_option_div = html.Div(
         ),
     ]
 ),
-
