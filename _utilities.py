@@ -199,6 +199,7 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
     div_list = []
     layers = list(o_stack.keys())
     layer_dict = {}
+    print(o_stack)
     for l, layer in enumerate(layers):
         elements_in_current_layer = o_stack[layer]['elements']
         l_str = str(l + 1)
@@ -272,9 +273,9 @@ def form_iso_table(sample_tb_rows):
 
 
 markdown_sample = dcc.Markdown(
-    '''NOTE: formula is case sensitive, density input can be omitted (leave as blank) 
-    only if the input formula is single element, natural density available
-    [here](http://periodictable.com/Properties/A/Density.al.html) will be used.''')
+    '''NOTE: Formula is **case sensitive**, atomic ratio must be **integers**. Density input can be omitted (leave as blank) 
+    only if the input formula is single element, natural densities available
+    [here](http://periodictable.com/Properties/A/Density.al.html) are used.''')
 
 markdown_iso = dcc.Markdown("""NOTE: Please edit **ONLY** the 'Isotopic ratio' column.
                         Editing of 'Sample info' will **RESET** contents in isotope table.""")
