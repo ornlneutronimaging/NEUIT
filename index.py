@@ -8,7 +8,7 @@ import matplotlib as mpl
 mpl.use('agg')  # this is to fix the matplotlib backend
 
 from _app import app
-from apps import app1, app2
+from apps import app1, app2, app3
 
 server = app.server
 
@@ -34,6 +34,8 @@ index_page = html.Div(
         dcc.Link('1. Cold neutron transmission', href='/apps/cg1d'),
         html.Br(),
         dcc.Link('2. Neutron resonance', href='/apps/venus'),
+        html.Br(),
+        dcc.Link('3. Composition converter', href='/apps/converter'),
         dcc.Markdown('''
 #### Introduction
 
@@ -86,6 +88,8 @@ def display_page(pathname):
         return app1.layout
     elif pathname == '/apps/venus':
         return app2.layout
+    elif pathname == '/apps/converter':
+        return app3.layout
     elif pathname == '/':
         return index_page
     else:

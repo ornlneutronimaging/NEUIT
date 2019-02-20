@@ -26,6 +26,8 @@ layout = html.Div(
         dcc.Link('Home', href='/'),
         html.Br(),
         dcc.Link('Cold neutron transmission', href='/apps/cg1d'),
+        html.Br(),
+        dcc.Link('Composition converter', href='/apps/converter'),
         html.H1('Neutron resonance'),
         # Global parameters
         html.Div(
@@ -506,9 +508,9 @@ def export_plot_data(n_submit,
     ])
 def output(n_clicks, y_type, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_clicks is not None:
-        total_trans, div_list = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows,
-                                                                                 iso_tb_rows,
-                                                                                 iso_changed)
+        total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows,
+                                                                                          iso_tb_rows,
+                                                                                          iso_changed)
         if y_type == 'transmission':
             return html.Div(
                 [

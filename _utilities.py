@@ -7,6 +7,8 @@ import dash_table_experiments as dt
 import pandas as pd
 from ImagingReso.resonance import Resonance
 from scipy.interpolate import interp1d
+import numpy as np
+from pprint import pprint
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
@@ -18,7 +20,13 @@ range_tb_header = [energy_name, wave_name, speed_name, tof_name, class_name]
 chem_name = 'Chemical formula'
 thick_name = 'Thickness (mm)'
 density_name = 'Density (g/cm\u00B3)'
+ratio_name = 'Stoichiometric ratio'
+molar_name = 'Molar mass (g/mol)'
+number_density_name = 'Atoms per cm\u00B3 (#)'
+weight_name = 'Weight %'
+atomic_name = 'Atomic %'
 sample_tb_header = [chem_name, thick_name, density_name]
+converter_tb_header = [chem_name, weight_name, atomic_name]
 
 layer_name = 'Layer'
 ele_name = 'Element'
@@ -55,6 +63,11 @@ def classify_neutron(energy_ev):
         return 'Ultra-fast'
 
 
+def output_error_div(error_message: str):
+    error_message_div = dcc.Markdown(error_message)
+    return error_message_div
+
+
 def init_reso_from_tb(range_tb_rows, e_step):
     df_range_tb = pd.DataFrame(range_tb_rows)
     e_min = df_range_tb[energy_name][0]
@@ -80,7 +93,9 @@ def load_beam_shape(relative_path_to_beam_shape):
 def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
     num_layer = len(sample_tb_df['Chemical formula'])
     for i in range(num_layer):
-        if sample_tb_df[chem_name][i] != '' and sample_tb_df[thick_name][i] != '':
+        assert sample_tb_df[chem_name][i] != ''
+        if thick_name in sample_tb_df.keys():
+            assert sample_tb_df[thick_name][i] != ''
             if sample_tb_df[density_name][i] == '':
                 o_reso.add_layer(formula=sample_tb_df[chem_name][i],
                                  thickness=float(sample_tb_df[thick_name][i]))
@@ -88,6 +103,10 @@ def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
                 o_reso.add_layer(formula=sample_tb_df[chem_name][i],
                                  density=float(sample_tb_df[density_name][i]),
                                  thickness=float(sample_tb_df[thick_name][i]))
+        if weight_name in sample_tb_df.keys():
+            # assert sample_tb_df[weight_name][i] != '' or sample_tb_df[atomic_name][i] != ''
+            o_reso.add_layer(formula=sample_tb_df[chem_name][i],
+                             thickness=1)
     return o_reso
 
 
@@ -110,7 +129,7 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
 
 def add_del_tb_rows(add_or_del, sample_tb_rows):
     df_sample_tb = pd.DataFrame(sample_tb_rows)
-    for _each in [chem_name, thick_name, density_name]:
+    for _each in sample_tb_header:
         if _each not in df_sample_tb.columns:
             df_sample_tb[_each] = ['']
             _in = False
@@ -136,6 +155,38 @@ def add_del_tb_rows(add_or_del, sample_tb_rows):
         chem_name: _formula_list,
         thick_name: _thickness_list,
         density_name: _density_list,
+    })
+    return _df_sample
+
+
+def add_del_tb_rows_converter(add_or_del, sample_tb_rows):
+    df_sample_tb = pd.DataFrame(sample_tb_rows)
+    for _each in converter_tb_header:
+        if _each not in df_sample_tb.columns:
+            df_sample_tb[_each] = ['']
+            _in = False
+        else:
+            _in = True
+    _formula_list = list(df_sample_tb[chem_name])
+    _weight_list = list(df_sample_tb[weight_name])
+    _atomic_list = list(df_sample_tb[atomic_name])
+    if add_or_del == 'add':
+        if _in:
+            _formula_list.append('')
+            _weight_list.append('')
+            _atomic_list.append('')
+    elif add_or_del == 'del':
+        _formula_list.pop()
+        _weight_list.pop()
+        _atomic_list.pop()
+    else:
+        _formula_list = _formula_list
+        _weight_list = _weight_list
+        _atomic_list = _atomic_list
+    _df_sample = pd.DataFrame({
+        chem_name: _formula_list,
+        weight_name: _weight_list,
+        atomic_name: _atomic_list,
     })
     return _df_sample
 
@@ -199,7 +250,7 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
     div_list = []
     layers = list(o_stack.keys())
     layer_dict = {}
-    print(o_stack)
+    # pprint(o_stack)
     for l, layer in enumerate(layers):
         elements_in_current_layer = o_stack[layer]['elements']
         l_str = str(l + 1)
@@ -209,10 +260,12 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
         layer_dict[thick_name] = o_stack[layer]['thickness']['value']
         layer_dict[density_name] = o_stack[layer]['density']['value']
         # layer_dict[density_name] = round(o_stack[layer]['density']['value'], 4)
+        _ratio_str_list = [str(_p) for _p in o_stack[layer]['stoichiometric_ratio']]
+        layer_dict[ratio_name] = ":".join(_ratio_str_list)
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
             dt.DataTable(rows=_df_layer.to_dict('records'),
-                         columns=[thick_name, density_name],
+                         columns=[thick_name, density_name, ratio_name],
                          editable=False,
                          row_selectable=False,
                          filterable=False,
@@ -226,6 +279,8 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
             iso_dict = {}
             for i, iso in enumerate(_iso_list):
                 iso_dict[iso] = round(_iso_ratios[i], 4)
+            iso_dict[molar_name] = round(o_stack[layer][ele]['molar_mass']['value'], 4)
+            iso_dict[number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'][ele])
             _df_iso = pd.DataFrame([iso_dict])
             current_layer_list.append(
                 dt.DataTable(rows=_df_iso.to_dict('records'),
@@ -235,11 +290,22 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
                              filterable=False,
                              sortable=False,
                              ))
+            # ele_dict = {molar_name: round(o_stack[layer][ele]['molar_mass']['value'], 4),
+            #             number_density_name: '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'][ele])}
+            # _df_ele = pd.DataFrame([ele_dict])
+            # current_layer_list.append(
+            #     dt.DataTable(rows=_df_ele.to_dict('records'),
+            #                  columns=_df_ele.columns,
+            #                  editable=False,
+            #                  row_selectable=False,
+            #                  filterable=False,
+            #                  sortable=False,
+            #                  ))
 
         div_list.append(html.Div(current_layer_list))
         div_list.append(html.Br())
 
-    return _total_trans, div_list
+    return _total_trans, div_list, o_stack
 
 
 def form_iso_table(sample_tb_rows):
@@ -271,6 +337,16 @@ def form_iso_table(sample_tb_rows):
 
     return _df
 
+
+def weight_to_atomic(composition: list, o_stack):
+    for each_layer in composition:
+        if each_layer[weight_name] != '':
+            assert each_layer[weight_name] != ''
+
+    pass
+
+
+# def weight_to_atomic(weight)
 
 markdown_sample = dcc.Markdown(
     '''NOTE: Formula is **case sensitive**, atomic ratio must be **integers**. Density input can be omitted (leave as blank) 
