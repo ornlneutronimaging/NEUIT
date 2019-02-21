@@ -23,10 +23,13 @@ density_name = 'Density (g/cm\u00B3)'
 ratio_name = 'Stoichiometric ratio'
 molar_name = 'Molar mass (g/mol)'
 number_density_name = 'Atoms per cm\u00B3 (#)'
-weight_name = 'Weight %'
-atomic_name = 'Atomic %'
+weight_name = 'Weight (g)'
+weight_name_p = 'Weight (%)'
+atomic_name = 'Atomic (mol)'
+atomic_name_p = 'Atomic (%)'
 sample_tb_header = [chem_name, thick_name, density_name]
 converter_tb_header = [chem_name, weight_name, atomic_name]
+converter_tb_header_p = [chem_name, weight_name_p, atomic_name_p]
 
 layer_name = 'Layer'
 ele_name = 'Element'
@@ -91,9 +94,11 @@ def load_beam_shape(relative_path_to_beam_shape):
 
 
 def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
+    sample_tb_df = sample_tb_df[sample_tb_df[chem_name] != '']
     num_layer = len(sample_tb_df['Chemical formula'])
     for i in range(num_layer):
-        assert sample_tb_df[chem_name][i] != ''
+        if sample_tb_df[chem_name][i] == '':
+            raise IOError('Remove empty lines in sample input table.')
         if thick_name in sample_tb_df.keys():
             assert sample_tb_df[thick_name][i] != ''
             if sample_tb_df[density_name][i] == '':
@@ -159,35 +164,51 @@ def add_del_tb_rows(add_or_del, sample_tb_rows):
     return _df_sample
 
 
-def add_del_tb_rows_converter(add_or_del, sample_tb_rows):
+def add_del_tb_rows_converter(add_or_del, sample_tb_rows, input_type: str, header: list):
     df_sample_tb = pd.DataFrame(sample_tb_rows)
-    for _each in converter_tb_header:
+    # converter_tb_header_new = converter_tb_header[:]
+    # if input_type == weight_name:
+    #     converter_tb_header_new.remove(atomic_name)
+    # else:
+    #     converter_tb_header_new.remove(weight_name)
+    for _each in header:
         if _each not in df_sample_tb.columns:
             df_sample_tb[_each] = ['']
             _in = False
         else:
             _in = True
     _formula_list = list(df_sample_tb[chem_name])
-    _weight_list = list(df_sample_tb[weight_name])
-    _atomic_list = list(df_sample_tb[atomic_name])
+    _list = list(df_sample_tb[input_type])
+    # _weight_list = list(df_sample_tb[weight_name])
+    # _atomic_list = list(df_sample_tb[atomic_name])
     if add_or_del == 'add':
         if _in:
             _formula_list.append('')
-            _weight_list.append('')
-            _atomic_list.append('')
+            _list.append('')
+            # _weight_list.append('')
+            # _atomic_list.append('')
     elif add_or_del == 'del':
         _formula_list.pop()
-        _weight_list.pop()
-        _atomic_list.pop()
+        _list.pop()
+        # _weight_list.pop()
+        # _atomic_list.pop()
     else:
         _formula_list = _formula_list
-        _weight_list = _weight_list
-        _atomic_list = _atomic_list
+        _list = _list
+        # _weight_list = _weight_list
+        # _atomic_list = _atomic_list
     _df_sample = pd.DataFrame({
         chem_name: _formula_list,
-        weight_name: _weight_list,
-        atomic_name: _atomic_list,
+        input_type: _list,
+        # weight_name: _weight_list,
+        # atomic_name: _atomic_list,
     })
+    # print(_df_sample)
+    # if input_type == weight_name:
+    #     _df_sample.drop(columns=[atomic_name], inplace=True)
+    # else:
+    #     _df_sample.drop(columns=[weight_name], inplace=True)
+    # print(_df_sample)
     return _df_sample
 
 
@@ -250,7 +271,6 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
     div_list = []
     layers = list(o_stack.keys())
     layer_dict = {}
-    # pprint(o_stack)
     for l, layer in enumerate(layers):
         elements_in_current_layer = o_stack[layer]['elements']
         l_str = str(l + 1)
@@ -337,16 +357,6 @@ def form_iso_table(sample_tb_rows):
 
     return _df
 
-
-def weight_to_atomic(composition: list, o_stack):
-    for each_layer in composition:
-        if each_layer[weight_name] != '':
-            assert each_layer[weight_name] != ''
-
-    pass
-
-
-# def weight_to_atomic(weight)
 
 markdown_sample = dcc.Markdown(
     '''NOTE: Formula is **case sensitive**, atomic ratio must be **integers**. Density input can be omitted (leave as blank) 

@@ -4,7 +4,7 @@ from _app import app
 from _utilities import *
 
 df_sample = pd.DataFrame({
-    chem_name: ['SiC', 'Si'],
+    chem_name: ['B4C', 'SiC'],
     weight_name: ['50', '50'],
     atomic_name: ['', ''],
 })
@@ -19,6 +19,18 @@ layout = html.Div(
         dcc.Link('Neutron resonance', href='/apps/venus'),
         html.H1('Composition converter'),
         html.H3('Sample composition'),
+
+        html.Div(
+            [
+                dcc.RadioItems(id='composition_input_type',
+                               options=[
+                                   {'label': weight_name, 'value': weight_name},
+                                   {'label': atomic_name, 'value': atomic_name},
+                               ],
+                               value=weight_name,
+                               )
+            ]
+        ),
 
         # Sample input
         html.Div(
@@ -35,7 +47,8 @@ layout = html.Div(
                 dt.DataTable(
                     rows=df_sample.to_dict('records'),
                     # optional - sets the order of columns
-                    columns=converter_tb_header,
+                    columns=[chem_name, weight_name],
+                    # columns=converter_tb_header.remove(atomic_name),
                     editable=True,
                     row_selectable=False,
                     filterable=False,
@@ -111,11 +124,32 @@ def updated_clicked(add_clicks, del_clicks, prev_clicks):
     ],
     [
         State('app3_sample_table', 'rows'),
+        State('composition_input_type', 'value'),
+        State('app3_sample_table', 'columns'),
     ])
-def add_del_row(clicked, sample_tb_rows):
+def add_del_row(clicked, sample_tb_rows, input_type, converter_tb_header_new):
     last_clicked = clicked[-3:]
-    _df_sample = add_del_tb_rows_converter(add_or_del=last_clicked, sample_tb_rows=sample_tb_rows)
+    _df_sample = add_del_tb_rows_converter(add_or_del=last_clicked,
+                                           sample_tb_rows=sample_tb_rows,
+                                           input_type=input_type,
+                                           header=converter_tb_header_new)
     return _df_sample.to_dict('records')
+
+
+@app.callback(
+    Output('app3_sample_table', 'columns'),
+    [
+        Input('composition_input_type', 'value'),
+        # State('app3_sample_table', 'rows'),
+    ],
+)
+def update_input_columns(input_type):
+    converter_tb_header_new = converter_tb_header[:]
+    if input_type == weight_name:
+        converter_tb_header_new.remove(atomic_name)
+    else:
+        converter_tb_header_new.remove(weight_name)
+    return converter_tb_header_new
 
 
 @app.callback(
@@ -149,46 +183,69 @@ def show_hide_iso_table(iso_changed):
         State('app3_sample_table', 'rows'),
         State('app3_iso_table', 'rows'),
         State('app3_iso_check', 'values'),
+        State('composition_input_type', 'value'),
     ])
-def output(n_clicks, sample_tb_rows, iso_tb_rows, iso_changed):
+def output(n_clicks, sample_tb_rows, iso_tb_rows, iso_changed, input_type):
     if n_clicks is not None:
         total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows,
                                                                                           iso_tb_rows,
                                                                                           iso_changed)
         df_input = pd.DataFrame(sample_tb_rows)
-        atomic_bool = all(np.array(df_input[atomic_name] != '')) is True
-        weight_bool = all(np.array(df_input[weight_name] != '')) is True
-        print(df_input)
-        print(sample_tb_rows)
-        if weight_bool:
-            _name = weight_name
-            fill_name = atomic_name
+        df_input = df_input[df_input[chem_name] != '']
+        df_input[input_type] = pd.to_numeric(df_input[input_type])  # , errors='ignore')
+        if input_type == weight_name:
+            fill_name = atomic_name_p
+            update_name = weight_name_p
         else:
-            _name = atomic_name
-            fill_name = weight_name
+            fill_name = weight_name_p
+            update_name = atomic_name_p
+            df_input.drop(columns=[weight_name], inplace=True)
         _list = []
-        for _n, each_phase in enumerate(sample_tb_rows):
-            _molar_mass = o_stack[each_phase[chem_name]]['molar_mass']['value']
-            _num = float(each_phase[_name])
-            if weight_bool:  # wt.% input (g)
-                _result = _num / _molar_mass
+        _ele_list = []
+        _ratio_list = []
+        _input_p_list = []
+        _input_sum = df_input[input_type].sum()
+        for _n, each_chem in enumerate(df_input[chem_name]):
+            _molar_mass = o_stack[each_chem]['molar_mass']['value']
+            input_num = df_input[input_type][_n]
+            _current_ele_list = o_stack[each_chem]['elements']
+            _current_ratio_list = o_stack[each_chem]['stoichiometric_ratio']
+            _input_percentage = input_num * 100 / _input_sum
+            if input_type == weight_name:  # wt.% input (g)
+                _result = input_num / _molar_mass
             else:  # at.% input (mol)
-                _result = _num * _molar_mass
+                _result = input_num * _molar_mass
             _list.append(_result)
+            _input_p_list.append(_input_percentage)
+            _ele_list += _current_ele_list
+            _ratio_list += _current_ratio_list
+        print(_ele_list)
+        print(_ratio_list)
+        print(_list)
         _array = np.array(_list)
+        _input_p_array = np.array(_input_p_list)
         _output_array = _array * 100 / sum(_array)
         df_input[fill_name] = np.round(_output_array, 3)
+        df_input[update_name] = np.round(_input_p_array, 3)
         print(df_input)
 
-        print(atomic_bool, weight_bool)
         return html.Div(
             [
                 html.Hr(),
                 html.H3('Result'),
-                html.H5('Transmission:'),
-                html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(round(total_trans, 3))),
-                html.H5('Attenuation:'),
-                html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(round(100 - total_trans, 3))),
+                html.P('The effective chemical formula after conversion: {}'.format('aa')),
+                dt.DataTable(rows=df_input.to_dict('records'),
+                             columns=converter_tb_header_p,
+                             editable=False,
+                             row_selectable=False,
+                             filterable=False,
+                             sortable=False,
+                             # id='sample_table'
+                             ),
+                # html.H5('Transmission:'),
+                # html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(round(total_trans, 3))),
+                # html.H5('Attenuation:'),
+                # html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(round(100 - total_trans, 3))),
                 html.Div([html.H5('Sample stack:'), html.Div(div_list)])
             ]
         )
