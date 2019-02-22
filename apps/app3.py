@@ -6,7 +6,7 @@ from _utilities import *
 df_sample = pd.DataFrame({
     chem_name: ['B4C', 'SiC'],
     weight_name: ['50', '50'],
-    atomic_name: ['', ''],
+    # atomic_name: ['', ''],
 })
 
 # Create app layout
@@ -187,53 +187,21 @@ def show_hide_iso_table(iso_changed):
     ])
 def output(n_clicks, sample_tb_rows, iso_tb_rows, iso_changed, input_type):
     if n_clicks is not None:
-        total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows,
-                                                                                          iso_tb_rows,
-                                                                                          iso_changed)
-        df_input = pd.DataFrame(sample_tb_rows)
-        df_input = df_input[df_input[chem_name] != '']
-        df_input[input_type] = pd.to_numeric(df_input[input_type])  # , errors='ignore')
-        if input_type == weight_name:
-            fill_name = atomic_name_p
-            update_name = weight_name_p
-        else:
-            fill_name = weight_name_p
-            update_name = atomic_name_p
-            df_input.drop(columns=[weight_name], inplace=True)
-        _list = []
-        _ele_list = []
-        _ratio_list = []
-        _input_p_list = []
-        _input_sum = df_input[input_type].sum()
-        for _n, each_chem in enumerate(df_input[chem_name]):
-            _molar_mass = o_stack[each_chem]['molar_mass']['value']
-            input_num = df_input[input_type][_n]
-            _current_ele_list = o_stack[each_chem]['elements']
-            _current_ratio_list = o_stack[each_chem]['stoichiometric_ratio']
-            _input_percentage = input_num * 100 / _input_sum
-            if input_type == weight_name:  # wt.% input (g)
-                _result = input_num / _molar_mass
-            else:  # at.% input (mol)
-                _result = input_num * _molar_mass
-            _list.append(_result)
-            _input_p_list.append(_input_percentage)
-            _ele_list += _current_ele_list
-            _ratio_list += _current_ratio_list
-        print(_ele_list)
-        print(_ratio_list)
-        print(_list)
-        _array = np.array(_list)
-        _input_p_array = np.array(_input_p_list)
-        _output_array = _array * 100 / sum(_array)
-        df_input[fill_name] = np.round(_output_array, 3)
-        df_input[update_name] = np.round(_input_p_array, 3)
-        print(df_input)
+        total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows=sample_tb_rows,
+                                                                                          iso_tb_rows=iso_tb_rows,
+                                                                                          iso_changed=iso_changed)
+        df_input, ele_list, mol_list = convert_input_to_composition(sample_tb_rows=sample_tb_rows,
+                                                                    input_type=input_type,
+                                                                    o_stack=o_stack)
+
+        effective_formula = convert_to_effective_formula(ele_list=ele_list, mol_list=mol_list)
 
         return html.Div(
             [
                 html.Hr(),
                 html.H3('Result'),
-                html.P('The effective chemical formula after conversion: {}'.format('aa')),
+                html.P('The effective chemical formula after conversion: {}'.format(effective_formula)),
+                html.P('(This can be passed as chemical formula for other apps)'),
                 dt.DataTable(rows=df_input.to_dict('records'),
                              columns=converter_tb_header_p,
                              editable=False,
@@ -242,10 +210,6 @@ def output(n_clicks, sample_tb_rows, iso_tb_rows, iso_changed, input_type):
                              sortable=False,
                              # id='sample_table'
                              ),
-                # html.H5('Transmission:'),
-                # html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(round(total_trans, 3))),
-                # html.H5('Attenuation:'),
-                # html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(round(100 - total_trans, 3))),
                 html.Div([html.H5('Sample stack:'), html.Div(div_list)])
             ]
         )

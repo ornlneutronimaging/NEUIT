@@ -166,11 +166,6 @@ def add_del_tb_rows(add_or_del, sample_tb_rows):
 
 def add_del_tb_rows_converter(add_or_del, sample_tb_rows, input_type: str, header: list):
     df_sample_tb = pd.DataFrame(sample_tb_rows)
-    # converter_tb_header_new = converter_tb_header[:]
-    # if input_type == weight_name:
-    #     converter_tb_header_new.remove(atomic_name)
-    # else:
-    #     converter_tb_header_new.remove(weight_name)
     for _each in header:
         if _each not in df_sample_tb.columns:
             df_sample_tb[_each] = ['']
@@ -179,36 +174,20 @@ def add_del_tb_rows_converter(add_or_del, sample_tb_rows, input_type: str, heade
             _in = True
     _formula_list = list(df_sample_tb[chem_name])
     _list = list(df_sample_tb[input_type])
-    # _weight_list = list(df_sample_tb[weight_name])
-    # _atomic_list = list(df_sample_tb[atomic_name])
     if add_or_del == 'add':
         if _in:
             _formula_list.append('')
             _list.append('')
-            # _weight_list.append('')
-            # _atomic_list.append('')
     elif add_or_del == 'del':
         _formula_list.pop()
         _list.pop()
-        # _weight_list.pop()
-        # _atomic_list.pop()
     else:
         _formula_list = _formula_list
         _list = _list
-        # _weight_list = _weight_list
-        # _atomic_list = _atomic_list
     _df_sample = pd.DataFrame({
         chem_name: _formula_list,
         input_type: _list,
-        # weight_name: _weight_list,
-        # atomic_name: _atomic_list,
     })
-    # print(_df_sample)
-    # if input_type == weight_name:
-    #     _df_sample.drop(columns=[atomic_name], inplace=True)
-    # else:
-    #     _df_sample.drop(columns=[weight_name], inplace=True)
-    # print(_df_sample)
     return _df_sample
 
 
@@ -326,6 +305,64 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
         div_list.append(html.Br())
 
     return _total_trans, div_list, o_stack
+
+
+def convert_input_to_composition(sample_tb_rows, input_type, o_stack):
+    df_input = pd.DataFrame(sample_tb_rows)
+    df_input = df_input[df_input[chem_name] != '']
+    df_input[input_type] = pd.to_numeric(df_input[input_type])  # , errors='ignore')
+    if input_type == weight_name:
+        fill_name = atomic_name_p
+        update_name = weight_name_p
+    else:
+        fill_name = weight_name_p
+        update_name = atomic_name_p
+        df_input.drop(columns=[weight_name], inplace=True)
+    result_list = []
+    _ele_list = []
+    _mol_list = []
+    _input_converted_p_list = []
+    _input_sum = df_input[input_type].sum()
+    for _n, each_chem in enumerate(df_input[chem_name]):
+        _molar_mass = o_stack[each_chem]['molar_mass']['value']
+        input_num = df_input[input_type][_n]
+        _current_ele_list = o_stack[each_chem]['elements']
+        _current_ratio_list = o_stack[each_chem]['stoichiometric_ratio']
+        _input_percentage = input_num * 100 / _input_sum
+        _ele_list += _current_ele_list
+        if input_type == weight_name:  # wt. input (g)
+            _result = input_num / _molar_mass
+            _mol_list += list(np.array(_current_ratio_list) * _result)
+        else:  # at. input (mol)
+            _result = input_num * _molar_mass
+            _mol_list += list(np.array(_current_ratio_list) * input_num)
+        result_list.append(_result)
+        _input_converted_p_list.append(_input_percentage)
+
+    result_array = np.array(result_list)
+    _input_converted_p_array = np.array(_input_converted_p_list)
+    _output_array = result_array * 100 / sum(result_array)
+    df_input[fill_name] = np.round(_output_array, 3)
+    df_input[update_name] = np.round(_input_converted_p_array, 3)
+    return df_input, _ele_list, _mol_list
+
+
+def convert_to_effective_formula(ele_list, mol_list):
+    ele_array = np.array(ele_list)
+    mol_array = np.array(mol_list)
+    unique_ele = set(ele_array)
+    mol_sum_for_ele_list = []
+    for _e in unique_ele:
+        indices = ele_array == _e
+        mol_for_this_ele = mol_array[indices]
+        mol_sum_for_ele_list.append(mol_for_this_ele.sum())
+
+    mol_minimum = min(mol_sum_for_ele_list)
+    mol_sum_for_ele_array = np.array(mol_sum_for_ele_list) / mol_minimum
+    effective_str = ''
+    for index, _e in enumerate(unique_ele):
+        effective_str += _e + str(int(round(mol_sum_for_ele_array[index], 3)*1000))
+    return effective_str
 
 
 def form_iso_table(sample_tb_rows):
