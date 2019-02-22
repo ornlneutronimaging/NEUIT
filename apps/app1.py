@@ -152,17 +152,27 @@ def show_hide_iso_table(iso_changed):
     ])
 def output(n_clicks, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_clicks is not None:
-        total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows,
-                                                                                          iso_tb_rows,
-                                                                                          iso_changed)
-        return html.Div(
-            [
+        # Test input
+        df_sample_tb, df_iso_tb, test_passed_list, output_div_list = validate_sample_input(
+            sample_tb_rows=sample_tb_rows,
+            iso_tb_rows=iso_tb_rows)
+
+        # Calculation starts
+        if all(test_passed_list):
+            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(df_sample_tb=df_sample_tb,
+                                                                                              df_iso_tb=df_iso_tb,
+                                                                                              iso_changed=iso_changed)
+            output_div_list = [
                 html.Hr(),
                 html.H3('Result'),
                 html.H5('Transmission:'),
                 html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(round(total_trans, 3))),
                 html.H5('Attenuation:'),
                 html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(round(100 - total_trans, 3))),
-                html.Div([html.H5('Sample stack:'), html.Div(div_list)])
+                html.Div([html.H5('Sample stack:'), html.Div(div_list)]),
             ]
-        )
+            return output_div_list
+        else:
+            return output_div_list
+    else:
+        return empty_div

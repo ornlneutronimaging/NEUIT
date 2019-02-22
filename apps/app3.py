@@ -84,7 +84,8 @@ layout = html.Div(
                 html.Button('Submit', id='app3_button_submit'),
             ]
         ),
-
+        # # Transmission at CG-1D
+        # html.Div(id='app3_error'),
         # Transmission at CG-1D
         html.Div(id='app3_result'),
         # Hidden Div to handle button action
@@ -100,7 +101,7 @@ layout = html.Div(
     Output('app3_clicked_button', 'children'),
     [
         Input('app3_button_add', 'n_clicks'),
-        Input('app3_button_del', 'n_clicks')
+        Input('app3_button_del', 'n_clicks'),
     ],
     [
         State('app3_clicked_button', 'children')
@@ -140,9 +141,7 @@ def add_del_row(clicked, sample_tb_rows, input_type, converter_tb_header_new):
     Output('app3_sample_table', 'columns'),
     [
         Input('composition_input_type', 'value'),
-        # State('app3_sample_table', 'rows'),
-    ],
-)
+    ])
 def update_input_columns(input_type):
     converter_tb_header_new = converter_tb_header[:]
     if input_type == weight_name:
@@ -185,23 +184,30 @@ def show_hide_iso_table(iso_changed):
         State('app3_iso_check', 'values'),
         State('composition_input_type', 'value'),
     ])
-def output(n_clicks, sample_tb_rows, iso_tb_rows, iso_changed, input_type):
+def output(n_clicks, sample_tb_rows, iso_tb_rows, iso_changed, compos_type):
     if n_clicks is not None:
-        total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows=sample_tb_rows,
-                                                                                          iso_tb_rows=iso_tb_rows,
-                                                                                          iso_changed=iso_changed)
-        df_input, ele_list, mol_list = convert_input_to_composition(sample_tb_rows=sample_tb_rows,
-                                                                    input_type=input_type,
-                                                                    o_stack=o_stack)
+        # Test input
+        df_sample_tb, df_iso_tb, test_passed_list, output_div_list = validate_composition_input(
+            sample_tb_rows=sample_tb_rows,
+            iso_tb_rows=iso_tb_rows,
+            compos_type=compos_type)
 
-        effective_formula = convert_to_effective_formula(ele_list=ele_list, mol_list=mol_list)
+        # Calculation starts
+        if all(test_passed_list):
+            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(df_sample_tb=df_sample_tb,
+                                                                                              df_iso_tb=df_iso_tb,
+                                                                                              iso_changed=iso_changed)
+            df_input, ele_list, mol_list = convert_input_to_composition(df_input=df_sample_tb,
+                                                                        compos_type=compos_type,
+                                                                        o_stack=o_stack)
 
-        return html.Div(
-            [
+            effective_formula = convert_to_effective_formula(ele_list=ele_list, mol_list=mol_list)
+
+            output_div_list = [
                 html.Hr(),
                 html.H3('Result'),
                 html.P('The effective chemical formula after conversion: {}'.format(effective_formula)),
-                html.P('(This can be passed as chemical formula for other apps)'),
+                html.P("(This can be passed as 'Chemical formula' for other apps)"),
                 dt.DataTable(rows=df_input.to_dict('records'),
                              columns=converter_tb_header_p,
                              editable=False,
@@ -212,4 +218,8 @@ def output(n_clicks, sample_tb_rows, iso_tb_rows, iso_changed, input_type):
                              ),
                 html.Div([html.H5('Sample stack:'), html.Div(div_list)])
             ]
-        )
+            return output_div_list
+        else:
+            return output_div_list
+    else:
+        return empty_div

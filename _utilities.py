@@ -8,7 +8,7 @@ import pandas as pd
 from ImagingReso.resonance import Resonance
 from scipy.interpolate import interp1d
 import numpy as np
-from pprint import pprint
+from cerberus import Validator
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
@@ -40,6 +40,26 @@ iso_tb_rows_default = [{ele_name: None, iso_name: None, iso_ratio_name: None, la
 iso_tb_df_default = pd.DataFrame(iso_tb_rows_default)
 col_3 = 'three columns'
 col_6 = 'six columns'
+empty_div = html.Div()
+
+compos_dict_schema = {
+    chem_name: {'type': 'string'},
+    weight_name: {'type': 'float', 'min': 0},
+    atomic_name: {'type': 'float', 'min': 0},
+}
+
+iso_dict_schema = {
+    layer_name: {'type': 'string'},
+    ele_name: {'type': 'string'},
+    iso_name: {'type': 'string'},
+    iso_ratio_name: {'type': 'float', 'min': 0, 'max': 1},
+}
+
+ele_dict_schema = {
+    chem_name: {'type': 'string'},
+    thick_name: {'type': 'float', 'min': 0},
+    density_name: {'type': 'float', 'min': 0},
+}
 
 
 def classify_neutron(energy_ev):
@@ -66,9 +86,86 @@ def classify_neutron(energy_ev):
         return 'Ultra-fast'
 
 
-def output_error_div(error_message: str):
-    error_message_div = dcc.Markdown(error_message)
-    return error_message_div
+def validate_sample_input(sample_tb_rows: dict, iso_tb_rows: dict):
+    # Force input to pd.DataFrame and force input type from 'str' to 'float' for number input fields
+    df_sample_tb = pd.DataFrame(sample_tb_rows)
+    df_iso_tb = pd.DataFrame(iso_tb_rows)
+    df_sample_tb = force_col_to_numeric(input_df=df_sample_tb, col_name=thick_name)
+    df_sample_tb = force_col_to_numeric(input_df=df_sample_tb, col_name=density_name)
+    df_iso_tb = force_col_to_numeric(input_df=df_iso_tb, col_name=iso_ratio_name)
+
+    # Test input format
+    sample_test_passed_list, sample_output_div_list = validate_input_loop(schema=ele_dict_schema,
+                                                                          input_df=df_sample_tb)
+    iso_test_passed_list, iso_output_div_list = validate_input_loop(schema=iso_dict_schema,
+                                                                    input_df=df_iso_tb)
+    test_passed_list = sample_test_passed_list + iso_test_passed_list
+    output_div_list = sample_output_div_list + iso_output_div_list
+
+    # Test the sum of iso ratio == 1
+    sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=df_iso_tb)
+    test_passed_list.append(sum_test_passed)
+    output_div_list.append(sum_test_output_div)
+    return df_sample_tb, df_iso_tb, test_passed_list, output_div_list
+
+
+def validate_composition_input(sample_tb_rows: dict, iso_tb_rows: dict, compos_type):
+    # Force input to pd.DataFrame and force input type from 'str' to 'float' for number input fields
+    df_sample_tb = pd.DataFrame(sample_tb_rows)
+    df_iso_tb = pd.DataFrame(iso_tb_rows)
+    df_sample_tb = force_col_to_numeric(input_df=df_sample_tb, col_name=compos_type)
+    df_iso_tb = force_col_to_numeric(input_df=df_iso_tb, col_name=iso_ratio_name)
+
+    # Test input format
+    sample_test_passed_list, sample_output_div_list = validate_input_loop(schema=compos_dict_schema,
+                                                                          input_df=df_sample_tb)
+    iso_test_passed_list, iso_output_div_list = validate_input_loop(schema=iso_dict_schema,
+                                                                    input_df=df_iso_tb)
+    test_passed_list = sample_test_passed_list + iso_test_passed_list
+    output_div_list = sample_output_div_list + iso_output_div_list
+
+    # Test the sum of iso ratio == 1
+    sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=df_iso_tb)
+    test_passed_list.append(sum_test_passed)
+    output_div_list.append(sum_test_output_div)
+    return df_sample_tb, df_iso_tb, test_passed_list, output_div_list
+
+
+def validate_input_loop(schema: dict, input_df: pd.DataFrame):
+    v = Validator(schema)
+    list_of_input_dict = input_df.to_dict('records')
+    passed_list = []
+    div_list = []
+    for each_input_dict in list_of_input_dict:
+        passed, div = validate_input(v=v, input_dict=each_input_dict)
+        div_list.append(div)
+        passed_list.append(passed)
+    return passed_list, div_list
+
+
+def validate_input(v: Validator, input_dict: dict):
+    passed = v.validate(input_dict)
+    if passed:
+        return passed, None
+    else:
+        error_message_str = v.errors
+    return passed, html.P('INPUT ERROR: {}'.format(error_message_str))
+
+
+def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
+    df = iso_df.groupby([layer_name, ele_name]).sum()
+    boo = df[iso_ratio_name] - 1.0 <= 0.005
+    passed_list = list(boo)
+    if all(passed_list):
+        return True, None
+    else:
+        _list = df.index[boo].tolist()
+        return False, html.P("INPUT ERROR: {}: ['sum of isotopic ratios is not 1']".format(str(_list)))
+
+
+def force_col_to_numeric(input_df: pd.DataFrame, col_name: str):
+    input_df[col_name] = pd.to_numeric(input_df[col_name])
+    return input_df
 
 
 def init_reso_from_tb(range_tb_rows, e_step):
@@ -223,15 +320,13 @@ def add_del_tb_rows_converter(add_or_del, sample_tb_rows, input_type: str, heade
 #     return _df_sample
 
 
-def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows, iso_changed):
+def calculate_transmission_cg1d_and_form_stack_table(df_sample_tb, df_iso_tb, iso_changed):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
     df = load_beam_shape(_path_to_beam_shape)
     __o_reso = Resonance(energy_min=0.00025, energy_max=0.12525, energy_step=0.000625)
 
-    df_sample_tb = pd.DataFrame(sample_tb_rows)
     _o_reso = unpack_sample_tb_df_and_add_layer(o_reso=__o_reso, sample_tb_df=df_sample_tb)
-    df_iso_tb = pd.DataFrame(iso_tb_rows)
     o_reso = unpack_iso_tb_df_and_update(o_reso=_o_reso, iso_tb_df=df_iso_tb, iso_changed=iso_changed)
 
     # interpolate with the beam shape energy
@@ -307,11 +402,10 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows, iso_tb_rows
     return _total_trans, div_list, o_stack
 
 
-def convert_input_to_composition(sample_tb_rows, input_type, o_stack):
-    df_input = pd.DataFrame(sample_tb_rows)
+def convert_input_to_composition(df_input, compos_type, o_stack):
     df_input = df_input[df_input[chem_name] != '']
-    df_input[input_type] = pd.to_numeric(df_input[input_type])  # , errors='ignore')
-    if input_type == weight_name:
+    # df_input[input_type] = pd.to_numeric(df_input[input_type])  # , errors='ignore')
+    if compos_type == weight_name:
         fill_name = atomic_name_p
         update_name = weight_name_p
     else:
@@ -322,15 +416,15 @@ def convert_input_to_composition(sample_tb_rows, input_type, o_stack):
     _ele_list = []
     _mol_list = []
     _input_converted_p_list = []
-    _input_sum = df_input[input_type].sum()
+    _input_sum = df_input[compos_type].sum()
     for _n, each_chem in enumerate(df_input[chem_name]):
         _molar_mass = o_stack[each_chem]['molar_mass']['value']
-        input_num = df_input[input_type][_n]
+        input_num = df_input[compos_type][_n]
         _current_ele_list = o_stack[each_chem]['elements']
         _current_ratio_list = o_stack[each_chem]['stoichiometric_ratio']
         _input_percentage = input_num * 100 / _input_sum
         _ele_list += _current_ele_list
-        if input_type == weight_name:  # wt. input (g)
+        if compos_type == weight_name:  # wt. input (g)
             _result = input_num / _molar_mass
             _mol_list += list(np.array(_current_ratio_list) * _result)
         else:  # at. input (mol)
@@ -361,7 +455,7 @@ def convert_to_effective_formula(ele_list, mol_list):
     mol_sum_for_ele_array = np.array(mol_sum_for_ele_list) / mol_minimum
     effective_str = ''
     for index, _e in enumerate(unique_ele):
-        effective_str += _e + str(int(round(mol_sum_for_ele_array[index], 3)*1000))
+        effective_str += _e + str(int(round(mol_sum_for_ele_array[index], 3) * 1000))
     return effective_str
 
 

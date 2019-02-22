@@ -173,6 +173,10 @@ layout = html.Div(
             html.Div(id='clicked_button', children='del:0 add:0 tog:0 last:nan', style={'display': 'none'})
         ]),
         html.Div(id='display_clicked', children=""),
+
+        # Error message
+        html.Div(id='app2_error'),
+
         # Plot
         html.Div(
             [
@@ -199,16 +203,8 @@ layout = html.Div(
             id='plot_div',
             style={'display': 'none'}
         ),
-
-        # Stack display
-        html.Div(
-            [
-                # Transmission at CG-1D
-                html.Div(id='result'),
-                # Sample stack
-                html.Div(id='stack'),
-            ],
-        ),
+        # Transmission at CG-1D and sample stack
+        html.Div(id='result'),
     ]
 )
 
@@ -374,63 +370,69 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
          sample_tb_rows, iso_tb_rows,
          iso_changed):
     if n_submit is not None:
-        o_reso = init_reso_from_tb(range_tb_rows, e_step)
+        # Test input
+        df_sample_tb, df_iso_tb, test_passed_list, output_div_list = validate_sample_input(
+            sample_tb_rows=sample_tb_rows,
+            iso_tb_rows=iso_tb_rows)
 
-        df_sample_tb = pd.DataFrame(sample_tb_rows)
-        df_iso_tb = pd.DataFrame(iso_tb_rows)
-        o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
-        o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb, iso_changed=iso_changed)
+        # Calculation starts
+        if all(test_passed_list):
+            o_reso = init_reso_from_tb(range_tb_rows, e_step)
+            o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
+            o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb, iso_changed=iso_changed)
 
-        if plot_scale == 'logx':
-            _log_x = True
-            _log_y = False
-        elif plot_scale == 'logy':
-            _log_x = False
-            _log_y = True
-        elif plot_scale == 'loglog':
-            _log_x = True
-            _log_y = True
+            if plot_scale == 'logx':
+                _log_x = True
+                _log_y = False
+            elif plot_scale == 'logy':
+                _log_x = False
+                _log_y = True
+            elif plot_scale == 'loglog':
+                _log_x = True
+                _log_y = True
+            else:
+                _log_x = False
+                _log_y = False
+            show_total = False
+            show_layer = False
+            show_ele = False
+            show_iso = False
+            if 'total' in show_opt:
+                show_total = True
+            if 'layer' in show_opt:
+                show_layer = True
+            if 'ele' in show_opt:
+                show_ele = True
+            if 'iso' in show_opt:
+                show_iso = True
+            plotly_fig = o_reso.plot(plotly=True,
+                                     y_axis=y_type,
+                                     x_axis=x_type,
+                                     time_unit='us',
+                                     logy=_log_y,
+                                     logx=_log_x,
+                                     mixed=show_total,
+                                     all_layers=show_layer,
+                                     all_elements=show_ele,
+                                     all_isotopes=show_iso,
+                                     source_to_detector_m=distance_m)
+            plotly_fig.layout.showlegend = True
+            plotly_fig.layout.autosize = True
+            plotly_fig.layout.height = 600
+            plotly_fig.layout.width = 900
+            plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
+            plotly_fig.layout.xaxis1.tickfont.size = 15
+            plotly_fig.layout.xaxis1.titlefont.size = 18
+            plotly_fig.layout.yaxis1.tickfont.size = 15
+            plotly_fig.layout.yaxis1.titlefont.size = 18
+
+            return html.Div(
+                [
+                    dcc.Graph(id='reso_plot', figure=plotly_fig, className='container'),
+                ]
+            )
         else:
-            _log_x = False
-            _log_y = False
-        show_total = False
-        show_layer = False
-        show_ele = False
-        show_iso = False
-        if 'total' in show_opt:
-            show_total = True
-        if 'layer' in show_opt:
-            show_layer = True
-        if 'ele' in show_opt:
-            show_ele = True
-        if 'iso' in show_opt:
-            show_iso = True
-        plotly_fig = o_reso.plot(plotly=True,
-                                 y_axis=y_type,
-                                 x_axis=x_type,
-                                 time_unit='us',
-                                 logy=_log_y,
-                                 logx=_log_x,
-                                 mixed=show_total,
-                                 all_layers=show_layer,
-                                 all_elements=show_ele,
-                                 all_isotopes=show_iso,
-                                 source_to_detector_m=distance_m)
-        plotly_fig.layout.showlegend = True
-        plotly_fig.layout.autosize = True
-        plotly_fig.layout.height = 600
-        plotly_fig.layout.width = 900
-        plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
-        plotly_fig.layout.xaxis1.tickfont.size = 15
-        plotly_fig.layout.xaxis1.titlefont.size = 18
-        plotly_fig.layout.yaxis1.tickfont.size = 15
-        plotly_fig.layout.yaxis1.titlefont.size = 18
-
-        return html.Div(
-            [
-                dcc.Graph(id='reso_plot', figure=plotly_fig, className='container'),
-            ]
-        )
+            return None
 
 
 @app.callback(
@@ -455,44 +457,75 @@ def export_plot_data(n_submit,
                      range_tb_rows, e_step, distance_m,
                      sample_tb_rows, iso_tb_rows,
                      iso_changed):
-    o_reso = init_reso_from_tb(range_tb_rows, e_step)
+    # Test input
+    df_sample_tb, df_iso_tb, test_passed_list, output_div_list = validate_sample_input(
+        sample_tb_rows=sample_tb_rows,
+        iso_tb_rows=iso_tb_rows)
 
-    df_sample_tb = pd.DataFrame(sample_tb_rows)
-    df_iso_tb = pd.DataFrame(iso_tb_rows)
-    o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
-    o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb, iso_changed=iso_changed)
+    # Calculation starts
+    if all(test_passed_list):
+        o_reso = init_reso_from_tb(range_tb_rows, e_step)
+        o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
+        o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb, iso_changed=iso_changed)
 
-    show_total = False
-    show_layer = False
-    show_ele = False
-    show_iso = False
-    if 'total' in show_opt:
-        show_total = True
-    if 'layer' in show_opt:
-        show_layer = True
-    if 'ele' in show_opt:
-        show_ele = True
-    if 'iso' in show_opt:
-        show_iso = True
-    if export_clip:
-        _type = 'clip'
+        show_total = False
+        show_layer = False
+        show_ele = False
+        show_iso = False
+        if 'total' in show_opt:
+            show_total = True
+        if 'layer' in show_opt:
+            show_layer = True
+        if 'ele' in show_opt:
+            show_ele = True
+        if 'iso' in show_opt:
+            show_iso = True
+        if export_clip:
+            _type = 'clip'
+        else:
+            _type = 'df'
+
+        # if n_link_click is not None:
+        df = o_reso.export(y_axis=y_type,
+                           x_axis=x_type,
+                           time_unit='us',
+                           mixed=show_total,
+                           all_layers=show_layer,
+                           all_elements=show_ele,
+                           all_isotopes=show_iso,
+                           source_to_detector_m=distance_m,
+                           output_type=_type)
+        # if export_type == 'download':
+        csv_string = df.to_csv(index=False, encoding='utf-8')
+        csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
+        return csv_string
     else:
-        _type = 'df'
+        return None
 
-    # if n_link_click is not None:
-    df = o_reso.export(y_axis=y_type,
-                       x_axis=x_type,
-                       time_unit='us',
-                       mixed=show_total,
-                       all_layers=show_layer,
-                       all_elements=show_ele,
-                       all_isotopes=show_iso,
-                       source_to_detector_m=distance_m,
-                       output_type=_type)
-    # if export_type == 'download':
-    csv_string = df.to_csv(index=False, encoding='utf-8')
-    csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
-    return csv_string
+
+@app.callback(
+    Output('app2_error', 'children'),
+    [
+        Input('button_submit', 'n_clicks'),
+    ],
+    [
+        State('sample_table', 'rows'),
+        State('iso_table', 'rows'),
+    ])
+def error(n_clicks, sample_tb_rows, iso_tb_rows):
+    if n_clicks is not None:
+        # Test input
+        df_sample_tb, df_iso_tb, test_passed_list, output_div_list = validate_sample_input(
+            sample_tb_rows=sample_tb_rows,
+            iso_tb_rows=iso_tb_rows)
+
+        # Calculation starts
+        if all(test_passed_list):
+            return None
+        else:
+            return output_div_list
+    else:
+        return None
 
 
 @app.callback(
@@ -508,20 +541,30 @@ def export_plot_data(n_submit,
     ])
 def output(n_clicks, y_type, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_clicks is not None:
-        total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_rows,
-                                                                                          iso_tb_rows,
-                                                                                          iso_changed)
-        if y_type == 'transmission':
-            return html.Div(
-                [
+        # Test input
+        df_sample_tb, df_iso_tb, test_passed_list, output_div_list = validate_sample_input(
+            sample_tb_rows=sample_tb_rows,
+            iso_tb_rows=iso_tb_rows)
+
+        # Calculation starts
+        if all(test_passed_list):
+            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(df_sample_tb=df_sample_tb,
+                                                                                              df_iso_tb=df_iso_tb,
+                                                                                              iso_changed=iso_changed)
+            if y_type == 'transmission':
+                output_div_list = [
                     html.H5('Sample transmission:'),
                     html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(round(total_trans, 3))),
-                    html.Div([html.H5('Sample stack:'), html.Div(div_list)])
-                ])
-        else:
-            return html.Div(
-                [
+                    html.Div([html.H5('Sample stack:'), html.Div(div_list)]),
+                ]
+            else:
+                output_div_list = [
                     html.H5('Sample attenuation:'),
                     html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(round(100 - total_trans, 3))),
-                    html.Div([html.H5('Sample stack:'), html.Div(div_list)])
-                ])
+                    html.Div([html.H5('Sample stack:'), html.Div(div_list)]),
+                ]
+            return output_div_list
+        else:
+            return None
+    else:
+        return None
