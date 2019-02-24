@@ -222,16 +222,16 @@ def validate_input(v: Validator, input_dict: dict):
 
 
 def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
-    print(iso_df)
     df = iso_df.groupby([column_1, column_2]).sum()
-    print(df)
-    boo = df[column_4] - 1.0 <= 0.005
+    df_boo = df[column_4] - 1.0
+    print(df_boo)
+    boo = df_boo.abs() >= 0.005
     passed_list = list(boo)
-    if all(passed_list):
-        return True, None
-    else:
+    if any(passed_list):
         _list = df.index[boo].tolist()
         return False, html.P("INPUT ERROR: {}: ['sum of isotopic ratios is not 1']".format(str(_list)))
+    else:
+        return True, None
 
 
 def force_col_to_numeric(input_df: pd.DataFrame, col_name: str):
