@@ -6,16 +6,16 @@ from _app import app
 import urllib.parse
 from _utilities import *
 
-df_range = pd.DataFrame({
-    energy_name: [1, 100],
-    wave_name: [np.NaN, np.NaN],
-    tof_name: [np.NaN, np.NaN],
+energy_range_df_default = pd.DataFrame({
+    'column_1': [1, 100],
+    'column_2': [np.NaN, np.NaN],
+    'column_3': [np.NaN, np.NaN],
 })
 
-df_sample = pd.DataFrame({
-    chem_name: ['Ag'],
-    thick_name: ['1'],
-    density_name: [''],
+sample_df_default = pd.DataFrame({
+    'column_1': ['Ag'],
+    'column_2': ['1'],
+    'column_3': [''],
 })
 
 plot_data_filename = "plot_data.csv"
@@ -38,7 +38,7 @@ layout = html.Div(
                     [
                         # Energy slider
                         dcc.RangeSlider(
-                            id='e_range_slider',
+                            id='app2_e_range_slider',
                             min=-5,
                             max=6,
                             value=[0, 2],
@@ -54,14 +54,15 @@ layout = html.Div(
                 html.Br(),
                 html.Div([
                     dt.DataTable(
-                        rows=df_range.to_dict('records'),
+                        data=energy_range_df_default.to_dict('records'),
                         # optional - sets the order of columns
-                        columns=range_tb_header,
+                        columns=energy_range_header_df.to_dict('records'),
                         editable=False,
                         row_selectable=False,
-                        filterable=False,
-                        sortable=True,
-                        id='range_table'
+                        filtering=False,
+                        sorting=False,
+                        row_deletable=False,
+                        id='app2_range_table'
                     ),
                 ]),
                 html.Div(
@@ -73,7 +74,7 @@ layout = html.Div(
                                 html.Div(
                                     [
                                         dcc.Dropdown(
-                                            id='e_step',
+                                            id='app2_e_step',
                                             options=[
                                                 {'label': '0.001 (eV)  (NOT recommended if energy range > 10 eV)',
                                                  'value': 0.001},
@@ -98,7 +99,7 @@ layout = html.Div(
                                 html.H6('Source-to-detector (optional):'),
                                 html.Div(
                                     [
-                                        dcc.Input(id='distance', type='number', value=16.45, min=1,
+                                        dcc.Input(id='app2_distance', type='number', value=16.45, min=1,
                                                   inputmode='numeric',
                                                   step=0.01,
                                                   className='nine columns'),
@@ -111,7 +112,7 @@ layout = html.Div(
                                 dcc.Markdown(
                                     '''NOTE: Please ignore the above input field if **NOT** 
                                     interested in display of time-of-flight (TOF).'''),
-                            ], className=col_6,
+                            ], className=col_width_6,
                         ),
                     ], className='row',
                 ),
@@ -121,27 +122,20 @@ layout = html.Div(
         # Sample input
         html.H3('Sample info'),
         html.Div([
-            html.Div(
-                [
-                    html.Button('+', id='button_add', n_clicks=0),
-                    html.Button('-', id='button_del', n_clicks=0),
-                    # html.Button('+', id='button_add', n_clicks_timestamp=0),
-                    # html.Button('-', id='button_del', n_clicks_timestamp=0),
-                ], className='row'
-            ),
-
+            html.Button('Add Row', id='app2_add_row', n_clicks=0),
             dt.DataTable(
-                rows=df_sample.to_dict('records'),
+                data=sample_df_default.to_dict('records'),
                 # optional - sets the order of columns
-                columns=sample_tb_header,
+                columns=sample_header_df.to_dict('records'),
                 editable=True,
                 row_selectable=False,
-                filterable=False,
-                sortable=False,
-                id='sample_table'
+                filtering=False,
+                sorting=False,
+                row_deletable=True,
+                id='app2_sample_table'
             ),
             markdown_sample,
-            dcc.Checklist(id='iso_modified',
+            dcc.Checklist(id='app2_iso_check',
                           options=[
                               {'label': 'Modify isotopic ratios', 'value': True},
                           ], values=[],
@@ -149,30 +143,27 @@ layout = html.Div(
             html.Div(
                 [
                     markdown_iso,
-                    dt.DataTable(rows=iso_tb_df_default.to_dict('records'),
-                                 columns=iso_table_header,
-                                 editable=True,
-                                 # editable={layer_name: False,
-                                 #           ele_name: False,
-                                 #           iso_name: True,
-                                 #           },
-                                 # row_selectable=True,
-                                 filterable=True,
-                                 sortable=True,
-                                 id='iso_table'),
+                    dt.DataTable(
+                        data=iso_tb_df_default.to_dict('records'),
+                        columns=iso_tb_header_df.to_dict('records'),
+                        editable=True,
+                        # editable={layer_name: False,
+                        #           ele_name: False,
+                        #           iso_name: True,
+                        #           },
+                        row_selectable=False,
+                        filtering=False,
+                        sorting=False,
+                        row_deletable=False,
+                        id='app2_iso_table'
+                    ),
                 ],
-                id='iso_input',
-                style={'visibility': 'hidden'},
-                # style={'display': 'none'},
+                id='app2_iso_input',
+                style={'display': 'none'},
             ),
-            html.Button('Submit', id='button_submit'),
+            html.Button('Submit', id='app2_button_submit'),
         ]
         ),
-        # Hidden Div to handle button action
-        html.Div([
-            html.Div(id='clicked_button', children='del:0 add:0 tog:0 last:nan', style={'display': 'none'})
-        ]),
-        html.Div(id='display_clicked', children=""),
 
         # Error message
         html.Div(id='app2_error'),
@@ -180,17 +171,17 @@ layout = html.Div(
         # Plot
         html.Div(
             [
-                html.Div(id='plot_options', children=plot_option_div),
+                html.Div(id='app2_plot_options', children=plot_option_div),
                 html.Div(
                     [
-                        dcc.Checklist(id='export_clip',
+                        dcc.Checklist(id='app2_export_clip',
                                       options=[
                                           {'label': 'Clipboard', 'value': False},
                                       ], values=[],
                                       ),
                         html.A(
                             'Download Plot Data',
-                            id='download_link',
+                            id='app2_download_link',
                             download=plot_data_filename,
                             href="",
                             target="_blank",
@@ -198,22 +189,22 @@ layout = html.Div(
                         ),
                     ], className='row'
                 ),
-                html.Div(id='plot'),
+                html.Div(id='app2_plot'),
             ],
-            id='plot_div',
+            id='app2_plot_div',
             style={'display': 'none'}
         ),
         # Transmission at CG-1D and sample stack
-        html.Div(id='result'),
+        html.Div(id='app2_result'),
     ]
 )
 
 
 @app.callback(
-    Output('range_table', 'rows'),
+    Output('app2_range_table', 'data'),
     [
-        Input('e_range_slider', 'value'),
-        Input('distance', 'value'),
+        Input('app2_e_range_slider', 'value'),
+        Input('app2_distance', 'value'),
     ])
 def show_range_table(slider, distance):
     transformed_value = [pow(10, v) for v in slider]
@@ -228,64 +219,42 @@ def show_range_table(slider, distance):
     class_1 = classify_neutron(e_min)
     class_2 = classify_neutron(e_max)
     _df_range = pd.DataFrame({
-        energy_name: [e_min, e_max],
-        wave_name: [lambda_1, lambda_2],
-        speed_name: [v_1, v_2],
-        tof_name: [tof_1, tof_2],
-        class_name: [class_1, class_2],
+        column_1: [e_min, e_max],
+        column_2: [lambda_1, lambda_2],
+        column_3: [v_1, v_2],
+        column_4: [tof_1, tof_2],
+        column_5: [class_1, class_2],
     })
     return _df_range.to_dict('records')
 
 
 @app.callback(
-    Output('clicked_button', 'children'),
-    [
-        Input('button_add', 'n_clicks'),
-        Input('button_del', 'n_clicks')
-    ],
-    [
-        State('clicked_button', 'children')
-    ])
-def updated_clicked(add_clicks, del_clicks, prev_clicks):
-    prev_clicks = dict([i.split(':') for i in prev_clicks.split(' ')])
-    last_clicked = 'nan'
-    if del_clicks > int(prev_clicks['del']):
-        last_clicked = 'del'
-    elif add_clicks > int(prev_clicks['add']):
-        last_clicked = 'add'
-    cur_clicks = 'add:{} del:{} last:{}'.format(add_clicks, del_clicks, last_clicked)
-    print(cur_clicks)
-    return cur_clicks
+    Output('app2_sample_table', 'data'),
+    [Input('app2_add_row', 'n_clicks')],
+    [State('app2_sample_table', 'data'),
+     State('app2_sample_table', 'columns')])
+def add_row(n_clicks, rows, columns):
+    if n_clicks > 0:
+        rows.append({c['id']: '' for c in columns})
+    return rows
 
 
 @app.callback(
-    Output('sample_table', 'rows'),
+    Output('app2_iso_table', 'data'),
     [
-        Input('clicked_button', 'children'),
-    ],
-    [
-        State('sample_table', 'rows'),
+        Input('app2_sample_table', 'data'),
     ])
-def add_del_row(clicked, sample_tb_rows):
-    last_clicked = clicked[-3:]
-    _df_sample = add_del_tb_rows(add_or_del=last_clicked, sample_tb_rows=sample_tb_rows)
-    return _df_sample.to_dict('records')
+def update_iso_table(compos_tb_dict):
+    compos_tb_df = pd.DataFrame(compos_tb_dict)
+    sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
+    iso_df = form_iso_table(sample_df=sample_df)
+    return iso_df.to_dict('records')
 
 
 @app.callback(
-    Output('iso_table', 'rows'),
+    Output('app2_iso_input', 'style'),
     [
-        Input('sample_table', 'rows'),
-    ])
-def update_iso_table(sample_tb_rows):
-    _df = form_iso_table(sample_tb_rows)
-    return _df.to_dict('records')
-
-
-@app.callback(
-    Output('iso_input', 'style'),
-    [
-        Input('iso_modified', 'values'),
+        Input('app2_iso_check', 'values'),
     ])
 def show_hide_iso_table(iso_changed):
     if iso_changed:
@@ -337,9 +306,9 @@ def disable_total_layer_when_plotting_sigma(y_type):
 
 
 @app.callback(
-    Output('plot_div', 'style'),
+    Output('app2_plot_div', 'style'),
     [
-        Input('button_submit', 'n_clicks'),
+        Input('app2_button_submit', 'n_clicks'),
     ])
 def show_plot_options(n_submit):
     if n_submit is not None:
@@ -349,37 +318,38 @@ def show_plot_options(n_submit):
 
 
 @app.callback(
-    Output('plot', 'children'),
+    Output('app2_plot', 'children'),
     [
-        Input('button_submit', 'n_clicks'),
+        Input('app2_button_submit', 'n_clicks'),
         Input('y_type', 'value'),
         Input('x_type', 'value'),
         Input('plot_scale', 'value'),
         Input('show_opt', 'values'),
     ],
     [
-        State('range_table', 'rows'),
-        State('e_step', 'value'),
-        State('distance', 'value'),
-        State('sample_table', 'rows'),
-        State('iso_table', 'rows'),
-        State('iso_modified', 'values'),
+        State('app2_range_table', 'data'),
+        State('app2_e_step', 'value'),
+        State('app2_distance', 'value'),
+        State('app2_sample_table', 'data'),
+        State('app2_iso_table', 'data'),
+        State('app2_iso_check', 'values'),
     ])
 def plot(n_submit, y_type, x_type, plot_scale, show_opt,
          range_tb_rows, e_step, distance_m,
          sample_tb_rows, iso_tb_rows,
          iso_changed):
     if n_submit is not None:
+        range_tb_df = pd.DataFrame(range_tb_rows)
         # Test input
-        df_sample_tb, df_iso_tb, test_passed_list, output_div_list = validate_sample_input(
-            sample_tb_rows=sample_tb_rows,
-            iso_tb_rows=iso_tb_rows)
-
+        sample_tb_df = pd.DataFrame(sample_tb_rows)
+        iso_tb_df = pd.DataFrame(iso_tb_rows)
+        sample_tb_df, iso_tb_df, test_passed_list, output_div_list = validate_sample_input(sample_tb_df=sample_tb_df,
+                                                                                           iso_tb_df=iso_tb_df)
         # Calculation starts
         if all(test_passed_list):
-            o_reso = init_reso_from_tb(range_tb_rows, e_step)
-            o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
-            o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb, iso_changed=iso_changed)
+            o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step)
+            o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_tb_df)
+            o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
 
             if plot_scale == 'logx':
                 _log_x = True
@@ -428,7 +398,7 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
 
             return html.Div(
                 [
-                    dcc.Graph(id='reso_plot', figure=plotly_fig, className='container'),
+                    dcc.Graph(id='app2_reso_plot', figure=plotly_fig, className='container'),
                 ]
             )
         else:
@@ -436,37 +406,39 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
 
 
 @app.callback(
-    Output('download_link', 'href'),
+    Output('app2_download_link', 'href'),
     [
-        Input('button_submit', 'n_clicks'),
+        Input('app2_button_submit', 'n_clicks'),
         Input('y_type', 'value'),
         Input('x_type', 'value'),
         Input('show_opt', 'values'),
-        Input('export_clip', 'values'),
+        Input('app2_export_clip', 'values'),
     ],
     [
-        State('range_table', 'rows'),
-        State('e_step', 'value'),
-        State('distance', 'value'),
-        State('sample_table', 'rows'),
-        State('iso_table', 'rows'),
-        State('iso_modified', 'values'),
+        State('app2_range_table', 'data'),
+        State('app2_e_step', 'value'),
+        State('app2_distance', 'value'),
+        State('app2_sample_table', 'data'),
+        State('app2_iso_table', 'data'),
+        State('app2_iso_check', 'values'),
     ])
 def export_plot_data(n_submit,
                      y_type, x_type, show_opt, export_clip,
                      range_tb_rows, e_step, distance_m,
                      sample_tb_rows, iso_tb_rows,
                      iso_changed):
+    range_tb_df = pd.DataFrame(range_tb_rows)
     # Test input
-    df_sample_tb, df_iso_tb, test_passed_list, output_div_list = validate_sample_input(
-        sample_tb_rows=sample_tb_rows,
-        iso_tb_rows=iso_tb_rows)
+    sample_tb_df = pd.DataFrame(sample_tb_rows)
+    iso_tb_df = pd.DataFrame(iso_tb_rows)
+    sample_tb_df, iso_tb_df, test_passed_list, output_div_list = validate_sample_input(sample_tb_df=sample_tb_df,
+                                                                                       iso_tb_df=iso_tb_df)
 
     # Calculation starts
     if all(test_passed_list):
-        o_reso = init_reso_from_tb(range_tb_rows, e_step)
-        o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
-        o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=df_iso_tb, iso_changed=iso_changed)
+        o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step)
+        o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_tb_df)
+        o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
 
         show_total = False
         show_layer = False
@@ -506,18 +478,19 @@ def export_plot_data(n_submit,
 @app.callback(
     Output('app2_error', 'children'),
     [
-        Input('button_submit', 'n_clicks'),
+        Input('app2_button_submit', 'n_clicks'),
     ],
     [
-        State('sample_table', 'rows'),
-        State('iso_table', 'rows'),
+        State('app2_sample_table', 'data'),
+        State('app2_iso_table', 'data'),
     ])
 def error(n_clicks, sample_tb_rows, iso_tb_rows):
     if n_clicks is not None:
         # Test input
-        df_sample_tb, df_iso_tb, test_passed_list, output_div_list = validate_sample_input(
-            sample_tb_rows=sample_tb_rows,
-            iso_tb_rows=iso_tb_rows)
+        sample_tb_df = pd.DataFrame(sample_tb_rows)
+        iso_tb_df = pd.DataFrame(iso_tb_rows)
+        sample_tb_df, iso_tb_df, test_passed_list, output_div_list = validate_sample_input(sample_tb_df=sample_tb_df,
+                                                                                           iso_tb_df=iso_tb_df)
 
         # Calculation starts
         if all(test_passed_list):
@@ -529,27 +502,28 @@ def error(n_clicks, sample_tb_rows, iso_tb_rows):
 
 
 @app.callback(
-    Output('result', 'children'),
+    Output('app2_result', 'children'),
     [
-        Input('button_submit', 'n_clicks'),
+        Input('app2_button_submit', 'n_clicks'),
     ],
     [
         State('y_type', 'value'),
-        State('sample_table', 'rows'),
-        State('iso_table', 'rows'),
-        State('iso_modified', 'values'),
+        State('app2_sample_table', 'data'),
+        State('app2_iso_table', 'data'),
+        State('app2_iso_check', 'values'),
     ])
 def output(n_clicks, y_type, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_clicks is not None:
         # Test input
-        df_sample_tb, df_iso_tb, test_passed_list, output_div_list = validate_sample_input(
-            sample_tb_rows=sample_tb_rows,
-            iso_tb_rows=iso_tb_rows)
+        sample_tb_df = pd.DataFrame(sample_tb_rows)
+        iso_tb_df = pd.DataFrame(iso_tb_rows)
+        sample_tb_df, iso_tb_df, test_passed_list, output_div_list = validate_sample_input(sample_tb_df=sample_tb_df,
+                                                                                           iso_tb_df=iso_tb_df)
 
         # Calculation starts
         if all(test_passed_list):
-            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(df_sample_tb=df_sample_tb,
-                                                                                              df_iso_tb=df_iso_tb,
+            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_df=sample_tb_df,
+                                                                                              iso_tb_df=iso_tb_df,
                                                                                               iso_changed=iso_changed)
             if y_type == 'transmission':
                 output_div_list = [

@@ -3,7 +3,7 @@ import os
 import ImagingReso._utilities as ir_util
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_table_experiments as dt
+import dash_table as dt
 import pandas as pd
 from ImagingReso.resonance import Resonance
 from scipy.interpolate import interp1d
@@ -15,50 +15,96 @@ wave_name = 'Wavelength (\u212B)'
 speed_name = 'Speed (m/s)'
 tof_name = 'Time-of-flight (\u03BCs)'
 class_name = 'Neutron classification'
-range_tb_header = [energy_name, wave_name, speed_name, tof_name, class_name]
-
 chem_name = 'Chemical formula'
 thick_name = 'Thickness (mm)'
 density_name = 'Density (g/cm\u00B3)'
 ratio_name = 'Stoichiometric ratio'
 molar_name = 'Molar mass (g/mol)'
 number_density_name = 'Atoms per cm\u00B3 (#)'
-weight_name = 'Weight (g)'
-weight_name_p = 'Weight (%)'
-atomic_name = 'Atomic (mol)'
-atomic_name_p = 'Atomic (%)'
-sample_tb_header = [chem_name, thick_name, density_name]
-converter_tb_header = [chem_name, weight_name, atomic_name]
-converter_tb_header_p = [chem_name, weight_name_p, atomic_name_p]
-
 layer_name = 'Layer'
 ele_name = 'Element'
 iso_name = 'Isotope'
 iso_ratio_name = 'Isotopic ratio'
-iso_table_header = [layer_name, ele_name, iso_name, iso_ratio_name]
-iso_tb_rows_default = [{ele_name: None, iso_name: None, iso_ratio_name: None, layer_name: None}]
-iso_tb_df_default = pd.DataFrame(iso_tb_rows_default)
-col_3 = 'three columns'
-col_6 = 'six columns'
+weight_name = 'Weight (g)'
+weight_name_p = 'Weight (%)'
+atomic_name = 'Atomic (mol)'
+atomic_name_p = 'Atomic (%)'
+column_1 = 'column_1'
+column_2 = 'column_2'
+column_3 = 'column_3'
+column_4 = 'column_4'
+column_5 = 'column_5'
+
+energy_range_header_df = pd.DataFrame({
+    'name': [energy_name, wave_name, speed_name, tof_name, class_name],
+    'id': [column_1, column_2, column_3, column_4, column_5],
+    'deletable': [False, False, False, False, False],
+    'editable': [True, False, False, False, False],
+})
+
+sample_header_df = pd.DataFrame({
+    'name': [chem_name, thick_name, density_name],
+    'id': [column_1, column_2, column_3],
+    'deletable': [False, False, False],
+    'editable': [True, True, True],
+})
+
+compos_header_df = pd.DataFrame({
+    'name': [chem_name, weight_name, atomic_name],
+    'id': [column_1, column_2, column_3],
+    'deletable': [False, False, False],
+    'editable': [True, True, True],
+})
+
+compos_header_p_df = pd.DataFrame({
+    'name': [chem_name, weight_name_p, atomic_name_p],
+    'id': [column_1, column_2, column_3],
+    'deletable': [False, False, False],
+    'editable': [False, False, False],
+})
+
+iso_tb_header_df = pd.DataFrame({
+    'name': [layer_name, ele_name, iso_name, iso_ratio_name],
+    'id': [column_1, column_2, column_3, column_4],
+    'deletable': [False, False, False, False],
+    'editable': [False, False, False, True],
+})
+
+iso_tb_df_default = pd.DataFrame({
+    column_1: [None],
+    column_2: [None],
+    column_3: [None],
+    column_4: [None],
+})
+
+output_stack_header_df = pd.DataFrame({
+    'name': [thick_name, density_name, ratio_name],
+    'id': [column_1, column_2, column_3],
+    'deletable': [False, False, False],
+    'editable': [False, False, False],
+})
+
+col_width_3 = 'three columns'
+col_width_6 = 'six columns'
 empty_div = html.Div()
 
 compos_dict_schema = {
-    chem_name: {'type': 'string'},
-    weight_name: {'type': 'float', 'min': 0},
-    atomic_name: {'type': 'float', 'min': 0},
+    column_1: {'type': 'string'},
+    column_2: {'type': 'float', 'min': 0, 'forbidden': [0]},
+    column_3: {'type': 'float', 'min': 0, 'forbidden': [0]},
 }
 
 iso_dict_schema = {
-    layer_name: {'type': 'string'},
-    ele_name: {'type': 'string'},
-    iso_name: {'type': 'string'},
-    iso_ratio_name: {'type': 'float', 'min': 0, 'max': 1},
+    column_1: {'type': 'string'},
+    column_2: {'type': 'string'},
+    column_3: {'type': 'string'},
+    column_4: {'type': 'float', 'min': 0, 'max': 1},
 }
 
-ele_dict_schema = {
-    chem_name: {'type': 'string'},
-    thick_name: {'type': 'float', 'min': 0},
-    density_name: {'type': 'float', 'min': 0},
+sample_dict_schema = {
+    column_1: {'type': 'string'},
+    column_2: {'type': 'float', 'min': 0},
+    column_3: {'type': 'float', 'min': 0},
 }
 
 
@@ -86,49 +132,72 @@ def classify_neutron(energy_ev):
         return 'Ultra-fast'
 
 
-def validate_sample_input(sample_tb_rows: dict, iso_tb_rows: dict):
+def drop_df_column_not_needed(input_df: pd.DataFrame, column_name: str):
+    if column_name in input_df.columns:
+        _dropped_df = input_df.drop(columns=[column_name])
+        return _dropped_df
+    else:
+        return input_df
+
+
+def creat_sample_df_from_compos_df(compos_tb_df):
+    sample_df = pd.DataFrame()
+    sample_df[column_1] = compos_tb_df[column_1]
+    sample_df[column_2] = 1
+    sample_df[column_3] = np.nan
+    return sample_df
+
+
+def validate_sample_input(sample_tb_df: pd.DataFrame, iso_tb_df: pd.DataFrame):
+    # Remove rows contains no chemical input
+    sample_tb_df = sample_tb_df[sample_tb_df.column_1 != '']
     # Force input to pd.DataFrame and force input type from 'str' to 'float' for number input fields
-    df_sample_tb = pd.DataFrame(sample_tb_rows)
-    df_iso_tb = pd.DataFrame(iso_tb_rows)
-    df_sample_tb = force_col_to_numeric(input_df=df_sample_tb, col_name=thick_name)
-    df_sample_tb = force_col_to_numeric(input_df=df_sample_tb, col_name=density_name)
-    df_iso_tb = force_col_to_numeric(input_df=df_iso_tb, col_name=iso_ratio_name)
+    sample_tb_df = force_col_to_numeric(input_df=sample_tb_df, col_name=column_2)  # Thickness
+    sample_tb_df = force_col_to_numeric(input_df=sample_tb_df, col_name=column_3)  # Density
+    iso_tb_df = force_col_to_numeric(input_df=iso_tb_df, col_name=column_4)  # Isotopic ratio
 
     # Test input format
-    sample_test_passed_list, sample_output_div_list = validate_input_loop(schema=ele_dict_schema,
-                                                                          input_df=df_sample_tb)
+    sample_test_passed_list, sample_output_div_list = validate_input_loop(schema=sample_dict_schema,
+                                                                          input_df=sample_tb_df)
     iso_test_passed_list, iso_output_div_list = validate_input_loop(schema=iso_dict_schema,
-                                                                    input_df=df_iso_tb)
+                                                                    input_df=iso_tb_df)
     test_passed_list = sample_test_passed_list + iso_test_passed_list
     output_div_list = sample_output_div_list + iso_output_div_list
 
     # Test the sum of iso ratio == 1
-    sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=df_iso_tb)
+    sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=iso_tb_df)
     test_passed_list.append(sum_test_passed)
     output_div_list.append(sum_test_output_div)
-    return df_sample_tb, df_iso_tb, test_passed_list, output_div_list
+    return sample_tb_df, iso_tb_df, test_passed_list, output_div_list
 
 
-def validate_composition_input(sample_tb_rows: dict, iso_tb_rows: dict, compos_type):
+def validate_compos_input(compos_tb_df: pd.DataFrame, iso_tb_df: pd.DataFrame, compos_type: str):
+    if compos_type == weight_name:
+        _col_name = column_2
+        _rm_name = column_3
+    else:
+        _col_name = column_3
+        _rm_name = column_2
+    # Remove rows contains no chemical input
+    compos_df = compos_tb_df[compos_tb_df.column_1 != '']
     # Force input to pd.DataFrame and force input type from 'str' to 'float' for number input fields
-    df_sample_tb = pd.DataFrame(sample_tb_rows)
-    df_iso_tb = pd.DataFrame(iso_tb_rows)
-    df_sample_tb = force_col_to_numeric(input_df=df_sample_tb, col_name=compos_type)
-    df_iso_tb = force_col_to_numeric(input_df=df_iso_tb, col_name=iso_ratio_name)
+    compos_df = drop_df_column_not_needed(input_df=compos_df, column_name=_rm_name)
+    compos_df = force_col_to_numeric(input_df=compos_df, col_name=_col_name)
+    iso_tb_df = force_col_to_numeric(input_df=iso_tb_df, col_name=column_4)  # Isotopic ratio
 
     # Test input format
     sample_test_passed_list, sample_output_div_list = validate_input_loop(schema=compos_dict_schema,
-                                                                          input_df=df_sample_tb)
+                                                                          input_df=compos_df)
     iso_test_passed_list, iso_output_div_list = validate_input_loop(schema=iso_dict_schema,
-                                                                    input_df=df_iso_tb)
+                                                                    input_df=iso_tb_df)
     test_passed_list = sample_test_passed_list + iso_test_passed_list
     output_div_list = sample_output_div_list + iso_output_div_list
 
     # Test the sum of iso ratio == 1
-    sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=df_iso_tb)
+    sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=iso_tb_df)
     test_passed_list.append(sum_test_passed)
     output_div_list.append(sum_test_output_div)
-    return df_sample_tb, df_iso_tb, test_passed_list, output_div_list
+    return compos_df, iso_tb_df, test_passed_list, output_div_list
 
 
 def validate_input_loop(schema: dict, input_df: pd.DataFrame):
@@ -153,8 +222,10 @@ def validate_input(v: Validator, input_dict: dict):
 
 
 def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
-    df = iso_df.groupby([layer_name, ele_name]).sum()
-    boo = df[iso_ratio_name] - 1.0 <= 0.005
+    print(iso_df)
+    df = iso_df.groupby([column_1, column_2]).sum()
+    print(df)
+    boo = df[column_4] - 1.0 <= 0.005
     passed_list = list(boo)
     if all(passed_list):
         return True, None
@@ -164,14 +235,13 @@ def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
 
 
 def force_col_to_numeric(input_df: pd.DataFrame, col_name: str):
-    input_df[col_name] = pd.to_numeric(input_df[col_name])
+    input_df[col_name] = pd.to_numeric(input_df[col_name], errors='ignore')
     return input_df
 
 
-def init_reso_from_tb(range_tb_rows, e_step):
-    df_range_tb = pd.DataFrame(range_tb_rows)
-    e_min = df_range_tb[energy_name][0]
-    e_max = df_range_tb[energy_name][1]
+def init_reso_from_tb(range_tb_df, e_step):
+    e_min = range_tb_df[column_1][0]
+    e_max = range_tb_df[column_1][1]
     o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
     return o_reso
 
@@ -191,24 +261,16 @@ def load_beam_shape(relative_path_to_beam_shape):
 
 
 def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
-    sample_tb_df = sample_tb_df[sample_tb_df[chem_name] != '']
-    num_layer = len(sample_tb_df['Chemical formula'])
+    sample_tb_df = sample_tb_df[sample_tb_df[column_1] != '']
+    num_layer = len(sample_tb_df[column_1])
     for i in range(num_layer):
-        if sample_tb_df[chem_name][i] == '':
-            raise IOError('Remove empty lines in sample input table.')
-        if thick_name in sample_tb_df.keys():
-            assert sample_tb_df[thick_name][i] != ''
-            if sample_tb_df[density_name][i] == '':
-                o_reso.add_layer(formula=sample_tb_df[chem_name][i],
-                                 thickness=float(sample_tb_df[thick_name][i]))
-            else:
-                o_reso.add_layer(formula=sample_tb_df[chem_name][i],
-                                 density=float(sample_tb_df[density_name][i]),
-                                 thickness=float(sample_tb_df[thick_name][i]))
-        if weight_name in sample_tb_df.keys():
-            # assert sample_tb_df[weight_name][i] != '' or sample_tb_df[atomic_name][i] != ''
-            o_reso.add_layer(formula=sample_tb_df[chem_name][i],
-                             thickness=1)
+        if sample_tb_df[column_3][i] == '':
+            o_reso.add_layer(formula=sample_tb_df[column_1][i],
+                             thickness=float(sample_tb_df[column_2][i]))
+        else:
+            o_reso.add_layer(formula=sample_tb_df[column_1][i],
+                             thickness=float(sample_tb_df[column_2][i]),
+                             density=float(sample_tb_df[column_3][i]))
     return o_reso
 
 
@@ -223,111 +285,19 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
             for each_ele in element_list:
                 _ele_ratio_list = []
                 for i in range(len(iso_tb_df)):
-                    if each_layer == iso_tb_df[layer_name][i] and each_ele == iso_tb_df[ele_name][i]:
-                        _ele_ratio_list.append(float(iso_tb_df[iso_ratio_name][i]))
+                    if each_layer == iso_tb_df[column_1][i] and each_ele == iso_tb_df[column_2][i]:
+                        _ele_ratio_list.append(float(iso_tb_df[column_4][i]))
                 o_reso.set_isotopic_ratio(compound=each_layer, element=each_ele, list_ratio=_ele_ratio_list)
         return o_reso
 
 
-def add_del_tb_rows(add_or_del, sample_tb_rows):
-    df_sample_tb = pd.DataFrame(sample_tb_rows)
-    for _each in sample_tb_header:
-        if _each not in df_sample_tb.columns:
-            df_sample_tb[_each] = ['']
-            _in = False
-        else:
-            _in = True
-    _formula_list = list(df_sample_tb[chem_name])
-    _thickness_list = list(df_sample_tb[thick_name])
-    _density_list = list(df_sample_tb[density_name])
-    if add_or_del == 'add':
-        if _in:
-            _formula_list.append('')
-            _thickness_list.append('')
-            _density_list.append('')
-    elif add_or_del == 'del':
-        _formula_list.pop()
-        _thickness_list.pop()
-        _density_list.pop()
-    else:
-        _formula_list = _formula_list
-        _thickness_list = _thickness_list
-        _density_list = _density_list
-    _df_sample = pd.DataFrame({
-        chem_name: _formula_list,
-        thick_name: _thickness_list,
-        density_name: _density_list,
-    })
-    return _df_sample
-
-
-def add_del_tb_rows_converter(add_or_del, sample_tb_rows, input_type: str, header: list):
-    df_sample_tb = pd.DataFrame(sample_tb_rows)
-    for _each in header:
-        if _each not in df_sample_tb.columns:
-            df_sample_tb[_each] = ['']
-            _in = False
-        else:
-            _in = True
-    _formula_list = list(df_sample_tb[chem_name])
-    _list = list(df_sample_tb[input_type])
-    if add_or_del == 'add':
-        if _in:
-            _formula_list.append('')
-            _list.append('')
-    elif add_or_del == 'del':
-        _formula_list.pop()
-        _list.pop()
-    else:
-        _formula_list = _formula_list
-        _list = _list
-    _df_sample = pd.DataFrame({
-        chem_name: _formula_list,
-        input_type: _list,
-    })
-    return _df_sample
-
-
-# def add_del_tb_rows(n_add_time, n_del_time, sample_tb_rows):
-#     df_sample_tb = pd.DataFrame(sample_tb_rows)
-#     for _each in [chem_name, thick_name, density_name]:
-#         if _each not in df_sample_tb.columns:
-#             df_sample_tb[_each] = ['']
-#             _in = False
-#         else:
-#             _in = True
-#     _formula_list = list(df_sample_tb[chem_name])
-#     _thickness_list = list(df_sample_tb[thick_name])
-#     _density_list = list(df_sample_tb[density_name])
-#     if n_add_time > n_del_time:
-#         if _in:
-#             _formula_list.append('')
-#             _thickness_list.append('')
-#             _density_list.append('')
-#     elif n_add_time == n_del_time:
-#         _formula_list = _formula_list
-#         _thickness_list = _thickness_list
-#         _density_list = _density_list
-#     else:
-#         _formula_list.pop()
-#         _thickness_list.pop()
-#         _density_list.pop()
-#     _df_sample = pd.DataFrame({
-#         chem_name: _formula_list,
-#         thick_name: _thickness_list,
-#         density_name: _density_list,
-#     })
-#     return _df_sample
-
-
-def calculate_transmission_cg1d_and_form_stack_table(df_sample_tb, df_iso_tb, iso_changed):
+def calculate_transmission_cg1d_and_form_stack_table(sample_tb_df, iso_tb_df, iso_changed):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
     df = load_beam_shape(_path_to_beam_shape)
     __o_reso = Resonance(energy_min=0.00025, energy_max=0.12525, energy_step=0.000625)
-
-    _o_reso = unpack_sample_tb_df_and_add_layer(o_reso=__o_reso, sample_tb_df=df_sample_tb)
-    o_reso = unpack_iso_tb_df_and_update(o_reso=_o_reso, iso_tb_df=df_iso_tb, iso_changed=iso_changed)
+    _o_reso = unpack_sample_tb_df_and_add_layer(o_reso=__o_reso, sample_tb_df=sample_tb_df)
+    o_reso = unpack_iso_tb_df_and_update(o_reso=_o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
 
     # interpolate with the beam shape energy
     interp_type = 'cubic'
@@ -351,50 +321,68 @@ def calculate_transmission_cg1d_and_form_stack_table(df_sample_tb, df_iso_tb, is
         current_layer_list = [
             html.P("Layer {}: {}".format(l_str, layer)),
         ]
-        layer_dict[thick_name] = o_stack[layer]['thickness']['value']
-        layer_dict[density_name] = o_stack[layer]['density']['value']
+        layer_dict[column_1] = o_stack[layer]['thickness']['value']
+        layer_dict[column_2] = o_stack[layer]['density']['value']
         # layer_dict[density_name] = round(o_stack[layer]['density']['value'], 4)
         _ratio_str_list = [str(_p) for _p in o_stack[layer]['stoichiometric_ratio']]
-        layer_dict[ratio_name] = ":".join(_ratio_str_list)
+        layer_dict[column_3] = ":".join(_ratio_str_list)
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
-            dt.DataTable(rows=_df_layer.to_dict('records'),
-                         columns=[thick_name, density_name, ratio_name],
+            dt.DataTable(data=_df_layer.to_dict('records'),
+                         columns=output_stack_header_df.to_dict('records'),
                          editable=False,
                          row_selectable=False,
-                         filterable=False,
-                         sortable=False,
-                         # id='sample_table'
+                         filtering=False,
+                         sorting=False,
+                         row_deletable=False,
                          ))
 
         for e, ele in enumerate(elements_in_current_layer):
             _iso_list = o_stack[layer][ele]['isotopes']['list']
             _iso_ratios = o_stack[layer][ele]['isotopes']['isotopic_ratio']
             iso_dict = {}
+            name_list = []
+            id_list = []
+            deletable_list = []
+            editable_list = []
             for i, iso in enumerate(_iso_list):
-                iso_dict[iso] = round(_iso_ratios[i], 4)
-            iso_dict[molar_name] = round(o_stack[layer][ele]['molar_mass']['value'], 4)
-            iso_dict[number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'][ele])
+                current_id = 'column_' + str(i + 1)
+                name_list.append(iso)
+                id_list.append(current_id)
+                deletable_list.append(False)
+                editable_list.append(False)
+                iso_dict[current_id] = round(_iso_ratios[i], 4)
+
+            _i = len(id_list)
+            name_list.append(molar_name)
+            molar_name_id = 'column_' + str(_i + 1)
+            id_list.append(molar_name_id)
+            deletable_list.append(False)
+            editable_list.append(False)
+            name_list.append(number_density_name)
+            number_density_name_id = 'column_' + str(_i + 2)
+            id_list.append(number_density_name_id)
+            deletable_list.append(False)
+            editable_list.append(False)
+
+            iso_dict[molar_name_id] = round(o_stack[layer][ele]['molar_mass']['value'], 4)
+            iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'][ele])
             _df_iso = pd.DataFrame([iso_dict])
+            iso_output_header_df = pd.DataFrame({
+                'name': name_list,
+                'id': id_list,
+                'deletable': deletable_list,
+                'editable': editable_list,
+            })
             current_layer_list.append(
-                dt.DataTable(rows=_df_iso.to_dict('records'),
-                             columns=_df_iso.columns,
+                dt.DataTable(data=_df_iso.to_dict('records'),
+                             columns=iso_output_header_df.to_dict('records'),
                              editable=False,
                              row_selectable=False,
-                             filterable=False,
-                             sortable=False,
+                             filtering=False,
+                             sorting=False,
+                             row_deletable=False,
                              ))
-            # ele_dict = {molar_name: round(o_stack[layer][ele]['molar_mass']['value'], 4),
-            #             number_density_name: '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'][ele])}
-            # _df_ele = pd.DataFrame([ele_dict])
-            # current_layer_list.append(
-            #     dt.DataTable(rows=_df_ele.to_dict('records'),
-            #                  columns=_df_ele.columns,
-            #                  editable=False,
-            #                  row_selectable=False,
-            #                  filterable=False,
-            #                  sortable=False,
-            #                  ))
 
         div_list.append(html.Div(current_layer_list))
         div_list.append(html.Br())
@@ -402,24 +390,21 @@ def calculate_transmission_cg1d_and_form_stack_table(df_sample_tb, df_iso_tb, is
     return _total_trans, div_list, o_stack
 
 
-def convert_input_to_composition(df_input, compos_type, o_stack):
-    df_input = df_input[df_input[chem_name] != '']
-    # df_input[input_type] = pd.to_numeric(df_input[input_type])  # , errors='ignore')
+def convert_input_to_composition(compos_df, compos_type, o_stack):
     if compos_type == weight_name:
-        fill_name = atomic_name_p
-        update_name = weight_name_p
+        fill_name = column_3
+        update_name = column_2
     else:
-        fill_name = weight_name_p
-        update_name = atomic_name_p
-        df_input.drop(columns=[weight_name], inplace=True)
+        fill_name = column_2
+        update_name = column_3
     result_list = []
     _ele_list = []
     _mol_list = []
     _input_converted_p_list = []
-    _input_sum = df_input[compos_type].sum()
-    for _n, each_chem in enumerate(df_input[chem_name]):
+    _input_sum = compos_df[update_name].sum()
+    for _n, each_chem in enumerate(compos_df[column_1]):
         _molar_mass = o_stack[each_chem]['molar_mass']['value']
-        input_num = df_input[compos_type][_n]
+        input_num = compos_df[update_name][_n]
         _current_ele_list = o_stack[each_chem]['elements']
         _current_ratio_list = o_stack[each_chem]['stoichiometric_ratio']
         _input_percentage = input_num * 100 / _input_sum
@@ -436,9 +421,9 @@ def convert_input_to_composition(df_input, compos_type, o_stack):
     result_array = np.array(result_list)
     _input_converted_p_array = np.array(_input_converted_p_list)
     _output_array = result_array * 100 / sum(result_array)
-    df_input[fill_name] = np.round(_output_array, 3)
-    df_input[update_name] = np.round(_input_converted_p_array, 3)
-    return df_input, _ele_list, _mol_list
+    compos_df[fill_name] = np.round(_output_array, 3)
+    compos_df[update_name] = np.round(_input_converted_p_array, 3)
+    return compos_df, _ele_list, _mol_list
 
 
 def convert_to_effective_formula(ele_list, mol_list):
@@ -459,10 +444,9 @@ def convert_to_effective_formula(ele_list, mol_list):
     return effective_str
 
 
-def form_iso_table(sample_tb_rows):
+def form_iso_table(sample_df: pd.DataFrame):
     o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
-    df_sample_tb = pd.DataFrame(sample_tb_rows)
-    o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=df_sample_tb)
+    o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_df)
     layer_list = list(o_reso.stack.keys())
     lay_list = []
     ele_list = []
@@ -479,10 +463,10 @@ def form_iso_table(sample_tb_rows):
                 iso_list.append(each_iso)
                 iso_ratio_list.append(round(current_iso_ratio_list[i], 4))
 
-    _dict = {'Layer': lay_list,
-             'Element': ele_list,
-             'Isotope': iso_list,
-             'Isotopic ratio': iso_ratio_list,
+    _dict = {column_1: lay_list,
+             column_2: ele_list,
+             column_3: iso_list,
+             column_4: iso_ratio_list,
              }
     _df = pd.DataFrame(_dict)
 
@@ -516,7 +500,7 @@ plot_option_div = html.Div(
                                        ],
                                        value='energy',
                                        )
-                    ], className=col_3
+                    ], className=col_width_3
                 ),
                 html.Div(
                     [
@@ -530,7 +514,7 @@ plot_option_div = html.Div(
                                        ],
                                        value='attenuation',
                                        )
-                    ], className=col_3
+                    ], className=col_width_3
                 ),
                 html.Div(
                     [
@@ -544,7 +528,7 @@ plot_option_div = html.Div(
                                        ],
                                        value='linear',
                                        )
-                    ], className=col_3
+                    ], className=col_width_3
                 ),
                 html.Div(
                     [
@@ -558,7 +542,7 @@ plot_option_div = html.Div(
                                       ],
                                       values=['iso'],
                                       ),
-                    ], className=col_3
+                    ], className=col_width_3
                 ),
             ], className='row'
         ),

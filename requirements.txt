@@ -1,12 +1,13 @@
 dash
 dash-core-components >= 0.28.3
 dash-html-components == 0.10.1
-dash-renderer
 dash-table-experiments >= 0.6.0
+dash-renderer
 plotly
 matplotlib
 ImagingReso >= 1.6.11
 pandas
 numpy
 scipy
+cerberus
 gunicorn

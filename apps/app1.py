@@ -3,10 +3,10 @@ from dash.dependencies import Input, Output, State
 from _app import app
 from _utilities import *
 
-df_sample = pd.DataFrame({
-    chem_name: ['H2O'],
-    thick_name: ['2'],
-    density_name: ['1'],
+sample_df_default = pd.DataFrame({
+    'column_1': ['H2O'],
+    'column_2': ['2'],
+    'column_3': ['1'],
 })
 
 # Create app layout
@@ -23,26 +23,20 @@ layout = html.Div(
         # Sample input
         html.Div(
             [
-                html.Div(
-                    [
-                        html.Button('+', id='app1_button_add', n_clicks=0),
-                        html.Button('-', id='app1_button_del', n_clicks=0),
-                        # html.Button('+', id='app1_button_add', n_clicks_timestamp=0),
-                        # html.Button('-', id='app1_button_del', n_clicks_timestamp=0),
-                    ], className='row'
-                ),
-
+                html.Button('Add Row', id='app1_add_row', n_clicks=0),
                 dt.DataTable(
-                    rows=df_sample.to_dict('records'),
+                    data=sample_df_default.to_dict('records'),
                     # optional - sets the order of columns
-                    columns=sample_tb_header,
+                    columns=sample_header_df.to_dict('records'),
                     editable=True,
                     row_selectable=False,
-                    filterable=False,
-                    sortable=False,
+                    filtering=False,
+                    sorting=False,
+                    row_deletable=True,
                     id='app1_sample_table'
                 ),
                 markdown_sample,
+
                 # Input table for isotopic ratios
                 dcc.Checklist(id='app1_iso_check',
                               options=[
@@ -52,21 +46,19 @@ layout = html.Div(
                 html.Div(
                     [
                         markdown_iso,
-                        dt.DataTable(rows=iso_tb_df_default.to_dict('records'),
-                                     columns=iso_table_header,
-                                     editable=True,
-                                     # editable={layer_name: False,
-                                     #           ele_name: False,
-                                     #           iso_name: True,
-                                     #           },
-                                     # row_selectable=True,
-                                     filterable=True,
-                                     sortable=True,
-                                     id='app1_iso_table'),
+                        dt.DataTable(
+                            data=iso_tb_df_default.to_dict('records'),
+                            columns=iso_tb_header_df.to_dict('records'),
+                            editable=True,
+                            row_selectable=False,
+                            filtering=False,
+                            sorting=False,
+                            row_deletable=False,
+                            id='app1_iso_table'
+                        ),
                     ],
                     id='app1_iso_input',
-                    style={'visibility': 'hidden'},
-                    # style={'display': 'none'},
+                    style={'display': 'none'},
                 ),
                 html.Button('Submit', id='app1_button_submit'),
             ]
@@ -74,58 +66,31 @@ layout = html.Div(
 
         # Transmission at CG-1D
         html.Div(id='app1_result'),
-        # Hidden Div to handle button action
-        html.Div([
-            html.Div(id='app1_clicked_button', children='del:0 add:0 tog:0 last:nan', style={'display': 'none'})
-        ]),
-        html.Div(id='app1_display_clicked', children=""),
     ]
 )
 
 
 @app.callback(
-    Output('app1_clicked_button', 'children'),
-    [
-        Input('app1_button_add', 'n_clicks'),
-        Input('app1_button_del', 'n_clicks')
-    ],
-    [
-        State('app1_clicked_button', 'children')
-    ])
-def updated_clicked(add_clicks, del_clicks, prev_clicks):
-    prev_clicks = dict([i.split(':') for i in prev_clicks.split(' ')])
-    last_clicked = 'nan'
-    if del_clicks > int(prev_clicks['del']):
-        last_clicked = 'del'
-    elif add_clicks > int(prev_clicks['add']):
-        last_clicked = 'add'
-    cur_clicks = 'add:{} del:{} last:{}'.format(add_clicks, del_clicks, last_clicked)
-    print(cur_clicks)
-    return cur_clicks
+    Output('app1_sample_table', 'data'),
+    [Input('app1_add_row', 'n_clicks')],
+    [State('app1_sample_table', 'data'),
+     State('app1_sample_table', 'columns')])
+def add_row(n_clicks, rows, columns):
+    if n_clicks > 0:
+        rows.append({c['id']: '' for c in columns})
+    return rows
 
 
 @app.callback(
-    Output('app1_sample_table', 'rows'),
+    Output('app1_iso_table', 'data'),
     [
-        Input('app1_clicked_button', 'children'),
-    ],
-    [
-        State('app1_sample_table', 'rows'),
+        Input('app1_sample_table', 'data'),
     ])
-def add_del_row(clicked, sample_tb_rows):
-    last_clicked = clicked[-3:]
-    _df_sample = add_del_tb_rows(add_or_del=last_clicked, sample_tb_rows=sample_tb_rows)
-    return _df_sample.to_dict('records')
-
-
-@app.callback(
-    Output('app1_iso_table', 'rows'),
-    [
-        Input('app1_sample_table', 'rows'),
-    ])
-def update_iso_table(sample_tb_rows):
-    _df = form_iso_table(sample_tb_rows)
-    return _df.to_dict('records')
+def update_iso_table(compos_tb_dict):
+    compos_tb_df = pd.DataFrame(compos_tb_dict)
+    sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
+    iso_df = form_iso_table(sample_df=sample_df)
+    return iso_df.to_dict('records')
 
 
 @app.callback(
@@ -146,21 +111,21 @@ def show_hide_iso_table(iso_changed):
         Input('app1_button_submit', 'n_clicks'),
     ],
     [
-        State('app1_sample_table', 'rows'),
-        State('app1_iso_table', 'rows'),
+        State('app1_sample_table', 'data'),
+        State('app1_iso_table', 'data'),
         State('app1_iso_check', 'values'),
     ])
 def output(n_clicks, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_clicks is not None:
         # Test input
-        df_sample_tb, df_iso_tb, test_passed_list, output_div_list = validate_sample_input(
-            sample_tb_rows=sample_tb_rows,
-            iso_tb_rows=iso_tb_rows)
-
+        sample_tb_df = pd.DataFrame(sample_tb_rows)
+        iso_tb_df = pd.DataFrame(iso_tb_rows)
+        sample_tb_df, iso_tb_df, test_passed_list, output_div_list = validate_sample_input(sample_tb_df=sample_tb_df,
+                                                                                           iso_tb_df=iso_tb_df)
         # Calculation starts
         if all(test_passed_list):
-            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(df_sample_tb=df_sample_tb,
-                                                                                              df_iso_tb=df_iso_tb,
+            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_df=sample_tb_df,
+                                                                                              iso_tb_df=iso_tb_df,
                                                                                               iso_changed=iso_changed)
             output_div_list = [
                 html.Hr(),
@@ -175,4 +140,4 @@ def output(n_clicks, sample_tb_rows, iso_tb_rows, iso_changed):
         else:
             return output_div_list
     else:
-        return empty_div
+        return None
