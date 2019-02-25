@@ -109,11 +109,6 @@ sample_dict_schema = {
 
 
 def classify_neutron(energy_ev):
-    """
-
-    :param energy_ev:
-    :return:
-    """
     assert energy_ev >= 0
     e = energy_ev
     if 0 < e <= 2.5e-7:
@@ -146,6 +141,11 @@ def creat_sample_df_from_compos_df(compos_tb_df):
     sample_df[column_2] = 1
     sample_df[column_3] = np.nan
     return sample_df
+
+
+def force_col_to_numeric(input_df: pd.DataFrame, col_name: str):
+    input_df[col_name] = pd.to_numeric(input_df[col_name], errors='ignore')
+    return input_df
 
 
 def validate_sample_input(sample_tb_df: pd.DataFrame, iso_tb_df: pd.DataFrame):
@@ -224,7 +224,6 @@ def validate_input(v: Validator, input_dict: dict):
 def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
     df = iso_df.groupby([column_1, column_2]).sum()
     df_boo = df[column_4] - 1.0
-    print(df_boo)
     boo = df_boo.abs() >= 0.005
     passed_list = list(boo)
     if any(passed_list):
@@ -232,11 +231,6 @@ def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
         return False, html.P("INPUT ERROR: {}: ['sum of isotopic ratios is not 1']".format(str(_list)))
     else:
         return True, None
-
-
-def force_col_to_numeric(input_df: pd.DataFrame, col_name: str):
-    input_df[col_name] = pd.to_numeric(input_df[col_name], errors='ignore')
-    return input_df
 
 
 def init_reso_from_tb(range_tb_df, e_step):

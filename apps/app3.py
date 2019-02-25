@@ -149,7 +149,6 @@ def output(n_clicks, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
             compos_tb_df=compos_tb_df,
             iso_tb_df=iso_tb_df,
             compos_type=compos_type)
-        print(test_passed_list)
         sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
         # Calculation starts
         if all(test_passed_list):
