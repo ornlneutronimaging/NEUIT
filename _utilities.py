@@ -162,7 +162,7 @@ def creat_sample_df_from_compos_df(compos_tb_df):
 
 
 def is_number_tryexcept(s):
-    """ Returns True is string is a number. """
+    """ Returns True if string is a number. """
     try:
         float(s)
         return True
