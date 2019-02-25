@@ -105,21 +105,26 @@ def empty_str(field, value, error):
             error(field, "must be a number >= '0' or leave as 'blank'")
 
 
+def valid_chem_name(field, value, error):
+    if not validate_chem_name(value):
+        error(field, "must be a valid 'chemical formula', input is case sensitive")
+
+
 compos_dict_schema = {
-    column_1: {'type': 'string', 'empty': False, 'required': True, },
+    column_1: {'type': 'string', 'empty': False, 'required': True, 'validator': valid_chem_name, },
     column_2: {'type': 'number', 'validator': greater_than_zero},
     column_3: {'type': 'number', 'validator': greater_than_zero},
 }
 
 iso_dict_schema = {
-    column_1: {'type': 'string', 'empty': False, 'required': True, },
+    column_1: {'type': 'string', 'empty': False, 'required': True, 'validator': valid_chem_name, },
     column_2: {'type': 'string', 'empty': False, 'required': True, },
     column_3: {'type': 'string', 'empty': False, 'required': True, },
     column_4: {'type': 'number', 'min': 0, 'max': 1, 'required': True, 'validator': type_is_str, },
 }
 
 sample_dict_schema = {
-    column_1: {'type': 'string', 'empty': False, 'required': True, },
+    column_1: {'type': 'string', 'empty': False, 'required': True, 'validator': valid_chem_name, },
     column_2: {'type': 'number', 'min': 0, 'required': True, },
     column_3: {'anyof_type': ['string', 'number'], 'min': 0, 'validator': empty_str, },
 }
@@ -228,15 +233,27 @@ def _validate_input(v: Validator, input_dict: dict):
 
 
 def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
-    df = iso_df.groupby([column_1, column_2]).sum()
-    df_boo = df[column_4] - 1.0
-    boo = df_boo.abs() >= 0.005
-    passed_list = list(boo)
-    if any(passed_list):
-        _list = df.index[boo].tolist()
-        return False, html.P("INPUT ERROR: {}: ['sum of isotopic ratios is not 1']".format(str(_list)))
-    else:
-        return True, None
+    try:
+        df = iso_df.groupby([column_1, column_2]).sum()
+        df_boo = df[column_4] - 1.0
+        boo = df_boo.abs() >= 0.005
+        passed_list = list(boo)
+        if any(passed_list):
+            _list = df.index[boo].tolist()
+            return False, html.P("INPUT ERROR: {}: ['sum of isotopic ratios is not 1']".format(str(_list)))
+        else:
+            return True, None
+    except KeyError:
+        return False
+
+
+def validate_chem_name(input_name: str):
+    """ Returns True if string is a number. """
+    try:
+        ir_util.formula_to_dictionary(input_name)
+        return True
+    except ValueError:
+        return False
 
 
 def init_reso_from_tb(range_tb_df, e_step):
@@ -261,10 +278,8 @@ def load_beam_shape(relative_path_to_beam_shape):
 
 
 def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
-    # sample_tb_df = sample_tb_df[sample_tb_df[column_1] != '']
     num_layer = len(sample_tb_df[column_1])
     for i in range(num_layer):
-        print(sample_tb_df[column_3])
         if sample_tb_df[column_3][i] == '':
             o_reso.add_layer(formula=sample_tb_df[column_1][i],
                              thickness=float(sample_tb_df[column_2][i]))
@@ -276,7 +291,6 @@ def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
 
 
 def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
-    # if layer_name not in iso_tb_df.columns:
     if len(iso_changed) == 0:
         return o_reso
     else:

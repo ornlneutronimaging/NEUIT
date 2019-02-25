@@ -567,7 +567,7 @@ def output(n_submit, y_type, sample_tb_rows, iso_tb_rows, iso_changed):
         # Test input format
         test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
                                                                   iso_df=iso_tb_df,
-                                                                  sample_schema=compos_dict_schema,
+                                                                  sample_schema=sample_dict_schema,
                                                                   iso_schema=iso_dict_schema)
 
         # Calculation starts

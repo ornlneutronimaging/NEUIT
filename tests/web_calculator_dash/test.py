@@ -227,4 +227,15 @@ class TestUtilities(unittest.TestCase):
         test_df = pd.DataFrame(test_dict_list)
         self.assertRaises(KeyError, validate_sum_of_iso_ratio, test_df)
 
+    def test_chem_name_validator(self):
+        self.assertTrue(validate_chem_name('Ag'))
+        self.assertFalse(validate_chem_name('Dg'))
+        self.assertFalse(validate_chem_name('Xo'))
+        self.assertFalse(validate_chem_name('Asd'))
+        self.assertTrue(validate_chem_name('U2O3'))
+        self.assertTrue(validate_chem_name('CH3COOH'))
+        self.assertTrue(validate_chem_name('CuO2H2'))
+        self.assertFalse(validate_chem_name('Hug'))
+        self.assertFalse(validate_chem_name('AA'))
+
 
