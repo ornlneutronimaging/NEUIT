@@ -45,6 +45,14 @@ layout = html.Div(
                     filtering=False,
                     sorting=False,
                     row_deletable=True,
+                    style_cell_conditional=[
+                        {'if': {'column_id': column_1},
+                         'width': '50%'},
+                        {'if': {'column_id': column_2},
+                         'width': '50%'},
+                        {'if': {'column_id': column_3},
+                         'width': '50%'},
+                    ],
                     id='app3_sample_table'
                 ),
                 markdown_sample,
@@ -65,6 +73,20 @@ layout = html.Div(
                             filtering=False,
                             sorting=False,
                             row_deletable=False,
+                            style_cell_conditional=[
+                                {'if': {'column_id': column_1},
+                                 'width': '25%'},
+                                {'if': {'column_id': column_2},
+                                 'width': '25%'},
+                                {'if': {'column_id': column_3},
+                                 'width': '25%'},
+                                {'if': {'column_id': column_4},
+                                 'width': '25%'},
+                            ],
+                            style_table={
+                                'maxHeight': '300',
+                                'overflowY': 'scroll'
+                            },
                             id='app3_iso_table'
                         ),
                     ],
