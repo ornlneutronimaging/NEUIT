@@ -94,7 +94,7 @@ class TestUtilities(unittest.TestCase):
             'column_3': [1, 1, 1, '50', ''],
         })
         expected_passed_list = [True, False, False, False, False]
-        passed_list, div_list = validate_input_loop(schema=compos_dict_schema, input_df=test_df)
+        passed_list, div_list = validate_input_loop(schema=compos_dict_schema, input_rows=test_df)
         print(passed_list)
         print(div_list)
         self.assertEqual(passed_list, expected_passed_list)
@@ -106,7 +106,7 @@ class TestUtilities(unittest.TestCase):
             'column_3': [1, 1, 1, '50', ''],
         })
         expected_passed_list = [True, False, False, False, False]
-        passed_list, div_list = validate_input_loop(schema=compos_dict_schema, input_df=test_df)
+        passed_list, div_list = validate_input_loop(schema=compos_dict_schema, input_rows=test_df)
         print(passed_list)
         print(div_list)
         self.assertEqual(passed_list, expected_passed_list)

@@ -97,6 +97,8 @@ layout = html.Div(
             ]
         ),
         # Transmission at CG-1D or error messages
+        html.Div(id='app3_validator_error'),
+        # Transmission at CG-1D or error messages
         html.Div(id='app3_result'),
     ]
 )
@@ -118,9 +120,13 @@ def update_input_columns(compos_type):
 
 @app.callback(
     Output('app3_sample_table', 'data'),
-    [Input('app3_add_row', 'n_clicks')],
-    [State('app3_sample_table', 'data'),
-     State('app3_sample_table', 'columns')])
+    [
+        Input('app3_add_row', 'n_clicks')
+    ],
+    [
+        State('app3_sample_table', 'data'),
+        State('app3_sample_table', 'columns')
+    ])
 def add_row(n_clicks, rows, columns):
     if n_clicks > 0:
         rows.append({c['id']: '' for c in columns})
@@ -128,15 +134,57 @@ def add_row(n_clicks, rows, columns):
 
 
 @app.callback(
+    Output('app3_validator_error', 'children'),
+    [
+        Input('app3_sample_table', 'data'),
+        Input('app3_iso_table', 'data'),
+    ])
+def validate_input(compos_tb_row, iso_tb_row):
+    print(compos_tb_row)
+    print(iso_tb_row)
+    # Test input format
+    compos_tb_df = pd.DataFrame(compos_tb_row)
+    iso_tb_df = pd.DataFrame(iso_tb_row)
+    compos_tb_df = force_col_to_numeric(input_df=compos_tb_df, col_name=[column_2, column_3])  # Weight & atomic
+    iso_tb_df = force_col_to_numeric(input_df=iso_tb_df, col_name=column_4)  # Isotopic ratio
+
+    _compos_tb_row = compos_tb_df.to_dict('records')
+    _iso_tb_row = iso_tb_df.to_dict('records')
+    print(compos_tb_row)
+    print(iso_tb_row)
+    compos_test_passed_list, compos_output_div_list = validate_input_loop(schema=compos_dict_schema,
+                                                                          input_rows=_compos_tb_row)
+    iso_test_passed_list, iso_output_div_list = validate_input_loop(schema=iso_dict_schema,
+                                                                    input_rows=_iso_tb_row)
+    test_passed_list = compos_test_passed_list + iso_test_passed_list
+    output_div_list = compos_output_div_list + iso_output_div_list
+    # Test the sum of iso ratio == 1
+    iso_tb_df = pd.DataFrame(iso_tb_row)
+    sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=iso_tb_df)
+    test_passed_list.append(sum_test_passed)
+    output_div_list.append(sum_test_output_div)
+    if all(test_passed_list):
+        return None
+    else:
+        return output_div_list
+
+
+@app.callback(
     Output('app3_iso_table', 'data'),
     [
         Input('app3_sample_table', 'data'),
+    ],
+    [
+        State('app3_validator_error', 'children'),
     ])
-def update_iso_table(compos_tb_dict):
-    compos_tb_df = pd.DataFrame(compos_tb_dict)
-    sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    iso_df = form_iso_table(sample_df=sample_df)
-    return iso_df.to_dict('records')
+def update_iso_table(compos_tb_row, validator_error):
+    if validator_error is None:
+        compos_tb_df = pd.DataFrame(compos_tb_row)
+        sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
+        iso_df = form_iso_table(sample_df=sample_df)
+        return iso_df.to_dict('records')
+    else:
+        return iso_tb_df_default.to_dict('records')  # empty table
 
 
 @app.callback(
@@ -161,23 +209,32 @@ def show_hide_iso_table(iso_changed):
         State('app3_iso_table', 'data'),
         State('app3_iso_check', 'values'),
         State('app3_compos_input_type', 'value'),
+        State('app3_validator_error', 'children'),
     ])
-def output(n_clicks, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
+def output(n_clicks, compos_tb_rows, iso_tb_rows, iso_changed, compos_type, validator_error):
     if n_clicks is not None:
-        # Test input
-        compos_tb_df = pd.DataFrame(compos_tb_rows)
-        iso_tb_df = pd.DataFrame(iso_tb_rows)
-        compos_tb_df, iso_tb_df, test_passed_list, output_div_list = validate_compos_input(
-            compos_tb_df=compos_tb_df,
-            iso_tb_df=iso_tb_df,
-            compos_type=compos_type)
-        sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-        # Calculation starts
-        if all(test_passed_list):
-            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_df=sample_df,
-                                                                                              iso_tb_df=iso_tb_df,
+        if validator_error is None:
+            if compos_type == weight_name:
+                _col_name = column_2
+                _rm_name = column_3
+            else:
+                _col_name = column_3
+                _rm_name = column_2
+            # Remove rows contains no chemical input
+            _compos_df = pd.DataFrame(compos_tb_rows)
+            _compos_df = _compos_df[_compos_df.column_1 != '']
+            # Force input to pd.DataFrame and force input type from 'str' to 'float' for number input fields
+            # _compos_df = drop_df_column_not_needed(input_df=_compos_df, column_name=_rm_name)
+            _compos_df = force_col_to_numeric(input_df=_compos_df, col_name=_col_name)  # input in g or mol
+            _iso_tb_df = pd.DataFrame(iso_tb_rows)
+            _iso_tb_df = force_col_to_numeric(input_df=_iso_tb_df, col_name=column_4)  # Isotopic ratio
+
+            _sample_df = creat_sample_df_from_compos_df(compos_tb_df=_compos_df)
+            # Calculation starts
+            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_df=_sample_df,
+                                                                                              iso_tb_df=_iso_tb_df,
                                                                                               iso_changed=iso_changed)
-            compos_output_df, ele_list, mol_list = convert_input_to_composition(compos_df=compos_tb_df,
+            compos_output_df, ele_list, mol_list = convert_input_to_composition(compos_df=_compos_df,
                                                                                 compos_type=compos_type,
                                                                                 o_stack=o_stack)
 
@@ -200,6 +257,6 @@ def output(n_clicks, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
             ]
             return output_div_list
         else:
-            return output_div_list
+            return None
     else:
         return None

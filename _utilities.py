@@ -144,10 +144,15 @@ def creat_sample_df_from_compos_df(compos_tb_df):
     return sample_df
 
 
-def force_col_to_numeric(input_df: pd.DataFrame, col_name: str):
+def force_col_to_numeric(input_df: pd.DataFrame, col_name: list or str):
     _input_df = input_df[:]
-    _input_df[col_name] = pd.to_numeric(input_df[col_name], errors='ignore')
-    # _input_df[col_name] = input_df[col_name].astype(dtype=float, copy=True, errors='ignore')
+    if type(col_name) == str:
+        # _input_df[col_name] = pd.to_numeric(input_df[col_name], errors='ignore')
+        _input_df[col_name] = input_df[col_name].astype(dtype=float, copy=True, errors='ignore')
+    elif type(col_name) == list:
+        for each_col_name in col_name:
+            # _input_df[each_col_name] = pd.to_numeric(input_df[each_col_name], errors='ignore')
+            _input_df[each_col_name] = input_df[each_col_name].astype(dtype=float, copy=True, errors='ignore')
     return _input_df
 
 
@@ -163,9 +168,9 @@ def validate_sample_input(sample_tb_df: pd.DataFrame, iso_tb_df: pd.DataFrame):
 
     # Test input format
     sample_test_passed_list, sample_output_div_list = validate_input_loop(schema=sample_dict_schema,
-                                                                          input_df=_sample_tb_df)
+                                                                          input_rows=_sample_tb_df)
     iso_test_passed_list, iso_output_div_list = validate_input_loop(schema=iso_dict_schema,
-                                                                    input_df=_iso_tb_df)
+                                                                    input_rows=_iso_tb_df)
     test_passed_list = sample_test_passed_list + iso_test_passed_list
     output_div_list = sample_output_div_list + iso_output_div_list
 
@@ -194,9 +199,9 @@ def validate_compos_input(compos_tb_df: pd.DataFrame, iso_tb_df: pd.DataFrame, c
 
     # Test input format
     compos_test_passed_list, compos_output_div_list = validate_input_loop(schema=compos_dict_schema,
-                                                                          input_df=_compos_df)
+                                                                          input_rows=_compos_df)
     iso_test_passed_list, iso_output_div_list = validate_input_loop(schema=iso_dict_schema,
-                                                                    input_df=_iso_tb_df)
+                                                                    input_rows=_iso_tb_df)
     test_passed_list = compos_test_passed_list + iso_test_passed_list
     output_div_list = compos_output_div_list + iso_output_div_list
 
@@ -207,12 +212,23 @@ def validate_compos_input(compos_tb_df: pd.DataFrame, iso_tb_df: pd.DataFrame, c
     return _compos_df, _iso_tb_df, test_passed_list, output_div_list
 
 
-def validate_input_loop(schema: dict, input_df: pd.DataFrame):
+# def validate_input_loop(schema: dict, input_df: pd.DataFrame):
+#     v = Validator(schema)
+#     list_of_input_dict = input_df.to_dict('records')
+#     passed_list = []
+#     div_list = []
+#     for each_input_dict in list_of_input_dict:
+#         passed, div = validate_input(v=v, input_dict=each_input_dict)
+#         div_list.append(div)
+#         passed_list.append(passed)
+#     return passed_list, div_list
+
+
+def validate_input_loop(schema: dict, input_rows: list):
     v = Validator(schema)
-    list_of_input_dict = input_df.to_dict('records')
     passed_list = []
     div_list = []
-    for each_input_dict in list_of_input_dict:
+    for each_input_dict in input_rows:
         passed, div = validate_input(v=v, input_dict=each_input_dict)
         div_list.append(div)
         passed_list.append(passed)
@@ -229,7 +245,8 @@ def validate_input(v: Validator, input_dict: dict):
 
 
 def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
-    df = iso_df.groupby([column_1, column_2]).sum()
+    iso_tb_df = force_col_to_numeric(input_df=iso_df, col_name=column_4)
+    df = iso_tb_df.groupby([column_1, column_2]).sum()
     df_boo = df[column_4] - 1.0
     boo = df_boo.abs() >= 0.005
     passed_list = list(boo)
