@@ -64,49 +64,40 @@ class TestUtilities(unittest.TestCase):
         self.assertTrue(new_df.equals(expected_df))
 
     def test_force_col_to_numeric(self):
-        test_df = pd.DataFrame({
-            'column_1': ['B4C', 'SiC'],
-            'column_2': ['50', '50'],
-            'column_3': ['A', '1'],
-        })
-        expected_df = pd.DataFrame({
-            'column_1': ['B4C', 'SiC'],
-            'column_2': [50, 50],
-            'column_3': ['A', '1'],
-        })
-        new_df = force_col_to_numeric(input_df=test_df, col_name='column_2')
-        self.assertTrue(new_df.equals(expected_df))
+        test_dict_list = [{'column_1': 'B4C', 'column_2': '50', 'column_3': 'A'},
+                          {'column_1': 'SiC', 'column_2': '50', 'column_3': '1'}]
+        expected_list_df = pd.DataFrame([{'column_1': 'B4C', 'column_2': 50, 'column_3': 'A'},
+                                      {'column_1': 'SiC', 'column_2': 50, 'column_3': 1}])
+        expected_dict = expected_list_df.to_dict('list')
 
-        # test 'ignore' when str and number appear
-        expected_df = pd.DataFrame({
-            'column_1': ['B4C', 'SiC'],
-            'column_2': ['50', '50'],
-            'column_3': ['A', '1'],
-        })
-        new_df = force_col_to_numeric(input_df=test_df, col_name='column_3')
-        self.assertTrue(new_df.equals(expected_df))
+        new_dict = force_dict_to_numeric(input_dict_list=test_dict_list)
+        self.assertDictEqual(new_dict, expected_dict)
 
-    def test_validate_input_loop(self):
-        # Test compos validator
-        test_df = pd.DataFrame({
-            'column_1': ['B4C', 2123, 'B4C', 'B4C', 'B4C'],
-            'column_2': [1, 1, '50', 1, 1],
-            'column_3': [1, 1, 1, '50', ''],
-        })
-        expected_passed_list = [True, False, False, False, False]
-        passed_list, div_list = validate_input_loop(schema=compos_dict_schema, input_rows=test_df)
-        print(passed_list)
-        print(div_list)
-        self.assertEqual(passed_list, expected_passed_list)
+        new_df = pd.DataFrame(new_dict)
+        pass_list, output_div_list = validate_input_tb_rows(schema=compos_dict_schema, input_df=new_df)
+        self.assertEqual([False, True], pass_list)
 
-        # Test sample validator
-        test_df = pd.DataFrame({
-            'column_1': ['B4C', 2123, 'B4C', 'B4C', 'B4C'],
-            'column_2': [1, 1, '50', 1, 1],
-            'column_3': [1, 1, 1, '50', ''],
-        })
-        expected_passed_list = [True, False, False, False, False]
-        passed_list, div_list = validate_input_loop(schema=compos_dict_schema, input_rows=test_df)
-        print(passed_list)
-        print(div_list)
-        self.assertEqual(passed_list, expected_passed_list)
+    # def test_validate_input_loop(self):
+    #     # Test compos validator
+    #     test_df = pd.DataFrame({
+    #         'column_1': ['B4C', 2123, 'B4C', 'B4C', 'B4C'],
+    #         'column_2': [1, 1, '50', 1, 1],
+    #         'column_3': [1, 1, 1, '50', ''],
+    #     })
+    #     expected_passed_list = [True, False, False, False, False]
+    #     passed_list, div_list = _validate_input_tb_rows(schema=compos_dict_schema, input_df=test_df)
+    #     print(passed_list)
+    #     print(div_list)
+    #     self.assertEqual(passed_list, expected_passed_list)
+    #
+    #     # Test sample validator
+    #     test_df = pd.DataFrame({
+    #         'column_1': ['B4C', 2123, 'B4C', 'B4C', 'B4C'],
+    #         'column_2': [1, 1, '50', 1, 1],
+    #         'column_3': [1, 1, 1, '50', ''],
+    #     })
+    #     expected_passed_list = [True, False, False, False, False]
+    #     passed_list, div_list = _validate_input_tb_rows(schema=compos_dict_schema, input_df=test_df)
+    #     print(passed_list)
+    #     print(div_list)
+    #     self.assertEqual(passed_list, expected_passed_list)

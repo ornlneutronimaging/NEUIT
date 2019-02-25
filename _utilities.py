@@ -88,23 +88,40 @@ col_width_3 = 'three columns'
 col_width_6 = 'six columns'
 empty_div = html.Div()
 
+
+def greater_than_zero(field, value, error):
+    if not value > 0:
+        error(field, "must be greater than '0'")
+
+
+def type_is_str(field, value, error):
+    if type(value) is str:
+        error(field, "must be a number between '0' and '1'")
+
+
+def empty_str(field, value, error):
+    if type(value) is str:
+        if not value == '':
+            error(field, "must be a number >= '0' or leave as 'blank'")
+
+
 compos_dict_schema = {
-    column_1: {'type': 'string', 'forbidden': [''], 'required': True, },
-    column_2: {'type': 'number', 'min': 0, 'forbidden': [0, '', np.nan]},
-    column_3: {'type': 'number', 'min': 0, 'forbidden': [0, '', np.nan]},
+    column_1: {'type': 'string', 'empty': False, 'required': True, },
+    column_2: {'type': 'number', 'validator': greater_than_zero},
+    column_3: {'type': 'number', 'validator': greater_than_zero},
 }
 
 iso_dict_schema = {
-    column_1: {'type': 'string', 'required': True, },
-    column_2: {'type': 'string', 'required': True, },
-    column_3: {'type': 'string', 'required': True, },
-    column_4: {'type': 'number', 'min': 0, 'max': 1, 'required': True, },
+    column_1: {'type': 'string', 'empty': False, 'required': True, },
+    column_2: {'type': 'string', 'empty': False, 'required': True, },
+    column_3: {'type': 'string', 'empty': False, 'required': True, },
+    column_4: {'type': 'number', 'min': 0, 'max': 1, 'required': True, 'validator': type_is_str, },
 }
 
 sample_dict_schema = {
-    column_1: {'type': 'string', 'forbidden': [''], 'required': True, },
+    column_1: {'type': 'string', 'empty': False, 'required': True, },
     column_2: {'type': 'number', 'min': 0, 'required': True, },
-    column_3: {'type': 'number', 'min': 0, 'nullable': True, },
+    column_3: {'anyof_type': ['string', 'number'], 'min': 0, 'validator': empty_str, },
 }
 
 
@@ -140,102 +157,68 @@ def creat_sample_df_from_compos_df(compos_tb_df):
     sample_df = pd.DataFrame()
     sample_df[column_1] = _compos_tb_df[column_1]
     sample_df[column_2] = 1
-    sample_df[column_3] = np.nan
+    sample_df[column_3] = ''
     return sample_df
 
 
-def force_col_to_numeric(input_df: pd.DataFrame, col_name: list or str):
-    _input_df = input_df[:]
-    if type(col_name) == str:
-        # _input_df[col_name] = pd.to_numeric(input_df[col_name], errors='ignore')
-        _input_df[col_name] = input_df[col_name].astype(dtype=float, copy=True, errors='ignore')
-    elif type(col_name) == list:
-        for each_col_name in col_name:
-            # _input_df[each_col_name] = pd.to_numeric(input_df[each_col_name], errors='ignore')
-            _input_df[each_col_name] = input_df[each_col_name].astype(dtype=float, copy=True, errors='ignore')
-    return _input_df
+def is_number_tryexcept(s):
+    """ Returns True is string is a number. """
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 
-def validate_sample_input(sample_tb_df: pd.DataFrame, iso_tb_df: pd.DataFrame):
-    # Remove rows contains no chemical input
-    _sample_tb_df = sample_tb_df[:]
-    _sample_tb_df = _sample_tb_df[_sample_tb_df.column_1 != '']
-    # Force input to pd.DataFrame and force input type from 'str' to 'float' for number input fields
-    _sample_tb_df = force_col_to_numeric(input_df=_sample_tb_df, col_name=column_2)  # Thickness
-    _sample_tb_df = force_col_to_numeric(input_df=_sample_tb_df, col_name=column_3)  # Density
-    _iso_tb_df = iso_tb_df[:]
-    _iso_tb_df = force_col_to_numeric(input_df=_iso_tb_df, col_name=column_4)  # Isotopic ratio
-
-    # Test input format
-    sample_test_passed_list, sample_output_div_list = validate_input_loop(schema=sample_dict_schema,
-                                                                          input_rows=_sample_tb_df)
-    iso_test_passed_list, iso_output_div_list = validate_input_loop(schema=iso_dict_schema,
-                                                                    input_rows=_iso_tb_df)
-    test_passed_list = sample_test_passed_list + iso_test_passed_list
-    output_div_list = sample_output_div_list + iso_output_div_list
-
-    # Test the sum of iso ratio == 1
-    sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=_iso_tb_df)
-    test_passed_list.append(sum_test_passed)
-    output_div_list.append(sum_test_output_div)
-    return _sample_tb_df, _iso_tb_df, test_passed_list, output_div_list
+def force_dict_to_numeric(input_dict_list: list):
+    input_df = pd.DataFrame(input_dict_list)
+    input_dict = input_df.to_dict('list')
+    keys = input_dict.keys()
+    output_dict = {}
+    for each_key in keys:
+        _current_list = input_dict[each_key]
+        _current_output_list = []
+        for each_item in _current_list:
+            if is_number_tryexcept(each_item):
+                _current_output_list.append(float(each_item))
+            else:
+                _current_output_list.append(each_item)
+        output_dict[each_key] = _current_output_list
+    return output_dict
 
 
-def validate_compos_input(compos_tb_df: pd.DataFrame, iso_tb_df: pd.DataFrame, compos_type: str):
-    if compos_type == weight_name:
-        _col_name = column_2
-        _rm_name = column_3
-    else:
-        _col_name = column_3
-        _rm_name = column_2
-    # Remove rows contains no chemical input
-    _compos_df = compos_tb_df[:]
-    _compos_df = _compos_df[_compos_df.column_1 != '']
-    # Force input to pd.DataFrame and force input type from 'str' to 'float' for number input fields
-    _compos_df = drop_df_column_not_needed(input_df=_compos_df, column_name=_rm_name)
-    _compos_df = force_col_to_numeric(input_df=_compos_df, col_name=_col_name)
-    _iso_tb_df = iso_tb_df[:]
-    _iso_tb_df = force_col_to_numeric(input_df=_iso_tb_df, col_name=column_4)  # Isotopic ratio
+def validate_sample_input(sample_df: pd.DataFrame, iso_df: pd.DataFrame, sample_schema: dict, iso_schema: dict):
+    # Test sample input format
+    test_passed_list, output_div_list = validate_input_tb_rows(schema=sample_schema, input_df=sample_df)
 
-    # Test input format
-    compos_test_passed_list, compos_output_div_list = validate_input_loop(schema=compos_dict_schema,
-                                                                          input_rows=_compos_df)
-    iso_test_passed_list, iso_output_div_list = validate_input_loop(schema=iso_dict_schema,
-                                                                    input_rows=_iso_tb_df)
-    test_passed_list = compos_test_passed_list + iso_test_passed_list
-    output_div_list = compos_output_div_list + iso_output_div_list
+    # Test iso input format
+    if all(test_passed_list):
+        iso_test_passed_list, iso_output_div_list = validate_input_tb_rows(schema=iso_schema, input_df=iso_df)
+        test_passed_list += iso_test_passed_list
+        output_div_list += iso_output_div_list
 
     # Test the sum of iso ratio == 1
-    sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=_iso_tb_df)
-    test_passed_list.append(sum_test_passed)
-    output_div_list.append(sum_test_output_div)
-    return _compos_df, _iso_tb_df, test_passed_list, output_div_list
+    if all(test_passed_list):
+        sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=iso_df)
+        test_passed_list.append(sum_test_passed)
+        output_div_list.append(sum_test_output_div)
+
+    return test_passed_list, output_div_list
 
 
-# def validate_input_loop(schema: dict, input_df: pd.DataFrame):
-#     v = Validator(schema)
-#     list_of_input_dict = input_df.to_dict('records')
-#     passed_list = []
-#     div_list = []
-#     for each_input_dict in list_of_input_dict:
-#         passed, div = validate_input(v=v, input_dict=each_input_dict)
-#         div_list.append(div)
-#         passed_list.append(passed)
-#     return passed_list, div_list
-
-
-def validate_input_loop(schema: dict, input_rows: list):
+def validate_input_tb_rows(schema: dict, input_df: pd.DataFrame):
+    input_dict_list = input_df.to_dict('records')
     v = Validator(schema)
     passed_list = []
     div_list = []
-    for each_input_dict in input_rows:
-        passed, div = validate_input(v=v, input_dict=each_input_dict)
+    for each_input_dict in input_dict_list:
+        passed, div = _validate_input(v=v, input_dict=each_input_dict)
         div_list.append(div)
         passed_list.append(passed)
     return passed_list, div_list
 
 
-def validate_input(v: Validator, input_dict: dict):
+def _validate_input(v: Validator, input_dict: dict):
     passed = v.validate(input_dict)
     if passed:
         return passed, None
@@ -245,8 +228,7 @@ def validate_input(v: Validator, input_dict: dict):
 
 
 def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
-    iso_tb_df = force_col_to_numeric(input_df=iso_df, col_name=column_4)
-    df = iso_tb_df.groupby([column_1, column_2]).sum()
+    df = iso_df.groupby([column_1, column_2]).sum()
     df_boo = df[column_4] - 1.0
     boo = df_boo.abs() >= 0.005
     passed_list = list(boo)
@@ -279,9 +261,10 @@ def load_beam_shape(relative_path_to_beam_shape):
 
 
 def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
-    sample_tb_df = sample_tb_df[sample_tb_df[column_1] != '']
+    # sample_tb_df = sample_tb_df[sample_tb_df[column_1] != '']
     num_layer = len(sample_tb_df[column_1])
     for i in range(num_layer):
+        print(sample_tb_df[column_3])
         if sample_tb_df[column_3][i] == '':
             o_reso.add_layer(formula=sample_tb_df[column_1][i],
                              thickness=float(sample_tb_df[column_2][i]))
