@@ -145,13 +145,17 @@ def validate_input(compos_tb_row, iso_tb_row):
     # Test input format
     compos_tb_df = pd.DataFrame(compos_tb_row)
     iso_tb_df = pd.DataFrame(iso_tb_row)
+    print(compos_tb_df.dtypes)
     compos_tb_df = force_col_to_numeric(input_df=compos_tb_df, col_name=[column_2, column_3])  # Weight & atomic
+    print(compos_tb_df.dtypes)
     iso_tb_df = force_col_to_numeric(input_df=iso_tb_df, col_name=column_4)  # Isotopic ratio
 
+    # _compos_tb_row = compos_tb_df.to_dict('list')
+    # _iso_tb_row = iso_tb_df.to_dict('list')
     _compos_tb_row = compos_tb_df.to_dict('records')
     _iso_tb_row = iso_tb_df.to_dict('records')
-    print(compos_tb_row)
-    print(iso_tb_row)
+    print(_compos_tb_row)
+    print(_iso_tb_row)
     compos_test_passed_list, compos_output_div_list = validate_input_loop(schema=compos_dict_schema,
                                                                           input_rows=_compos_tb_row)
     iso_test_passed_list, iso_output_div_list = validate_input_loop(schema=iso_dict_schema,
@@ -183,8 +187,6 @@ def update_iso_table(compos_tb_row, validator_error):
         sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
         iso_df = form_iso_table(sample_df=sample_df)
         return iso_df.to_dict('records')
-    else:
-        return iso_tb_df_default.to_dict('records')  # empty table
 
 
 @app.callback(
