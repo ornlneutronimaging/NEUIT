@@ -215,18 +215,6 @@ class TestUtilities(unittest.TestCase):
         passed, output_div = validate_sum_of_iso_ratio(iso_df=test_df)
         self.assertEqual(True, passed)
 
-        test_dict_list = [{'column_1': 'B4C', 'column_2': 'B', 'column_3': '10-B', 'column_4': '1'},
-                          {'column_1': 'B4C', 'column_2': 'B', 'column_3': '11-B', 'column_4': 1},
-                          {'column_1': 'B4C', 'column_2': 'C', 'column_3': '12-C', 'column_4': 0.9893},
-                          {'column_1': 'B4C', 'column_2': 'C', 'column_3': '13-C', 'column_4': 0.0107},
-                          {'column_1': 'SiC', 'column_2': 'Si', 'column_3': '28-Si', 'column_4': 0.9223},
-                          {'column_1': 'SiC', 'column_2': 'Si', 'column_3': '29-Si', 'column_4': 0.0468},
-                          {'column_1': 'SiC', 'column_2': 'Si', 'column_3': '30-Si', 'column_4': 0.0309},
-                          {'column_1': 'SiC', 'column_2': 'C', 'column_3': '12-C', 'column_4': 0.9893},
-                          {'column_1': 'SiC', 'column_2': 'C', 'column_3': '13-C', 'column_4': 0.0107}]
-        test_df = pd.DataFrame(test_dict_list)
-        self.assertRaises(KeyError, validate_sum_of_iso_ratio, test_df)
-
     def test_chem_name_validator(self):
         self.assertTrue(validate_chem_name('Ag'))
         self.assertFalse(validate_chem_name('Dg'))

@@ -123,11 +123,19 @@ def update_input_columns(compos_type):
     ],
     [
         State('app3_sample_table', 'data'),
-        State('app3_sample_table', 'columns')
+        # State('app3_sample_table', 'columns'),
+        State('app3_compos_input_type', 'value'),
     ])
-def add_row(n_clicks, rows, columns):
+def add_row(n_clicks, rows, input_type):
     if n_clicks > 0:
-        rows.append({c['id']: '' for c in columns})
+        if input_type == weight_name:
+            empty_col_id = column_2
+            fake_col_id = column_3
+        else:
+            empty_col_id = column_3
+            fake_col_id = column_2
+        # rows.append({c['id']: '' for c in columns})
+        rows.append({'column_1': '', empty_col_id: '', fake_col_id: '1'})
     return rows
 
 
