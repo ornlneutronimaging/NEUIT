@@ -224,6 +224,14 @@ def output(n_clicks, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
                              filtering=False,
                              sorting=False,
                              row_deletable=False,
+                             style_cell_conditional=[
+                                 {'if': {'column_id': column_1},
+                                  'width': '33%'},
+                                 {'if': {'column_id': column_2},
+                                  'width': '33%'},
+                                 {'if': {'column_id': column_3},
+                                  'width': '33%'},
+                             ],
                              ),
                 html.Div([html.H5('Sample stack:'), html.Div(div_list)])
             ]
