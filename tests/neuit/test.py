@@ -218,6 +218,7 @@ class TestUtilities(unittest.TestCase):
     def test_chem_name_validator(self):
         self.assertTrue(validate_chem_name('Ag'))
         self.assertFalse(validate_chem_name('Dg'))
+        self.assertFalse(validate_chem_name('Ci'))
         self.assertFalse(validate_chem_name('Xo'))
         self.assertFalse(validate_chem_name('Asd'))
         self.assertTrue(validate_chem_name('U2O3'))
@@ -225,5 +226,11 @@ class TestUtilities(unittest.TestCase):
         self.assertTrue(validate_chem_name('CuO2H2'))
         self.assertFalse(validate_chem_name('Hug'))
         self.assertFalse(validate_chem_name('AA'))
+        self.assertFalse(validate_chem_name('ab'))
+        self.assertFalse(validate_chem_name('dd'))
+        self.assertFalse(validate_chem_name('Co1.2Cu1.4'))
+        self.assertTrue(validate_chem_name('LiMg'))
+        self.assertTrue(validate_chem_name('Li-Mg'))
+        self.assertFalse(validate_chem_name('aa'))
 
 

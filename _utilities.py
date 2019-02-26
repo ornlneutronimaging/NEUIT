@@ -281,12 +281,18 @@ def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
     num_layer = len(sample_tb_df[column_1])
     for i in range(num_layer):
         if sample_tb_df[column_3][i] == '':
-            o_reso.add_layer(formula=sample_tb_df[column_1][i],
-                             thickness=float(sample_tb_df[column_2][i]))
+            try:
+                o_reso.add_layer(formula=sample_tb_df[column_1][i],
+                                 thickness=float(sample_tb_df[column_2][i]))
+            except ValueError:
+                pass
         else:
-            o_reso.add_layer(formula=sample_tb_df[column_1][i],
-                             thickness=float(sample_tb_df[column_2][i]),
-                             density=float(sample_tb_df[column_3][i]))
+            try:
+                o_reso.add_layer(formula=sample_tb_df[column_1][i],
+                                 thickness=float(sample_tb_df[column_2][i]),
+                                 density=float(sample_tb_df[column_3][i]))
+            except ValueError:
+                pass
     return o_reso
 
 
