@@ -1,3 +1,3 @@
-# ONIST
+# NEUIT
 
-**O**nline **N**eutron **I**maging **S**imulation **T**ools.
+**NEU**tron **I**maging **T**oolbox.
