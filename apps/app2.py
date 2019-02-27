@@ -257,10 +257,10 @@ def show_range_table(timestamp, distance, range_table_rows):
             if energy > 0:
                 things_to_fill = fill_range_table_by_e(e_ev=energy, distance_m=distance)
                 col_list_1.append(energy)
-                col_list_2.append(things_to_fill[0])
-                col_list_3.append(things_to_fill[1])
-                col_list_4.append(things_to_fill[2])
-                col_list_5.append(things_to_fill[3])
+                col_list_2.append(things_to_fill[column_2])
+                col_list_3.append(things_to_fill[column_3])
+                col_list_4.append(things_to_fill[column_4])
+                col_list_5.append(things_to_fill[column_5])
             else:
                 col_list_1.append(energy)
                 col_list_2.append('N/A')

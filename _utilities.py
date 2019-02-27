@@ -152,10 +152,13 @@ def classify_neutron(energy_ev):
 def fill_range_table_by_e(e_ev, distance_m):
     _e = e_ev
     _lambda = round(ir_util.ev_to_angstroms(array=_e), 4)
-    _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _v = round(3956. / np.sqrt(81.787 / (_e * 1000.)), 2)
+    _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _class = classify_neutron(_e)
-    return [_lambda, _tof, _v, _class]
+    return {column_2: _lambda,
+            column_3: _v,
+            column_4: _tof,
+            column_5: _class}
 
 
 def drop_df_column_not_needed(input_df: pd.DataFrame, column_name: str):
