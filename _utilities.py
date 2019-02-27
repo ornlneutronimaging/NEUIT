@@ -26,9 +26,9 @@ ele_name = 'Element'
 iso_name = 'Isotope'
 iso_ratio_name = 'Isotopic ratio'
 weight_name = 'Weight (g)'
-weight_name_p = 'Weight (%)'
-atomic_name = 'Atomic (mol)'
-atomic_name_p = 'Atomic (%)'
+weight_name_p = 'Weight %'
+atomic_name = 'Atoms (mol)'
+atomic_name_p = 'Atomic %'
 column_1 = 'column_1'
 column_2 = 'column_2'
 column_3 = 'column_3'
@@ -149,6 +149,15 @@ def classify_neutron(energy_ev):
         return 'Ultra-fast'
 
 
+def fill_range_table_by_e(e_ev, distance_m):
+    _e = e_ev
+    _lambda = round(ir_util.ev_to_angstroms(array=_e), 4)
+    _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
+    _v = round(3956. / np.sqrt(81.787 / (_e * 1000.)), 2)
+    _class = classify_neutron(_e)
+    return [_lambda, _tof, _v, _class]
+
+
 def drop_df_column_not_needed(input_df: pd.DataFrame, column_name: str):
     if column_name in input_df.columns:
         _dropped_df = input_df.drop(columns=[column_name])
@@ -166,7 +175,7 @@ def creat_sample_df_from_compos_df(compos_tb_df):
     return sample_df
 
 
-def is_number_tryexcept(s):
+def is_number(s):
     """ Returns True if string is a number. """
     try:
         float(s)
@@ -184,7 +193,7 @@ def force_dict_to_numeric(input_dict_list: list):
         _current_list = input_dict[each_key]
         _current_output_list = []
         for each_item in _current_list:
-            if is_number_tryexcept(each_item):
+            if is_number(each_item):
                 _current_output_list.append(float(each_item))
             else:
                 _current_output_list.append(each_item)
@@ -504,16 +513,8 @@ def init_iso_table(id_str: str):
         filtering=False,
         sorting=False,
         row_deletable=False,
-        style_cell_conditional=[
-            {'if': {'column_id': column_1},
-             'width': '25%'},
-            {'if': {'column_id': column_2},
-             'width': '25%'},
-            {'if': {'column_id': column_3},
-             'width': '25%'},
-            {'if': {'column_id': column_4},
-             'width': '25%'},
-        ],
+        style_cell_conditional=even_4_col,
+        style_data_conditional=gray_iso_cols,
         n_fixed_rows=1,
         style_table={
             'maxHeight': '300',
@@ -533,13 +534,60 @@ even_3_col = [
      'width': '33%'},
 ]
 
-markdown_sample = dcc.Markdown(
-    '''NOTE: Formula is **case sensitive**, atomic ratio must be **integers**. Density input can be omitted (leave as blank) 
-    only if the input formula is single element, natural densities available
-    [here](http://periodictable.com/Properties/A/Density.al.html) are used.''')
+even_4_col = [
+    {'if': {'column_id': column_1},
+     'width': '25%'},
+    {'if': {'column_id': column_2},
+     'width': '25%'},
+    {'if': {'column_id': column_3},
+     'width': '25%'},
+    {'if': {'column_id': column_4},
+     'width': '25%'},
+]
 
-markdown_iso = dcc.Markdown("""NOTE: Please edit **ONLY** the 'Isotopic ratio' column.
-                        Editing of 'Sample info' will **RESET** contents in isotope table.""")
+even_5_col = [
+    {'if': {'column_id': column_1},
+     'width': '20%'},
+    {'if': {'column_id': column_2},
+     'width': '20%'},
+    {'if': {'column_id': column_3},
+     'width': '20%'},
+    {'if': {'column_id': column_4},
+     'width': '20%'},
+    {'if': {'column_id': column_5},
+     'width': '20%'},
+]
+
+color = 'rgb(240, 240, 240)'
+gray_range_cols = [
+    {'if': {'column_id': column_2},
+     'backgroundColor': color},
+    {'if': {'column_id': column_3},
+     'backgroundColor': color},
+    {'if': {'column_id': column_4},
+     'backgroundColor': color},
+    {'if': {'column_id': column_5},
+     'backgroundColor': color},
+]
+
+gray_iso_cols = [
+    {'if': {'column_id': column_1},
+     'backgroundColor': color},
+    {'if': {'column_id': column_2},
+     'backgroundColor': color},
+    {'if': {'column_id': column_3},
+     'backgroundColor': color},
+]
+
+markdown_sample = dcc.Markdown('''
+NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**. 
+Density input can be omitted (leave as blank) only if the input formula is single element, 
+natural densities available [here](http://periodictable.com/Properties/A/Density.al.html) are used.''')
+
+markdown_compos = dcc.Markdown('''
+NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**.''')
+
+markdown_iso = dcc.Markdown("""NOTE: Editing of 'Sample info' again will **RESET** contents in isotope table.""")
 
 # Plot control buttons
 plot_option_div = html.Div(

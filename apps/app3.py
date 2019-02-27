@@ -60,7 +60,7 @@ layout = html.Div(
                     ],
                     id=sample_table_id
                 ),
-                markdown_sample,
+                markdown_compos,
                 # Input table for isotopic ratios
                 dcc.Checklist(id=iso_check_id,
                               options=[

@@ -1,6 +1,4 @@
 import numpy as np
-from ImagingReso._utilities import ev_to_angstroms
-from ImagingReso._utilities import ev_to_s
 from dash.dependencies import Input, Output, State
 from _app import app
 import urllib.parse
@@ -48,37 +46,40 @@ layout = html.Div(
             [
                 # Range input
                 html.H6('Energy range:'),
-                html.Div(
-                    [
-                        # Energy slider
-                        dcc.RangeSlider(
-                            id=slider_id,
-                            min=-5,
-                            max=6,
-                            value=[0, 2],
-                            allowCross=False,
-                            dots=False,
-                            step=0.01,
-                            updatemode='drag',
-                            marks={i: '{} eV'.format(pow(10, i)) for i in range(-5, 7, 1)},
-                            className='ten columns offset-by-one',
-                        ),
-                    ], className='row'
-                ),
-                html.Br(),
+                # html.Div(
+                #     [
+                #         # Energy slider
+                #         dcc.RangeSlider(
+                #             id=slider_id,
+                #             min=-5,
+                #             max=6,
+                #             value=[0, 2],
+                #             allowCross=False,
+                #             dots=False,
+                #             step=0.01,
+                #             updatemode='drag',
+                #             marks={i: '{} eV'.format(pow(10, i)) for i in range(-5, 7, 1)},
+                #             className='ten columns offset-by-one',
+                #         ),
+                #     ], className='row'
+                # ),
+                # html.Br(),
                 html.Div([
                     dt.DataTable(
                         data=energy_range_df_default.to_dict('records'),
                         # optional - sets the order of columns
                         columns=energy_range_header_df.to_dict('records'),
-                        editable=False,
+                        editable=True,
                         row_selectable=False,
                         filtering=False,
                         sorting=False,
                         row_deletable=False,
+                        style_cell_conditional=even_5_col,
+                        style_data_conditional=gray_range_cols,
                         id=range_table_id
                     ),
                 ]),
+                dcc.Markdown('''NOTE: Only '**Energy (eV)**' is editable and takes number '**>0**'.'''),
                 html.Div(
                     [
                         # Step input
@@ -124,8 +125,8 @@ layout = html.Div(
                                     ], className='row', style={'verticalAlign': 'middle'},
                                 ),
                                 dcc.Markdown(
-                                    '''NOTE: Please ignore the above input field if **NOT** 
-                                    interested in display of time-of-flight (TOF).'''),
+                                    '''NOTE: Please ignore the above input field if you are **NOT** 
+                                    interested in displaying results in time-of-flight (TOF).'''),
                             ], className=col_width_6,
                         ),
                     ], className='row',
@@ -204,31 +205,85 @@ layout = html.Div(
 )
 
 
+# @app.callback(
+#     Output(range_table_id, 'data'),
+#     [
+#         Input(slider_id, 'value'),
+#         Input(distance_id, 'value'),
+#     ])
+# def show_range_table(slider, distance):
+#     transformed_value = [pow(10, v) for v in slider]
+#     e_min = round(transformed_value[0], 5)
+#     e_max = round(transformed_value[1], 5)
+#     lambda_1 = round(ev_to_angstroms(array=e_min), 4)
+#     lambda_2 = round(ev_to_angstroms(array=e_max), 4)
+#     tof_1 = round(ev_to_s(array=e_min, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
+#     tof_2 = round(ev_to_s(array=e_max, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
+#     v_1 = round(3956. / np.sqrt(81.787 / (e_min * 1000.)), 2)
+#     v_2 = round(3956. / np.sqrt(81.787 / (e_max * 1000.)), 2)
+#     class_1 = classify_neutron(e_min)
+#     class_2 = classify_neutron(e_max)
+#     _df_range = pd.DataFrame({
+#         column_1: [e_min, e_max],
+#         column_2: [lambda_1, lambda_2],
+#         column_3: [v_1, v_2],
+#         column_4: [tof_1, tof_2],
+#         column_5: [class_1, class_2],
+#     })
+#     return _df_range.to_dict('records')
+
+
 @app.callback(
     Output(range_table_id, 'data'),
     [
-        Input(slider_id, 'value'),
+        Input(range_table_id, 'data_timestamp'),
         Input(distance_id, 'value'),
+    ],
+    [
+        State(range_table_id, 'data'),
     ])
-def show_range_table(slider, distance):
-    transformed_value = [pow(10, v) for v in slider]
-    e_min = round(transformed_value[0], 5)
-    e_max = round(transformed_value[1], 5)
-    lambda_1 = round(ev_to_angstroms(array=e_min), 4)
-    lambda_2 = round(ev_to_angstroms(array=e_max), 4)
-    tof_1 = round(ev_to_s(array=e_min, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
-    tof_2 = round(ev_to_s(array=e_max, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
-    v_1 = round(3956. / np.sqrt(81.787 / (e_min * 1000.)), 2)
-    v_2 = round(3956. / np.sqrt(81.787 / (e_max * 1000.)), 2)
-    class_1 = classify_neutron(e_min)
-    class_2 = classify_neutron(e_max)
+def show_range_table(timestamp, distance, range_table_rows):
+    col_list_1 = []
+    col_list_2 = []
+    col_list_3 = []
+    col_list_4 = []
+    col_list_5 = []
+    is_number_list = []
+    for each_row in range_table_rows:
+        energy_input = each_row[column_1]
+        if is_number(energy_input):
+            energy = float(energy_input)
+            is_number_list.append(True)
+            if energy > 0:
+                things_to_fill = fill_range_table_by_e(e_ev=energy, distance_m=distance)
+                col_list_1.append(energy)
+                col_list_2.append(things_to_fill[0])
+                col_list_3.append(things_to_fill[1])
+                col_list_4.append(things_to_fill[2])
+                col_list_5.append(things_to_fill[3])
+            else:
+                col_list_1.append(energy)
+                col_list_2.append('N/A')
+                col_list_3.append('N/A')
+                col_list_4.append('N/A')
+                col_list_5.append('N/A')
+        else:
+            is_number_list.append(False)
+            col_list_1.append(energy_input)
+            col_list_2.append('N/A')
+            col_list_3.append('N/A')
+            col_list_4.append('N/A')
+            col_list_5.append('N/A')
+
     _df_range = pd.DataFrame({
-        column_1: [e_min, e_max],
-        column_2: [lambda_1, lambda_2],
-        column_3: [v_1, v_2],
-        column_4: [tof_1, tof_2],
-        column_5: [class_1, class_2],
+        column_1: col_list_1,
+        column_2: col_list_2,
+        column_3: col_list_3,
+        column_4: col_list_4,
+        column_5: col_list_5,
     })
+    if all(is_number_list):
+        _df_range.sort_values(by=column_1, inplace=True)
     return _df_range.to_dict('records')
 
 
