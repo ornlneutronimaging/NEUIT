@@ -9,6 +9,15 @@ sample_df_default = pd.DataFrame({
     'column_3': [1],
 })
 
+app_name = 'app1'
+add_row_id = app_name + '_add_row'
+sample_table_id = app_name + '_sample_table'
+iso_check_id = app_name + '_iso_check'
+iso_div_id = app_name + '_iso_input'
+iso_table_id = app_name + '_iso_table'
+submit_button_id = app_name + '_submit'
+result_id = app_name + '_result'
+
 # Create app layout
 layout = html.Div(
     [
@@ -18,12 +27,12 @@ layout = html.Div(
         html.Br(),
         dcc.Link('Composition converter', href='/apps/converter'),
         html.H1('Cold neutron transmission'),
-        html.H3('Sample info'),
 
         # Sample input
+        html.H3('Sample info'),
         html.Div(
             [
-                html.Button('Add Row', id='app1_add_row', n_clicks=0),
+                html.Button('Add Row', id=add_row_id, n_clicks=0),
                 dt.DataTable(
                     data=sample_df_default.to_dict('records'),
                     # optional - sets the order of columns
@@ -33,20 +42,12 @@ layout = html.Div(
                     filtering=False,
                     sorting=False,
                     row_deletable=True,
-                    style_cell_conditional=[
-                        {'if': {'column_id': column_1},
-                         'width': '33%'},
-                        {'if': {'column_id': column_2},
-                         'width': '33%'},
-                        {'if': {'column_id': column_3},
-                         'width': '33%'},
-                    ],
-                    id='app1_sample_table'
+                    style_cell_conditional=even_3_col,
+                    id=sample_table_id
                 ),
                 markdown_sample,
-
                 # Input table for isotopic ratios
-                dcc.Checklist(id='app1_iso_check',
+                dcc.Checklist(id=iso_check_id,
                               options=[
                                   {'label': 'Modify isotopic ratios', 'value': True},
                               ], values=[],
@@ -54,49 +55,26 @@ layout = html.Div(
                 html.Div(
                     [
                         markdown_iso,
-                        dt.DataTable(
-                            data=iso_tb_df_default.to_dict('records'),
-                            columns=iso_tb_header_df.to_dict('records'),
-                            editable=True,
-                            row_selectable=False,
-                            filtering=False,
-                            sorting=False,
-                            row_deletable=False,
-                            style_cell_conditional=[
-                                {'if': {'column_id': column_1},
-                                 'width': '25%'},
-                                {'if': {'column_id': column_2},
-                                 'width': '25%'},
-                                {'if': {'column_id': column_3},
-                                 'width': '25%'},
-                                {'if': {'column_id': column_4},
-                                 'width': '25%'},
-                            ],
-                            style_table={
-                                'maxHeight': '300',
-                                'overflowY': 'scroll'
-                            },
-                            id='app1_iso_table'
-                        ),
+                        init_iso_table(id_str=iso_table_id)
                     ],
-                    id='app1_iso_input',
+                    id=iso_div_id,
                     style={'display': 'none'},
                 ),
-                html.Button('Submit', id='app1_button_submit'),
+                html.Button('Submit', id=submit_button_id),
             ]
         ),
 
         # Transmission at CG-1D
-        html.Div(id='app1_result'),
+        html.Div(id=result_id),
     ]
 )
 
 
 @app.callback(
-    Output('app1_sample_table', 'data'),
-    [Input('app1_add_row', 'n_clicks')],
-    [State('app1_sample_table', 'data'),
-     State('app1_sample_table', 'columns')])
+    Output(sample_table_id, 'data'),
+    [Input(add_row_id, 'n_clicks')],
+    [State(sample_table_id, 'data'),
+     State(sample_table_id, 'columns')])
 def add_row(n_clicks, rows, columns):
     if n_clicks > 0:
         rows.append({c['id']: '' for c in columns})
@@ -104,9 +82,9 @@ def add_row(n_clicks, rows, columns):
 
 
 @app.callback(
-    Output('app1_iso_table', 'data'),
+    Output(iso_table_id, 'data'),
     [
-        Input('app1_sample_table', 'data'),
+        Input(sample_table_id, 'data'),
     ])
 def update_iso_table(compos_tb_dict):
     compos_tb_df = pd.DataFrame(compos_tb_dict)
@@ -116,9 +94,9 @@ def update_iso_table(compos_tb_dict):
 
 
 @app.callback(
-    Output('app1_iso_input', 'style'),
+    Output(iso_div_id, 'style'),
     [
-        Input('app1_iso_check', 'values'),
+        Input(iso_check_id, 'values'),
     ])
 def show_hide_iso_table(iso_changed):
     if iso_changed:
@@ -128,14 +106,14 @@ def show_hide_iso_table(iso_changed):
 
 
 @app.callback(
-    Output('app1_result', 'children'),
+    Output(result_id, 'children'),
     [
-        Input('app1_button_submit', 'n_clicks'),
+        Input(submit_button_id, 'n_clicks'),
     ],
     [
-        State('app1_sample_table', 'data'),
-        State('app1_iso_table', 'data'),
-        State('app1_iso_check', 'values'),
+        State(sample_table_id, 'data'),
+        State(iso_table_id, 'data'),
+        State(iso_check_id, 'values'),
     ])
 def output(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_submit is not None:

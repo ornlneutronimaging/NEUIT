@@ -20,6 +20,20 @@ sample_df_default = pd.DataFrame({
 
 plot_data_filename = "plot_data.csv"
 
+app_name = 'app2'
+slider_id = app_name + '_e_range_slider'
+range_table_id = app_name + '_range_table'
+e_step_id = app_name + '_e_step'
+distance_id = app_name + '_distance'
+add_row_id = app_name + '_add_row'
+sample_table_id = app_name + '_sample_table'
+iso_check_id = app_name + '_iso_check'
+iso_div_id = app_name + '_iso_input'
+iso_table_id = app_name + '_iso_table'
+submit_button_id = app_name + '_submit'
+error_id = app_name + '_error'
+result_id = app_name + '_result'
+
 # Create app2 layout
 layout = html.Div(
     [
@@ -38,7 +52,7 @@ layout = html.Div(
                     [
                         # Energy slider
                         dcc.RangeSlider(
-                            id='app2_e_range_slider',
+                            id=slider_id,
                             min=-5,
                             max=6,
                             value=[0, 2],
@@ -62,7 +76,7 @@ layout = html.Div(
                         filtering=False,
                         sorting=False,
                         row_deletable=False,
-                        id='app2_range_table'
+                        id=range_table_id
                     ),
                 ]),
                 html.Div(
@@ -74,7 +88,7 @@ layout = html.Div(
                                 html.Div(
                                     [
                                         dcc.Dropdown(
-                                            id='app2_e_step',
+                                            id=e_step_id,
                                             options=[
                                                 {'label': '0.001 (eV)  (NOT recommended if energy range > 10 eV)',
                                                  'value': 0.001},
@@ -99,7 +113,7 @@ layout = html.Div(
                                 html.H6('Source-to-detector (optional):'),
                                 html.Div(
                                     [
-                                        dcc.Input(id='app2_distance', type='number', value=16.45, min=1,
+                                        dcc.Input(id=distance_id, type='number', value=16.45, min=1,
                                                   inputmode='numeric',
                                                   step=0.01,
                                                   className='nine columns'),
@@ -121,74 +135,42 @@ layout = html.Div(
 
         # Sample input
         html.H3('Sample info'),
-        html.Div([
-            html.Button('Add Row', id='app2_add_row', n_clicks=0),
-            dt.DataTable(
-                data=sample_df_default.to_dict('records'),
-                # optional - sets the order of columns
-                columns=sample_header_df.to_dict('records'),
-                editable=True,
-                row_selectable=False,
-                filtering=False,
-                sorting=False,
-                row_deletable=True,
-                style_cell_conditional=[
-                    {'if': {'column_id': column_1},
-                     'width': '33%'},
-                    {'if': {'column_id': column_2},
-                     'width': '33%'},
-                    {'if': {'column_id': column_3},
-                     'width': '33%'},
-                ],
-                id='app2_sample_table'
-            ),
-            markdown_sample,
-            dcc.Checklist(id='app2_iso_check',
-                          options=[
-                              {'label': 'Modify isotopic ratios', 'value': True},
-                          ], values=[],
-                          ),
-            html.Div(
-                [
-                    markdown_iso,
-                    dt.DataTable(
-                        data=iso_tb_df_default.to_dict('records'),
-                        columns=iso_tb_header_df.to_dict('records'),
-                        editable=True,
-                        # editable={layer_name: False,
-                        #           ele_name: False,
-                        #           iso_name: True,
-                        #           },
-                        row_selectable=False,
-                        filtering=False,
-                        sorting=False,
-                        row_deletable=False,
-                        style_cell_conditional=[
-                            {'if': {'column_id': column_1},
-                             'width': '25%'},
-                            {'if': {'column_id': column_2},
-                             'width': '25%'},
-                            {'if': {'column_id': column_3},
-                             'width': '25%'},
-                            {'if': {'column_id': column_4},
-                             'width': '25%'},
-                        ],
-                        style_table={
-                            'maxHeight': '300',
-                            'overflowY': 'scroll'
-                        },
-                        id='app2_iso_table'
-                    ),
-                ],
-                id='app2_iso_input',
-                style={'display': 'none'},
-            ),
-            html.Button('Submit', id='app2_button_submit'),
-        ]
+        html.Div(
+            [
+                html.Button('Add Row', id=add_row_id, n_clicks=0),
+                dt.DataTable(
+                    data=sample_df_default.to_dict('records'),
+                    # optional - sets the order of columns
+                    columns=sample_header_df.to_dict('records'),
+                    editable=True,
+                    row_selectable=False,
+                    filtering=False,
+                    sorting=False,
+                    row_deletable=True,
+                    style_cell_conditional=even_3_col,
+                    id=sample_table_id
+                ),
+                markdown_sample,
+                # Input table for isotopic ratios
+                dcc.Checklist(id=iso_check_id,
+                              options=[
+                                  {'label': 'Modify isotopic ratios', 'value': True},
+                              ], values=[],
+                              ),
+                html.Div(
+                    [
+                        markdown_iso,
+                        init_iso_table(id_str=iso_table_id)
+                    ],
+                    id=iso_div_id,
+                    style={'display': 'none'},
+                ),
+                html.Button('Submit', id=submit_button_id),
+            ]
         ),
 
         # Error message
-        html.Div(id='app2_error'),
+        html.Div(id=error_id),
 
         # Plot
         html.Div(
@@ -217,16 +199,16 @@ layout = html.Div(
             style={'display': 'none'}
         ),
         # Transmission at CG-1D and sample stack
-        html.Div(id='app2_result'),
+        html.Div(id=result_id),
     ]
 )
 
 
 @app.callback(
-    Output('app2_range_table', 'data'),
+    Output(range_table_id, 'data'),
     [
-        Input('app2_e_range_slider', 'value'),
-        Input('app2_distance', 'value'),
+        Input(slider_id, 'value'),
+        Input(distance_id, 'value'),
     ])
 def show_range_table(slider, distance):
     transformed_value = [pow(10, v) for v in slider]
@@ -251,10 +233,10 @@ def show_range_table(slider, distance):
 
 
 @app.callback(
-    Output('app2_sample_table', 'data'),
-    [Input('app2_add_row', 'n_clicks')],
-    [State('app2_sample_table', 'data'),
-     State('app2_sample_table', 'columns')])
+    Output(sample_table_id, 'data'),
+    [Input(add_row_id, 'n_clicks')],
+    [State(sample_table_id, 'data'),
+     State(sample_table_id, 'columns')])
 def add_row(n_clicks, rows, columns):
     if n_clicks > 0:
         rows.append({c['id']: '' for c in columns})
@@ -262,9 +244,9 @@ def add_row(n_clicks, rows, columns):
 
 
 @app.callback(
-    Output('app2_iso_table', 'data'),
+    Output(iso_table_id, 'data'),
     [
-        Input('app2_sample_table', 'data'),
+        Input(sample_table_id, 'data'),
     ])
 def update_iso_table(compos_tb_dict):
     compos_tb_df = pd.DataFrame(compos_tb_dict)
@@ -274,9 +256,9 @@ def update_iso_table(compos_tb_dict):
 
 
 @app.callback(
-    Output('app2_iso_input', 'style'),
+    Output(iso_div_id, 'style'),
     [
-        Input('app2_iso_check', 'values'),
+        Input(iso_check_id, 'values'),
     ])
 def show_hide_iso_table(iso_changed):
     if iso_changed:
@@ -330,7 +312,7 @@ def disable_total_layer_when_plotting_sigma(y_type):
 @app.callback(
     Output('app2_plot_div', 'style'),
     [
-        Input('app2_button_submit', 'n_clicks'),
+        Input(submit_button_id, 'n_clicks'),
     ])
 def show_plot_options(n_submit):
     if n_submit is not None:
@@ -342,19 +324,19 @@ def show_plot_options(n_submit):
 @app.callback(
     Output('app2_plot', 'children'),
     [
-        Input('app2_button_submit', 'n_clicks'),
+        Input(submit_button_id, 'n_clicks'),
         Input('y_type', 'value'),
         Input('x_type', 'value'),
         Input('plot_scale', 'value'),
         Input('show_opt', 'values'),
     ],
     [
-        State('app2_range_table', 'data'),
-        State('app2_e_step', 'value'),
-        State('app2_distance', 'value'),
-        State('app2_sample_table', 'data'),
-        State('app2_iso_table', 'data'),
-        State('app2_iso_check', 'values'),
+        State(range_table_id, 'data'),
+        State(e_step_id, 'value'),
+        State(distance_id, 'value'),
+        State(sample_table_id, 'data'),
+        State(iso_table_id, 'data'),
+        State(iso_check_id, 'values'),
     ])
 def plot(n_submit, y_type, x_type, plot_scale, show_opt,
          range_tb_rows, e_step, distance_m,
@@ -437,19 +419,19 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
 @app.callback(
     Output('app2_download_link', 'href'),
     [
-        Input('app2_button_submit', 'n_clicks'),
+        Input(submit_button_id, 'n_clicks'),
         Input('y_type', 'value'),
         Input('x_type', 'value'),
         Input('show_opt', 'values'),
         Input('app2_export_clip', 'values'),
     ],
     [
-        State('app2_range_table', 'data'),
-        State('app2_e_step', 'value'),
-        State('app2_distance', 'value'),
-        State('app2_sample_table', 'data'),
-        State('app2_iso_table', 'data'),
-        State('app2_iso_check', 'values'),
+        State(range_table_id, 'data'),
+        State(e_step_id, 'value'),
+        State(distance_id, 'value'),
+        State(sample_table_id, 'data'),
+        State(iso_table_id, 'data'),
+        State(iso_check_id, 'values'),
     ])
 def export_plot_data(n_submit,
                      y_type, x_type, show_opt, export_clip,
@@ -514,13 +496,13 @@ def export_plot_data(n_submit,
 
 
 @app.callback(
-    Output('app2_error', 'children'),
+    Output(error_id, 'children'),
     [
-        Input('app2_button_submit', 'n_clicks'),
+        Input(submit_button_id, 'n_clicks'),
     ],
     [
-        State('app2_sample_table', 'data'),
-        State('app2_iso_table', 'data'),
+        State(sample_table_id, 'data'),
+        State(iso_table_id, 'data'),
     ])
 def error(n_submit, sample_tb_rows, iso_tb_rows):
     if n_submit is not None:
@@ -546,15 +528,15 @@ def error(n_submit, sample_tb_rows, iso_tb_rows):
 
 
 @app.callback(
-    Output('app2_result', 'children'),
+    Output(result_id, 'children'),
     [
-        Input('app2_button_submit', 'n_clicks'),
+        Input(submit_button_id, 'n_clicks'),
     ],
     [
         State('y_type', 'value'),
-        State('app2_sample_table', 'data'),
-        State('app2_iso_table', 'data'),
-        State('app2_iso_check', 'values'),
+        State(sample_table_id, 'data'),
+        State(iso_table_id, 'data'),
+        State(iso_check_id, 'values'),
     ])
 def output(n_submit, y_type, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_submit is not None:

@@ -9,6 +9,16 @@ compos_df_default = pd.DataFrame({
     'column_3': ['1', '1'],
 })
 
+app_name = 'app3'
+compos_type_id = app_name + 'compos_input_type'
+add_row_id = app_name + '_add_row'
+sample_table_id = app_name + '_sample_table'
+iso_check_id = app_name + '_iso_check'
+iso_div_id = app_name + '_iso_input'
+iso_table_id = app_name + '_iso_table'
+submit_button_id = app_name + '_submit'
+result_id = app_name + '_result'
+
 # Create app layout
 layout = html.Div(
     [
@@ -18,24 +28,19 @@ layout = html.Div(
         html.Br(),
         dcc.Link('Neutron resonance', href='/apps/venus'),
         html.H1('Composition converter'),
-        html.H3('Sample composition'),
 
+        # Sample input
+        html.H3('Sample composition'),
         html.Div(
             [
-                dcc.RadioItems(id='app3_compos_input_type',
+                dcc.RadioItems(id=compos_type_id,
                                options=[
                                    {'label': weight_name, 'value': weight_name},
                                    {'label': atomic_name, 'value': atomic_name},
                                ],
                                value=weight_name,
-                               )
-            ]
-        ),
-
-        # Sample input
-        html.Div(
-            [
-                html.Button('Add Row', id='app3_add_row', n_clicks=0),
+                               ),
+                html.Button('Add Row', id=add_row_id, n_clicks=0),
                 dt.DataTable(
                     data=compos_df_default.to_dict('records'),
                     # optional - sets the order of columns
@@ -53,11 +58,11 @@ layout = html.Div(
                         {'if': {'column_id': column_3},
                          'width': '50%'},
                     ],
-                    id='app3_sample_table'
+                    id=sample_table_id
                 ),
                 markdown_sample,
                 # Input table for isotopic ratios
-                dcc.Checklist(id='app3_iso_check',
+                dcc.Checklist(id=iso_check_id,
                               options=[
                                   {'label': 'Modify isotopic ratios', 'value': True},
                               ], values=[],
@@ -65,47 +70,24 @@ layout = html.Div(
                 html.Div(
                     [
                         markdown_iso,
-                        dt.DataTable(
-                            data=iso_tb_df_default.to_dict('records'),
-                            columns=iso_tb_header_df.to_dict('records'),
-                            editable=True,
-                            row_selectable=False,
-                            filtering=False,
-                            sorting=False,
-                            row_deletable=False,
-                            style_cell_conditional=[
-                                {'if': {'column_id': column_1},
-                                 'width': '25%'},
-                                {'if': {'column_id': column_2},
-                                 'width': '25%'},
-                                {'if': {'column_id': column_3},
-                                 'width': '25%'},
-                                {'if': {'column_id': column_4},
-                                 'width': '25%'},
-                            ],
-                            style_table={
-                                'maxHeight': '300',
-                                'overflowY': 'scroll'
-                            },
-                            id='app3_iso_table'
-                        ),
+                        init_iso_table(id_str=iso_table_id)
                     ],
-                    id='app3_iso_input',
+                    id=iso_div_id,
                     style={'display': 'none'},
                 ),
-                html.Button('Submit', id='app3_button_submit'),
+                html.Button('Submit', id=submit_button_id),
             ]
         ),
         # Transmission at CG-1D or error messages
-        html.Div(id='app3_result'),
+        html.Div(id=result_id),
     ]
 )
 
 
 @app.callback(
-    Output('app3_sample_table', 'columns'),
+    Output(sample_table_id, 'columns'),
     [
-        Input('app3_compos_input_type', 'value'),
+        Input(compos_type_id, 'value'),
     ])
 def update_input_columns(compos_type):
     if compos_type == weight_name:
@@ -117,14 +99,14 @@ def update_input_columns(compos_type):
 
 
 @app.callback(
-    Output('app3_sample_table', 'data'),
+    Output(sample_table_id, 'data'),
     [
-        Input('app3_add_row', 'n_clicks')
+        Input(add_row_id, 'n_clicks')
     ],
     [
-        State('app3_sample_table', 'data'),
+        State(sample_table_id, 'data'),
         # State('app3_sample_table', 'columns'),
-        State('app3_compos_input_type', 'value'),
+        State(compos_type_id, 'value'),
     ])
 def add_row(n_clicks, rows, input_type):
     if n_clicks > 0:
@@ -140,9 +122,9 @@ def add_row(n_clicks, rows, input_type):
 
 
 @app.callback(
-    Output('app3_iso_table', 'data'),
+    Output(iso_table_id, 'data'),
     [
-        Input('app3_sample_table', 'data'),
+        Input(sample_table_id, 'data'),
     ])
 def update_iso_table(compos_tb_row):
     compos_tb_df = pd.DataFrame(compos_tb_row)
@@ -152,9 +134,9 @@ def update_iso_table(compos_tb_row):
 
 
 @app.callback(
-    Output('app3_iso_input', 'style'),
+    Output(iso_div_id, 'style'),
     [
-        Input('app3_iso_check', 'values'),
+        Input(iso_check_id, 'values'),
     ])
 def show_hide_iso_table(iso_changed):
     if iso_changed:
@@ -164,15 +146,15 @@ def show_hide_iso_table(iso_changed):
 
 
 @app.callback(
-    Output('app3_result', 'children'),
+    Output(result_id, 'children'),
     [
-        Input('app3_button_submit', 'n_clicks'),
+        Input(submit_button_id, 'n_clicks'),
     ],
     [
-        State('app3_sample_table', 'data'),
-        State('app3_iso_table', 'data'),
-        State('app3_iso_check', 'values'),
-        State('app3_compos_input_type', 'value'),
+        State(sample_table_id, 'data'),
+        State(iso_table_id, 'data'),
+        State(iso_check_id, 'values'),
+        State(compos_type_id, 'value'),
     ])
 def output(n_clicks, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
     if n_clicks is not None:

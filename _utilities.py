@@ -494,6 +494,45 @@ def form_iso_table(sample_df: pd.DataFrame):
     return _df
 
 
+# Layout
+def init_iso_table(id_str: str):
+    iso_table = dt.DataTable(
+        data=iso_tb_df_default.to_dict('records'),
+        columns=iso_tb_header_df.to_dict('records'),
+        editable=True,
+        row_selectable=False,
+        filtering=False,
+        sorting=False,
+        row_deletable=False,
+        style_cell_conditional=[
+            {'if': {'column_id': column_1},
+             'width': '25%'},
+            {'if': {'column_id': column_2},
+             'width': '25%'},
+            {'if': {'column_id': column_3},
+             'width': '25%'},
+            {'if': {'column_id': column_4},
+             'width': '25%'},
+        ],
+        n_fixed_rows=1,
+        style_table={
+            'maxHeight': '300',
+            'overflowY': 'scroll'
+        },
+        id=id_str
+    )
+    return iso_table
+
+
+even_3_col = [
+    {'if': {'column_id': column_1},
+     'width': '33%'},
+    {'if': {'column_id': column_2},
+     'width': '33%'},
+    {'if': {'column_id': column_3},
+     'width': '33%'},
+]
+
 markdown_sample = dcc.Markdown(
     '''NOTE: Formula is **case sensitive**, atomic ratio must be **integers**. Density input can be omitted (leave as blank) 
     only if the input formula is single element, natural densities available
