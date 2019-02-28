@@ -11,6 +11,7 @@ sample_df_default = pd.DataFrame({
 
 app_name = 'app1'
 add_row_id = app_name + '_add_row'
+del_row_id = app_name + '_del_row'
 sample_table_id = app_name + '_sample_table'
 iso_check_id = app_name + '_iso_check'
 iso_div_id = app_name + '_iso_input'
@@ -32,7 +33,8 @@ layout = html.Div(
         html.H3('Sample info'),
         html.Div(
             [
-                html.Button('Add Row', id=add_row_id, n_clicks=0),
+                html.Button('+', id=add_row_id, n_clicks_timestamp=0),
+                html.Button('-', id=del_row_id, n_clicks_timestamp=0),
                 dt.DataTable(
                     data=sample_df_default.to_dict('records'),
                     # optional - sets the order of columns
@@ -72,12 +74,21 @@ layout = html.Div(
 
 @app.callback(
     Output(sample_table_id, 'data'),
-    [Input(add_row_id, 'n_clicks')],
-    [State(sample_table_id, 'data'),
-     State(sample_table_id, 'columns')])
-def add_row(n_clicks, rows, columns):
-    if n_clicks > 0:
+    [
+        Input(add_row_id, 'n_clicks_timestamp'),
+        Input(del_row_id, 'n_clicks_timestamp')
+    ],
+    [
+        State(sample_table_id, 'data'),
+        State(sample_table_id, 'columns')
+    ])
+def update_rows(n_add, n_del, rows, columns):
+    if n_add > n_del:
         rows.append({c['id']: '' for c in columns})
+    elif n_add < n_del:
+        rows = rows[:-1]
+    else:
+        rows = rows
     return rows
 
 

@@ -12,6 +12,7 @@ compos_df_default = pd.DataFrame({
 app_name = 'app3'
 compos_type_id = app_name + 'compos_input_type'
 add_row_id = app_name + '_add_row'
+del_row_id = app_name + '_del_row'
 sample_table_id = app_name + '_sample_table'
 iso_check_id = app_name + '_iso_check'
 iso_div_id = app_name + '_iso_input'
@@ -40,7 +41,8 @@ layout = html.Div(
                                ],
                                value=weight_name,
                                ),
-                html.Button('Add Row', id=add_row_id, n_clicks=0),
+                html.Button('+', id=add_row_id, n_clicks_timestamp=0),
+                html.Button('-', id=del_row_id, n_clicks_timestamp=0),
                 dt.DataTable(
                     data=compos_df_default.to_dict('records'),
                     # optional - sets the order of columns
@@ -101,15 +103,16 @@ def update_input_columns(compos_type):
 @app.callback(
     Output(sample_table_id, 'data'),
     [
-        Input(add_row_id, 'n_clicks')
+        Input(add_row_id, 'n_clicks_timestamp'),
+        Input(del_row_id, 'n_clicks_timestamp')
     ],
     [
         State(sample_table_id, 'data'),
         # State('app3_sample_table', 'columns'),
         State(compos_type_id, 'value'),
     ])
-def add_row(n_clicks, rows, input_type):
-    if n_clicks > 0:
+def update_rows(n_add, n_del, rows, input_type):
+    if n_add > n_del:
         if input_type == weight_name:
             empty_col_id = column_2
             fake_col_id = column_3
@@ -118,6 +121,10 @@ def add_row(n_clicks, rows, input_type):
             fake_col_id = column_2
         # rows.append({c['id']: '' for c in columns})
         rows.append({'column_1': '', empty_col_id: '', fake_col_id: '1'})
+    elif n_add < n_del:
+        rows = rows[:-1]
+    else:
+        rows = rows
     return rows
 
 
