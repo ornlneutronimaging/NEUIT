@@ -132,12 +132,18 @@ def update_rows(n_add, n_del, rows, input_type):
     Output(iso_table_id, 'data'),
     [
         Input(sample_table_id, 'data'),
+    ],
+    [
+        State(iso_table_id, 'data'),
     ])
-def update_iso_table(compos_tb_row):
-    compos_tb_df = pd.DataFrame(compos_tb_row)
+def update_iso_table(compos_tb_dict, prev_iso_tb_dict):
+    compos_tb_df = pd.DataFrame(compos_tb_dict)
+    prev_iso_tb_df = pd.DataFrame(prev_iso_tb_dict)
     sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    iso_df = form_iso_table(sample_df=sample_df)
-    return iso_df.to_dict('records')
+    new_iso_df = form_iso_table(sample_df=sample_df)
+
+    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
+    return new_iso_df.to_dict('records')
 
 
 @app.callback(
@@ -169,7 +175,10 @@ def output(n_clicks, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
         compos_tb_dict = force_dict_to_numeric(input_dict_list=compos_tb_rows)
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
         compos_tb_df = pd.DataFrame(compos_tb_dict)
-        iso_tb_df = pd.DataFrame(iso_tb_dict)
+        if iso_changed:
+            iso_tb_df = pd.DataFrame(iso_tb_dict)
+        else:
+            iso_tb_df = form_iso_table(sample_df=compos_tb_df)
 
         # Test input format
         test_passed_list, output_div_list = validate_sample_input(sample_df=compos_tb_df,

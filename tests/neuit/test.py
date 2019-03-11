@@ -232,5 +232,3 @@ class TestUtilities(unittest.TestCase):
         self.assertTrue(validate_chem_name('LiMg'))
         self.assertTrue(validate_chem_name('Li-Mg'))
         self.assertFalse(validate_chem_name('aa'))
-
-

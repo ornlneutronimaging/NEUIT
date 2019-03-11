@@ -20,7 +20,7 @@ thick_name = 'Thickness (mm)'
 density_name = 'Density (g/cm\u00B3)'
 ratio_name = 'Stoichiometric ratio'
 molar_name = 'Molar mass (g/mol)'
-number_density_name = 'Atoms per cm\u00B3 (#)'
+number_density_name = 'Atoms (#/cm\u00B3)'
 layer_name = 'Layer'
 ele_name = 'Element'
 iso_name = 'Isotope'
@@ -78,10 +78,10 @@ iso_tb_df_default = pd.DataFrame({
 })
 
 output_stack_header_df = pd.DataFrame({
-    'name': [thick_name, density_name, ratio_name],
-    'id': [column_1, column_2, column_3],
-    'deletable': [False, False, False],
-    'editable': [False, False, False],
+    'name': [thick_name, density_name, ratio_name, molar_name, number_density_name],
+    'id': [column_1, column_2, column_3, column_4, column_5],
+    'deletable': [False, False, False, False, False],
+    'editable': [False, False, False, False, False],
 })
 
 col_width_3 = 'three columns'
@@ -359,6 +359,8 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_df, iso_tb_df, is
         # layer_dict[density_name] = round(o_stack[layer]['density']['value'], 4)
         _ratio_str_list = [str(_p) for _p in o_stack[layer]['stoichiometric_ratio']]
         layer_dict[column_3] = ":".join(_ratio_str_list)
+        layer_dict[column_4] = round(o_stack[layer]['molar_mass']['value'], 4)
+        layer_dict[column_5] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
             dt.DataTable(data=_df_layer.to_dict('records'),
@@ -399,7 +401,7 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_df, iso_tb_df, is
             editable_list.append(False)
 
             iso_dict[molar_name_id] = round(o_stack[layer][ele]['molar_mass']['value'], 4)
-            iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'][ele])
+            iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['atoms_per_cm3'])
             _df_iso = pd.DataFrame([iso_dict])
             iso_output_header_df = pd.DataFrame({
                 'name': name_list,
@@ -506,6 +508,22 @@ def form_iso_table(sample_df: pd.DataFrame):
     return _df
 
 
+def update_new_iso_table(prev_iso_df: pd.DataFrame, new_iso_df: pd.DataFrame):
+    pre_len = len(prev_iso_df)
+    new_len = len(new_iso_df)
+    if pre_len < new_len:
+        while len(prev_iso_df) < len(new_iso_df):
+            prev_iso_df = prev_iso_df.append(iso_tb_df_default, ignore_index=True)
+    elif pre_len > new_len:
+        while len(new_iso_df) < len(prev_iso_df):
+            new_iso_df = new_iso_df.append(iso_tb_df_default, ignore_index=True)
+
+    _indices = prev_iso_df == new_iso_df
+    new_iso_df[column_4][_indices[column_1]] = prev_iso_df[column_4][_indices[column_1]]
+    new_iso_df = new_iso_df[new_iso_df.column_1.notnull()]
+    return new_iso_df
+
+
 # Layout
 def init_iso_table(id_str: str):
     iso_table = dt.DataTable(
@@ -584,13 +602,15 @@ gray_iso_cols = [
 
 markdown_sample = dcc.Markdown('''
 NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**. 
-Density input can be omitted (leave as blank) only if the input formula is single element, 
+Density input can **ONLY** be **omitted (leave as blank)** if the input formula is a single element, 
 natural densities available [here](http://periodictable.com/Properties/A/Density.al.html) are used.''')
 
 markdown_compos = dcc.Markdown('''
 NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**.''')
 
-markdown_iso = dcc.Markdown("""NOTE: Editing of 'Sample info' again will **RESET** contents in isotope table.""")
+markdown_iso = dcc.Markdown('''
+NOTE: Uncheck the box will **NOT RESET** this table if you have edited it,
+but the input will not be used in calculations.''')
 
 # Plot control buttons
 plot_option_div = html.Div(
