@@ -85,9 +85,9 @@ layout = html.Div(
                         id=range_table_id
                     ),
                 ]),
-                dcc.Markdown('''NOTE: ONLY '**Energy (eV)**' is editable and takes number '**>0**'.'''),
+                dcc.Markdown('''NOTE: '**Energy (eV)**' and '**Wavelength (\u212B)**' are editable.'''),
 
-                # Hidden div to store range input type
+                # Hidden div to store previous range table
                 html.Div([
                     dt.DataTable(
                         data=energy_range_df_default.to_dict('records'),
@@ -98,7 +98,8 @@ layout = html.Div(
                 ],
                     style={'display': 'none'}
                 ),
-                html.Div(id=hidden_range_input_type_id, children='energy'),
+                # Hidden div to store range input type
+                html.Div(id=hidden_range_input_type_id, children='energy', style={'display': 'none'}),
 
                 # Step/distance input
                 html.Div(
@@ -267,9 +268,14 @@ layout = html.Div(
         State(hidden_range_tb_id, 'data'),
     ])
 def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
-    print(new_range_tb_rows)
-    print(old_range_tb_rows)
-    pass
+    diff_indices = pd.DataFrame(new_range_tb_rows) == pd.DataFrame(old_range_tb_rows)
+    # _cord = np.where(diff_indices == False)
+    # modified_cord = (_cord[0][0], _cord[1][0])
+    # print(modified_cord)
+    if not all(diff_indices[column_2] == True):
+        return 'lambda'
+    else:
+        return 'energy'
 
 
 @app.callback(
@@ -277,12 +283,12 @@ def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
     [
         Input(range_table_id, 'data_timestamp'),
         Input(distance_id, 'value'),
+        Input(hidden_range_input_type_id, 'children'),
     ],
     [
         State(range_table_id, 'data'),
-        State(hidden_range_input_type_id, 'children'),
     ])
-def form_range_table(timestamp, distance, range_table_rows, range_input_type):
+def form_range_table(timestamp, distance, range_input_type, range_table_rows):
     if range_input_type == 'energy':
         df_range = update_range_tb_by_energy(range_table_rows=range_table_rows, distance=distance)
     else:
@@ -295,12 +301,12 @@ def form_range_table(timestamp, distance, range_table_rows, range_input_type):
     [
         Input(range_table_id, 'data_timestamp'),
         Input(distance_id, 'value'),
+        Input(hidden_range_input_type_id, 'children'),
     ],
     [
         State(range_table_id, 'data'),
-        State(hidden_range_input_type_id, 'children'),
     ])
-def store_range_table(timestamp, distance, range_table_rows, range_input_type):
+def store_range_table(timestamp, distance, range_input_type, range_table_rows):
     if range_input_type == 'energy':
         df_range = update_range_tb_by_energy(range_table_rows=range_table_rows, distance=distance)
     else:

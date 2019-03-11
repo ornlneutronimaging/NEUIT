@@ -151,7 +151,7 @@ def classify_neutron(energy_ev):
 
 def fill_range_table_by_e(e_ev, distance_m):
     _e = e_ev
-    _lambda = round(ir_util.ev_to_angstroms(array=_e), 4)
+    _lambda = round(ir_util.ev_to_angstroms(array=_e), 5)
     _v = round(3956. / np.sqrt(81.787 / (_e * 1000.)), 2)
     _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _class = classify_neutron(_e)
@@ -163,7 +163,7 @@ def fill_range_table_by_e(e_ev, distance_m):
 
 def fill_range_table_by_wave(wave_angstroms, distance_m):
     _lambda = wave_angstroms
-    _e = round(ir_util.angstroms_to_ev(array=_lambda), 4)
+    _e = round(ir_util.angstroms_to_ev(array=_lambda), 5)
     _v = round(3956. / np.sqrt(81.787 / (_e * 1000.)), 2)
     _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _class = classify_neutron(_e)
