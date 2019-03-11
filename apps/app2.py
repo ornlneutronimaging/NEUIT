@@ -6,8 +6,10 @@ from _utilities import *
 
 energy_range_df_default = pd.DataFrame({
     'column_1': [1, 100],
-    'column_2': [np.NaN, np.NaN],
-    'column_3': [np.NaN, np.NaN],
+    'column_2': [0.286, 0.0286],
+    'column_3': [13832.93, 138329.29],
+    'column_4': [1189.1914, 118.9191],
+    'column_5': ['Epithermal', 'Epithermal'],
 })
 
 sample_df_default = pd.DataFrame({
@@ -32,6 +34,9 @@ iso_table_id = app_name + '_iso_table'
 submit_button_id = app_name + '_submit'
 error_id = app_name + '_error'
 result_id = app_name + '_result'
+hidden_stack_id = app_name + '_hidden_stack'
+hidden_range_tb_id = app_name + '_hidden_range_table'
+hidden_range_input_type_id = app_name + '_hidden_range_input_type'
 
 # Create app2 layout
 layout = html.Div(
@@ -81,9 +86,23 @@ layout = html.Div(
                     ),
                 ]),
                 dcc.Markdown('''NOTE: ONLY '**Energy (eV)**' is editable and takes number '**>0**'.'''),
+
+                # Hidden div to store range input type
+                html.Div([
+                    dt.DataTable(
+                        data=energy_range_df_default.to_dict('records'),
+                        # optional - sets the order of columns
+                        columns=energy_range_header_df.to_dict('records'),
+                        id=hidden_range_tb_id
+                    ),
+                ],
+                    style={'display': 'none'}
+                ),
+                html.Div(id=hidden_range_input_type_id, children='energy'),
+
+                # Step/distance input
                 html.Div(
                     [
-                        # Step input
                         html.Div(
                             [
                                 html.H6('Energy step:'),
@@ -175,6 +194,9 @@ layout = html.Div(
         # Error message
         html.Div(id=error_id),
 
+        # Hidden div to store stack
+        html.Div(id=hidden_stack_id),
+
         # Plot
         html.Div(
             [
@@ -236,6 +258,21 @@ layout = html.Div(
 
 
 @app.callback(
+    Output(hidden_range_input_type_id, 'children'),
+    [
+        Input(range_table_id, 'data_timestamp'),
+    ],
+    [
+        State(range_table_id, 'data'),
+        State(hidden_range_tb_id, 'data'),
+    ])
+def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
+    print(new_range_tb_rows)
+    print(old_range_tb_rows)
+    pass
+
+
+@app.callback(
     Output(range_table_id, 'data'),
     [
         Input(range_table_id, 'data_timestamp'),
@@ -243,50 +280,33 @@ layout = html.Div(
     ],
     [
         State(range_table_id, 'data'),
+        State(hidden_range_input_type_id, 'children'),
     ])
-def show_range_table(timestamp, distance, range_table_rows):
-    col_list_1 = []
-    col_list_2 = []
-    col_list_3 = []
-    col_list_4 = []
-    col_list_5 = []
-    is_number_list = []
-    for each_row in range_table_rows:
-        energy_input = each_row[column_1]
-        if is_number(energy_input):
-            energy = float(energy_input)
-            is_number_list.append(True)
-            if energy > 0:
-                things_to_fill = fill_range_table_by_e(e_ev=energy, distance_m=distance)
-                col_list_1.append(energy)
-                col_list_2.append(things_to_fill[column_2])
-                col_list_3.append(things_to_fill[column_3])
-                col_list_4.append(things_to_fill[column_4])
-                col_list_5.append(things_to_fill[column_5])
-            else:
-                col_list_1.append(energy)
-                col_list_2.append('N/A')
-                col_list_3.append('N/A')
-                col_list_4.append('N/A')
-                col_list_5.append('N/A')
-        else:
-            is_number_list.append(False)
-            col_list_1.append(energy_input)
-            col_list_2.append('N/A')
-            col_list_3.append('N/A')
-            col_list_4.append('N/A')
-            col_list_5.append('N/A')
+def form_range_table(timestamp, distance, range_table_rows, range_input_type):
+    if range_input_type == 'energy':
+        df_range = update_range_tb_by_energy(range_table_rows=range_table_rows, distance=distance)
+    else:
+        df_range = update_range_tb_by_lambda(range_table_rows=range_table_rows, distance=distance)
+    return df_range.to_dict('records')
 
-    _df_range = pd.DataFrame({
-        column_1: col_list_1,
-        column_2: col_list_2,
-        column_3: col_list_3,
-        column_4: col_list_4,
-        column_5: col_list_5,
-    })
-    if all(is_number_list):
-        _df_range.sort_values(by=column_1, inplace=True)
-    return _df_range.to_dict('records')
+
+@app.callback(
+    Output(hidden_range_tb_id, 'data'),
+    [
+        Input(range_table_id, 'data_timestamp'),
+        Input(distance_id, 'value'),
+    ],
+    [
+        State(range_table_id, 'data'),
+        State(hidden_range_input_type_id, 'children'),
+    ])
+def store_range_table(timestamp, distance, range_table_rows, range_input_type):
+    if range_input_type == 'energy':
+        df_range = update_range_tb_by_energy(range_table_rows=range_table_rows, distance=distance)
+    else:
+        df_range = update_range_tb_by_lambda(range_table_rows=range_table_rows, distance=distance)
+    return df_range.to_dict('records')
+    # return df_range
 
 
 @app.callback(
