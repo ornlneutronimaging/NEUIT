@@ -281,9 +281,12 @@ def validate_chem_name(input_name: str):
 
 
 def init_reso_from_tb(range_tb_df, e_step):
-    e_min = range_tb_df[column_1][0]
-    e_max = range_tb_df[column_1][1]
-    o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    v_1 = range_tb_df[column_1][0]
+    v_2 = range_tb_df[column_1][1]
+    if v_1 < v_2:
+        o_reso = Resonance(energy_min=v_1, energy_max=v_2, energy_step=e_step)
+    else:
+        o_reso = Resonance(energy_min=v_2, energy_max=v_1, energy_step=e_step)
     return o_reso
 
 
@@ -658,6 +661,15 @@ def output_cg1d_result_stack(n_submit, sample_tb_rows, iso_tb_rows, iso_changed)
         return output_div_list
     else:
         return None
+
+
+def fill_df_x_types(df: pd.DataFrame, distance_m):
+    df.insert(loc=1, column=tof_name, value=ir_util.ev_to_s(array=df[energy_name],
+                                                            source_to_detector_m=distance_m,
+                                                            offset_us=0))
+    df.insert(loc=1, column=wave_name, value=ir_util.ev_to_angstroms(df[energy_name]))
+    df[tof_name] = df[tof_name] * 1e6
+    return df
 
 
 # Layout

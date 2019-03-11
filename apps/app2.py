@@ -3,6 +3,8 @@ from dash.dependencies import Input, Output, State
 from _app import app
 import urllib.parse
 import json
+import matplotlib as plt
+import plotly.tools as tls
 from _utilities import *
 
 energy_range_df_default = pd.DataFrame({
@@ -359,10 +361,15 @@ def disable_total_layer_when_plotting_sigma(y_type):
             {'label': 'Isotope', 'value': 'iso'},
         ]
     else:
-        options = [
-            {'label': 'Element', 'value': 'ele'},
-            {'label': 'Isotope', 'value': 'iso'},
-        ]
+        if y_type[-3:] == 'raw':
+            options = [
+                {'label': 'Isotope', 'value': 'iso'},
+            ]
+        else:
+            options = [
+                {'label': 'Element', 'value': 'ele'},
+                {'label': 'Isotope', 'value': 'iso'},
+            ]
     return options
 
 
@@ -379,112 +386,54 @@ def show_plot_options(n_submit):
 
 
 @app.callback(
-    Output('app2_plot', 'children'),
+    Output(error_id, 'children'),
     [
         Input(submit_button_id, 'n_clicks'),
-        Input('y_type', 'value'),
-        Input('x_type', 'value'),
-        Input('plot_scale', 'value'),
-        Input('show_opt', 'values'),
     ],
     [
-        State(range_table_id, 'data'),
-        State(e_step_id, 'value'),
-        State(distance_id, 'value'),
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(range_table_id, 'data'),
     ])
-def plot(n_submit, y_type, x_type, plot_scale, show_opt,
-         range_tb_rows, e_step, distance_m,
-         sample_tb_rows, iso_tb_rows,
-         iso_changed):
+def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows):
     if n_submit is not None:
-        # Modify input for testing
+        # Convert all number str to numeric and keep rest invalid input
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
-        iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
         sample_tb_df = pd.DataFrame(sample_tb_dict)
-        if iso_changed:
-            iso_tb_df = pd.DataFrame(iso_tb_dict)
-        else:
-            iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+
+        iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
+        iso_tb_df = pd.DataFrame(iso_tb_dict)
+
+        range_tb_dict = force_dict_to_numeric(input_dict_list=range_tb_rows)
+        range_tb_df = pd.DataFrame(range_tb_dict)
 
         # Test input format
         test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
                                                                   iso_df=iso_tb_df,
                                                                   sample_schema=sample_dict_schema,
                                                                   iso_schema=iso_dict_schema)
-
-        # Calculation starts
-        if all(test_passed_list):
-            range_tb_df = pd.DataFrame(range_tb_rows)
-            range_tb_df.sort_values(by=column_1, inplace=True)
-            o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step)
-            o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_tb_df)
-            o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
-
-            if plot_scale == 'logx':
-                _log_x = True
-                _log_y = False
-            elif plot_scale == 'logy':
-                _log_x = False
-                _log_y = True
-            elif plot_scale == 'loglog':
-                _log_x = True
-                _log_y = True
-            else:
-                _log_x = False
-                _log_y = False
-            show_total = False
-            show_layer = False
-            show_ele = False
-            show_iso = False
-            if 'total' in show_opt:
-                show_total = True
-            if 'layer' in show_opt:
-                show_layer = True
-            if 'ele' in show_opt:
-                show_ele = True
-            if 'iso' in show_opt:
-                show_iso = True
-            plotly_fig = o_reso.plot(plotly=True,
-                                     y_axis=y_type,
-                                     x_axis=x_type,
-                                     time_unit='us',
-                                     logy=_log_y,
-                                     logx=_log_x,
-                                     mixed=show_total,
-                                     all_layers=show_layer,
-                                     all_elements=show_ele,
-                                     all_isotopes=show_iso,
-                                     source_to_detector_m=distance_m)
-            plotly_fig.layout.showlegend = True
-            plotly_fig.layout.autosize = True
-            plotly_fig.layout.height = 600
-            plotly_fig.layout.width = 900
-            plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
-            plotly_fig.layout.xaxis1.tickfont.size = 15
-            plotly_fig.layout.xaxis1.titlefont.size = 18
-            plotly_fig.layout.yaxis1.tickfont.size = 15
-            plotly_fig.layout.yaxis1.titlefont.size = 18
-
-            return html.Div(
-                [
-                    dcc.Graph(id='app2_reso_plot', figure=plotly_fig, className='container'),
-                ]
-            )
+        # Test range table
+        if range_tb_df[column_1][0] == range_tb_df[column_1][1]:
+            test_passed_list.append(False)
+            output_div_list.append(
+                html.P("INPUT ERROR: {}: ['Energy min. can not equal energy max.']".format(str(energy_name))))
         else:
-            return None
+            test_passed_list.append(True)
+            output_div_list.append(None)
+
+        # Return result
+        if all(test_passed_list):
+            return True
+        else:
+            return output_div_list
+    else:
+        return None
 
 
 @app.callback(
     Output(hidden_df_json_id, 'children'),
     [
-        Input(submit_button_id, 'n_clicks'),
-        Input('y_type', 'value'),
-        Input('x_type', 'value'),
-        Input('show_opt', 'values'),
-        Input('app2_export_clip', 'values'),
+        Input(error_id, 'children'),
     ],
     [
         State(range_table_id, 'data'),
@@ -494,12 +443,11 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         State(iso_table_id, 'data'),
         State(iso_check_id, 'values'),
     ])
-def store_reso_df_in_json(n_submit,
-                          y_type, x_type, show_opt, export_clip,
+def store_reso_df_in_json(test_passed,
                           range_tb_rows, e_step, distance_m,
                           sample_tb_rows, iso_tb_rows,
                           iso_changed):
-    if n_submit is not None:
+    if test_passed:
         # Modify input for testing
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
@@ -509,66 +457,148 @@ def store_reso_df_in_json(n_submit,
         else:
             iso_tb_df = form_iso_table(sample_df=sample_tb_df)
 
-        # Test input format
-        test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
-                                                                  iso_df=iso_tb_df,
-                                                                  sample_schema=sample_dict_schema,
-                                                                  iso_schema=iso_dict_schema)
-
         # Calculation starts
-        if all(test_passed_list):
-            range_tb_df = pd.DataFrame(range_tb_rows)
-            range_tb_df.sort_values(by=column_1, inplace=True)
-            o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step)
-            o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_tb_df)
-            o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
+        range_tb_df = pd.DataFrame(range_tb_rows)
+        o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step)
+        o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_tb_df)
+        o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
 
-            show_total = False
-            show_layer = False
-            show_ele = False
-            show_iso = False
-            if 'total' in show_opt:
-                show_total = True
-            if 'layer' in show_opt:
-                show_layer = True
-            if 'ele' in show_opt:
-                show_ele = True
-            if 'iso' in show_opt:
-                show_iso = True
-            if export_clip:
-                _type = 'clip'
-            else:
-                _type = 'df'
+        # Get dfs from o_reso stacks
+        df_trans = o_reso.export(y_axis='transmission',
+                                 x_axis='energy',
+                                 time_unit='us',
+                                 mixed=True,
+                                 all_layers=True,
+                                 all_elements=True,
+                                 all_isotopes=True,
+                                 source_to_detector_m=distance_m,
+                                 output_type='df')
 
-            # if n_link_click is not None:
-            df = o_reso.export(y_axis=y_type,
-                               x_axis=x_type,
-                               time_unit='us',
-                               mixed=show_total,
-                               all_layers=show_layer,
-                               all_elements=show_ele,
-                               all_isotopes=show_iso,
-                               source_to_detector_m=distance_m,
-                               output_type=_type)
-            datasets = {
-                'df_1': df.to_json(orient='split', date_format='iso'),
-                # 'df_2': df_2.to_json(orient='split', date_format='iso'),
-                # 'df_3': df_3.to_json(orient='split', date_format='iso'),
-            }
-            # return df.to_dict('list')
-            print(df)
-            return json.dumps(datasets)
+        df_sigma_b = o_reso.export(y_axis='sigma',
+                                   x_axis='energy',
+                                   time_unit='us',
+                                   mixed=False,
+                                   all_layers=False,
+                                   all_elements=True,
+                                   all_isotopes=True,
+                                   source_to_detector_m=distance_m,
+                                   output_type='df')
+
+        df_sigma_raw = o_reso.export(y_axis='sigma_raw',
+                                     x_axis='energy',
+                                     time_unit='us',
+                                     mixed=False,
+                                     all_layers=False,
+                                     all_elements=True,
+                                     all_isotopes=True,
+                                     source_to_detector_m=distance_m,
+                                     output_type='df')
+
+        df_x = pd.DataFrame()
+        df_x[energy_name] = df_trans[energy_name][:]
+        df_x = fill_df_x_types(df=df_x, distance_m=distance_m)
+
+        df_trans.drop(columns=[df_trans.columns[0]], inplace=True)
+        df_attenu = 1 - df_trans
+        df_attenu.rename(columns={'Total_transmission': 'Total_attenuation'}, inplace=True)
+        df_sigma_b.drop(columns=[df_sigma_b.columns[0]], inplace=True)
+        df_sigma_raw.drop(columns=[df_sigma_raw.columns[0], df_sigma_raw.columns[2]],
+                          inplace=True)
+
+        datasets = {
+            'df_x': df_x.to_json(orient='split', date_format='iso'),
+            'df_trans': df_trans.to_json(orient='split', date_format='iso'),
+            'df_attenu': df_attenu.to_json(orient='split', date_format='iso'),
+            'df_sigma_b': df_sigma_b.to_json(orient='split', date_format='iso'),
+            'df_sigma_raw': df_sigma_raw.to_json(orient='split', date_format='iso'),
+        }
+        return json.dumps(datasets)
+    else:
+        return None
+
+
+@app.callback(
+    Output('app2_plot', 'children'),
+    [
+        Input(error_id, 'children'),
+        Input('y_type', 'value'),
+        Input('x_type', 'value'),
+        Input('plot_scale', 'value'),
+        Input('show_opt', 'values'),
+        Input(hidden_df_json_id, 'children'),
+    ])
+def plot(test_passed, y_type, x_type, plot_scale, show_opt, jsonified_data):
+    if test_passed:
+        # Load and shape the data
+        datasets = json.loads(jsonified_data)
+        df_x = pd.read_json(datasets['df_x'], orient='split')
+        df_trans = pd.read_json(datasets['df_trans'], orient='split')
+        df_attenu = pd.read_json(datasets['df_attenu'], orient='split')
+        df_sigma_b = pd.read_json(datasets['df_sigma_b'], orient='split')
+        df_sigma_raw = pd.read_json(datasets['df_sigma_raw'], orient='split')
+
+        df_sigma_b.drop(columns=[df_sigma_b.columns[0]], inplace=True)
+        df_sigma_raw.drop(columns=[df_sigma_raw.columns[0]], inplace=True)
+
+        print(df_x.head())
+        print(df_trans.head())
+        print(df_attenu.head())
+        print(df_sigma_b.head())
+        print(df_sigma_raw.head())
+
+        if plot_scale == 'logx':
+            _log_x = True
+            _log_y = False
+        elif plot_scale == 'logy':
+            _log_x = False
+            _log_y = True
+        elif plot_scale == 'loglog':
+            _log_x = True
+            _log_y = True
         else:
-            return None
+            _log_x = False
+            _log_y = False
+
+        show_total = False
+        show_layer = False
+        show_ele = False
+        show_iso = False
+        if 'total' in show_opt:
+            show_total = True
+        if 'layer' in show_opt:
+            show_layer = True
+        if 'ele' in show_opt:
+            show_ele = True
+        if 'iso' in show_opt:
+            show_iso = True
+
+        # Plotting starts
+        ax_mpl = df_trans.plot()
+        fig_mpl = ax_mpl.get_figure()
+        plotly_fig = tls.mpl_to_plotly(fig_mpl)
+        plotly_fig.layout.showlegend = True
+        plotly_fig.layout.autosize = True
+        plotly_fig.layout.height = 600
+        plotly_fig.layout.width = 900
+        plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
+        plotly_fig.layout.xaxis1.tickfont.size = 15
+        plotly_fig.layout.xaxis1.titlefont.size = 18
+        plotly_fig.layout.yaxis1.tickfont.size = 15
+        plotly_fig.layout.yaxis1.titlefont.size = 18
+        return html.Div(
+            [
+                dcc.Graph(id='app2_reso_plot', figure=plotly_fig, className='container'),
+                # dcc.Graph(id='app2_reso_plot', figure=plotly_fig),
+            ]
+        )
     else:
         return None
 
 
 @app.callback(
     Output('app2_download_link', 'href'),
-    # Output(hidden_stack_tb_id, 'data'),
     [
-        Input(submit_button_id, 'n_clicks'),
+        Input(error_id, 'children'),
         Input('y_type', 'value'),
         Input('x_type', 'value'),
         Input('show_opt', 'values'),
@@ -582,12 +612,12 @@ def store_reso_df_in_json(n_submit,
         State(iso_table_id, 'data'),
         State(iso_check_id, 'values'),
     ])
-def export_plot_data(n_submit,
+def export_plot_data(test_passed,
                      y_type, x_type, show_opt, export_clip,
                      range_tb_rows, e_step, distance_m,
                      sample_tb_rows, iso_tb_rows,
                      iso_changed):
-    if n_submit is not None:
+    if test_passed:
         # Modify input for testing
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
@@ -606,7 +636,6 @@ def export_plot_data(n_submit,
         # Calculation starts
         if all(test_passed_list):
             range_tb_df = pd.DataFrame(range_tb_rows)
-            range_tb_df.sort_values(by=column_1, inplace=True)
             o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step)
             o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_tb_df)
             o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
@@ -644,38 +673,6 @@ def export_plot_data(n_submit,
             return csv_string
         else:
             return None
-    else:
-        return None
-
-
-@app.callback(
-    Output(error_id, 'children'),
-    [
-        Input(submit_button_id, 'n_clicks'),
-    ],
-    [
-        State(sample_table_id, 'data'),
-        State(iso_table_id, 'data'),
-    ])
-def error(n_submit, sample_tb_rows, iso_tb_rows):
-    if n_submit is not None:
-        # Modify input for testing
-        sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
-        iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
-        sample_tb_df = pd.DataFrame(sample_tb_dict)
-        iso_tb_df = pd.DataFrame(iso_tb_dict)
-
-        # Test input format
-        test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
-                                                                  iso_df=iso_tb_df,
-                                                                  sample_schema=sample_dict_schema,
-                                                                  iso_schema=iso_dict_schema)
-
-        # Calculation starts
-        if all(test_passed_list):
-            return None
-        else:
-            return output_div_list
     else:
         return None
 
