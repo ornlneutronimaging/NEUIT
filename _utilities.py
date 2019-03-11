@@ -576,8 +576,8 @@ def update_range_tb_by_energy(range_table_rows, distance):
         column_4: col_list_4,
         column_5: col_list_5,
     })
-    if all(is_number_list):
-        _df_range.sort_values(by=column_1, inplace=True)
+    # if all(is_number_list):
+    #     _df_range.sort_values(by=column_1, inplace=True)
     return _df_range
 
 
@@ -621,9 +621,43 @@ def update_range_tb_by_lambda(range_table_rows, distance):
         column_4: col_list_4,
         column_5: col_list_5,
     })
-    if all(is_number_list):
-        _df_range.sort_values(by=column_1, inplace=True)
+    # if all(is_number_list):
+    #     _df_range.sort_values(by=column_1, inplace=True)
     return _df_range
+
+
+def output_cg1d_result_stack(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
+    if n_submit is not None:
+        # Modify input for testing
+        sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
+        iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
+        sample_tb_df = pd.DataFrame(sample_tb_dict)
+        if iso_changed:
+            iso_tb_df = pd.DataFrame(iso_tb_dict)
+        else:
+            iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+
+        # Test input format
+        test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
+                                                                  iso_df=iso_tb_df,
+                                                                  sample_schema=sample_dict_schema,
+                                                                  iso_schema=iso_dict_schema)
+
+        # Calculation starts
+        if all(test_passed_list):
+            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_df=sample_tb_df,
+                                                                                              iso_tb_df=iso_tb_df,
+                                                                                              iso_changed=iso_changed)
+            output_div_list = [
+                html.Hr(),
+                html.H3('Result (CG-1D, ORNL)'),
+                html.P('Transmission (total): {} %'.format(round(total_trans, 3))),
+                html.P('Attenuation (total): {} %'.format(round(100 - total_trans, 3))),
+                html.Div([html.H5('Sample stack:'), html.Div(div_list)]),
+            ]
+        return output_div_list
+    else:
+        return None
 
 
 # Layout

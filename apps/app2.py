@@ -2,6 +2,7 @@ import numpy as np
 from dash.dependencies import Input, Output, State
 from _app import app
 import urllib.parse
+import json
 from _utilities import *
 
 energy_range_df_default = pd.DataFrame({
@@ -34,9 +35,10 @@ iso_table_id = app_name + '_iso_table'
 submit_button_id = app_name + '_submit'
 error_id = app_name + '_error'
 result_id = app_name + '_result'
-hidden_stack_id = app_name + '_hidden_stack'
 hidden_range_tb_id = app_name + '_hidden_range_table'
 hidden_range_input_type_id = app_name + '_hidden_range_input_type'
+hidden_df_json_id = app_name + '_hidden_df_json'
+# hidden_stack_tb_id = app_name + '_hidden_stack_tb'
 
 # Create app2 layout
 layout = html.Div(
@@ -52,24 +54,6 @@ layout = html.Div(
             [
                 # Range input
                 html.H6('Energy range:'),
-                # html.Div(
-                #     [
-                #         # Energy slider
-                #         dcc.RangeSlider(
-                #             id=slider_id,
-                #             min=-5,
-                #             max=6,
-                #             value=[0, 2],
-                #             allowCross=False,
-                #             dots=False,
-                #             step=0.01,
-                #             updatemode='drag',
-                #             marks={i: '{} eV'.format(pow(10, i)) for i in range(-5, 7, 1)},
-                #             className='ten columns offset-by-one',
-                #         ),
-                #     ], className='row'
-                # ),
-                # html.Br(),
                 html.Div([
                     dt.DataTable(
                         data=energy_range_df_default.to_dict('records'),
@@ -88,16 +72,8 @@ layout = html.Div(
                 dcc.Markdown('''NOTE: '**Energy (eV)**' and '**Wavelength (\u212B)**' are editable.'''),
 
                 # Hidden div to store previous range table
-                html.Div([
-                    dt.DataTable(
-                        data=energy_range_df_default.to_dict('records'),
-                        # optional - sets the order of columns
-                        columns=energy_range_header_df.to_dict('records'),
-                        id=hidden_range_tb_id
-                    ),
-                ],
-                    style={'display': 'none'}
-                ),
+                html.Div(id=hidden_range_tb_id, style={'display': 'none'}),
+                html.Table(id='table'),
                 # Hidden div to store range input type
                 html.Div(id=hidden_range_input_type_id, children='energy', style={'display': 'none'}),
 
@@ -196,7 +172,17 @@ layout = html.Div(
         html.Div(id=error_id),
 
         # Hidden div to store stack
-        html.Div(id=hidden_stack_id),
+        html.Div(id=hidden_df_json_id, style={'display': 'none'}),
+        # dt.DataTable(
+        #     # data=energy_range_df_default.to_dict('records'),
+        #     # # optional - sets the order of columns
+        #     # columns=energy_range_header_df.to_dict('records'),
+        #     style_table={
+        #         'maxHeight': '300',
+        #         'overflowY': 'scroll'
+        #     },
+        #     id=hidden_stack_tb_id
+        # ),
 
         # Plot
         html.Div(
@@ -209,14 +195,14 @@ layout = html.Div(
                                           {'label': 'Clipboard', 'value': False},
                                       ], values=[],
                                       ),
-                        html.A(
-                            'Download Plot Data',
-                            id='app2_download_link',
-                            download=plot_data_filename,
-                            href="",
-                            target="_blank",
-                            style={'display': 'inline-block'},
-                        ),
+                        # html.A(
+                        #     'Download Plot Data',
+                        #     id='app2_download_link',
+                        #     download=plot_data_filename,
+                        #     href="",
+                        #     target="_blank",
+                        #     style={'display': 'inline-block'},
+                        # ),
                     ], className='row'
                 ),
                 html.Div(id='app2_plot'),
@@ -230,34 +216,6 @@ layout = html.Div(
 )
 
 
-# @app.callback(
-#     Output(range_table_id, 'data'),
-#     [
-#         Input(slider_id, 'value'),
-#         Input(distance_id, 'value'),
-#     ])
-# def show_range_table(slider, distance):
-#     transformed_value = [pow(10, v) for v in slider]
-#     e_min = round(transformed_value[0], 5)
-#     e_max = round(transformed_value[1], 5)
-#     lambda_1 = round(ev_to_angstroms(array=e_min), 4)
-#     lambda_2 = round(ev_to_angstroms(array=e_max), 4)
-#     tof_1 = round(ev_to_s(array=e_min, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
-#     tof_2 = round(ev_to_s(array=e_max, source_to_detector_m=distance, offset_us=0) * 1e6, 4)
-#     v_1 = round(3956. / np.sqrt(81.787 / (e_min * 1000.)), 2)
-#     v_2 = round(3956. / np.sqrt(81.787 / (e_max * 1000.)), 2)
-#     class_1 = classify_neutron(e_min)
-#     class_2 = classify_neutron(e_max)
-#     _df_range = pd.DataFrame({
-#         column_1: [e_min, e_max],
-#         column_2: [lambda_1, lambda_2],
-#         column_3: [v_1, v_2],
-#         column_4: [tof_1, tof_2],
-#         column_5: [class_1, class_2],
-#     })
-#     return _df_range.to_dict('records')
-
-
 @app.callback(
     Output(hidden_range_input_type_id, 'children'),
     [
@@ -265,13 +223,14 @@ layout = html.Div(
     ],
     [
         State(range_table_id, 'data'),
-        State(hidden_range_tb_id, 'data'),
+        State(hidden_range_tb_id, 'children'),
     ])
-def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
-    diff_indices = pd.DataFrame(new_range_tb_rows) == pd.DataFrame(old_range_tb_rows)
-    # _cord = np.where(diff_indices == False)
-    # modified_cord = (_cord[0][0], _cord[1][0])
-    # print(modified_cord)
+def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
+    old_range_tb_df = pd.read_json(old_range_tb_json, orient='split')
+    diff_indices = pd.DataFrame(new_range_tb_rows) == old_range_tb_df
+    _cord = np.where(diff_indices == False)
+    modified_cord = (_cord[0][0], _cord[1][0])
+    print(modified_cord)
     if not all(diff_indices[column_2] == True):
         return 'lambda'
     else:
@@ -297,7 +256,8 @@ def form_range_table(timestamp, distance, range_input_type, range_table_rows):
 
 
 @app.callback(
-    Output(hidden_range_tb_id, 'data'),
+    Output(hidden_range_tb_id, 'children'),
+    # Output(hidden_range_tb_id, 'data'),
     [
         Input(range_table_id, 'data_timestamp'),
         Input(distance_id, 'value'),
@@ -306,13 +266,12 @@ def form_range_table(timestamp, distance, range_input_type, range_table_rows):
     [
         State(range_table_id, 'data'),
     ])
-def store_range_table(timestamp, distance, range_input_type, range_table_rows):
+def store_prev_range_table_in_json(timestamp, distance, range_input_type, range_table_rows):
     if range_input_type == 'energy':
         df_range = update_range_tb_by_energy(range_table_rows=range_table_rows, distance=distance)
     else:
         df_range = update_range_tb_by_lambda(range_table_rows=range_table_rows, distance=distance)
-    return df_range.to_dict('records')
-    # return df_range
+    return df_range.to_json(date_format='iso', orient='split')
 
 
 @app.callback(
@@ -459,6 +418,7 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
         # Calculation starts
         if all(test_passed_list):
             range_tb_df = pd.DataFrame(range_tb_rows)
+            range_tb_df.sort_values(by=column_1, inplace=True)
             o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step)
             o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_tb_df)
             o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
@@ -518,7 +478,95 @@ def plot(n_submit, y_type, x_type, plot_scale, show_opt,
 
 
 @app.callback(
+    Output(hidden_df_json_id, 'children'),
+    [
+        Input(submit_button_id, 'n_clicks'),
+        Input('y_type', 'value'),
+        Input('x_type', 'value'),
+        Input('show_opt', 'values'),
+        Input('app2_export_clip', 'values'),
+    ],
+    [
+        State(range_table_id, 'data'),
+        State(e_step_id, 'value'),
+        State(distance_id, 'value'),
+        State(sample_table_id, 'data'),
+        State(iso_table_id, 'data'),
+        State(iso_check_id, 'values'),
+    ])
+def store_reso_df_in_json(n_submit,
+                          y_type, x_type, show_opt, export_clip,
+                          range_tb_rows, e_step, distance_m,
+                          sample_tb_rows, iso_tb_rows,
+                          iso_changed):
+    if n_submit is not None:
+        # Modify input for testing
+        sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
+        iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
+        sample_tb_df = pd.DataFrame(sample_tb_dict)
+        if iso_changed:
+            iso_tb_df = pd.DataFrame(iso_tb_dict)
+        else:
+            iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+
+        # Test input format
+        test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
+                                                                  iso_df=iso_tb_df,
+                                                                  sample_schema=sample_dict_schema,
+                                                                  iso_schema=iso_dict_schema)
+
+        # Calculation starts
+        if all(test_passed_list):
+            range_tb_df = pd.DataFrame(range_tb_rows)
+            range_tb_df.sort_values(by=column_1, inplace=True)
+            o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step)
+            o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_tb_df)
+            o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
+
+            show_total = False
+            show_layer = False
+            show_ele = False
+            show_iso = False
+            if 'total' in show_opt:
+                show_total = True
+            if 'layer' in show_opt:
+                show_layer = True
+            if 'ele' in show_opt:
+                show_ele = True
+            if 'iso' in show_opt:
+                show_iso = True
+            if export_clip:
+                _type = 'clip'
+            else:
+                _type = 'df'
+
+            # if n_link_click is not None:
+            df = o_reso.export(y_axis=y_type,
+                               x_axis=x_type,
+                               time_unit='us',
+                               mixed=show_total,
+                               all_layers=show_layer,
+                               all_elements=show_ele,
+                               all_isotopes=show_iso,
+                               source_to_detector_m=distance_m,
+                               output_type=_type)
+            datasets = {
+                'df_1': df.to_json(orient='split', date_format='iso'),
+                # 'df_2': df_2.to_json(orient='split', date_format='iso'),
+                # 'df_3': df_3.to_json(orient='split', date_format='iso'),
+            }
+            # return df.to_dict('list')
+            print(df)
+            return json.dumps(datasets)
+        else:
+            return None
+    else:
+        return None
+
+
+@app.callback(
     Output('app2_download_link', 'href'),
+    # Output(hidden_stack_tb_id, 'data'),
     [
         Input(submit_button_id, 'n_clicks'),
         Input('y_type', 'value'),
@@ -558,6 +606,7 @@ def export_plot_data(n_submit,
         # Calculation starts
         if all(test_passed_list):
             range_tb_df = pd.DataFrame(range_tb_rows)
+            range_tb_df.sort_values(by=column_1, inplace=True)
             o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step)
             o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_tb_df)
             o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
@@ -637,47 +686,13 @@ def error(n_submit, sample_tb_rows, iso_tb_rows):
         Input(submit_button_id, 'n_clicks'),
     ],
     [
-        State('y_type', 'value'),
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
         State(iso_check_id, 'values'),
     ])
-def output(n_submit, y_type, sample_tb_rows, iso_tb_rows, iso_changed):
-    if n_submit is not None:
-        # Modify input for testing
-        sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
-        iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
-        sample_tb_df = pd.DataFrame(sample_tb_dict)
-        if iso_changed:
-            iso_tb_df = pd.DataFrame(iso_tb_dict)
-        else:
-            iso_tb_df = form_iso_table(sample_df=sample_tb_df)
-
-        # Test input format
-        test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
-                                                                  iso_df=iso_tb_df,
-                                                                  sample_schema=sample_dict_schema,
-                                                                  iso_schema=iso_dict_schema)
-
-        # Calculation starts
-        if all(test_passed_list):
-            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_df=sample_tb_df,
-                                                                                              iso_tb_df=iso_tb_df,
-                                                                                              iso_changed=iso_changed)
-            if y_type == 'transmission':
-                output_div_list = [
-                    html.H5('Sample transmission:'),
-                    html.P('The total neutron transmission at CG-1D (ORNL): {} %'.format(round(total_trans, 3))),
-                    html.Div([html.H5('Sample stack:'), html.Div(div_list)]),
-                ]
-            else:
-                output_div_list = [
-                    html.H5('Sample attenuation:'),
-                    html.P('The total neutron attenuation at CG-1D (ORNL): {} %'.format(round(100 - total_trans, 3))),
-                    html.Div([html.H5('Sample stack:'), html.Div(div_list)]),
-                ]
-            return output_div_list
-        else:
-            return None
-    else:
-        return None
+def output_transmission_and_stack(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
+    output_div = output_cg1d_result_stack(n_submit=n_submit,
+                                          sample_tb_rows=sample_tb_rows,
+                                          iso_tb_rows=iso_tb_rows,
+                                          iso_changed=iso_changed)
+    return output_div
