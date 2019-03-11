@@ -540,24 +540,33 @@ def plot(test_passed, y_type, x_type, plot_scale, show_opt, jsonified_data):
         df_sigma_b.drop(columns=[df_sigma_b.columns[0]], inplace=True)
         df_sigma_raw.drop(columns=[df_sigma_raw.columns[0]], inplace=True)
 
-        print(df_x.head())
-        print(df_trans.head())
-        print(df_attenu.head())
-        print(df_sigma_b.head())
-        print(df_sigma_raw.head())
+        if y_type == 'transmission':
+            df = df_trans
+        elif y_type == 'attenuation':
+            df = df_attenu
+        elif y_type == 'sigma':
+            df = df_sigma_b
+        else:
+            df = df_sigma_raw
 
+        if x_type == 'energy':
+            x_tag = energy_name
+        elif x_type == 'lambda':
+            x_tag = wave_name
+        else:
+            x_tag = tof_name
+
+        df.insert(loc=0, column=x_tag, value=df_x[x_tag])
+
+        _log_log = False
+        _log_y = False
+        _log_x = False
         if plot_scale == 'logx':
             _log_x = True
-            _log_y = False
         elif plot_scale == 'logy':
-            _log_x = False
             _log_y = True
         elif plot_scale == 'loglog':
-            _log_x = True
-            _log_y = True
-        else:
-            _log_x = False
-            _log_y = False
+            _log_log = True
 
         show_total = False
         show_layer = False
@@ -573,7 +582,7 @@ def plot(test_passed, y_type, x_type, plot_scale, show_opt, jsonified_data):
             show_iso = True
 
         # Plotting starts
-        ax_mpl = df_trans.plot()
+        ax_mpl = df.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log)
         fig_mpl = ax_mpl.get_figure()
         plotly_fig = tls.mpl_to_plotly(fig_mpl)
         plotly_fig.layout.showlegend = True
