@@ -762,7 +762,7 @@ but the input will not be used in calculations.''')
 plot_option_div = html.Div(
     [
         html.Hr(),
-        html.H3('Result'),
+        html.H3('Result (plot)'),
         html.H5('Plot:'),
         html.Div(
             [
