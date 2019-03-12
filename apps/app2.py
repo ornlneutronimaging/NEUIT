@@ -6,7 +6,7 @@ from _utilities import *
 
 energy_range_df_default = pd.DataFrame({
     'column_1': [1, 100],
-    'column_2': [0.286, 0.0286],
+    'column_2': [0.28598, 0.0286],
     'column_3': [13832.93, 138329.29],
     'column_4': [1189.1914, 118.9191],
     'column_5': ['Epithermal', 'Epithermal'],
@@ -497,8 +497,8 @@ def store_reso_df_in_json(n_submit,
         df_x = fill_df_x_types(df=df_x, distance_m=distance_m)
 
         df_trans.drop(columns=[df_trans.columns[0]], inplace=True)
+        df_trans.rename(columns={'Total_transmission': 'Total'}, inplace=True)
         df_attenu = 1 - df_trans
-        df_attenu.rename(columns={'Total_transmission': 'Total_attenuation'}, inplace=True)
         df_sigma_b.drop(columns=[df_sigma_b.columns[0]], inplace=True)
         df_sigma_raw.drop(columns=[df_sigma_raw.columns[0], df_sigma_raw.columns[2]],
                           inplace=True)
@@ -541,12 +541,16 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
 
         if y_type == 'transmission':
             df = df_trans
+            _y_label = 'Transmission'
         elif y_type == 'attenuation':
             df = df_attenu
+            _y_label = 'Attenuation'
         elif y_type == 'sigma':
             df = df_sigma_b
+            _y_label = 'Cross-sections (barn)'
         else:
             df = df_sigma_raw
+            _y_label = 'Cross-sections (barn)'
 
         if x_type == 'energy':
             x_tag = energy_name
@@ -602,6 +606,7 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
         # plotly_fig = go.Figure(data=data)
 
         ax_mpl = df.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log)
+        ax_mpl.set_ylabel(_y_label)
         fig_mpl = ax_mpl.get_figure()
         plotly_fig = tls.mpl_to_plotly(fig_mpl)
 
@@ -618,7 +623,7 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
         return html.Div([dcc.Graph(figure=plotly_fig)])
         # return plotly_fig
     else:
-        return empty_div
+        return None
 
 
 @app.callback(
