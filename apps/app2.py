@@ -228,7 +228,7 @@ def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
     diff_indices = pd.DataFrame(new_range_tb_rows) == old_range_tb_df
     _cord = np.where(diff_indices == False)
     modified_cord = (_cord[0][0], _cord[1][0])
-    print(modified_cord)
+    # print(modified_cord)
     if not all(diff_indices[column_2] == True):
         return 'lambda'
     else:
@@ -421,6 +421,15 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
         else:
             test_passed_list.append(True)
             output_div_list.append(None)
+
+        for each in range_tb_df[column_1]:
+            if each < 1e-5 or each > 1e8:
+                test_passed_list.append(False)
+                output_div_list.append(
+                    html.P("INPUT ERROR: {}: ['1x10^-5 <= 'Energy' <= 1x10^8']".format(str(energy_name))))
+            else:
+                test_passed_list.append(True)
+                output_div_list.append(None)
 
         # Return result
         if all(test_passed_list):
