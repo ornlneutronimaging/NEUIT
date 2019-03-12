@@ -1,8 +1,7 @@
 from dash.dependencies import Input, Output, State
 from _app import app
 import json
-import plotly.plotly as py
-import plotly.graph_objs as go
+import plotly.tools as tls
 from _utilities import *
 
 energy_range_df_default = pd.DataFrame({
@@ -323,24 +322,21 @@ def show_hide_iso_table(iso_changed):
 
 
 @app.callback(
-    Output('plot_scale', 'options'),
+    Output('plot_scale', 'value'),
     [
         Input('y_type', 'value'),
+    ],
+    [
+        State('plot_scale', 'value'),
     ])
-def enable_logx_when_not_plot_sigma(y_type):
+def enable_logx_when_not_plot_sigma(y_type, prev_value):
     if y_type[:5] == 'sigma':
-        options = [
-            {'label': 'Linear', 'value': 'linear'},
-            {'label': 'Log x', 'value': 'logx'},
-            {'label': 'Log y', 'value': 'logy'},
-            {'label': 'Loglog', 'value': 'loglog'},
-        ]
+        if prev_value in ['logy', 'loglog']:
+            return prev_value
+        else:
+            return 'logy'
     else:
-        options = [
-            {'label': 'Linear', 'value': 'linear'},
-            {'label': 'Log x', 'value': 'logx'},
-        ]
-    return options
+        return prev_value
 
 
 @app.callback(
@@ -597,28 +593,29 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
             _num = 2
 
         # Plotting starts
-        data = [
-            go.Scatter(
-                x=df[energy_name],  # assign x as the dataframe column 'x'
-                y=df[df_trans.columns[1]]
-            )
-        ]
-        plotly_fig = go.Figure(data=data)
-        # ax_mpl = df.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log)
-        # fig_mpl = ax_mpl.get_figure()
-        # plotly_fig = tls.mpl_to_plotly(fig_mpl)
+        # data = [
+        #     go.Scatter(
+        #         x=df[energy_name],  # assign x as the dataframe column 'x'
+        #         y=df[df_trans.columns[1]]
+        #     )
+        # ]
+        # plotly_fig = go.Figure(data=data)
+
+        ax_mpl = df.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log)
+        fig_mpl = ax_mpl.get_figure()
+        plotly_fig = tls.mpl_to_plotly(fig_mpl)
 
         plotly_fig.layout.showlegend = True
         plotly_fig.layout.autosize = True
         plotly_fig.layout.height = 600
-        # plotly_fig.layout.width = 900
+        plotly_fig.layout.width = 900
         plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
         plotly_fig.layout.xaxis1.tickfont.size = 15
         plotly_fig.layout.xaxis1.titlefont.size = 18
         plotly_fig.layout.yaxis1.tickfont.size = 15
         plotly_fig.layout.yaxis1.titlefont.size = 18
 
-        return html.Div([dcc.Graph(id=plot_id, figure=plotly_fig)])
+        return html.Div([dcc.Graph(figure=plotly_fig)])
         # return plotly_fig
     else:
         return empty_div
