@@ -18,6 +18,8 @@ iso_div_id = app_name + '_iso_input'
 iso_table_id = app_name + '_iso_table'
 submit_button_id = app_name + '_submit'
 result_id = app_name + '_result'
+error_id = app_name + '_error'
+output_id = app_name + '_output'
 
 # Create app layout
 layout = html.Div(
@@ -66,8 +68,18 @@ layout = html.Div(
             ]
         ),
 
-        # Transmission at CG-1D
-        html.Div(id=result_id),
+        # Error message div
+        html.Div(id=error_id, children=None),
+
+        # Output div
+        html.Div(
+            [
+                # Transmission at CG-1D and stack info
+                html.Div(id=result_id),
+            ],
+            id=output_id,
+            style={'display': 'none'},
+        ),
     ]
 )
 
@@ -123,7 +135,23 @@ def show_hide_iso_table(iso_changed):
 
 
 @app.callback(
-    Output(result_id, 'children'),
+    Output(output_id, 'style'),
+    [
+        Input(submit_button_id, 'n_clicks'),
+        Input(error_id, 'children'),
+    ])
+def show_output_div(n_submit, test_passed):
+    if n_submit is not None:
+        if test_passed is True:
+            return {'display': 'block'}
+        else:
+            return {'display': 'none'}
+    else:
+        return {'display': 'none'}
+
+
+@app.callback(
+    Output(error_id, 'children'),
     [
         Input(submit_button_id, 'n_clicks'),
     ],
@@ -132,9 +160,49 @@ def show_hide_iso_table(iso_changed):
         State(iso_table_id, 'data'),
         State(iso_check_id, 'values'),
     ])
-def output_transmission_and_stack(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
-    output_div = output_cg1d_result_stack(n_submit=n_submit,
-                                          sample_tb_rows=sample_tb_rows,
-                                          iso_tb_rows=iso_tb_rows,
-                                          iso_changed=iso_changed)
-    return output_div
+def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
+    if n_submit is not None:
+        # Convert all number str to numeric and keep rest invalid input
+        sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
+        sample_tb_df = pd.DataFrame(sample_tb_dict)
+
+        if iso_changed:
+            iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
+            iso_tb_df = pd.DataFrame(iso_tb_dict)
+        else:
+            iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+
+        # Test input format
+        test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
+                                                                  iso_df=iso_tb_df,
+                                                                  sample_schema=sample_dict_schema,
+                                                                  iso_schema=iso_dict_schema)
+
+        # Return result
+        if all(test_passed_list):
+            return True
+        else:
+            return output_div_list
+    else:
+        return None
+
+
+@app.callback(
+    Output(result_id, 'children'),
+    [
+        Input(submit_button_id, 'n_clicks'),
+        Input(error_id, 'children'),
+    ],
+    [
+        State(sample_table_id, 'data'),
+        State(iso_table_id, 'data'),
+        State(iso_check_id, 'values'),
+    ])
+def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed):
+    if test_passed is True:
+        output_div_list = output_cg1d_result_stack(sample_tb_rows=sample_tb_rows,
+                                                   iso_tb_rows=iso_tb_rows,
+                                                   iso_changed=iso_changed)
+        return output_div_list
+    else:
+        return None

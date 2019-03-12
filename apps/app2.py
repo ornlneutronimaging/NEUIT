@@ -171,10 +171,10 @@ layout = html.Div(
             ]
         ),
 
-        # Error message
+        # Error message div
         html.Div(id=error_id, children=None),
 
-        # Hidden div to store stack
+        # Hidden div to store json
         html.Div(id=hidden_df_json_id, style={'display': 'none'}),
 
         # Output div
@@ -391,15 +391,19 @@ def show_output_div(n_submit, test_passed):
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
         State(range_table_id, 'data'),
+        State(iso_check_id, 'values'),
     ])
-def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows):
+def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
     if n_submit is not None:
         # Convert all number str to numeric and keep rest invalid input
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
         sample_tb_df = pd.DataFrame(sample_tb_dict)
 
-        iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
-        iso_tb_df = pd.DataFrame(iso_tb_dict)
+        if iso_changed:
+            iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
+            iso_tb_df = pd.DataFrame(iso_tb_dict)
+        else:
+            iso_tb_df = form_iso_table(sample_df=sample_tb_df)
 
         range_tb_dict = force_dict_to_numeric(input_dict_list=range_tb_rows)
         range_tb_df = pd.DataFrame(range_tb_dict)
@@ -577,18 +581,21 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
     Output(result_id, 'children'),
     [
         Input(submit_button_id, 'n_clicks'),
+        Input(error_id, 'children'),
     ],
     [
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
         State(iso_check_id, 'values'),
     ])
-def output_transmission_and_stack(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
-    output_div = output_cg1d_result_stack(n_submit=n_submit,
-                                          sample_tb_rows=sample_tb_rows,
-                                          iso_tb_rows=iso_tb_rows,
-                                          iso_changed=iso_changed)
-    return output_div
+def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed):
+    if test_passed is True:
+        output_div_list = output_cg1d_result_stack(sample_tb_rows=sample_tb_rows,
+                                                   iso_tb_rows=iso_tb_rows,
+                                                   iso_changed=iso_changed)
+        return output_div_list
+    else:
+        return None
 
 
 @app.callback(
@@ -625,84 +632,3 @@ def export_plot_data(n_submit, test_passed, y_type, x_type, plot_scale, show_opt
             return csv_string
     else:
         return ''
-
-# @app.callback(
-#     Output('app2_download_link', 'href'),
-#     [
-#         Input(error_id, 'children'),
-#         Input('y_type', 'value'),
-#         Input('x_type', 'value'),
-#         Input('show_opt', 'values'),
-#         Input('app2_export_clip', 'values'),
-#     ],
-#     [
-#         State(range_table_id, 'data'),
-#         State(e_step_id, 'value'),
-#         State(distance_id, 'value'),
-#         State(sample_table_id, 'data'),
-#         State(iso_table_id, 'data'),
-#         State(iso_check_id, 'values'),
-#     ])
-# def export_plot_data(test_passed,
-#                      y_type, x_type, show_opt, export_clip,
-#                      range_tb_rows, e_step, distance_m,
-#                      sample_tb_rows, iso_tb_rows,
-#                      iso_changed):
-#     if test_passed:
-#         # Modify input for testing
-#         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
-#         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
-#         sample_tb_df = pd.DataFrame(sample_tb_dict)
-#         if iso_changed:
-#             iso_tb_df = pd.DataFrame(iso_tb_dict)
-#         else:
-#             iso_tb_df = form_iso_table(sample_df=sample_tb_df)
-#
-#         # Test input format
-#         test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
-#                                                                   iso_df=iso_tb_df,
-#                                                                   sample_schema=sample_dict_schema,
-#                                                                   iso_schema=iso_dict_schema)
-#
-#         # Calculation starts
-#         if all(test_passed_list):
-#             range_tb_df = pd.DataFrame(range_tb_rows)
-#             o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step)
-#             o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_tb_df)
-#             o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
-#
-#             show_total = False
-#             show_layer = False
-#             show_ele = False
-#             show_iso = False
-#             if 'total' in show_opt:
-#                 show_total = True
-#             if 'layer' in show_opt:
-#                 show_layer = True
-#             if 'ele' in show_opt:
-#                 show_ele = True
-#             if 'iso' in show_opt:
-#                 show_iso = True
-#             if export_clip:
-#                 _type = 'clip'
-#             else:
-#                 _type = 'df'
-#
-#             # if n_link_click is not None:
-#             df = o_reso.export(y_axis=y_type,
-#                                x_axis=x_type,
-#                                time_unit='us',
-#                                mixed=show_total,
-#                                all_layers=show_layer,
-#                                all_elements=show_ele,
-#                                all_isotopes=show_iso,
-#                                source_to_detector_m=distance_m,
-#                                output_type=_type)
-#             # if export_type == 'download':
-#             csv_string = df.to_csv(index=False, encoding='utf-8')
-#             csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
-#             return csv_string
-#         else:
-#             return None
-#     else:
-#         return None

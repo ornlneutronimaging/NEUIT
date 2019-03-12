@@ -19,6 +19,8 @@ iso_div_id = app_name + '_iso_input'
 iso_table_id = app_name + '_iso_table'
 submit_button_id = app_name + '_submit'
 result_id = app_name + '_result'
+error_id = app_name + '_error'
+output_id = app_name + '_output'
 
 # Create app layout
 layout = html.Div(
@@ -80,8 +82,19 @@ layout = html.Div(
                 html.Button('Submit', id=submit_button_id),
             ]
         ),
-        # Transmission at CG-1D or error messages
-        html.Div(id=result_id),
+
+        # Error message div
+        html.Div(id=error_id, children=None),
+
+        # Output div
+        html.Div(
+            [
+                # Effective formula and stack info
+                html.Div(id=result_id),
+            ],
+            id=output_id,
+            style={'display': 'none'},
+        ),
     ]
 )
 
@@ -159,7 +172,23 @@ def show_hide_iso_table(iso_changed):
 
 
 @app.callback(
-    Output(result_id, 'children'),
+    Output(output_id, 'style'),
+    [
+        Input(submit_button_id, 'n_clicks'),
+        Input(error_id, 'children'),
+    ])
+def show_output_div(n_submit, test_passed):
+    if n_submit is not None:
+        if test_passed is True:
+            return {'display': 'block'}
+        else:
+            return {'display': 'none'}
+    else:
+        return {'display': 'none'}
+
+
+@app.callback(
+    Output(error_id, 'children'),
     [
         Input(submit_button_id, 'n_clicks'),
     ],
@@ -167,10 +196,47 @@ def show_hide_iso_table(iso_changed):
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
         State(iso_check_id, 'values'),
+    ])
+def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
+    if n_submit is not None:
+        # Convert all number str to numeric and keep rest invalid input
+        sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
+        sample_tb_df = pd.DataFrame(sample_tb_dict)
+
+        if iso_changed:
+            iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
+            iso_tb_df = pd.DataFrame(iso_tb_dict)
+        else:
+            iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+
+        # Test input format
+        test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
+                                                                  iso_df=iso_tb_df,
+                                                                  sample_schema=compos_dict_schema,  # different schema
+                                                                  iso_schema=iso_dict_schema)
+        # Return result
+        if all(test_passed_list):
+            return True
+        else:
+            return output_div_list
+    else:
+        return None
+
+
+@app.callback(
+    Output(result_id, 'children'),
+    [
+        Input(submit_button_id, 'n_clicks'),
+        Input(error_id, 'children'),
+    ],
+    [
+        State(sample_table_id, 'data'),
+        State(iso_table_id, 'data'),
+        State(iso_check_id, 'values'),
         State(compos_type_id, 'value'),
     ])
-def output(n_clicks, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
-    if n_clicks is not None:
+def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
+    if test_passed is True:
         # Modify input for testing
         compos_tb_dict = force_dict_to_numeric(input_dict_list=compos_tb_rows)
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
@@ -180,59 +246,54 @@ def output(n_clicks, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
         else:
             iso_tb_df = form_iso_table(sample_df=compos_tb_df)
 
-        # Test input format
-        test_passed_list, output_div_list = validate_sample_input(sample_df=compos_tb_df,
-                                                                  iso_df=iso_tb_df,
-                                                                  sample_schema=compos_dict_schema,
-                                                                  iso_schema=iso_dict_schema)
-
         # Calculation start
-        if all(test_passed_list):
-            if compos_type == weight_name:
-                _col_name = column_2
-                _rm_name = column_3
-            else:
-                _col_name = column_3
-                _rm_name = column_2
-            # Remove rows contains no chemical input
-            _compos_df = compos_tb_df[:]
-            _compos_df = _compos_df[_compos_df.column_1 != '']
-            _compos_df = drop_df_column_not_needed(input_df=_compos_df, column_name=_rm_name)
-            _sample_df = creat_sample_df_from_compos_df(compos_tb_df=_compos_df)
-            _iso_tb_df = iso_tb_df[:]
-            # Calculation starts
-            total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_df=_sample_df,
-                                                                                              iso_tb_df=_iso_tb_df,
-                                                                                              iso_changed=iso_changed)
-            compos_output_df, ele_list, mol_list = convert_input_to_composition(compos_df=_compos_df,
-                                                                                compos_type=compos_type,
-                                                                                o_stack=o_stack)
+        if compos_type == weight_name:
+            _col_name = column_2
+            _rm_name = column_3
+        else:
+            _col_name = column_3
+            _rm_name = column_2
 
-            effective_formula = convert_to_effective_formula(ele_list=ele_list, mol_list=mol_list)
+        # Remove rows contains no chemical input
+        _compos_df = compos_tb_df[:]
+        _compos_df = _compos_df[_compos_df.column_1 != '']
+        _compos_df = drop_df_column_not_needed(input_df=_compos_df, column_name=_rm_name)
+        _sample_df = creat_sample_df_from_compos_df(compos_tb_df=_compos_df)
+        _iso_tb_df = iso_tb_df[:]
 
-            output_div_list = [
-                html.Hr(),
-                html.H3('Result'),
-                html.P('The effective chemical formula after conversion: {}'.format(effective_formula)),
-                html.P("(This can be passed as 'Chemical formula' for other apps)"),
-                dt.DataTable(data=compos_output_df.to_dict('records'),
-                             columns=compos_header_p_df.to_dict('records'),
-                             editable=False,
-                             row_selectable=False,
-                             filtering=False,
-                             sorting=False,
-                             row_deletable=False,
-                             style_cell_conditional=[
-                                 {'if': {'column_id': column_1},
-                                  'width': '33%'},
-                                 {'if': {'column_id': column_2},
-                                  'width': '33%'},
-                                 {'if': {'column_id': column_3},
-                                  'width': '33%'},
-                             ],
-                             ),
-                html.Div([html.H5('Sample stack:'), html.Div(div_list)])
-            ]
+        # Calculation starts
+        total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_df=_sample_df,
+                                                                                          iso_tb_df=_iso_tb_df,
+                                                                                          iso_changed=iso_changed)
+        compos_output_df, ele_list, mol_list = convert_input_to_composition(compos_df=_compos_df,
+                                                                            compos_type=compos_type,
+                                                                            o_stack=o_stack)
+
+        effective_formula = convert_to_effective_formula(ele_list=ele_list, mol_list=mol_list)
+
+        output_div_list = [
+            html.Hr(),
+            html.H3('Result'),
+            html.P('The effective chemical formula after conversion: {}'.format(effective_formula)),
+            html.P("(This can be passed as 'Chemical formula' for other apps)"),
+            dt.DataTable(data=compos_output_df.to_dict('records'),
+                         columns=compos_header_p_df.to_dict('records'),
+                         editable=False,
+                         row_selectable=False,
+                         filtering=False,
+                         sorting=False,
+                         row_deletable=False,
+                         style_cell_conditional=[
+                             {'if': {'column_id': column_1},
+                              'width': '33%'},
+                             {'if': {'column_id': column_2},
+                              'width': '33%'},
+                             {'if': {'column_id': column_3},
+                              'width': '33%'},
+                         ],
+                         ),
+            html.Div([html.H5('Sample stack:'), html.Div(div_list)])
+        ]
         return output_div_list
     else:
         return None
