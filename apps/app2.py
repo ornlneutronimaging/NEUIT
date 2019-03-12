@@ -1,7 +1,7 @@
 from dash.dependencies import Input, Output, State
 from _app import app
-import json
 import plotly.tools as tls
+import urllib
 from _utilities import *
 
 energy_range_df_default = pd.DataFrame({
@@ -38,8 +38,11 @@ result_id = app_name + '_result'
 hidden_range_tb_id = app_name + '_hidden_range_table'
 hidden_range_input_type_id = app_name + '_hidden_range_input_type'
 hidden_df_json_id = app_name + '_hidden_df_json'
-plot_id = app_name + '_plot'
+plot_div_id = app_name + '_plot'
+plot_fig_id = app_name + '_plot_fig'
 plot_options_div_id = app_name + '_plot_options'
+export_check_id = app_name + 'export_to_clipboard'
+download_link_id = app_name + '_download_link'
 
 # Create app2 layout
 layout = html.Div(
@@ -180,28 +183,26 @@ layout = html.Div(
                 # Plot options
                 html.Div(id=plot_options_div_id, children=plot_option_div),
 
-                # html.Div(
-                #     [
-                #         dcc.Checklist(id='app2_export_clip',
-                #                       options=[
-                #                           {'label': 'Clipboard', 'value': False},
-                #                       ], values=[],
-                #                       ),
-                #         # html.A(
-                #         #     'Download Plot Data',
-                #         #     id='app2_download_link',
-                #         #     download=plot_data_filename,
-                #         #     href="",
-                #         #     target="_blank",
-                #         #     style={'display': 'inline-block'},
-                #         # ),
-                #     ], className='row'
-                # ),
+                html.Div(
+                    [
+                        dcc.Checklist(id=export_check_id,
+                                      options=[
+                                          {'label': 'Clipboard', 'value': False},
+                                      ], values=[],
+                                      ),
+                        html.A(
+                            'Download Plot Data',
+                            id=download_link_id,
+                            download=plot_data_filename,
+                            href="",
+                            target="_blank",
+                            style={'display': 'inline-block'},
+                        ),
+                    ], className='row'
+                ),
 
                 # Plot
-                html.Div(id=plot_id, className='container'),
-                # html.Div([dcc.Graph(id=plot_id)],
-                #          className='container'),
+                html.Div(id=plot_div_id, className='container'),
 
                 # Transmission at CG-1D and sample stack
                 html.Div(id=result_id),
@@ -516,7 +517,7 @@ def store_reso_df_in_json(n_submit,
 
 
 @app.callback(
-    Output(plot_id, 'children'),
+    Output(plot_div_id, 'children'),
     [
         Input(submit_button_id, 'n_clicks'),
         Input(error_id, 'children'),
@@ -525,45 +526,21 @@ def store_reso_df_in_json(n_submit,
         Input('plot_scale', 'value'),
         Input('show_opt', 'values'),
         Input(hidden_df_json_id, 'children'),
+    ],
+    [
+        State('show_opt', 'values'),
     ])
-def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_data):
+def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_data, prev_show_opt):
     if test_passed is True:
         # Load and shape the data
-        datasets = json.loads(jsonified_data)
-        df_x = pd.read_json(datasets['df_x'], orient='split')
-        df_trans = pd.read_json(datasets['df_trans'], orient='split')
-        df_attenu = pd.read_json(datasets['df_attenu'], orient='split')
-        df_sigma_b = pd.read_json(datasets['df_sigma_b'], orient='split')
-        df_sigma_raw = pd.read_json(datasets['df_sigma_raw'], orient='split')
+        df, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
+                                                     y_type=y_type,
+                                                     plot_scale=plot_scale,
+                                                     show_opt=show_opt,
+                                                     jsonified_data=jsonified_data,
+                                                     prev_show_opt=prev_show_opt)
 
-        df_sigma_b.drop(columns=[df_sigma_b.columns[0]], inplace=True)
-        df_sigma_raw.drop(columns=[df_sigma_raw.columns[0]], inplace=True)
-
-        if y_type == 'transmission':
-            df = df_trans
-            _y_label = 'Transmission'
-        elif y_type == 'attenuation':
-            df = df_attenu
-            _y_label = 'Attenuation'
-        elif y_type == 'sigma':
-            df = df_sigma_b
-            _y_label = 'Cross-sections (barn)'
-        else:
-            df = df_sigma_raw
-            _y_label = 'Cross-sections (barn)'
-
-        if x_type == 'energy':
-            x_tag = energy_name
-        elif x_type == 'lambda':
-            x_tag = wave_name
-        else:
-            x_tag = tof_name
-
-        df.insert(loc=0, column=x_tag, value=df_x[x_tag])
-
-        print(df.head())
-        print(df.tail())
-
+        # Determine plot scale (linear or log)
         _log_log = False
         _log_y = False
         _log_x = False
@@ -574,42 +551,13 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
         elif plot_scale == 'loglog':
             _log_log = True
 
-        # show_total = False
-        # show_layer = False
-        # show_ele = False
-        # show_iso = False
-        # if 'total' in show_opt:
-        #     show_total = True
-        # if 'layer' in show_opt:
-        #     show_layer = True
-        # if 'ele' in show_opt:
-        #     show_ele = True
-        # if 'iso' in show_opt:
-        #     show_iso = True
-
-        if 'total' in show_opt:
-            _num = 0
-        if 'layer' in show_opt:
-            _num = 1
-        if 'ele' in show_opt:
-            _num = 1
-        if 'iso' in show_opt:
-            _num = 2
-
-        # Plotting starts
-        # data = [
-        #     go.Scatter(
-        #         x=df[energy_name],  # assign x as the dataframe column 'x'
-        #         y=df[df_trans.columns[1]]
-        #     )
-        # ]
-        # plotly_fig = go.Figure(data=data)
-
+        # Plot
         ax_mpl = df.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log)
-        ax_mpl.set_ylabel(_y_label)
+        ax_mpl.set_ylabel(y_label)
         fig_mpl = ax_mpl.get_figure()
         plotly_fig = tls.mpl_to_plotly(fig_mpl)
 
+        # Layout
         plotly_fig.layout.showlegend = True
         plotly_fig.layout.autosize = True
         plotly_fig.layout.height = 600
@@ -620,8 +568,7 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
         plotly_fig.layout.yaxis1.tickfont.size = 15
         plotly_fig.layout.yaxis1.titlefont.size = 18
 
-        return html.Div([dcc.Graph(figure=plotly_fig)])
-        # return plotly_fig
+        return html.Div([dcc.Graph(figure=plotly_fig)], id=plot_fig_id)
     else:
         return None
 
@@ -642,6 +589,42 @@ def output_transmission_and_stack(n_submit, sample_tb_rows, iso_tb_rows, iso_cha
                                           iso_tb_rows=iso_tb_rows,
                                           iso_changed=iso_changed)
     return output_div
+
+
+@app.callback(
+    Output('app2_download_link', 'href'),
+    [
+        Input(submit_button_id, 'n_clicks'),
+        Input(error_id, 'children'),
+        Input('y_type', 'value'),
+        Input('x_type', 'value'),
+        Input('plot_scale', 'value'),
+        Input('show_opt', 'values'),
+        Input(hidden_df_json_id, 'children'),
+        Input(export_check_id, 'values'),
+    ],
+    [
+        State('show_opt', 'values'),
+    ])
+def export_plot_data(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_data,
+                     export_to_clipboard, prev_show_opt):
+    if test_passed is True:
+        # Load and shape the data
+        df, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
+                                                     y_type=y_type,
+                                                     plot_scale=plot_scale,
+                                                     show_opt=show_opt,
+                                                     jsonified_data=jsonified_data,
+                                                     prev_show_opt=prev_show_opt)
+        if export_to_clipboard:
+            df.to_clipboard(excel=True)
+            return ''
+        else:
+            csv_string = df.to_csv(index=False, encoding='utf-8')
+            csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
+            return csv_string
+    else:
+        return ''
 
 # @app.callback(
 #     Output('app2_download_link', 'href'),

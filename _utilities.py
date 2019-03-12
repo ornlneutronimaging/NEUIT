@@ -8,6 +8,7 @@ import pandas as pd
 from ImagingReso.resonance import Resonance
 from scipy.interpolate import interp1d
 import numpy as np
+import json
 from cerberus import Validator
 
 energy_name = 'Energy (eV)'
@@ -663,6 +664,75 @@ def output_cg1d_result_stack(n_submit, sample_tb_rows, iso_tb_rows, iso_changed)
         return None
 
 
+def _load_jsonified_data(jsonified_data):
+    datasets = json.loads(jsonified_data)
+    return datasets
+
+
+def _extract_df(datasets):
+    df_x = pd.read_json(datasets['df_x'], orient='split')
+    df_trans = pd.read_json(datasets['df_trans'], orient='split')
+    df_attenu = pd.read_json(datasets['df_attenu'], orient='split')
+    df_sigma_b = pd.read_json(datasets['df_sigma_b'], orient='split')
+    df_sigma_raw = pd.read_json(datasets['df_sigma_raw'], orient='split')
+    return [df_x, df_trans, df_attenu, df_sigma_b, df_sigma_raw]
+
+
+def shape_reso_df_to_output(y_type, x_type, plot_scale, show_opt, jsonified_data, prev_show_opt):
+    datasets = _load_jsonified_data(jsonified_data=jsonified_data)
+    df_lists = _extract_df(datasets=datasets)
+    # Determine Y df and y_label to plot
+    if y_type == 'transmission':
+        df = df_lists[1]
+        y_label = 'Transmission'
+    elif y_type == 'attenuation':
+        df = df_lists[2]
+        y_label = 'Attenuation'
+    elif y_type == 'sigma':
+        df = df_lists[3]
+        y_label = 'Cross-sections (barn)'
+    else:
+        df = df_lists[4]
+        y_label = 'Cross-sections (barn)'
+    # Determine X to plot
+    if x_type == 'energy':
+        x_tag = energy_name
+    elif x_type == 'lambda':
+        x_tag = wave_name
+    else:
+        x_tag = tof_name
+
+    # Locate items based on plot level provided
+    layer_col_name_list = []
+    ele_col_name_list = []
+    iso_col_name_list = []
+    for col_name in df.columns:
+        if col_name != 'Total':
+            _num_of_slash = col_name.count('/')
+            if _num_of_slash == 0:
+                layer_col_name_list.append(col_name)
+            elif _num_of_slash == 1:
+                ele_col_name_list.append(col_name)
+            elif _num_of_slash == 2:
+                iso_col_name_list.append(col_name)
+
+    _to_plot_list = [x_tag]
+    if len(show_opt) == 0:
+        _to_plot_list.append(prev_show_opt)
+    if 'total' in show_opt:
+        _to_plot_list.append('Total')
+    if 'layer' in show_opt:
+        _to_plot_list.extend(layer_col_name_list)
+    if 'ele' in show_opt:
+        _to_plot_list.extend(ele_col_name_list)
+    if 'iso' in show_opt:
+        _to_plot_list.extend(iso_col_name_list)
+
+    df.insert(loc=0, column=x_tag, value=df_lists[0][x_tag])  # Add index column
+
+    return df[_to_plot_list], x_tag, y_label
+
+
 def fill_df_x_types(df: pd.DataFrame, distance_m):
     df.insert(loc=1, column=tof_name, value=ir_util.ev_to_s(array=df[energy_name],
                                                             source_to_detector_m=distance_m,
@@ -762,7 +832,7 @@ but the input will not be used in calculations.''')
 plot_option_div = html.Div(
     [
         html.Hr(),
-        html.H3('Result (plot)'),
+        html.H3('Result'),
         html.H5('Plot:'),
         html.Div(
             [
