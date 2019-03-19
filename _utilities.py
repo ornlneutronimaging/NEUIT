@@ -719,30 +719,29 @@ def _load_jsonified_data(jsonified_data):
 
 
 def _extract_df(datasets):
-    df_x = pd.read_json(datasets['df_x'], orient='split')
-    df_trans = pd.read_json(datasets['df_trans'], orient='split')
-    df_attenu = pd.read_json(datasets['df_attenu'], orient='split')
-    df_sigma_b = pd.read_json(datasets['df_sigma_b'], orient='split')
-    df_sigma_raw = pd.read_json(datasets['df_sigma_raw'], orient='split')
-    return [df_x, df_trans, df_attenu, df_sigma_b, df_sigma_raw]
+    df_name_list = ['x', 'transmission', 'attenuation', 'sigma', 'sigma_raw', 'miu_per_cm']
+    df_dict = {}
+    for each_name in df_name_list:
+        df_dict[each_name] = pd.read_json(datasets[each_name], orient='split')
+        print(df_dict[each_name].head())
+    return df_dict
 
 
-def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_opt):
+def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_opt, to_csv):
     datasets = _load_jsonified_data(jsonified_data=jsonified_data)
-    df_lists = _extract_df(datasets=datasets)
+    df_dict = _extract_df(datasets=datasets)
     # Determine Y df and y_label to plot
     if y_type == 'transmission':
-        df = df_lists[1]
         y_label = 'Transmission'
     elif y_type == 'attenuation':
-        df = df_lists[2]
         y_label = 'Attenuation'
     elif y_type == 'sigma':
-        df = df_lists[3]
         y_label = 'Cross-sections (barn)'
-    else:
-        df = df_lists[4]
+    elif y_type == 'sigma_raw':
         y_label = 'Cross-sections (barn)'
+    else:  # y_type == 'miu_per_cm':
+        y_label = 'Attenuation coefficient (cm\u207B\u00B9)'
+    df = df_dict[y_type]
     # Determine X to plot
     if x_type == 'energy':
         x_tag = energy_name
@@ -763,9 +762,20 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
             elif _num_of_slash == 1:
                 ele_col_name_list.append(col_name)
             elif _num_of_slash == 2:
-                iso_col_name_list.append(col_name)
+                if col_name.count('atoms_per_cm3') != 0:
+                    if to_csv:
+                        iso_col_name_list.append(col_name)
+                else:
+                    iso_col_name_list.append(col_name)
+    if to_csv:
+        _to_plot_list = [energy_name, wave_name, tof_name]
+        df.insert(loc=0, column=tof_name, value=df_dict['x'][tof_name])  # Add index column
+        df.insert(loc=0, column=wave_name, value=df_dict['x'][wave_name])  # Add index column
+        df.insert(loc=0, column=energy_name, value=df_dict['x'][energy_name])  # Add index column
+    else:
+        _to_plot_list = [x_tag]
+        df.insert(loc=0, column=x_tag, value=df_dict['x'][x_tag])  # Add index column
 
-    _to_plot_list = [x_tag]
     if len(show_opt) == 0:
         _to_plot_list.append(prev_show_opt)
     if 'total' in show_opt:
@@ -776,8 +786,6 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
         _to_plot_list.extend(ele_col_name_list)
     if 'iso' in show_opt:
         _to_plot_list.extend(iso_col_name_list)
-
-    df.insert(loc=0, column=x_tag, value=df_lists[0][x_tag])  # Add index column
 
     return df[_to_plot_list], x_tag, y_label
 
@@ -920,6 +928,7 @@ plot_option_div = html.Div(
                                            {'label': 'Transmission', 'value': 'transmission'},
                                            {'label': "Cross-section (weighted)", 'value': 'sigma'},
                                            {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
+                                           {'label': 'Attenuation coefficient', 'value': 'miu_per_cm'},
                                        ],
                                        value='attenuation',
                                        )

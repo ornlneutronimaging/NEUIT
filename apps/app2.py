@@ -2,6 +2,7 @@ from dash.dependencies import Input, Output, State
 from _app import app
 import plotly.tools as tls
 import urllib
+from pprint import pprint
 from _utilities import *
 
 energy_range_df_default = pd.DataFrame({
@@ -477,6 +478,16 @@ def store_reso_df_in_json(n_submit,
                                  source_to_detector_m=distance_m,
                                  output_type='df')
 
+        df_miu_per_cm = o_reso.export(y_axis='miu_per_cm',
+                                      x_axis='energy',
+                                      time_unit='us',
+                                      mixed=False,
+                                      all_layers=True,
+                                      all_elements=True,
+                                      all_isotopes=True,
+                                      source_to_detector_m=distance_m,
+                                      output_type='df')
+
         df_sigma_b = o_reso.export(y_axis='sigma',
                                    x_axis='energy',
                                    time_unit='us',
@@ -492,7 +503,7 @@ def store_reso_df_in_json(n_submit,
                                      time_unit='us',
                                      mixed=False,
                                      all_layers=False,
-                                     all_elements=True,
+                                     all_elements=False,
                                      all_isotopes=True,
                                      source_to_detector_m=distance_m,
                                      output_type='df')
@@ -501,19 +512,23 @@ def store_reso_df_in_json(n_submit,
         df_x[energy_name] = df_trans[energy_name][:]
         df_x = fill_df_x_types(df=df_x, distance_m=distance_m)
 
-        df_trans.drop(columns=[df_trans.columns[0]], inplace=True)
+        df_trans.drop(columns=[df_trans.columns[0]], inplace=True)  # Drop x-axis row
         df_trans.rename(columns={'Total_transmission': 'Total'}, inplace=True)
+
         df_attenu = 1 - df_trans
-        df_sigma_b.drop(columns=[df_sigma_b.columns[0]], inplace=True)
-        df_sigma_raw.drop(columns=[df_sigma_raw.columns[0], df_sigma_raw.columns[2]],
-                          inplace=True)
+
+        df_miu_per_cm.drop(columns=[df_miu_per_cm.columns[0]], inplace=True)  # Drop x-axis row
+
+        df_sigma_b.drop(columns=[df_sigma_b.columns[0]], inplace=True)  # Drop x-axis row
+        df_sigma_raw.drop(columns=[df_sigma_raw.columns[0]], inplace=True)  # Drop x-axis row
 
         datasets = {
-            'df_x': df_x.to_json(orient='split', date_format='iso'),
-            'df_trans': df_trans.to_json(orient='split', date_format='iso'),
-            'df_attenu': df_attenu.to_json(orient='split', date_format='iso'),
-            'df_sigma_b': df_sigma_b.to_json(orient='split', date_format='iso'),
-            'df_sigma_raw': df_sigma_raw.to_json(orient='split', date_format='iso'),
+            'x': df_x.to_json(orient='split', date_format='iso'),
+            'transmission': df_trans.to_json(orient='split', date_format='iso'),
+            'attenuation': df_attenu.to_json(orient='split', date_format='iso'),
+            'sigma': df_sigma_b.to_json(orient='split', date_format='iso'),
+            'sigma_raw': df_sigma_raw.to_json(orient='split', date_format='iso'),
+            'miu_per_cm': df_miu_per_cm.to_json(orient='split', date_format='iso'),
         }
         return json.dumps(datasets)
     else:
@@ -541,7 +556,8 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
                                                      y_type=y_type,
                                                      show_opt=show_opt,
                                                      jsonified_data=jsonified_data,
-                                                     prev_show_opt=prev_show_opt)
+                                                     prev_show_opt=prev_show_opt,
+                                                     to_csv=False)
 
         # Determine plot scale (linear or log)
         _log_log = False
@@ -555,7 +571,13 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
             _log_log = True
 
         # Plot
-        ax_mpl = df.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log)
+        if y_type in ['attenuation', 'transmission']:
+            ax_mpl = df.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log,
+                                                   xlim=(-0.05, None), ylim=(-0.05, 1.05))
+        else:
+            ax_mpl = df.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log,
+                                                   xlim=(-0.05, None), ylim=(-0.05, None))
+
         ax_mpl.set_ylabel(y_label)
         fig_mpl = ax_mpl.get_figure()
         plotly_fig = tls.mpl_to_plotly(fig_mpl)
@@ -613,19 +635,21 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
     ])
 def export_plot_data(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data,
                      export_to_clipboard, prev_show_opt):
-    if test_passed is True:
-        # Load and shape the data
-        df, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
-                                                     y_type=y_type,
-                                                     show_opt=show_opt,
-                                                     jsonified_data=jsonified_data,
-                                                     prev_show_opt=prev_show_opt)
-        if export_to_clipboard:
-            df.to_clipboard(excel=True)
-            return ''
-        else:
-            csv_string = df.to_csv(index=False, encoding='utf-8')
-            csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
-            return csv_string
-    else:
-        return ''
+    # if test_passed is True:
+    #     # Load and shape the data
+    #     df, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
+    #                                                  y_type=y_type,
+    #                                                  show_opt=show_opt,
+    #                                                  jsonified_data=jsonified_data,
+    #                                                  prev_show_opt=prev_show_opt,
+    #                                                  to_csv=True)
+    #     if export_to_clipboard:
+    #         df.to_clipboard(excel=True)
+    #         return ''
+    #     else:
+    #         csv_string = df.to_csv(index=False, encoding='utf-8')
+    #         csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
+    #         return csv_string
+    # else:
+    #     return ''
+    pass

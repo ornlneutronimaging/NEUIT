@@ -5,7 +5,7 @@ pip install dash-html-components >= 0.13.5  # HTML components
 pip install dash-table >= 3.4.0 # Interactive table components
 pip install dash-renderer>=0.18.0  # The dash front-end
 pip install plotly
-pip install ImagingReso >= 1.6.14
+pip install ImagingReso >= 1.6.15
 pip install matplotlib
 pip install pandas
 pip install numpy
