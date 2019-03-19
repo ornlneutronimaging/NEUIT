@@ -414,22 +414,13 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
                                                                   sample_schema=sample_dict_schema,
                                                                   iso_schema=iso_dict_schema)
         # Test range table
-        if range_tb_df[column_1][0] == range_tb_df[column_1][1]:
-            test_passed_list.append(False)
-            output_div_list.append(
-                html.P("INPUT ERROR: {}: ['Energy min. can not equal energy max.']".format(str(energy_name))))
-        else:
-            test_passed_list.append(True)
-            output_div_list.append(None)
-
-        for each in range_tb_df[column_1]:
-            if each < 1e-5 or each > 1e8:
-                test_passed_list.append(False)
-                output_div_list.append(
-                    html.P("INPUT ERROR: {}: ['1x10^-5 <= 'Energy' <= 1x10^8']".format(str(energy_name))))
-            else:
-                test_passed_list.append(True)
-                output_div_list.append(None)
+        test_passed_list, output_div_list = validate_energy_input(range_tb_df=range_tb_df,
+                                                                  test_passed_list=test_passed_list,
+                                                                  output_div_list=output_div_list)
+        # Test density required or not
+        test_passed_list, output_div_list = validate_density_input(sample_tb_df=sample_tb_df,
+                                                                   test_passed_list=test_passed_list,
+                                                                   output_div_list=output_div_list)
 
         # Return result
         if all(test_passed_list):
@@ -548,7 +539,6 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
         # Load and shape the data
         df, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
                                                      y_type=y_type,
-                                                     plot_scale=plot_scale,
                                                      show_opt=show_opt,
                                                      jsonified_data=jsonified_data,
                                                      prev_show_opt=prev_show_opt)
@@ -614,7 +604,6 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
         Input(error_id, 'children'),
         Input('y_type', 'value'),
         Input('x_type', 'value'),
-        Input('plot_scale', 'value'),
         Input('show_opt', 'values'),
         Input(hidden_df_json_id, 'children'),
         Input(export_check_id, 'values'),
@@ -622,13 +611,12 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
     [
         State('show_opt', 'values'),
     ])
-def export_plot_data(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_data,
+def export_plot_data(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data,
                      export_to_clipboard, prev_show_opt):
     if test_passed is True:
         # Load and shape the data
         df, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
                                                      y_type=y_type,
-                                                     plot_scale=plot_scale,
                                                      show_opt=show_opt,
                                                      jsonified_data=jsonified_data,
                                                      prev_show_opt=prev_show_opt)

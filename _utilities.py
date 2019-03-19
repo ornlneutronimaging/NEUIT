@@ -238,6 +238,44 @@ def validate_sample_input(sample_df: pd.DataFrame, iso_df: pd.DataFrame, sample_
     return test_passed_list, output_div_list
 
 
+def validate_density_input(sample_tb_df: pd.DataFrame, test_passed_list: list, output_div_list: list):
+    # Test range table
+    for _index, _each_formula in enumerate(sample_tb_df[column_1]):
+        _parsed_dict = ir_util.formula_to_dictionary(_each_formula)
+        _num_of_ele_in_formula = len(_parsed_dict[_each_formula]['elements'])
+        if _num_of_ele_in_formula > 1 and sample_tb_df[column_3][_index] == '':
+            test_passed_list.append(False)
+            output_div_list.append(
+                html.P("INPUT ERROR: '{}': ['Density input is required for compound '{}'.']".format(density_name,
+                                                                                                    _each_formula)))
+        else:
+            test_passed_list.append(True)
+            output_div_list.append(None)
+
+    return test_passed_list, output_div_list
+
+
+def validate_energy_input(range_tb_df: pd.DataFrame, test_passed_list: list, output_div_list: list):
+    # Test range table
+    if range_tb_df[column_1][0] == range_tb_df[column_1][1]:
+        test_passed_list.append(False)
+        output_div_list.append(
+            html.P("INPUT ERROR: {}: ['Energy min. can not equal energy max.']".format(str(energy_name))))
+    else:
+        test_passed_list.append(True)
+        output_div_list.append(None)
+
+    for each in range_tb_df[column_1]:
+        if each < 1e-5 or each > 1e8:
+            test_passed_list.append(False)
+            output_div_list.append(
+                html.P("INPUT ERROR: {}: ['1x10^-5 <= 'Energy' <= 1x10^8']".format(str(energy_name))))
+        else:
+            test_passed_list.append(True)
+            output_div_list.append(None)
+    return test_passed_list, output_div_list
+
+
 def validate_input_tb_rows(schema: dict, input_df: pd.DataFrame):
     input_dict_list = input_df.to_dict('records')
     v = Validator(schema)
@@ -388,6 +426,7 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_df, iso_tb_df, is
                          filtering=False,
                          sorting=False,
                          row_deletable=False,
+                         style_cell_conditional=uneven_5_col,
                          ))
 
         for e, ele in enumerate(elements_in_current_layer):
@@ -435,6 +474,12 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_df, iso_tb_df, is
                              filtering=False,
                              sorting=False,
                              row_deletable=False,
+                             style_cell_conditional=[
+                                 {'if': {'column_id': molar_name_id},
+                                  'width': '14%'},
+                                 {'if': {'column_id': number_density_name_id},
+                                  'width': '14%'},
+                             ]
                              ))
 
         div_list.append(html.Div(current_layer_list))
@@ -670,7 +715,7 @@ def _extract_df(datasets):
     return [df_x, df_trans, df_attenu, df_sigma_b, df_sigma_raw]
 
 
-def shape_reso_df_to_output(y_type, x_type, plot_scale, show_opt, jsonified_data, prev_show_opt):
+def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_opt):
     datasets = _load_jsonified_data(jsonified_data=jsonified_data)
     df_lists = _extract_df(datasets=datasets)
     # Determine Y df and y_label to plot
@@ -787,6 +832,19 @@ even_5_col = [
      'width': '20%'},
     {'if': {'column_id': column_5},
      'width': '20%'},
+]
+
+uneven_5_col = [
+    {'if': {'column_id': column_1},
+     'width': '24%'},
+    {'if': {'column_id': column_2},
+     'width': '24%'},
+    {'if': {'column_id': column_3},
+     'width': '24%'},
+    {'if': {'column_id': column_4},
+     'width': '14%'},
+    {'if': {'column_id': column_5},
+     'width': '14%'},
 ]
 
 color = 'rgb(240, 240, 240)'

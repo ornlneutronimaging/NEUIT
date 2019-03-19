@@ -177,6 +177,10 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
                                                                   iso_df=iso_tb_df,
                                                                   sample_schema=sample_dict_schema,
                                                                   iso_schema=iso_dict_schema)
+        # Test density required or not
+        test_passed_list, output_div_list = validate_density_input(sample_tb_df=sample_tb_df,
+                                                                   test_passed_list=test_passed_list,
+                                                                   output_div_list=output_div_list)
 
         # Return result
         if all(test_passed_list):
