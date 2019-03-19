@@ -224,33 +224,37 @@ def validate_sample_input(sample_df: pd.DataFrame, iso_df: pd.DataFrame, sample_
     test_passed_list, output_div_list = validate_input_tb_rows(schema=sample_schema, input_df=sample_df)
 
     # Test iso input format
-    if all(test_passed_list):
-        iso_test_passed_list, iso_output_div_list = validate_input_tb_rows(schema=iso_schema, input_df=iso_df)
-        test_passed_list += iso_test_passed_list
-        output_div_list += iso_output_div_list
+    # if all(test_passed_list):
+    iso_test_passed_list, iso_output_div_list = validate_input_tb_rows(schema=iso_schema, input_df=iso_df)
+    test_passed_list += iso_test_passed_list
+    output_div_list += iso_output_div_list
 
     # Test the sum of iso ratio == 1
-    if all(test_passed_list):
-        sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=iso_df)
-        test_passed_list.append(sum_test_passed)
-        output_div_list.append(sum_test_output_div)
+    # if all(test_passed_list):
+    sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=iso_df)
+    test_passed_list += sum_test_passed
+    output_div_list += sum_test_output_div
 
     return test_passed_list, output_div_list
 
 
 def validate_density_input(sample_tb_df: pd.DataFrame, test_passed_list: list, output_div_list: list):
-    # Test range table
+    # Test density input required or not
     for _index, _each_formula in enumerate(sample_tb_df[column_1]):
-        _parsed_dict = ir_util.formula_to_dictionary(_each_formula)
-        _num_of_ele_in_formula = len(_parsed_dict[_each_formula]['elements'])
-        if _num_of_ele_in_formula > 1 and sample_tb_df[column_3][_index] == '':
-            test_passed_list.append(False)
-            output_div_list.append(
-                html.P("INPUT ERROR: '{}': ['Density input is required for compound '{}'.']".format(density_name,
-                                                                                                    _each_formula)))
-        else:
-            test_passed_list.append(True)
-            output_div_list.append(None)
+        try:
+            _parsed_dict = ir_util.formula_to_dictionary(_each_formula)
+            _num_of_ele_in_formula = len(_parsed_dict[_each_formula]['elements'])
+            if _num_of_ele_in_formula > 1 and sample_tb_df[column_3][_index] == '':
+                test_passed_list.append(False)
+                output_div_list.append(
+                    html.P("INPUT ERROR: '{}': ['Density input is required for compound '{}'.']".format(density_name,
+                                                                                                        _each_formula)))
+            else:
+                test_passed_list.append(True)
+                output_div_list.append(None)
+        except ValueError:
+            test_passed_list = test_passed_list
+            output_div_list = output_div_list
 
     return test_passed_list, output_div_list
 
@@ -302,14 +306,22 @@ def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
         df = iso_df.groupby([column_1, column_2]).sum()
         df_boo = df[column_4] - 1.0
         boo = df_boo.abs() >= 0.005
-        passed_list = list(boo)
-        if any(passed_list):
+        failed_list = list(boo)
+        passed_list = []
+        div_list = []
+        if any(failed_list):
             _list = df.index[boo].tolist()
-            return False, html.P("INPUT ERROR: {}: ['sum of isotopic ratios is not 1']".format(str(_list)))
+            for _index, each_fail_layer in enumerate(_list):
+                div = html.P("INPUT ERROR: {}: ['sum of isotopic ratios is '{}' not '1'']".format(
+                    str(each_fail_layer), float(df[boo][column_4][_index])))
+                passed_list.append(False)
+                div_list.append(div)
         else:
-            return True, None
+            passed_list.append(True)
+            div_list.append(None)
+        return passed_list, div_list
     except KeyError:
-        return False
+        return [False], [None]
 
 
 def validate_chem_name(input_name: str):
