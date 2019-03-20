@@ -920,9 +920,9 @@ plot_option_div = html.Div(
                                        options=[
                                            {'label': 'Attenuation', 'value': 'attenuation'},
                                            {'label': 'Transmission', 'value': 'transmission'},
+                                           {'label': 'Attenuation coefficient', 'value': 'miu_per_cm'},
                                            {'label': "Cross-section (weighted)", 'value': 'sigma'},
                                            {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
-                                           {'label': 'Attenuation coefficient', 'value': 'miu_per_cm'},
                                        ],
                                        value='attenuation',
                                        )

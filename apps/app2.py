@@ -561,7 +561,9 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
         elif plot_scale == 'loglog':
             _log_log = True
 
-        fig, ax1 = plt.subplots()
+        fig = plt.figure()
+        ax1 = fig.add_subplot(111)
+
         # Plot
         if y_type in ['attenuation', 'transmission']:
             ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log,
@@ -569,27 +571,35 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
         else:
             ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log,
                                                         ylim=(-0.05, None), ax=ax1)
-
         ax1.set_ylabel(y_label)
 
-        # Set scond x-axis
-        # Decide the ticklabel position in the new x-axis,
-        # then convert them to the position in the old x-axis
-        # newlabel = [273.15, 290, 310, 330, 350, 373.15]  # labels of the xticklabels: the position in the new x-axis
-        # k2degc = lambda t: t - 273.15  # convert function: from Kelvin to Degree Celsius
-        # newpos = [k2degc(t) for t in newlabel]  # position of the xticklabels in the old x-axis
-
+        # # Second axes
         # ax2 = ax1.twiny()
-        # ax2.set_xticks(df_x[energy_name])
-        # ax2.set_xticklabels(df_x[wave_name])
+        # Add some extra space for the second axis at the bottom
+        # fig.subplots_adjust(bottom=0.2)
+        # new_tick_label = np.linspace(0.01, 8.01, 18)
+        # new_tick_position = ir_util.angstroms_to_ev(new_tick_label)
+        # # Move twinned axis ticks and label from top to bottom
+        # ax2.xaxis.set_ticks_position("bottom")
+        # ax2.xaxis.set_label_position("bottom")
         #
-        # ax2.xaxis.set_ticks_position('bottom')  # set the position of the second x-axis to bottom
-        # ax2.xaxis.set_label_position('bottom')  # set the position of the second x-axis to bottom
-        # ax2.spines['bottom'].set_position(('outward', 36))
+        # # Offset the twin axis below the host
+        # ax2.spines["bottom"].set_position(("axes", -0.15))
+        #
+        # # Turn on the frame for the twin axis, but then hide all
+        # # but the bottom spine
+        # ax2.set_frame_on(True)
+        # ax2.patch.set_visible(False)
+        # # for sp in ax2.spines.itervalues():
+        # #     sp.set_visible(False)
+        # ax2.spines["bottom"].set_visible(True)
+        #
+        # ax2.set_xticks(new_tick_position)
+        # ax2.set_xticklabels(new_tick_label)
+        #
         # ax2.set_xlabel(wave_name)
         # ax2.set_xlim(ax1.get_xlim())
 
-        fig = ax1.get_figure()
         plotly_fig = tls.mpl_to_plotly(fig)
 
         # Layout
