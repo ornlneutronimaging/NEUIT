@@ -2,7 +2,7 @@ from dash.dependencies import Input, Output, State
 from _app import app
 import plotly.tools as tls
 import urllib
-from pprint import pprint
+import matplotlib.pyplot as plt
 from _utilities import *
 
 energy_range_df_default = pd.DataFrame({
@@ -42,8 +42,10 @@ hidden_df_json_id = app_name + '_hidden_df_json'
 plot_div_id = app_name + '_plot'
 plot_fig_id = app_name + '_plot_fig'
 plot_options_div_id = app_name + '_plot_options'
-export_check_id = app_name + 'export_to_clipboard'
+export_check_id = app_name + '_export_to_clipboard'
 download_link_id = app_name + '_download_link'
+# plot_data_div_id = app_name + '_plot_data_div'
+# plot_data_tb_id = app_name + '_plot_data_table'
 
 # Create app2 layout
 layout = html.Div(
@@ -207,6 +209,12 @@ layout = html.Div(
 
                 # Transmission at CG-1D and sample stack
                 html.Div(id=result_id),
+
+                # # Plot data table for download
+                # html.Div(
+                #     id=plot_data_div_id,
+                #     # style={'display': 'none'}
+                # ),
             ],
             id=output_id,
             style={'display': 'none'},
@@ -321,24 +329,6 @@ def show_hide_iso_table(iso_changed):
         return {'display': 'block'}
     else:
         return {'display': 'none'}
-
-
-@app.callback(
-    Output('plot_scale', 'value'),
-    [
-        Input('y_type', 'value'),
-    ],
-    [
-        State('plot_scale', 'value'),
-    ])
-def enable_logx_when_not_plot_sigma(y_type, prev_value):
-    if y_type[:5] == 'sigma':
-        if prev_value in ['logy', 'loglog']:
-            return prev_value
-        else:
-            return 'logy'
-    else:
-        return prev_value
 
 
 @app.callback(
@@ -552,13 +542,14 @@ def store_reso_df_in_json(n_submit,
 def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_data, prev_show_opt):
     if test_passed is True:
         # Load and shape the data
-        df, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
-                                                     y_type=y_type,
-                                                     show_opt=show_opt,
-                                                     jsonified_data=jsonified_data,
-                                                     prev_show_opt=prev_show_opt,
-                                                     to_csv=False)
-
+        df_x, df_y, to_plot_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
+                                                                           y_type=y_type,
+                                                                           show_opt=show_opt,
+                                                                           jsonified_data=jsonified_data,
+                                                                           prev_show_opt=prev_show_opt,
+                                                                           to_csv=False)
+        df_to_plot = df_y[to_plot_list]
+        df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
         # Determine plot scale (linear or log)
         _log_log = False
         _log_y = False
@@ -570,17 +561,36 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
         elif plot_scale == 'loglog':
             _log_log = True
 
+        fig, ax1 = plt.subplots()
         # Plot
         if y_type in ['attenuation', 'transmission']:
-            ax_mpl = df.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log,
-                                                   xlim=(-0.05, None), ylim=(-0.05, 1.05))
+            ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log,
+                                                        ylim=(-0.05, 1.05), ax=ax1)
         else:
-            ax_mpl = df.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log,
-                                                   xlim=(-0.05, None), ylim=(-0.05, None))
+            ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log,
+                                                        ylim=(-0.05, None), ax=ax1)
 
-        ax_mpl.set_ylabel(y_label)
-        fig_mpl = ax_mpl.get_figure()
-        plotly_fig = tls.mpl_to_plotly(fig_mpl)
+        ax1.set_ylabel(y_label)
+
+        # Set scond x-axis
+        # Decide the ticklabel position in the new x-axis,
+        # then convert them to the position in the old x-axis
+        # newlabel = [273.15, 290, 310, 330, 350, 373.15]  # labels of the xticklabels: the position in the new x-axis
+        # k2degc = lambda t: t - 273.15  # convert function: from Kelvin to Degree Celsius
+        # newpos = [k2degc(t) for t in newlabel]  # position of the xticklabels in the old x-axis
+
+        # ax2 = ax1.twiny()
+        # ax2.set_xticks(df_x[energy_name])
+        # ax2.set_xticklabels(df_x[wave_name])
+        #
+        # ax2.xaxis.set_ticks_position('bottom')  # set the position of the second x-axis to bottom
+        # ax2.xaxis.set_label_position('bottom')  # set the position of the second x-axis to bottom
+        # ax2.spines['bottom'].set_position(('outward', 36))
+        # ax2.set_xlabel(wave_name)
+        # ax2.set_xlim(ax1.get_xlim())
+
+        fig = ax1.get_figure()
+        plotly_fig = tls.mpl_to_plotly(fig)
 
         # Layout
         plotly_fig.layout.showlegend = True
@@ -620,7 +630,7 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
 
 
 @app.callback(
-    Output('app2_download_link', 'href'),
+    Output(download_link_id, 'href'),
     [
         Input(submit_button_id, 'n_clicks'),
         Input(error_id, 'children'),
@@ -635,21 +645,75 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
     ])
 def export_plot_data(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data,
                      export_to_clipboard, prev_show_opt):
-    # if test_passed is True:
-    #     # Load and shape the data
-    #     df, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
-    #                                                  y_type=y_type,
-    #                                                  show_opt=show_opt,
-    #                                                  jsonified_data=jsonified_data,
-    #                                                  prev_show_opt=prev_show_opt,
-    #                                                  to_csv=True)
-    #     if export_to_clipboard:
-    #         df.to_clipboard(excel=True)
-    #         return ''
-    #     else:
-    #         csv_string = df.to_csv(index=False, encoding='utf-8')
-    #         csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
-    #         return csv_string
-    # else:
-    #     return ''
-    pass
+    if test_passed is True:
+        # Load and shape the data
+        df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
+                                                                             y_type=y_type,
+                                                                             show_opt=show_opt,
+                                                                             jsonified_data=jsonified_data,
+                                                                             prev_show_opt=prev_show_opt,
+                                                                             to_csv=True)
+        df_to_export = df_y[to_export_list]
+        df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
+        df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
+        df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
+        if export_to_clipboard:
+            df_to_export.to_clipboard(excel=True)
+            return ''
+        else:
+            csv_string = df_to_export.to_csv(index=False, encoding='utf-8')
+            csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
+            return csv_string
+    else:
+        return ''
+
+
+# @app.callback(
+#     Output(plot_data_div_id, 'children'),
+#     [
+#         Input(submit_button_id, 'n_clicks'),
+#         Input(error_id, 'children'),
+#         Input('y_type', 'value'),
+#         Input('x_type', 'value'),
+#         Input('show_opt', 'values'),
+#         Input(hidden_df_json_id, 'children'),
+#         Input(export_check_id, 'values'),
+#     ],
+#     [
+#         State('show_opt', 'values'),
+#     ])
+# def show_export_df_tb(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data,
+#                       export_to_clipboard, prev_show_opt):
+#     if test_passed is True:
+#         # Load and shape the data
+#         df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
+#                                                                              y_type=y_type,
+#                                                                              show_opt=show_opt,
+#                                                                              jsonified_data=jsonified_data,
+#                                                                              prev_show_opt=prev_show_opt,
+#                                                                              to_csv=True)
+#         df_to_export = df_y[to_export_list]
+#         df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
+#         df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
+#         df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
+#         if export_to_clipboard:
+#             df_to_export.to_clipboard(excel=True)
+#         data_table = dt.DataTable(
+#             data=df_to_export.to_dict('records'),
+#             columns=iso_tb_header_df.to_dict('records'),
+#             editable=False,
+#             row_selectable=False,
+#             filtering=False,
+#             sorting=False,
+#             row_deletable=False,
+#             style_data_conditional=gray_iso_cols,
+#             n_fixed_rows=1,
+#             style_table={
+#                 'maxHeight': '300',
+#                 'overflowY': 'scroll'
+#             },
+#             id=plot_data_tb_id
+#         )
+#         return df_to_export.to_dict('records')
+#     else:
+#         return None

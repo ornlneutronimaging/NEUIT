@@ -723,7 +723,6 @@ def _extract_df(datasets):
     df_dict = {}
     for each_name in df_name_list:
         df_dict[each_name] = pd.read_json(datasets[each_name], orient='split')
-        print(df_dict[each_name].head())
     return df_dict
 
 
@@ -740,8 +739,8 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
     elif y_type == 'sigma_raw':
         y_label = 'Cross-sections (barn)'
     else:  # y_type == 'miu_per_cm':
-        y_label = 'Attenuation coefficient (cm\u207B\u00B9)'
-    df = df_dict[y_type]
+        y_label = 'Attenuation coefficient \u03BC (cm\u207B\u00B9)'
+    df_y = df_dict[y_type]
     # Determine X to plot
     if x_type == 'energy':
         x_tag = energy_name
@@ -754,7 +753,8 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
     layer_col_name_list = []
     ele_col_name_list = []
     iso_col_name_list = []
-    for col_name in df.columns:
+    atoms_per_cm3_col_name_list = []
+    for col_name in df_y.columns:
         if col_name != 'Total':
             _num_of_slash = col_name.count('/')
             if _num_of_slash == 0:
@@ -763,31 +763,25 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
                 ele_col_name_list.append(col_name)
             elif _num_of_slash == 2:
                 if col_name.count('atoms_per_cm3') != 0:
-                    if to_csv:
-                        iso_col_name_list.append(col_name)
+                    atoms_per_cm3_col_name_list.append(col_name)
                 else:
                     iso_col_name_list.append(col_name)
-    if to_csv:
-        _to_plot_list = [energy_name, wave_name, tof_name]
-        df.insert(loc=0, column=tof_name, value=df_dict['x'][tof_name])  # Add index column
-        df.insert(loc=0, column=wave_name, value=df_dict['x'][wave_name])  # Add index column
-        df.insert(loc=0, column=energy_name, value=df_dict['x'][energy_name])  # Add index column
-    else:
-        _to_plot_list = [x_tag]
-        df.insert(loc=0, column=x_tag, value=df_dict['x'][x_tag])  # Add index column
 
+    _to_export_list = []
     if len(show_opt) == 0:
-        _to_plot_list.append(prev_show_opt)
-    if 'total' in show_opt:
-        _to_plot_list.append('Total')
+        _to_export_list.append(prev_show_opt)
+    if 'total' in show_opt and 'Total' in df_y.columns:
+        _to_export_list.append('Total')
     if 'layer' in show_opt:
-        _to_plot_list.extend(layer_col_name_list)
+        _to_export_list.extend(layer_col_name_list)
     if 'ele' in show_opt:
-        _to_plot_list.extend(ele_col_name_list)
+        _to_export_list.extend(ele_col_name_list)
+    if to_csv:
+        _to_export_list.extend(atoms_per_cm3_col_name_list)
     if 'iso' in show_opt:
-        _to_plot_list.extend(iso_col_name_list)
+        _to_export_list.extend(iso_col_name_list)
 
-    return df[_to_plot_list], x_tag, y_label
+    return df_dict['x'], df_y, _to_export_list, x_tag, y_label
 
 
 def fill_df_x_types(df: pd.DataFrame, distance_m):
