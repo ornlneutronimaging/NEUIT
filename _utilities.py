@@ -719,7 +719,8 @@ def _load_jsonified_data(jsonified_data):
 
 
 def _extract_df(datasets):
-    df_name_list = ['x', 'transmission', 'attenuation', 'sigma', 'sigma_raw', 'miu_per_cm']
+    # df_name_list = ['x', 'transmission', 'attenuation', 'sigma', 'sigma_raw', 'miu_per_cm']
+    df_name_list = ['x', 'y']
     df_dict = {}
     for each_name in df_name_list:
         df_dict[each_name] = pd.read_json(datasets[each_name], orient='split')
@@ -740,8 +741,11 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
         y_label = 'Cross-sections (barn)'
     else:  # y_type == 'miu_per_cm':
         y_label = 'Attenuation coefficient \u03BC (cm\u207B\u00B9)'
-    df_y = df_dict[y_type]
-    # Determine X to plot
+
+    df_x = df_dict['x']
+    df_y = df_dict['y']
+
+    # Determine X names to plot
     if x_type == 'energy':
         x_tag = energy_name
     elif x_type == 'lambda':
@@ -750,12 +754,13 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
         x_tag = tof_name
 
     # Locate items based on plot level provided
+    total_col_name_list = []
     layer_col_name_list = []
     ele_col_name_list = []
     iso_col_name_list = []
     atoms_per_cm3_col_name_list = []
     for col_name in df_y.columns:
-        if col_name != 'Total':
+        if col_name.count('Total') == 0:
             _num_of_slash = col_name.count('/')
             if _num_of_slash == 0:
                 layer_col_name_list.append(col_name)
@@ -766,12 +771,14 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
                     atoms_per_cm3_col_name_list.append(col_name)
                 else:
                     iso_col_name_list.append(col_name)
+        else:
+            total_col_name_list.append(col_name)
 
     _to_export_list = []
     if len(show_opt) == 0:
         _to_export_list.append(prev_show_opt)
-    if 'total' in show_opt and 'Total' in df_y.columns:
-        _to_export_list.append('Total')
+    if 'total' in show_opt:
+        _to_export_list.extend(total_col_name_list)
     if 'layer' in show_opt:
         _to_export_list.extend(layer_col_name_list)
     if 'ele' in show_opt:
@@ -781,7 +788,7 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
     if 'iso' in show_opt:
         _to_export_list.extend(iso_col_name_list)
 
-    return df_dict['x'], df_y, _to_export_list, x_tag, y_label
+    return df_x, df_y, _to_export_list, x_tag, y_label
 
 
 def fill_df_x_types(df: pd.DataFrame, distance_m):

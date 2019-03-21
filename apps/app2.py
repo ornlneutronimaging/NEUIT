@@ -3,6 +3,7 @@ from _app import app
 import plotly.tools as tls
 import urllib
 import matplotlib.pyplot as plt
+from pprint import pprint
 from _utilities import *
 
 energy_range_df_default = pd.DataFrame({
@@ -336,24 +337,50 @@ def show_hide_iso_table(iso_changed):
     [
         Input('y_type', 'value'),
     ])
-def disable_total_layer_when_plotting_sigma(y_type):
-    if y_type[:5] != 'sigma':
+def disable_show_options(y_type):
+    if y_type in ['attenuation', 'transmission']:
         options = [
             {'label': 'Total', 'value': 'total'},
             {'label': 'Layer', 'value': 'layer'},
             {'label': 'Element', 'value': 'ele'},
             {'label': 'Isotope', 'value': 'iso'},
         ]
+    elif y_type == 'miu_per_cm':
+        options = [
+            {'label': 'Layer', 'value': 'layer'},
+            {'label': 'Element', 'value': 'ele'},
+            {'label': 'Isotope', 'value': 'iso'},
+        ]
+    elif y_type[-3:] == 'raw':
+        options = [
+            {'label': 'Isotope', 'value': 'iso'},
+        ]
     else:
-        if y_type[-3:] == 'raw':
-            options = [
-                {'label': 'Isotope', 'value': 'iso'},
-            ]
-        else:
-            options = [
-                {'label': 'Element', 'value': 'ele'},
-                {'label': 'Isotope', 'value': 'iso'},
-            ]
+        options = [
+            {'label': 'Element', 'value': 'ele'},
+            {'label': 'Isotope', 'value': 'iso'},
+        ]
+    return options
+
+
+@app.callback(
+    Output('plot_scale', 'options'),
+    [
+        Input('y_type', 'value'),
+    ])
+def disable_plot_scale_options(y_type):
+    if y_type in ['attenuation', 'transmission']:
+        options = [
+            {'label': 'Linear', 'value': 'linear'},
+            {'label': 'Log x', 'value': 'logx'},
+        ]
+    else:
+        options = [
+            {'label': 'Linear', 'value': 'linear'},
+            {'label': 'Log x', 'value': 'logx'},
+            {'label': 'Log y', 'value': 'logy'},
+            {'label': 'Loglog', 'value': 'loglog'},
+        ]
     return options
 
 
@@ -427,6 +454,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
     [
         Input(submit_button_id, 'n_clicks'),
         Input(error_id, 'children'),
+        Input('y_type', 'value'),
     ],
     [
         State(range_table_id, 'data'),
@@ -438,6 +466,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
     ])
 def store_reso_df_in_json(n_submit,
                           test_passed,
+                          y_type,
                           range_tb_rows, e_step, distance_m,
                           sample_tb_rows, iso_tb_rows,
                           iso_changed):
@@ -458,67 +487,55 @@ def store_reso_df_in_json(n_submit,
         o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
 
         # Get dfs from o_reso stacks
-        df_trans = o_reso.export(y_axis='transmission',
-                                 x_axis='energy',
-                                 time_unit='us',
-                                 mixed=True,
-                                 all_layers=True,
-                                 all_elements=True,
-                                 all_isotopes=True,
-                                 source_to_detector_m=distance_m,
-                                 output_type='df')
+        df_y = o_reso.export(y_axis=y_type,
+                             x_axis='energy',
+                             time_unit='us',
+                             mixed=True,
+                             all_layers=True,
+                             all_elements=True,
+                             all_isotopes=True,
+                             source_to_detector_m=distance_m,
+                             output_type='df')
 
-        df_miu_per_cm = o_reso.export(y_axis='miu_per_cm',
-                                      x_axis='energy',
-                                      time_unit='us',
-                                      mixed=False,
-                                      all_layers=True,
-                                      all_elements=True,
-                                      all_isotopes=True,
-                                      source_to_detector_m=distance_m,
-                                      output_type='df')
-
-        df_sigma_b = o_reso.export(y_axis='sigma',
-                                   x_axis='energy',
-                                   time_unit='us',
-                                   mixed=False,
-                                   all_layers=False,
-                                   all_elements=True,
-                                   all_isotopes=True,
-                                   source_to_detector_m=distance_m,
-                                   output_type='df')
-
-        df_sigma_raw = o_reso.export(y_axis='sigma_raw',
-                                     x_axis='energy',
-                                     time_unit='us',
-                                     mixed=False,
-                                     all_layers=False,
-                                     all_elements=False,
-                                     all_isotopes=True,
-                                     source_to_detector_m=distance_m,
-                                     output_type='df')
+        # df_miu_per_cm = o_reso.export(y_axis='miu_per_cm',
+        #                               x_axis='energy',
+        #                               time_unit='us',
+        #                               mixed=False,
+        #                               all_layers=True,
+        #                               all_elements=True,
+        #                               all_isotopes=True,
+        #                               source_to_detector_m=distance_m,
+        #                               output_type='df')
+        #
+        # df_sigma_b = o_reso.export(y_axis='sigma',
+        #                            x_axis='energy',
+        #                            time_unit='us',
+        #                            mixed=False,
+        #                            all_layers=False,
+        #                            all_elements=True,
+        #                            all_isotopes=True,
+        #                            source_to_detector_m=distance_m,
+        #                            output_type='df')
+        #
+        # df_sigma_raw = o_reso.export(y_axis='sigma_raw',
+        #                              x_axis='energy',
+        #                              time_unit='us',
+        #                              mixed=False,
+        #                              all_layers=False,
+        #                              all_elements=False,
+        #                              all_isotopes=True,
+        #                              source_to_detector_m=distance_m,
+        #                              output_type='df')
 
         df_x = pd.DataFrame()
-        df_x[energy_name] = df_trans[energy_name][:]
+        df_x[energy_name] = df_y[energy_name][:]
         df_x = fill_df_x_types(df=df_x, distance_m=distance_m)
 
-        df_trans.drop(columns=[df_trans.columns[0]], inplace=True)  # Drop x-axis row
-        df_trans.rename(columns={'Total_transmission': 'Total'}, inplace=True)
-
-        df_attenu = 1 - df_trans
-
-        df_miu_per_cm.drop(columns=[df_miu_per_cm.columns[0]], inplace=True)  # Drop x-axis row
-
-        df_sigma_b.drop(columns=[df_sigma_b.columns[0]], inplace=True)  # Drop x-axis row
-        df_sigma_raw.drop(columns=[df_sigma_raw.columns[0]], inplace=True)  # Drop x-axis row
+        df_y.drop(columns=[df_y.columns[0]], inplace=True)  # Drop x-axis row
 
         datasets = {
             'x': df_x.to_json(orient='split', date_format='iso'),
-            'transmission': df_trans.to_json(orient='split', date_format='iso'),
-            'attenuation': df_attenu.to_json(orient='split', date_format='iso'),
-            'sigma': df_sigma_b.to_json(orient='split', date_format='iso'),
-            'sigma_raw': df_sigma_raw.to_json(orient='split', date_format='iso'),
-            'miu_per_cm': df_miu_per_cm.to_json(orient='split', date_format='iso'),
+            'y': df_y.to_json(orient='split', date_format='iso'),
         }
         return json.dumps(datasets)
     else:
@@ -532,14 +549,14 @@ def store_reso_df_in_json(n_submit,
         Input(error_id, 'children'),
         Input('y_type', 'value'),
         Input('x_type', 'value'),
-        Input('plot_scale', 'value'),
         Input('show_opt', 'values'),
         Input(hidden_df_json_id, 'children'),
     ],
     [
         State('show_opt', 'values'),
+        State('plot_scale', 'value'),
     ])
-def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_data, prev_show_opt):
+def plot(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data, prev_show_opt, plot_scale):
     if test_passed is True:
         # Load and shape the data
         df_x, df_y, to_plot_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
@@ -550,27 +567,15 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
                                                                            to_csv=False)
         df_to_plot = df_y[to_plot_list]
         df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
-        # Determine plot scale (linear or log)
-        _log_log = False
-        _log_y = False
-        _log_x = False
-        if plot_scale == 'logx':
-            _log_x = True
-        elif plot_scale == 'logy':
-            _log_y = True
-        elif plot_scale == 'loglog':
-            _log_log = True
 
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
 
         # Plot
         if y_type in ['attenuation', 'transmission']:
-            ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log,
-                                                        ylim=(-0.05, 1.05), ax=ax1)
+            ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
         else:
-            ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, logx=_log_x, logy=_log_y, loglog=_log_log,
-                                                        ylim=(-0.05, None), ax=ax1)
+            ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
         ax1.set_ylabel(y_label)
 
         # # Second axes
@@ -612,10 +617,56 @@ def plot(n_submit, test_passed, y_type, x_type, plot_scale, show_opt, jsonified_
         plotly_fig.layout.xaxis1.titlefont.size = 18
         plotly_fig.layout.yaxis1.tickfont.size = 15
         plotly_fig.layout.yaxis1.titlefont.size = 18
+        if plot_scale == 'logx':
+            plotly_fig['layout']['xaxis']['type'] = 'log'
+            plotly_fig['layout']['yaxis']['type'] = 'linear'
+        elif plot_scale == 'logy':
+            if y_type not in ['attenuation', 'transmission']:
+                plotly_fig['layout']['xaxis']['type'] = 'linear'
+                plotly_fig['layout']['yaxis']['type'] = 'log'
+        elif plot_scale == 'loglog':
+            if y_type not in ['attenuation', 'transmission']:
+                plotly_fig['layout']['xaxis']['type'] = 'log'
+                plotly_fig['layout']['yaxis']['type'] = 'log'
+        else:
+            plotly_fig['layout']['xaxis']['type'] = 'linear'
+            plotly_fig['layout']['yaxis']['type'] = 'linear'
+        plotly_fig.layout.xaxis.autorange = True
+        plotly_fig.layout.yaxis.autorange = True
+        # plotly_fig.layout.legend.orientation = 'h'
 
-        return html.Div([dcc.Graph(figure=plotly_fig)], id=plot_fig_id)
+        return html.Div([dcc.Graph(figure=plotly_fig, id=plot_fig_id)])
     else:
         return None
+
+
+@app.callback(
+    Output(plot_fig_id, 'figure'),
+    [
+        Input('plot_scale', 'value'),
+    ],
+    [
+        State(plot_fig_id, 'figure'),
+        State('y_type', 'value')
+    ])
+def plot_in_log_scale(plot_scale, plotly_fig, y_type):
+    if plot_scale == 'logx':
+        plotly_fig['layout']['xaxis']['type'] = 'log'
+        plotly_fig['layout']['yaxis']['type'] = 'linear'
+    elif plot_scale == 'logy':
+        if y_type not in ['attenuation', 'transmission']:
+            plotly_fig['layout']['xaxis']['type'] = 'linear'
+            plotly_fig['layout']['yaxis']['type'] = 'log'
+    elif plot_scale == 'loglog':
+        if y_type not in ['attenuation', 'transmission']:
+            plotly_fig['layout']['xaxis']['type'] = 'log'
+            plotly_fig['layout']['yaxis']['type'] = 'log'
+    else:
+        plotly_fig['layout']['xaxis']['type'] = 'linear'
+        plotly_fig['layout']['yaxis']['type'] = 'linear'
+    plotly_fig['layout']['xaxis']['autorange'] = True
+    plotly_fig['layout']['yaxis']['autorange'] = True
+    return plotly_fig
 
 
 @app.callback(
@@ -676,7 +727,6 @@ def export_plot_data(n_submit, test_passed, y_type, x_type, show_opt, jsonified_
             return csv_string
     else:
         return ''
-
 
 # @app.callback(
 #     Output(plot_data_div_id, 'children'),
