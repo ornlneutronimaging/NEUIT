@@ -41,6 +41,7 @@ energy_range_header_df = pd.DataFrame({
     'id': [column_1, column_2, column_3, column_4, column_5],
     'deletable': [False, False, False, False, False],
     'editable': [True, True, False, False, False],
+    'type': ['numeric', 'numeric', 'any', 'any', 'any']
 })
 
 sample_header_df = pd.DataFrame({
@@ -48,6 +49,7 @@ sample_header_df = pd.DataFrame({
     'id': [column_1, column_2, column_3],
     'deletable': [False, False, False],
     'editable': [True, True, True],
+    'type': ['text', 'numeric', 'any']
 })
 
 compos_header_df = pd.DataFrame({
@@ -55,6 +57,8 @@ compos_header_df = pd.DataFrame({
     'id': [column_1, column_2, column_3],
     'deletable': [False, False, False],
     'editable': [True, True, True],
+    'type': ['text', 'numeric', 'numeric']
+
 })
 
 compos_header_p_df = pd.DataFrame({
@@ -69,6 +73,7 @@ iso_tb_header_df = pd.DataFrame({
     'id': [column_1, column_2, column_3, column_4],
     'deletable': [False, False, False, False],
     'editable': [False, False, False, True],
+    'type': ['any', 'any', 'any', 'numeric']
 })
 
 iso_tb_df_default = pd.DataFrame({
@@ -107,7 +112,10 @@ def empty_str(field, value, error):
 
 
 def valid_chem_name(field, value, error):
-    if not validate_chem_name(value):
+    if not is_number(value):
+        if not validate_chem_name(value):
+            error(field, "must be a valid 'chemical formula', input is case sensitive")
+    else:
         error(field, "must be a valid 'chemical formula', input is case sensitive")
 
 
@@ -221,21 +229,23 @@ def force_dict_to_numeric(input_dict_list: list):
     return output_dict
 
 
-def validate_sample_input(sample_df: pd.DataFrame, iso_df: pd.DataFrame, sample_schema: dict, iso_schema: dict):
+def validate_sample_input(sample_df: pd.DataFrame, sample_schema: dict):
     # Test sample input format
     test_passed_list, output_div_list = validate_input_tb_rows(schema=sample_schema, input_df=sample_df)
+    return test_passed_list, output_div_list
 
+
+def validate_iso_input(iso_df: pd.DataFrame, iso_schema: dict, test_passed_list: list, output_div_list: list):
     # Test iso input format
-    # if all(test_passed_list):
     iso_test_passed_list, iso_output_div_list = validate_input_tb_rows(schema=iso_schema, input_df=iso_df)
     test_passed_list += iso_test_passed_list
     output_div_list += iso_output_div_list
 
     # Test the sum of iso ratio == 1
-    # if all(test_passed_list):
-    sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=iso_df)
-    test_passed_list += sum_test_passed
-    output_div_list += sum_test_output_div
+    if all(test_passed_list):
+        sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=iso_df)
+        test_passed_list += sum_test_passed
+        output_div_list += sum_test_output_div
 
     return test_passed_list, output_div_list
 
@@ -620,7 +630,7 @@ def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
             for each_col in range_table_rows[row].keys():
                 range_table_rows[row][each_col] = things_to_fill[each_col]
         else:
-            for each_col in [column_2, column_3, column_4, column_5]:
+            for each_col in [column_1, column_3, column_4, column_5]:
                 range_table_rows[row][each_col] = 'N/A'
 
     return range_table_rows
@@ -656,7 +666,6 @@ def _load_jsonified_data(jsonified_data):
 
 
 def _extract_df(datasets):
-    # df_name_list = ['x', 'transmission', 'attenuation', 'sigma', 'sigma_raw', 'miu_per_cm']
     df_name_list = ['x', 'y']
     df_dict = {}
     for each_name in df_name_list:
@@ -837,8 +846,11 @@ gray_iso_cols = [
 
 markdown_sample = dcc.Markdown('''
 NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**. 
-Density input can **ONLY** be **omitted (leave as blank)** if the input formula is a single element, 
-natural densities available [here](http://periodictable.com/Properties/A/Density.al.html) are used.''')
+Density input can **ONLY** be **omitted (leave as blank)** if the input formula is a single element.''')
+
+label_sample = html.Label(['Natural densities used are from ',
+                           html.A("here", href='http://periodictable.com/Properties/A/Density.al.html',
+                                  target="_blank")])
 
 markdown_compos = dcc.Markdown('''
 NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**.''')
@@ -846,6 +858,10 @@ NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**.''
 markdown_iso = dcc.Markdown('''
 NOTE: Uncheck the box will **NOT RESET** this table if you have edited it,
 but the input will not be used in calculations.''')
+
+label_plotly = html.Label(['NOTE: This plot can be customized and/or exported by following instructions ',
+                           html.A("here", href='https://help.plot.ly/save-share-and-export-in-plotly/',
+                                  target="_blank")])
 
 # Plot control buttons
 plot_option_div = html.Div(

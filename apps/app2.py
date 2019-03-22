@@ -1,7 +1,6 @@
 from dash.dependencies import Input, Output, State
 from _app import app
 import plotly.tools as tls
-import urllib
 import matplotlib.pyplot as plt
 from _utilities import *
 
@@ -42,8 +41,8 @@ hidden_df_json_id = app_name + '_hidden_df_json'
 plot_div_id = app_name + '_plot'
 plot_fig_id = app_name + '_plot_fig'
 plot_options_div_id = app_name + '_plot_options'
-export_check_id = app_name + '_export_to_clipboard'
-download_link_id = app_name + '_download_link'
+export_plot_data_button_id = app_name + '_plot_data_export'
+export_plot_data_notice_id = app_name + '_export_notice'
 prev_x_type_id = app_name + '_prev_x_type'
 
 # Create app2 layout
@@ -155,6 +154,8 @@ layout = html.Div(
                     id=sample_table_id
                 ),
                 markdown_sample,
+                label_sample,
+
                 # Input table for isotopic ratios
                 dcc.Checklist(id=iso_check_id,
                               options=[
@@ -188,35 +189,29 @@ layout = html.Div(
                 # Plot options
                 html.Div(id=plot_options_div_id, children=plot_option_div),
 
+                # Plot
+                html.Div(id=plot_div_id, className='container'),
+
+                # Export plot data button
                 html.Div(
                     [
-                        dcc.Checklist(id=export_check_id,
-                                      options=[
-                                          {'label': 'Clipboard', 'value': False},
-                                      ], values=[],
-                                      ),
-                        html.A(
-                            'Download Plot Data',
-                            id=download_link_id,
-                            download=plot_data_filename,
-                            href="",
-                            target="_blank",
+                        html.Button(
+                            'Export to Clipboard',
+                            id=export_plot_data_button_id,
+                            style={'display': 'inline-block'},
+                        ),
+                        html.Div(
+                            id=export_plot_data_notice_id,
                             style={'display': 'inline-block'},
                         ),
                     ], className='row'
                 ),
 
-                # Plot
-                html.Div(id=plot_div_id, className='container'),
+                # Instruction link
+                label_plotly,
 
                 # Transmission at CG-1D and sample stack
                 html.Div(id=result_id),
-
-                # # Plot data table for download
-                # html.Div(
-                #     id=plot_data_div_id,
-                #     # style={'display': 'none'}
-                # ),
             ],
             id=output_id,
             style={'display': 'none'},
@@ -306,14 +301,16 @@ def update_rows(n_add, n_del, rows, columns):
     [
         State(iso_table_id, 'data'),
     ])
-def update_iso_table(compos_tb_dict, prev_iso_tb_dict):
-    compos_tb_df = pd.DataFrame(compos_tb_dict)
-    prev_iso_tb_df = pd.DataFrame(prev_iso_tb_dict)
+def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
+    compos_tb_df = pd.DataFrame(sample_tb_rows)
+    prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
     sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    new_iso_df = form_iso_table(sample_df=sample_df)
-
-    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
-    return new_iso_df.to_dict('records')
+    try:
+        new_iso_df = form_iso_table(sample_df=sample_df)
+        new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
+        return new_iso_df.to_dict('records')
+    except ValueError:
+        return None
 
 
 @app.callback(
@@ -413,28 +410,35 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
         sample_tb_df = pd.DataFrame(sample_tb_dict)
 
-        if iso_changed:
-            iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
-            iso_tb_df = pd.DataFrame(iso_tb_dict)
-        else:
-            iso_tb_df = form_iso_table(sample_df=sample_tb_df)
-
-        range_tb_dict = force_dict_to_numeric(input_dict_list=range_tb_rows)
-        range_tb_df = pd.DataFrame(range_tb_dict)
-
-        # Test input format
+        # Test sample input format
         test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
-                                                                  iso_df=iso_tb_df,
-                                                                  sample_schema=sample_dict_schema,
-                                                                  iso_schema=iso_dict_schema)
-        # Test range table
-        test_passed_list, output_div_list = validate_energy_input(range_tb_df=range_tb_df,
-                                                                  test_passed_list=test_passed_list,
-                                                                  output_div_list=output_div_list)
-        # Test density required or not
-        test_passed_list, output_div_list = validate_density_input(sample_tb_df=sample_tb_df,
+                                                                  sample_schema=sample_dict_schema)
+
+        # Test iso input format and sum
+        if all(test_passed_list):
+            if iso_changed:
+                iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
+                iso_tb_df = pd.DataFrame(iso_tb_dict)
+            else:
+                iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+
+            test_passed_list, output_div_list = validate_iso_input(iso_df=iso_tb_df,
+                                                                   iso_schema=iso_dict_schema,
                                                                    test_passed_list=test_passed_list,
                                                                    output_div_list=output_div_list)
+        # Test range table
+        if all(test_passed_list):
+            range_tb_dict = force_dict_to_numeric(input_dict_list=range_tb_rows)
+            range_tb_df = pd.DataFrame(range_tb_dict)
+
+            test_passed_list, output_div_list = validate_energy_input(range_tb_df=range_tb_df,
+                                                                      test_passed_list=test_passed_list,
+                                                                      output_div_list=output_div_list)
+        # Test density required or not
+        if all(test_passed_list):
+            test_passed_list, output_div_list = validate_density_input(sample_tb_df=sample_tb_df,
+                                                                       test_passed_list=test_passed_list,
+                                                                       output_div_list=output_div_list)
 
         # Return result
         if all(test_passed_list):
@@ -615,7 +619,7 @@ def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_s
         State(plot_fig_id, 'figure'),
         State(hidden_df_json_id, 'children'),
     ])
-def plot_in_log_scale(plot_scale, x_type, prev_x_type, y_type, plotly_fig, jsonified_data):
+def set_plot_scale_log_or_linear(plot_scale, x_type, prev_x_type, y_type, plotly_fig, jsonified_data):
     # Change plot x type
     if x_type != prev_x_type:
         df_dict = load_dfs(jsonified_data=jsonified_data)
@@ -666,95 +670,35 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
 
 
 @app.callback(
-    Output(download_link_id, 'href'),
+    Output(export_plot_data_notice_id, 'children'),
     [
-        Input(submit_button_id, 'n_clicks'),
-        Input(error_id, 'children'),
-        Input('y_type', 'value'),
-        Input('x_type', 'value'),
-        Input('show_opt', 'values'),
-        Input(hidden_df_json_id, 'children'),
-        Input(export_check_id, 'values'),
+        Input(export_plot_data_button_id, 'n_clicks'),
     ],
     [
+        State(error_id, 'children'),
+        State('x_type', 'value'),
+        State('y_type', 'value'),
         State('show_opt', 'values'),
+        State(hidden_df_json_id, 'children'),
     ])
-def export_plot_data(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data,
-                     export_to_clipboard, prev_show_opt):
-    if test_passed is True:
-        # Load and shape the data
-        df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
-                                                                             y_type=y_type,
-                                                                             show_opt=show_opt,
-                                                                             jsonified_data=jsonified_data,
-                                                                             prev_show_opt=prev_show_opt,
-                                                                             to_csv=True)
-        df_to_export = df_y[to_export_list]
-        df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
-        df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
-        df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
-        if export_to_clipboard:
-            df_to_export.to_clipboard(excel=True)
-            return ''
-        else:
-            csv_string = df_to_export.to_csv(index=False, encoding='utf-8')
-            csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
-            return csv_string
-    else:
-        return ''
+def export_plot_data(n_export, test_passed, x_type, y_type, show_opt, jsonified_data):
+    if n_export is not None:
+        if test_passed is True:
+            # Load and shape the data
+            df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
+                                                                                 y_type=y_type,
+                                                                                 show_opt=show_opt,
+                                                                                 jsonified_data=jsonified_data,
+                                                                                 prev_show_opt=None,
+                                                                                 to_csv=True)
+            df_to_export = df_y[to_export_list]
+            df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
+            df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
+            df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
 
-# @app.callback(
-#     Output(download_link_id, 'href'),
-#     [
-#         Input(submit_button_id, 'n_clicks'),
-#         Input(error_id, 'children'),
-#         Input('y_type', 'value'),
-#         Input('x_type', 'value'),
-#         Input('show_opt', 'values'),
-#         Input(hidden_df_json_id, 'children'),
-#         Input(export_check_id, 'values'),
-#     ],
-#     [
-#         State('show_opt', 'values'),
-#     ])
-# def update_link(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data, export_to_clipboard, prev_show_opt):
-#     if test_passed is True:
-#         # Load and shape the data
-#         # str_to_pass = '_'.join([x_type, y_type, show_opt])
-#         df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
-#                                                                              y_type=y_type,
-#                                                                              show_opt=show_opt,
-#                                                                              jsonified_data=jsonified_data,
-#                                                                              prev_show_opt=prev_show_opt,
-#                                                                              to_csv=True)
-#         df_to_export = df_y[to_export_list]
-#         df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
-#         df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
-#         df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
-#         if export_to_clipboard:
-#             df_to_export.to_clipboard(excel=True)
-#             return ''
-#         else:
-#             csv_string = df_to_export.to_csv(index=False, encoding='utf-8')
-#             csv_string = urllib.parse.quote(csv_string)
-#             # return csv_string
-#             return '/dash/urlToDownload?value={}'.format(csv_string)
-#     else:
-#         return ''
-#
-#
-# @app.server.route('/dash/urlToDownload')
-# def download_csv():
-#     value = flask.request.args.get('value')
-#     # create a dynamic csv or file here using `StringIO`
-#     # (instead of writing to the file system)
-#     str_io = io.StringIO()
-#     str_io.write(value)
-#     mem = io.BytesIO()
-#     mem.write(str_io.getvalue().encode('utf-8'))
-#     mem.seek(0)
-#     str_io.close()
-#     return flask.send_file(mem,
-#                            mimetype='text/csv',
-#                            attachment_filename='downloadFile.csv',
-#                            as_attachment=True)
+            df_to_export.to_clipboard(index=False, excel=True)
+            return '\u2705'
+        else:
+            return None
+    else:
+        return None
