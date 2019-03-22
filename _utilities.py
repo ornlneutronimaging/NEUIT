@@ -157,7 +157,8 @@ def fill_range_table_by_e(e_ev, distance_m):
     _v = round(3956. / np.sqrt(81.787 / (_e * 1000.)), 2)
     _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _class = classify_neutron(_e)
-    return {column_2: _lambda,
+    return {column_1: _e,
+            column_2: _lambda,
             column_3: _v,
             column_4: _tof,
             column_5: _class}
@@ -171,6 +172,7 @@ def fill_range_table_by_wave(wave_angstroms, distance_m):
     _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _class = classify_neutron(_e)
     return {column_1: _e,
+            column_2: _lambda,
             column_3: _v,
             column_4: _tof,
             column_5: _class}
@@ -598,94 +600,30 @@ def update_new_iso_table(prev_iso_df: pd.DataFrame, new_iso_df: pd.DataFrame):
     return new_iso_df
 
 
-def update_range_tb_by_energy(range_table_rows, distance):
-    col_list_1 = []
-    col_list_2 = []
-    col_list_3 = []
-    col_list_4 = []
-    col_list_5 = []
-    is_number_list = []
-    for each_row in range_table_rows:
-        energy_input = each_row[column_1]
-        if is_number(energy_input):
-            energy = float(energy_input)
-            is_number_list.append(True)
-            if energy > 0:
-                things_to_fill = fill_range_table_by_e(e_ev=energy, distance_m=distance)
-                col_list_1.append(energy)
-                col_list_2.append(things_to_fill[column_2])
-                col_list_3.append(things_to_fill[column_3])
-                col_list_4.append(things_to_fill[column_4])
-                col_list_5.append(things_to_fill[column_5])
-            else:
-                col_list_1.append(energy)
-                col_list_2.append('N/A')
-                col_list_3.append('N/A')
-                col_list_4.append('N/A')
-                col_list_5.append('N/A')
+def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
+    # print(range_table_rows)
+    row = modified_coord[0]
+    col = modified_coord[1]
+    if col == 0:
+        input_value = range_table_rows[row][column_1]
+        if is_number(input_value) and float(input_value) > 0:
+            things_to_fill = fill_range_table_by_e(e_ev=float(input_value), distance_m=distance)
+            for each_col in range_table_rows[row].keys():
+                range_table_rows[row][each_col] = things_to_fill[each_col]
         else:
-            is_number_list.append(False)
-            col_list_1.append(energy_input)
-            col_list_2.append('N/A')
-            col_list_3.append('N/A')
-            col_list_4.append('N/A')
-            col_list_5.append('N/A')
-
-    _df_range = pd.DataFrame({
-        column_1: col_list_1,
-        column_2: col_list_2,
-        column_3: col_list_3,
-        column_4: col_list_4,
-        column_5: col_list_5,
-    })
-    # if all(is_number_list):
-    #     _df_range.sort_values(by=column_1, inplace=True)
-    return _df_range
-
-
-def update_range_tb_by_lambda(range_table_rows, distance):
-    col_list_1 = []
-    col_list_2 = []
-    col_list_3 = []
-    col_list_4 = []
-    col_list_5 = []
-    is_number_list = []
-    for each_row in range_table_rows:
-        lambda_input = each_row[column_2]
-        if is_number(lambda_input):
-            _lambda = float(lambda_input)
-            is_number_list.append(True)
-            if _lambda > 0:
-                things_to_fill = fill_range_table_by_wave(wave_angstroms=_lambda, distance_m=distance)
-                col_list_1.append(things_to_fill[column_1])
-                col_list_2.append(_lambda)
-                col_list_3.append(things_to_fill[column_3])
-                col_list_4.append(things_to_fill[column_4])
-                col_list_5.append(things_to_fill[column_5])
-            else:
-                col_list_1.append('N/A')
-                col_list_2.append(_lambda)
-                col_list_3.append('N/A')
-                col_list_4.append('N/A')
-                col_list_5.append('N/A')
+            for each_col in [column_2, column_3, column_4, column_5]:
+                range_table_rows[row][each_col] = 'N/A'
+    elif col == 1:
+        input_value = range_table_rows[row][column_2]
+        if is_number(input_value) and float(input_value) > 0:
+            things_to_fill = fill_range_table_by_wave(wave_angstroms=float(input_value), distance_m=distance)
+            for each_col in range_table_rows[row].keys():
+                range_table_rows[row][each_col] = things_to_fill[each_col]
         else:
-            is_number_list.append(False)
-            col_list_1.append('N/A')
-            col_list_2.append(lambda_input)
-            col_list_3.append('N/A')
-            col_list_4.append('N/A')
-            col_list_5.append('N/A')
+            for each_col in [column_2, column_3, column_4, column_5]:
+                range_table_rows[row][each_col] = 'N/A'
 
-    _df_range = pd.DataFrame({
-        column_1: col_list_1,
-        column_2: col_list_2,
-        column_3: col_list_3,
-        column_4: col_list_4,
-        column_5: col_list_5,
-    })
-    # if all(is_number_list):
-    #     _df_range.sort_values(by=column_1, inplace=True)
-    return _df_range
+    return range_table_rows
 
 
 def output_cg1d_result_stack(sample_tb_rows, iso_tb_rows, iso_changed):

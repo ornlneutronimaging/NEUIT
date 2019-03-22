@@ -3,10 +3,7 @@ from _app import app
 import plotly.tools as tls
 import urllib
 import matplotlib.pyplot as plt
-import flask
-import io
 from _utilities import *
-
 
 energy_range_df_default = pd.DataFrame({
     'column_1': [1, 100],
@@ -40,7 +37,7 @@ error_id = app_name + '_error'
 output_id = app_name + '_output'
 result_id = app_name + '_result'
 hidden_range_tb_id = app_name + '_hidden_range_table'
-hidden_range_input_type_id = app_name + '_hidden_range_input_type'
+hidden_range_input_coord_id = app_name + '_hidden_range_input_coord'
 hidden_df_json_id = app_name + '_hidden_df_json'
 plot_div_id = app_name + '_plot'
 plot_fig_id = app_name + '_plot_fig'
@@ -83,7 +80,7 @@ layout = html.Div(
                 # Hidden div to store previous range table
                 html.Div(id=hidden_range_tb_id, style={'display': 'none'}),
                 # Hidden div to store range input type
-                html.Div(id=hidden_range_input_type_id, children='energy', style={'display': 'none'}),
+                html.Div(id=hidden_range_input_coord_id, children=[0, 0], style={'display': 'none'}),
 
                 # Step/distance input
                 html.Div(
@@ -229,7 +226,7 @@ layout = html.Div(
 
 
 @app.callback(
-    Output(hidden_range_input_type_id, 'children'),
+    Output(hidden_range_input_coord_id, 'children'),
     [
         Input(range_table_id, 'data_timestamp'),
     ],
@@ -240,13 +237,10 @@ layout = html.Div(
 def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
     old_range_tb_df = pd.read_json(old_range_tb_json, orient='split')
     diff_indices = pd.DataFrame(new_range_tb_rows) == old_range_tb_df
-    _cord = np.where(diff_indices == False)
-    modified_cord = (_cord[0][0], _cord[1][0])
-    # print(modified_cord)
-    if not all(diff_indices[column_2] == True):
-        return 'lambda'
-    else:
-        return 'energy'
+    _coord = np.where(diff_indices == False)
+    modified_coord = (_coord[0][0], _coord[1][0])
+    # print(modified_coord)
+    return modified_coord
 
 
 @app.callback(
@@ -254,35 +248,33 @@ def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
     [
         Input(range_table_id, 'data_timestamp'),
         Input(distance_id, 'value'),
-        Input(hidden_range_input_type_id, 'children'),
+        Input(hidden_range_input_coord_id, 'children'),
     ],
     [
         State(range_table_id, 'data'),
     ])
-def form_range_table(timestamp, distance, range_input_type, range_table_rows):
-    if range_input_type == 'energy':
-        df_range = update_range_tb_by_energy(range_table_rows=range_table_rows, distance=distance)
-    else:
-        df_range = update_range_tb_by_lambda(range_table_rows=range_table_rows, distance=distance)
-    return df_range.to_dict('records')
+def form_range_table(timestamp, distance, modified_coord, range_table_rows):
+    range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
+                                                     distance=distance,
+                                                     modified_coord=modified_coord)
+    return range_table_rows
 
 
 @app.callback(
     Output(hidden_range_tb_id, 'children'),
-    # Output(hidden_range_tb_id, 'data'),
     [
         Input(range_table_id, 'data_timestamp'),
         Input(distance_id, 'value'),
-        Input(hidden_range_input_type_id, 'children'),
+        Input(hidden_range_input_coord_id, 'children'),
     ],
     [
         State(range_table_id, 'data'),
     ])
-def store_prev_range_table_in_json(timestamp, distance, range_input_type, range_table_rows):
-    if range_input_type == 'energy':
-        df_range = update_range_tb_by_energy(range_table_rows=range_table_rows, distance=distance)
-    else:
-        df_range = update_range_tb_by_lambda(range_table_rows=range_table_rows, distance=distance)
+def store_prev_range_table_in_json(timestamp, distance, modified_coord, range_table_rows):
+    range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
+                                                     distance=distance,
+                                                     modified_coord=modified_coord)
+    df_range = pd.DataFrame(range_table_rows)
     return df_range.to_json(date_format='iso', orient='split')
 
 
@@ -710,7 +702,6 @@ def export_plot_data(n_submit, test_passed, y_type, x_type, show_opt, jsonified_
             return csv_string
     else:
         return ''
-
 
 # @app.callback(
 #     Output(download_link_id, 'href'),
