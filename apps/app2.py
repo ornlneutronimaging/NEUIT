@@ -673,45 +673,6 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
         return None
 
 
-# @app.callback(
-#     Output(download_link_id, 'href'),
-#     [
-#         Input(submit_button_id, 'n_clicks'),
-#         Input(error_id, 'children'),
-#         Input('y_type', 'value'),
-#         Input('x_type', 'value'),
-#         Input('show_opt', 'values'),
-#         Input(hidden_df_json_id, 'children'),
-#         Input(export_check_id, 'values'),
-#     ],
-#     [
-#         State('show_opt', 'values'),
-#     ])
-# def export_plot_data(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data,
-#                      export_to_clipboard, prev_show_opt):
-#     if test_passed is True:
-#         # Load and shape the data
-#         df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
-#                                                                              y_type=y_type,
-#                                                                              show_opt=show_opt,
-#                                                                              jsonified_data=jsonified_data,
-#                                                                              prev_show_opt=prev_show_opt,
-#                                                                              to_csv=True)
-#         df_to_export = df_y[to_export_list]
-#         df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
-#         df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
-#         df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
-#         if export_to_clipboard:
-#             df_to_export.to_clipboard(excel=True)
-#             return ''
-#         else:
-#             csv_string = df_to_export.to_csv(index=False, encoding='utf-8')
-#             csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
-#             return csv_string
-#     else:
-#         return ''
-
-
 @app.callback(
     Output(download_link_id, 'href'),
     [
@@ -726,10 +687,10 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
     [
         State('show_opt', 'values'),
     ])
-def update_link(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data, export_to_clipboard, prev_show_opt):
+def export_plot_data(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data,
+                     export_to_clipboard, prev_show_opt):
     if test_passed is True:
         # Load and shape the data
-        # str_to_pass = '_'.join([x_type, y_type, show_opt])
         df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
                                                                              y_type=y_type,
                                                                              show_opt=show_opt,
@@ -745,25 +706,64 @@ def update_link(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data,
             return ''
         else:
             csv_string = df_to_export.to_csv(index=False, encoding='utf-8')
-            csv_string = urllib.parse.quote(csv_string)
-            # return csv_string
-            return '/dash/urlToDownload?value={}'.format(csv_string)
+            csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
+            return csv_string
     else:
         return ''
 
 
-@app.server.route('/dash/urlToDownload')
-def download_csv():
-    value = flask.request.args.get('value')
-    # create a dynamic csv or file here using `StringIO`
-    # (instead of writing to the file system)
-    str_io = io.StringIO()
-    str_io.write(value)
-    mem = io.BytesIO()
-    mem.write(str_io.getvalue().encode('utf-8'))
-    mem.seek(0)
-    str_io.close()
-    return flask.send_file(mem,
-                           mimetype='text/csv',
-                           attachment_filename='downloadFile.csv',
-                           as_attachment=True)
+# @app.callback(
+#     Output(download_link_id, 'href'),
+#     [
+#         Input(submit_button_id, 'n_clicks'),
+#         Input(error_id, 'children'),
+#         Input('y_type', 'value'),
+#         Input('x_type', 'value'),
+#         Input('show_opt', 'values'),
+#         Input(hidden_df_json_id, 'children'),
+#         Input(export_check_id, 'values'),
+#     ],
+#     [
+#         State('show_opt', 'values'),
+#     ])
+# def update_link(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data, export_to_clipboard, prev_show_opt):
+#     if test_passed is True:
+#         # Load and shape the data
+#         # str_to_pass = '_'.join([x_type, y_type, show_opt])
+#         df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
+#                                                                              y_type=y_type,
+#                                                                              show_opt=show_opt,
+#                                                                              jsonified_data=jsonified_data,
+#                                                                              prev_show_opt=prev_show_opt,
+#                                                                              to_csv=True)
+#         df_to_export = df_y[to_export_list]
+#         df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
+#         df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
+#         df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
+#         if export_to_clipboard:
+#             df_to_export.to_clipboard(excel=True)
+#             return ''
+#         else:
+#             csv_string = df_to_export.to_csv(index=False, encoding='utf-8')
+#             csv_string = urllib.parse.quote(csv_string)
+#             # return csv_string
+#             return '/dash/urlToDownload?value={}'.format(csv_string)
+#     else:
+#         return ''
+#
+#
+# @app.server.route('/dash/urlToDownload')
+# def download_csv():
+#     value = flask.request.args.get('value')
+#     # create a dynamic csv or file here using `StringIO`
+#     # (instead of writing to the file system)
+#     str_io = io.StringIO()
+#     str_io.write(value)
+#     mem = io.BytesIO()
+#     mem.write(str_io.getvalue().encode('utf-8'))
+#     mem.seek(0)
+#     str_io.close()
+#     return flask.send_file(mem,
+#                            mimetype='text/csv',
+#                            attachment_filename='downloadFile.csv',
+#                            as_attachment=True)
