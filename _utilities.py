@@ -727,9 +727,25 @@ def _extract_df(datasets):
     return df_dict
 
 
-def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_opt, to_csv):
+def load_dfs(jsonified_data):
     datasets = _load_jsonified_data(jsonified_data=jsonified_data)
     df_dict = _extract_df(datasets=datasets)
+    return df_dict
+
+
+def x_type_to_x_tag(x_type):
+    # Determine X names to plot
+    if x_type == 'energy':
+        x_tag = energy_name
+    elif x_type == 'lambda':
+        x_tag = wave_name
+    else:
+        x_tag = tof_name
+    return x_tag
+
+
+def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_opt, to_csv):
+    df_dict = load_dfs(jsonified_data=jsonified_data)
     # Determine Y df and y_label to plot
     if y_type == 'transmission':
         y_label = 'Transmission'
@@ -746,12 +762,7 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
     df_y = df_dict['y']
 
     # Determine X names to plot
-    if x_type == 'energy':
-        x_tag = energy_name
-    elif x_type == 'lambda':
-        x_tag = wave_name
-    else:
-        x_tag = tof_name
+    x_tag = x_type_to_x_tag(x_type)
 
     # Locate items based on plot level provided
     total_col_name_list = []

@@ -4,7 +4,10 @@ import plotly.tools as tls
 import urllib
 import matplotlib.pyplot as plt
 from pprint import pprint
+import flask
+import io
 from _utilities import *
+
 
 energy_range_df_default = pd.DataFrame({
     'column_1': [1, 100],
@@ -45,8 +48,7 @@ plot_fig_id = app_name + '_plot_fig'
 plot_options_div_id = app_name + '_plot_options'
 export_check_id = app_name + '_export_to_clipboard'
 download_link_id = app_name + '_download_link'
-# plot_data_div_id = app_name + '_plot_data_div'
-# plot_data_tb_id = app_name + '_plot_data_table'
+prev_x_type_id = app_name + '_prev_x_type'
 
 # Create app2 layout
 layout = html.Div(
@@ -180,6 +182,9 @@ layout = html.Div(
 
         # Hidden div to store json
         html.Div(id=hidden_df_json_id, style={'display': 'none'}),
+
+        # Hidden div to store x_type
+        html.Div(id=prev_x_type_id, children='energy', style={'display': 'none'}),
 
         # Output div
         html.Div(
@@ -450,6 +455,15 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
 
 
 @app.callback(
+    Output(prev_x_type_id, 'children'),
+    [
+        Input('x_type', 'value'),
+    ])
+def store_x_type(x_type):
+    return x_type
+
+
+@app.callback(
     Output(hidden_df_json_id, 'children'),
     [
         Input(submit_button_id, 'n_clicks'),
@@ -497,36 +511,6 @@ def store_reso_df_in_json(n_submit,
                              source_to_detector_m=distance_m,
                              output_type='df')
 
-        # df_miu_per_cm = o_reso.export(y_axis='miu_per_cm',
-        #                               x_axis='energy',
-        #                               time_unit='us',
-        #                               mixed=False,
-        #                               all_layers=True,
-        #                               all_elements=True,
-        #                               all_isotopes=True,
-        #                               source_to_detector_m=distance_m,
-        #                               output_type='df')
-        #
-        # df_sigma_b = o_reso.export(y_axis='sigma',
-        #                            x_axis='energy',
-        #                            time_unit='us',
-        #                            mixed=False,
-        #                            all_layers=False,
-        #                            all_elements=True,
-        #                            all_isotopes=True,
-        #                            source_to_detector_m=distance_m,
-        #                            output_type='df')
-        #
-        # df_sigma_raw = o_reso.export(y_axis='sigma_raw',
-        #                              x_axis='energy',
-        #                              time_unit='us',
-        #                              mixed=False,
-        #                              all_layers=False,
-        #                              all_elements=False,
-        #                              all_isotopes=True,
-        #                              source_to_detector_m=distance_m,
-        #                              output_type='df')
-
         df_x = pd.DataFrame()
         df_x[energy_name] = df_y[energy_name][:]
         df_x = fill_df_x_types(df=df_x, distance_m=distance_m)
@@ -547,16 +531,16 @@ def store_reso_df_in_json(n_submit,
     [
         Input(submit_button_id, 'n_clicks'),
         Input(error_id, 'children'),
-        Input('y_type', 'value'),
-        Input('x_type', 'value'),
         Input('show_opt', 'values'),
         Input(hidden_df_json_id, 'children'),
+        Input('y_type', 'value'),
     ],
     [
+        State('x_type', 'value'),
         State('show_opt', 'values'),
         State('plot_scale', 'value'),
     ])
-def plot(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data, prev_show_opt, plot_scale):
+def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_show_opt, plot_scale):
     if test_passed is True:
         # Load and shape the data
         df_x, df_y, to_plot_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
@@ -572,38 +556,8 @@ def plot(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data, prev_s
         ax1 = fig.add_subplot(111)
 
         # Plot
-        if y_type in ['attenuation', 'transmission']:
-            ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
-        else:
-            ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
+        ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
         ax1.set_ylabel(y_label)
-
-        # # Second axes
-        # ax2 = ax1.twiny()
-        # Add some extra space for the second axis at the bottom
-        # fig.subplots_adjust(bottom=0.2)
-        # new_tick_label = np.linspace(0.01, 8.01, 18)
-        # new_tick_position = ir_util.angstroms_to_ev(new_tick_label)
-        # # Move twinned axis ticks and label from top to bottom
-        # ax2.xaxis.set_ticks_position("bottom")
-        # ax2.xaxis.set_label_position("bottom")
-        #
-        # # Offset the twin axis below the host
-        # ax2.spines["bottom"].set_position(("axes", -0.15))
-        #
-        # # Turn on the frame for the twin axis, but then hide all
-        # # but the bottom spine
-        # ax2.set_frame_on(True)
-        # ax2.patch.set_visible(False)
-        # # for sp in ax2.spines.itervalues():
-        # #     sp.set_visible(False)
-        # ax2.spines["bottom"].set_visible(True)
-        #
-        # ax2.set_xticks(new_tick_position)
-        # ax2.set_xticklabels(new_tick_label)
-        #
-        # ax2.set_xlabel(wave_name)
-        # ax2.set_xlim(ax1.get_xlim())
 
         plotly_fig = tls.mpl_to_plotly(fig)
 
@@ -633,7 +587,25 @@ def plot(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data, prev_s
             plotly_fig['layout']['yaxis']['type'] = 'linear'
         plotly_fig.layout.xaxis.autorange = True
         plotly_fig.layout.yaxis.autorange = True
+
+        # Dual x axis label would be ideal
         # plotly_fig.layout.legend.orientation = 'h'
+        # plotly_fig.layout['xaxis2'] = {'anchor': 'y',
+        #                                'autorange': True,
+        #                                'domain': [0, 1],
+        #                                'mirror': 'ticks',
+        #                                'nticks': 6,
+        #                                'range': [1, 2],
+        #                                'overlaying': 'y',
+        #                                'showgrid': False,
+        #                                'showline': True,
+        #                                'side': 'top',
+        #                                'tickfont': {'size': 15},
+        #                                'ticks': 'inside',
+        #                                'title': {'font': {'color': '#000000', 'size': 18},
+        #                                          'text': wave_name},
+        #                                'type': 'linear',
+        #                                'zeroline': False}
 
         return html.Div([dcc.Graph(figure=plotly_fig, id=plot_fig_id)])
     else:
@@ -644,12 +616,25 @@ def plot(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data, prev_s
     Output(plot_fig_id, 'figure'),
     [
         Input('plot_scale', 'value'),
+        Input('x_type', 'value'),
     ],
     [
+        State(prev_x_type_id, 'children'),
+        State('y_type', 'value'),
         State(plot_fig_id, 'figure'),
-        State('y_type', 'value')
+        State(hidden_df_json_id, 'children'),
     ])
-def plot_in_log_scale(plot_scale, plotly_fig, y_type):
+def plot_in_log_scale(plot_scale, x_type, prev_x_type, y_type, plotly_fig, jsonified_data):
+    # Change plot x type
+    if x_type != prev_x_type:
+        df_dict = load_dfs(jsonified_data=jsonified_data)
+        x_tag = x_type_to_x_tag(x_type=x_type)
+        for each_trace in plotly_fig['data']:
+            each_trace['x'] = df_dict['x'][x_tag]
+        pprint(plotly_fig['layout'])
+        plotly_fig['layout']['xaxis']['title']['text'] = x_tag
+
+    # Change plot scale between log and linear
     if plot_scale == 'logx':
         plotly_fig['layout']['xaxis']['type'] = 'log'
         plotly_fig['layout']['yaxis']['type'] = 'linear'
@@ -690,6 +675,45 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
         return None
 
 
+# @app.callback(
+#     Output(download_link_id, 'href'),
+#     [
+#         Input(submit_button_id, 'n_clicks'),
+#         Input(error_id, 'children'),
+#         Input('y_type', 'value'),
+#         Input('x_type', 'value'),
+#         Input('show_opt', 'values'),
+#         Input(hidden_df_json_id, 'children'),
+#         Input(export_check_id, 'values'),
+#     ],
+#     [
+#         State('show_opt', 'values'),
+#     ])
+# def export_plot_data(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data,
+#                      export_to_clipboard, prev_show_opt):
+#     if test_passed is True:
+#         # Load and shape the data
+#         df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
+#                                                                              y_type=y_type,
+#                                                                              show_opt=show_opt,
+#                                                                              jsonified_data=jsonified_data,
+#                                                                              prev_show_opt=prev_show_opt,
+#                                                                              to_csv=True)
+#         df_to_export = df_y[to_export_list]
+#         df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
+#         df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
+#         df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
+#         if export_to_clipboard:
+#             df_to_export.to_clipboard(excel=True)
+#             return ''
+#         else:
+#             csv_string = df_to_export.to_csv(index=False, encoding='utf-8')
+#             csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
+#             return csv_string
+#     else:
+#         return ''
+
+
 @app.callback(
     Output(download_link_id, 'href'),
     [
@@ -704,10 +728,10 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
     [
         State('show_opt', 'values'),
     ])
-def export_plot_data(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data,
-                     export_to_clipboard, prev_show_opt):
+def update_link(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data, export_to_clipboard, prev_show_opt):
     if test_passed is True:
         # Load and shape the data
+        # str_to_pass = '_'.join([x_type, y_type, show_opt])
         df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
                                                                              y_type=y_type,
                                                                              show_opt=show_opt,
@@ -723,57 +747,25 @@ def export_plot_data(n_submit, test_passed, y_type, x_type, show_opt, jsonified_
             return ''
         else:
             csv_string = df_to_export.to_csv(index=False, encoding='utf-8')
-            csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
-            return csv_string
+            csv_string = urllib.parse.quote(csv_string)
+            # return csv_string
+            return '/dash/urlToDownload?value={}'.format(csv_string)
     else:
         return ''
 
-# @app.callback(
-#     Output(plot_data_div_id, 'children'),
-#     [
-#         Input(submit_button_id, 'n_clicks'),
-#         Input(error_id, 'children'),
-#         Input('y_type', 'value'),
-#         Input('x_type', 'value'),
-#         Input('show_opt', 'values'),
-#         Input(hidden_df_json_id, 'children'),
-#         Input(export_check_id, 'values'),
-#     ],
-#     [
-#         State('show_opt', 'values'),
-#     ])
-# def show_export_df_tb(n_submit, test_passed, y_type, x_type, show_opt, jsonified_data,
-#                       export_to_clipboard, prev_show_opt):
-#     if test_passed is True:
-#         # Load and shape the data
-#         df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
-#                                                                              y_type=y_type,
-#                                                                              show_opt=show_opt,
-#                                                                              jsonified_data=jsonified_data,
-#                                                                              prev_show_opt=prev_show_opt,
-#                                                                              to_csv=True)
-#         df_to_export = df_y[to_export_list]
-#         df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
-#         df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
-#         df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
-#         if export_to_clipboard:
-#             df_to_export.to_clipboard(excel=True)
-#         data_table = dt.DataTable(
-#             data=df_to_export.to_dict('records'),
-#             columns=iso_tb_header_df.to_dict('records'),
-#             editable=False,
-#             row_selectable=False,
-#             filtering=False,
-#             sorting=False,
-#             row_deletable=False,
-#             style_data_conditional=gray_iso_cols,
-#             n_fixed_rows=1,
-#             style_table={
-#                 'maxHeight': '300',
-#                 'overflowY': 'scroll'
-#             },
-#             id=plot_data_tb_id
-#         )
-#         return df_to_export.to_dict('records')
-#     else:
-#         return None
+
+@app.server.route('/dash/urlToDownload')
+def download_csv():
+    value = flask.request.args.get('value')
+    # create a dynamic csv or file here using `StringIO`
+    # (instead of writing to the file system)
+    str_io = io.StringIO()
+    str_io.write(value)
+    mem = io.BytesIO()
+    mem.write(str_io.getvalue().encode('utf-8'))
+    mem.seek(0)
+    str_io.close()
+    return flask.send_file(mem,
+                           mimetype='text/csv',
+                           attachment_filename='downloadFile.csv',
+                           as_attachment=True)
