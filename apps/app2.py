@@ -3,7 +3,6 @@ from _app import app
 import plotly.tools as tls
 import urllib
 import matplotlib.pyplot as plt
-from pprint import pprint
 import flask
 import io
 from _utilities import *
@@ -631,7 +630,6 @@ def plot_in_log_scale(plot_scale, x_type, prev_x_type, y_type, plotly_fig, jsoni
         x_tag = x_type_to_x_tag(x_type=x_type)
         for each_trace in plotly_fig['data']:
             each_trace['x'] = df_dict['x'][x_tag]
-        pprint(plotly_fig['layout'])
         plotly_fig['layout']['xaxis']['title']['text'] = x_tag
 
     # Change plot scale between log and linear

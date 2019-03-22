@@ -545,7 +545,6 @@ def convert_to_effective_formula(ele_list, mol_list):
         indices = ele_array == _e
         mol_for_this_ele = mol_array[indices]
         mol_sum_for_ele_list.append(mol_for_this_ele.sum())
-
     mol_minimum = min(mol_sum_for_ele_list)
     mol_sum_for_ele_array = np.array(mol_sum_for_ele_list) / mol_minimum
     effective_str = ''
