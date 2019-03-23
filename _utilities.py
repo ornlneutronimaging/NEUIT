@@ -408,6 +408,7 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_df, iso_tb_df, is
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
     df = load_beam_shape(_path_to_beam_shape)
+    print(df.head())
     __o_reso = Resonance(energy_min=0.00025, energy_max=0.12525, energy_step=0.000625)
     _o_reso = unpack_sample_tb_df_and_add_layer(o_reso=__o_reso, sample_tb_df=sample_tb_df)
     o_reso = unpack_iso_tb_df_and_update(o_reso=_o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)

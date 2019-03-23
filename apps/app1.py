@@ -20,6 +20,10 @@ submit_button_id = app_name + '_submit'
 result_id = app_name + '_result'
 error_id = app_name + '_error'
 output_id = app_name + '_output'
+beamline_id = app_name + '_beamline'
+band_div_id = app_name + '_band_div'
+band_min_id = app_name + '_band_min'
+band_max_id = app_name + '_band_max'
 
 # Create app layout
 layout = html.Div(
@@ -31,6 +35,55 @@ layout = html.Div(
         dcc.Link('Composition converter', href='/apps/converter'),
         html.H1('Cold neutron transmission'),
 
+        # Beamline selection
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.H3('Beamline'),
+                        html.Div(
+                            [
+                                dcc.Dropdown(
+                                    id=beamline_id,
+                                    options=[
+                                        {'label': 'HFIR, IMAGING (CG-1D)', 'value': 'cg1d'},
+                                        {'label': 'SNS, SNAP (BL-3)', 'value': 'snap'},
+                                        # {'label': 'SNS, VENUS (BL-10)', 'value': 'venus'},
+                                    ],
+                                    value='cg1d',
+                                    searchable=False,
+                                    clearable=False,
+                                ),
+                            ]
+                        ),
+                    ], className='five columns', style={'verticalAlign': 'middle'},
+                ),
+                html.Div(
+                    [
+                        html.H3('Band width'),
+                        html.Div(
+                            [
+                                dcc.Input(id=band_min_id, type='number', min=1,
+                                          inputmode='numeric',
+                                          placeholder='Min.',
+                                          step=0.01,
+                                          className='four columns',
+                                          ),
+                                dcc.Input(id=band_max_id, type='number', min=1,
+                                          inputmode='numeric',
+                                          placeholder='Max.',
+                                          step=0.01,
+                                          className='four columns',
+                                          ),
+                                html.P('\u212B', className='one column',
+                                       style={'marginBottom': 10, 'marginTop': 5},
+                                       ),
+                            ], className='row', style={'verticalAlign': 'middle'},
+                        ),
+                    ], className=col_width_6, style={'display': 'none'}, id=band_div_id,
+                ),
+            ], className='row',
+        ),
         # Sample input
         html.H3('Sample info'),
         html.Div(
@@ -84,6 +137,22 @@ layout = html.Div(
         ),
     ]
 )
+
+
+@app.callback(
+    Output(band_div_id, 'style'),
+    [
+        Input(beamline_id, 'value'),
+    ],
+    [
+        State(band_div_id, 'style'),
+    ])
+def show_hide_band_input(beamline, style):
+    if beamline == 'cg1d':
+        style['display'] = 'none'
+    else:
+        style['display'] = 'block'
+    return style
 
 
 @app.callback(
