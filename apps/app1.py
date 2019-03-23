@@ -174,6 +174,12 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
         test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
                                                                   sample_schema=sample_dict_schema)
 
+        # Test density required or not
+        if all(test_passed_list):
+            test_passed_list, output_div_list = validate_density_input(sample_tb_df=sample_tb_df,
+                                                                       test_passed_list=test_passed_list,
+                                                                       output_div_list=output_div_list)
+
         # Test iso input format and sum
         if all(test_passed_list):
             if iso_changed:
@@ -186,12 +192,6 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
                                                                    iso_schema=iso_dict_schema,
                                                                    test_passed_list=test_passed_list,
                                                                    output_div_list=output_div_list)
-
-        # Test density required or not
-        if all(test_passed_list):
-            test_passed_list, output_div_list = validate_density_input(sample_tb_df=sample_tb_df,
-                                                                       test_passed_list=test_passed_list,
-                                                                       output_div_list=output_div_list)
 
         # Return result
         if all(test_passed_list):

@@ -44,6 +44,7 @@ plot_options_div_id = app_name + '_plot_options'
 export_plot_data_button_id = app_name + '_plot_data_export'
 export_plot_data_notice_id = app_name + '_export_notice'
 prev_x_type_id = app_name + '_prev_x_type'
+plot_loading = 'Plot loading...'
 
 # Create app2 layout
 layout = html.Div(
@@ -190,7 +191,7 @@ layout = html.Div(
                 html.Div(id=plot_options_div_id, children=plot_option_div),
 
                 # Plot
-                html.Div(id=plot_div_id, className='container'),
+                html.Div(id=plot_div_id, children=plot_loading, className='container'),
 
                 # Export plot data button
                 html.Div(
@@ -414,6 +415,11 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
         test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
                                                                   sample_schema=sample_dict_schema)
 
+        # Test density required or not
+        if all(test_passed_list):
+            test_passed_list, output_div_list = validate_density_input(sample_tb_df=sample_tb_df,
+                                                                       test_passed_list=test_passed_list,
+                                                                       output_div_list=output_div_list)
         # Test iso input format and sum
         if all(test_passed_list):
             if iso_changed:
@@ -434,11 +440,6 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
             test_passed_list, output_div_list = validate_energy_input(range_tb_df=range_tb_df,
                                                                       test_passed_list=test_passed_list,
                                                                       output_div_list=output_div_list)
-        # Test density required or not
-        if all(test_passed_list):
-            test_passed_list, output_div_list = validate_density_input(sample_tb_df=sample_tb_df,
-                                                                       test_passed_list=test_passed_list,
-                                                                       output_div_list=output_div_list)
 
         # Return result
         if all(test_passed_list):
@@ -583,28 +584,9 @@ def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_s
         plotly_fig.layout.xaxis.autorange = True
         plotly_fig.layout.yaxis.autorange = True
 
-        # Dual x axis label would be ideal
-        # plotly_fig.layout.legend.orientation = 'h'
-        # plotly_fig.layout['xaxis2'] = {'anchor': 'y',
-        #                                'autorange': True,
-        #                                'domain': [0, 1],
-        #                                'mirror': 'ticks',
-        #                                'nticks': 6,
-        #                                'range': [1, 2],
-        #                                'overlaying': 'y',
-        #                                'showgrid': False,
-        #                                'showline': True,
-        #                                'side': 'top',
-        #                                'tickfont': {'size': 15},
-        #                                'ticks': 'inside',
-        #                                'title': {'font': {'color': '#000000', 'size': 18},
-        #                                          'text': wave_name},
-        #                                'type': 'linear',
-        #                                'zeroline': False}
-
         return html.Div([dcc.Graph(figure=plotly_fig, id=plot_fig_id)])
     else:
-        return None
+        return plot_loading
 
 
 @app.callback(
@@ -614,12 +596,12 @@ def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_s
         Input('x_type', 'value'),
     ],
     [
-        State(prev_x_type_id, 'children'),
         State('y_type', 'value'),
+        State(prev_x_type_id, 'children'),
         State(plot_fig_id, 'figure'),
         State(hidden_df_json_id, 'children'),
     ])
-def set_plot_scale_log_or_linear(plot_scale, x_type, prev_x_type, y_type, plotly_fig, jsonified_data):
+def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly_fig, jsonified_data):
     # Change plot x type
     if x_type != prev_x_type:
         df_dict = load_dfs(jsonified_data=jsonified_data)
