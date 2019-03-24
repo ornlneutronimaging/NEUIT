@@ -11,6 +11,14 @@ import numpy as np
 import json
 from cerberus import Validator
 
+app_dict = {'app1': {'name': 'Neutron transmission',
+                     'url': '/apps/transmission'},
+            'app2': {'name': 'Neutron resonance',
+                     'url': '/apps/resonance'},
+            'app3': {'name': 'Composition converter',
+                     'url': '/apps/converter'},
+            }
+
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
 speed_name = 'Speed (m/s)'
@@ -285,10 +293,44 @@ def validate_energy_input(range_tb_df: pd.DataFrame, test_passed_list: list, out
         if each < 1e-5 or each > 1e8:
             test_passed_list.append(False)
             output_div_list.append(
-                html.P("INPUT ERROR: {}: ['1x10^-5 <= 'Energy' <= 1x10^8']".format(str(energy_name))))
+                html.P("INPUT ERROR: '{}': ['1x10^-5 <= 'Energy' <= 1x10^8']".format(str(energy_name))))
         else:
             test_passed_list.append(True)
             output_div_list.append(None)
+    return test_passed_list, output_div_list
+
+
+def validate_band_width_input(beamline, band_width, test_passed_list: list, output_div_list: list):
+    if beamline == 'imaging':
+        test_passed_list.append(True)
+        output_div_list.append(None)
+    else:
+        if band_width[0] is None:
+            test_passed_list.append(False)
+            output_div_list.append(
+                html.P("INPUT ERROR: '{}': ['Min.' is required!]".format('Band width')))
+        if band_width[1] is None:
+            test_passed_list.append(False)
+            output_div_list.append(
+                html.P("INPUT ERROR: '{}': ['Max.' is required!]".format('Band width')))
+        if all(test_passed_list):
+            if band_width[0] == band_width[1]:
+                test_passed_list.append(False)
+                output_div_list.append(
+                    html.P("INPUT ERROR: '{}': ['Min.' and 'Max.' can not be equal!]".format('Band width')))
+            elif band_width[0] > band_width[1]:
+                test_passed_list.append(False)
+                output_div_list.append(
+                    html.P("INPUT ERROR: '{}': ['Min.' < 'Max.' is required!]".format('Band width')))
+            else:
+                _diff = round(band_width[1] - band_width[0], 3)
+                if _diff < 0.05:
+                    test_passed_list.append(False)
+                    output_div_list.append(
+                        html.P(
+                            "INPUT ERROR: '{} - {} = {}': ['Max.' minus 'Min.' >=0.05 required]".format(band_width[1],
+                                                                                                        band_width[0],
+                                                                                                        _diff)))
     return test_passed_list, output_div_list
 
 
@@ -324,7 +366,7 @@ def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
         if any(failed_list):
             _list = df.index[boo].tolist()
             for _index, each_fail_layer in enumerate(_list):
-                div = html.P("INPUT ERROR: {}: ['sum of isotopic ratios is '{}' not '1'']".format(
+                div = html.P("INPUT ERROR: '{}': [sum of isotopic ratios is '{}' not '1']".format(
                     str(each_fail_layer), float(df[boo][column_4][_index])))
                 passed_list.append(False)
                 div_list.append(div)
@@ -404,12 +446,35 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
         return o_reso
 
 
-def calculate_transmission_cg1d_and_form_stack_table(sample_tb_df, iso_tb_df, iso_changed):
+def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_min, band_max, band_type):
     _main_path = os.path.abspath(os.path.dirname(__file__))
-    _path_to_beam_shape = os.path.join(_main_path, 'static/instrument_file/beam_shape_cg1d.txt')
-    df = load_beam_shape(_path_to_beam_shape)
-    print(df.head())
-    __o_reso = Resonance(energy_min=0.00025, energy_max=0.12525, energy_step=0.000625)
+    _path_to_beam_shape = {'imaging': 'static/instrument_file/beam_shape_cg1d.txt',
+                           'snap': 'static/instrument_file/beam_shape_snap.txt',
+                           # 'venus': 'static/instrument_file/beam_shape_venus.txt',
+                           }
+    df = load_beam_shape(_path_to_beam_shape[beamline])
+    if beamline == 'imaging':
+        __o_reso = Resonance(energy_min=0.00025, energy_max=0.12525, energy_step=0.000625)
+    else:
+        if band_type == 'lambda':
+            e_min = ir_util.angstroms_to_ev(band_max)
+            e_max = ir_util.angstroms_to_ev(band_min)
+        else:  # band_type == 'energy'
+            e_min = band_min
+            e_max = band_max
+        e_diff = e_max - e_min
+        if e_diff > 300:
+            e_step = 0.1
+        elif 50 < e_diff <= 300:
+            e_step = 0.01
+        elif 10 < e_diff <= 50:
+            e_step = 0.001
+        else:
+            e_step = 0.000625
+        df = df[df.energy_eV > e_min]
+        df = df[df.energy_eV < e_max]
+        __o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+
     _o_reso = unpack_sample_tb_df_and_add_layer(o_reso=__o_reso, sample_tb_df=sample_tb_df)
     o_reso = unpack_iso_tb_df_and_update(o_reso=_o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
 
@@ -426,7 +491,46 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_df, iso_tb_df, is
     # total_trans = round(_total_trans, 3)
 
     o_stack = o_reso.stack
-    div_list = []
+
+    return _total_trans, o_stack
+
+
+def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min, band_max, band_type):
+    if beamline == 'snap':
+        beamline_name = 'SNAP (BL-3), SNS'
+    elif beamline == 'venus':
+        beamline_name = 'VENUS (BL-10), SNS'
+    else:  # beamline == 'imaging':
+        beamline_name = 'IMAGING (CG-1D), HFIR'
+    # Modify input for testing
+    sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
+    sample_tb_df = pd.DataFrame(sample_tb_dict)
+    if iso_changed:
+        iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
+        iso_tb_df = pd.DataFrame(iso_tb_dict)
+    else:
+        iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+
+    # Calculation starts
+    total_trans, o_stack = calculate_transmission(sample_tb_df=sample_tb_df,
+                                                  iso_tb_df=iso_tb_df,
+                                                  iso_changed=iso_changed,
+                                                  beamline=beamline,
+                                                  band_min=band_min,
+                                                  band_max=band_max,
+                                                  band_type=band_type)
+    output_div_list = [
+        html.Hr(),
+        html.H3('Result at ' + beamline_name),
+        html.P('Transmission (total): {} %'.format(round(total_trans, 3))),
+        html.P('Attenuation (total): {} %'.format(round(100 - total_trans, 3))),
+        # html.Div(sample_stack_div_list),
+    ]
+    return output_div_list, o_stack
+
+
+def form_sample_stack_table_div(o_stack):
+    sample_stack_div_list = [html.Hr(), html.H5('Sample stack:')]
     layers = list(o_stack.keys())
     layer_dict = {}
     for l, layer in enumerate(layers):
@@ -507,10 +611,9 @@ def calculate_transmission_cg1d_and_form_stack_table(sample_tb_df, iso_tb_df, is
                              ]
                              ))
 
-        div_list.append(html.Div(current_layer_list))
-        div_list.append(html.Br())
-
-    return _total_trans, div_list, o_stack
+        sample_stack_div_list.append(html.Div(current_layer_list))
+        sample_stack_div_list.append(html.Br())
+        return sample_stack_div_list
 
 
 def convert_input_to_composition(compos_df, compos_type, o_stack):
@@ -637,30 +740,6 @@ def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
     return range_table_rows
 
 
-def output_cg1d_result_stack(sample_tb_rows, iso_tb_rows, iso_changed):
-    # Modify input for testing
-    sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
-    sample_tb_df = pd.DataFrame(sample_tb_dict)
-    if iso_changed:
-        iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
-        iso_tb_df = pd.DataFrame(iso_tb_dict)
-    else:
-        iso_tb_df = form_iso_table(sample_df=sample_tb_df)
-
-    # Calculation starts
-    total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_df=sample_tb_df,
-                                                                                      iso_tb_df=iso_tb_df,
-                                                                                      iso_changed=iso_changed)
-    output_div_list = [
-        html.Hr(),
-        html.H3('Result (CG-1D, ORNL)'),
-        html.P('Transmission (total): {} %'.format(round(total_trans, 3))),
-        html.P('Attenuation (total): {} %'.format(round(100 - total_trans, 3))),
-        html.Div([html.H5('Sample stack:'), html.Div(div_list)]),
-    ]
-    return output_div_list
-
-
 def _load_jsonified_data(jsonified_data):
     datasets = json.loads(jsonified_data)
     return datasets
@@ -779,6 +858,14 @@ def init_iso_table(id_str: str):
     )
     return iso_table
 
+
+app_links_list = []
+for i, each_app in enumerate(app_dict.keys()):
+    current_str = str(i + 1) + '. ' + app_dict[each_app]['name']
+    current_url = app_dict[each_app]['url']
+    app_links_list.append(dcc.Link(current_str, href=current_url))
+    app_links_list.append(html.Br())
+app_links_div = html.Div(app_links_list)
 
 even_3_col = [
     {'if': {'column_id': column_1},

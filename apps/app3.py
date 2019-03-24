@@ -27,10 +27,10 @@ layout = html.Div(
     [
         dcc.Link('Home', href='/'),
         html.Br(),
-        dcc.Link('Cold neutron transmission', href='/apps/cg1d'),
+        dcc.Link(app_dict['app1']['name'], href=app_dict['app1']['url']),
         html.Br(),
-        dcc.Link('Neutron resonance', href='/apps/venus'),
-        html.H1('Composition converter'),
+        dcc.Link(app_dict['app2']['name'], href=app_dict['app2']['url']),
+        html.H1(app_dict['app3']['name']),
 
         # Sample input
         html.H3('Sample composition'),
@@ -270,9 +270,14 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
         _iso_tb_df = iso_tb_df[:]
 
         # Calculation starts
-        total_trans, div_list, o_stack = calculate_transmission_cg1d_and_form_stack_table(sample_tb_df=_sample_df,
-                                                                                          iso_tb_df=_iso_tb_df,
-                                                                                          iso_changed=iso_changed)
+        transmission_div_list, o_stack = form_transmission_result_div(sample_tb_rows=_sample_df.to_dict('records'),
+                                                                      iso_tb_rows=_iso_tb_df.to_dict('records'),
+                                                                      iso_changed=iso_changed,
+                                                                      beamline='cg1d',
+                                                                      band_min=None,
+                                                                      band_max=None)
+        sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack)
+
         compos_output_df, ele_list, mol_list = convert_input_to_composition(compos_df=_compos_df,
                                                                             compos_type=compos_type,
                                                                             o_stack=o_stack)
@@ -300,7 +305,7 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
                               'width': '33%'},
                          ],
                          ),
-            html.Div([html.H5('Sample stack:'), html.Div(div_list)])
+            html.Div(sample_stack_div_list)
         ]
         return output_div_list
     else:

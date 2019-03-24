@@ -44,17 +44,17 @@ plot_options_div_id = app_name + '_plot_options'
 export_plot_data_button_id = app_name + '_plot_data_export'
 export_plot_data_notice_id = app_name + '_export_notice'
 prev_x_type_id = app_name + '_prev_x_type'
-plot_loading = 'Plot loading...'
+plot_loading = html.H2('Plot loading...')
 
 # Create app2 layout
 layout = html.Div(
     [
         dcc.Link('Home', href='/'),
         html.Br(),
-        dcc.Link('Cold neutron transmission', href='/apps/cg1d'),
+        dcc.Link(app_dict['app1']['name'], href=app_dict['app1']['url']),
         html.Br(),
-        dcc.Link('Composition converter', href='/apps/converter'),
-        html.H1('Neutron resonance'),
+        dcc.Link(app_dict['app3']['name'], href=app_dict['app3']['url']),
+        html.H1(app_dict['app2']['name']),
         # Global parameters
         html.Div(
             [
@@ -640,12 +640,35 @@ def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
         State(iso_check_id, 'values'),
+        State(range_table_id, 'data'),
     ])
-def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed):
+def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed, range_table_rows):
     if test_passed is True:
-        output_div_list = output_cg1d_result_stack(sample_tb_rows=sample_tb_rows,
-                                                   iso_tb_rows=iso_tb_rows,
-                                                   iso_changed=iso_changed)
+        if range_table_rows[0][column_1] < range_table_rows[1][column_1]:
+            e_min = range_table_rows[0][column_1]
+            e_max = range_table_rows[1][column_1]
+        else:
+            e_min = range_table_rows[1][column_1]
+            e_max = range_table_rows[0][column_1]
+        output_div_list, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
+                                                                iso_tb_rows=iso_tb_rows,
+                                                                iso_changed=iso_changed,
+                                                                beamline='snap',
+                                                                band_min=e_min,
+                                                                band_max=e_max,
+                                                                band_type='energy')
+        trans_div_list_tof, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
+                                                                   iso_tb_rows=iso_tb_rows,
+                                                                   iso_changed=iso_changed,
+                                                                   beamline='imaging',
+                                                                   band_min=None,
+                                                                   band_max=None,
+                                                                   band_type=None)
+        output_div_list.extend(trans_div_list_tof)
+
+        # Sample stack table div
+        sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack)
+        output_div_list.extend(sample_stack_div_list)
         return output_div_list
     else:
         return None

@@ -24,16 +24,18 @@ beamline_id = app_name + '_beamline'
 band_div_id = app_name + '_band_div'
 band_min_id = app_name + '_band_min'
 band_max_id = app_name + '_band_max'
+band_type_id = app_name + '_band_type'
+band_unit_id = app_name + '_band_unit'
 
 # Create app layout
 layout = html.Div(
     [
         dcc.Link('Home', href='/'),
         html.Br(),
-        dcc.Link('Neutron resonance', href='/apps/venus'),
+        dcc.Link(app_dict['app2']['name'], href=app_dict['app2']['url']),
         html.Br(),
-        dcc.Link('Composition converter', href='/apps/converter'),
-        html.H1('Cold neutron transmission'),
+        dcc.Link(app_dict['app3']['name'], href=app_dict['app3']['url']),
+        html.H1(app_dict['app1']['name']),
 
         # Beamline selection
         html.Div(
@@ -46,11 +48,11 @@ layout = html.Div(
                                 dcc.Dropdown(
                                     id=beamline_id,
                                     options=[
-                                        {'label': 'HFIR, IMAGING (CG-1D)', 'value': 'cg1d'},
-                                        {'label': 'SNS, SNAP (BL-3)', 'value': 'snap'},
+                                        {'label': 'IMAGING (CG-1D), HFIR', 'value': 'imaging'},
+                                        {'label': 'SNAP (BL-3), SNS', 'value': 'snap'},
                                         # {'label': 'SNS, VENUS (BL-10)', 'value': 'venus'},
                                     ],
-                                    value='cg1d',
+                                    value='imaging',
                                     searchable=False,
                                     clearable=False,
                                 ),
@@ -60,23 +62,40 @@ layout = html.Div(
                 ),
                 html.Div(
                     [
-                        html.H3('Band width'),
                         html.Div(
                             [
-                                dcc.Input(id=band_min_id, type='number', min=1,
+                                html.H3('Band width',
+                                        className='four columns'
+                                        ),
+                                dcc.RadioItems(id=band_type_id,
+                                               options=[
+                                                   {'label': 'Energy (eV)', 'value': 'energy'},
+                                                   {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
+                                               ],
+                                               value='lambda',
+                                               className='four columns',
+                                               labelStyle={'display': 'inline-block'},
+                                               ),
+                            ], className='row'
+                        ),
+                        html.Div(
+                            [
+                                dcc.Input(id=band_min_id, type='number', min=2.86E-04, max=9.04E+01,
                                           inputmode='numeric',
                                           placeholder='Min.',
                                           step=0.01,
                                           className='four columns',
                                           ),
-                                dcc.Input(id=band_max_id, type='number', min=1,
+                                dcc.Input(id=band_max_id, type='number', min=2.86E-04, max=9.04E+01,
                                           inputmode='numeric',
                                           placeholder='Max.',
                                           step=0.01,
                                           className='four columns',
                                           ),
-                                html.P('\u212B', className='one column',
+                                html.P('\u212B',
+                                       id=band_unit_id,
                                        style={'marginBottom': 10, 'marginTop': 5},
+                                       className='one column',
                                        ),
                             ], className='row', style={'verticalAlign': 'middle'},
                         ),
@@ -148,11 +167,23 @@ layout = html.Div(
         State(band_div_id, 'style'),
     ])
 def show_hide_band_input(beamline, style):
-    if beamline == 'cg1d':
+    if beamline == 'imaging':
         style['display'] = 'none'
     else:
         style['display'] = 'block'
     return style
+
+
+@app.callback(
+    Output(band_unit_id, 'children'),
+    [
+        Input(band_type_id, 'value'),
+    ])
+def show_band_units(band_type):
+    if band_type == 'lambda':
+        return '\u212B'
+    else:
+        return 'eV'
 
 
 @app.callback(
@@ -232,8 +263,11 @@ def show_output_div(n_submit, test_passed):
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
         State(iso_check_id, 'values'),
+        State(beamline_id, 'value'),
+        State(band_min_id, 'value'),
+        State(band_max_id, 'value'),
     ])
-def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
+def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min, band_max):
     if n_submit is not None:
         # Convert all number str to numeric and keep rest invalid input
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
@@ -261,6 +295,12 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
                                                                    iso_schema=iso_dict_schema,
                                                                    test_passed_list=test_passed_list,
                                                                    output_div_list=output_div_list)
+        # Test band width input
+        if all(test_passed_list):
+            test_passed_list, output_div_list = validate_band_width_input(beamline=beamline,
+                                                                          band_width=(band_min, band_max),
+                                                                          test_passed_list=test_passed_list,
+                                                                          output_div_list=output_div_list)
 
         # Return result
         if all(test_passed_list):
@@ -281,12 +321,35 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
         State(iso_check_id, 'values'),
+        State(beamline_id, 'value'),
+        State(band_min_id, 'value'),
+        State(band_max_id, 'value'),
+        State(band_type_id, 'value'),
     ])
-def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed):
+def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed,
+                                  beamline, band_min, band_max, band_type):
     if test_passed is True:
-        output_div_list = output_cg1d_result_stack(sample_tb_rows=sample_tb_rows,
-                                                   iso_tb_rows=iso_tb_rows,
-                                                   iso_changed=iso_changed)
+        output_div_list, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
+                                                                iso_tb_rows=iso_tb_rows,
+                                                                iso_changed=iso_changed,
+                                                                beamline=beamline,
+                                                                band_min=band_min,
+                                                                band_max=band_max,
+                                                                band_type=band_type)
+        if beamline != 'imaging':
+            trans_div_list_tof, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
+                                                                       iso_tb_rows=iso_tb_rows,
+                                                                       iso_changed=iso_changed,
+                                                                       beamline='imaging',
+                                                                       band_min=band_min,
+                                                                       band_max=band_max,
+                                                                       band_type=band_type)
+            output_div_list.extend(trans_div_list_tof)
+
+        # Sample stack table div
+        sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack)
+        output_div_list.extend(sample_stack_div_list)
+
         return output_div_list
     else:
         return None

@@ -5,6 +5,7 @@ import matplotlib as mpl
 
 mpl.use('agg')  # this is to fix the matplotlib backend
 
+from _utilities import app_links_div, app_dict
 from _app import app
 from apps import app1, app2, app3
 
@@ -29,11 +30,7 @@ index_page = html.Div(
         ),
         dcc.Markdown('''**NEU**tron **I**maging **T**oolbox'''),
         html.H6('Tools available are:'),
-        dcc.Link('1. Cold neutron transmission', href='/apps/cg1d'),
-        html.Br(),
-        dcc.Link('2. Neutron resonance', href='/apps/venus'),
-        html.Br(),
-        dcc.Link('3. Composition converter', href='/apps/converter'),
+        app_links_div,
         dcc.Markdown('''
 #### Introduction
 
@@ -86,11 +83,11 @@ Jean Bilheux -- bilheuxjm@ornl.gov
 def display_page(pathname):
     if pathname is None:
         return 'loading...'
-    elif pathname == '/apps/cg1d':
+    elif pathname == app_dict['app1']['url']:
         return app1.layout
-    elif pathname == '/apps/venus':
+    elif pathname == app_dict['app2']['url']:
         return app2.layout
-    elif pathname == '/apps/converter':
+    elif pathname == app_dict['app3']['url']:
         return app3.layout
     elif pathname == '/':
         return index_page
