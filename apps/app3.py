@@ -273,9 +273,10 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
         transmission_div_list, o_stack = form_transmission_result_div(sample_tb_rows=_sample_df.to_dict('records'),
                                                                       iso_tb_rows=_iso_tb_df.to_dict('records'),
                                                                       iso_changed=iso_changed,
-                                                                      beamline='cg1d',
+                                                                      beamline='imaging',
                                                                       band_min=None,
-                                                                      band_max=None)
+                                                                      band_max=None,
+                                                                      band_type='energy')
         sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack)
 
         compos_output_df, ele_list, mol_list = convert_input_to_composition(compos_df=_compos_df,

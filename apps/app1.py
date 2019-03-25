@@ -80,13 +80,13 @@ layout = html.Div(
                         ),
                         html.Div(
                             [
-                                dcc.Input(id=band_min_id, type='number', min=2.86E-04, max=9.04E+01,
+                                dcc.Input(id=band_min_id, type='number',
                                           inputmode='numeric',
                                           placeholder='Min.',
                                           step=0.01,
                                           className='four columns',
                                           ),
-                                dcc.Input(id=band_max_id, type='number', min=2.86E-04, max=9.04E+01,
+                                dcc.Input(id=band_max_id, type='number',
                                           inputmode='numeric',
                                           placeholder='Max.',
                                           step=0.01,
@@ -266,8 +266,9 @@ def show_output_div(n_submit, test_passed):
         State(beamline_id, 'value'),
         State(band_min_id, 'value'),
         State(band_max_id, 'value'),
+        State(band_type_id, 'value'),
     ])
-def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min, band_max):
+def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min, band_max, band_type):
     if n_submit is not None:
         # Convert all number str to numeric and keep rest invalid input
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
@@ -299,6 +300,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min
         if all(test_passed_list):
             test_passed_list, output_div_list = validate_band_width_input(beamline=beamline,
                                                                           band_width=(band_min, band_max),
+                                                                          band_type=band_type,
                                                                           test_passed_list=test_passed_list,
                                                                           output_div_list=output_div_list)
 

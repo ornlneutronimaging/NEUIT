@@ -300,7 +300,7 @@ def validate_energy_input(range_tb_df: pd.DataFrame, test_passed_list: list, out
     return test_passed_list, output_div_list
 
 
-def validate_band_width_input(beamline, band_width, test_passed_list: list, output_div_list: list):
+def validate_band_width_input(beamline, band_width, band_type, test_passed_list: list, output_div_list: list):
     if beamline == 'imaging':
         test_passed_list.append(True)
         output_div_list.append(None)
@@ -314,6 +314,7 @@ def validate_band_width_input(beamline, band_width, test_passed_list: list, outp
             output_div_list.append(
                 html.P("INPUT ERROR: '{}': ['Max.' is required!]".format('Band width')))
         if all(test_passed_list):
+            # if band_width[0] =  min=2.86E-04, max=9.04E+01,
             if band_width[0] == band_width[1]:
                 test_passed_list.append(False)
                 output_div_list.append(
@@ -323,14 +324,52 @@ def validate_band_width_input(beamline, band_width, test_passed_list: list, outp
                 output_div_list.append(
                     html.P("INPUT ERROR: '{}': ['Min.' < 'Max.' is required!]".format('Band width')))
             else:
-                _diff = round(band_width[1] - band_width[0], 3)
-                if _diff < 0.05:
-                    test_passed_list.append(False)
-                    output_div_list.append(
-                        html.P(
-                            "INPUT ERROR: '{} - {} = {}': ['Max.' minus 'Min.' >=0.05 required]".format(band_width[1],
-                                                                                                        band_width[0],
-                                                                                                        _diff)))
+                if band_type == 'lambda':
+                    if band_width[0] < 2.86E-04 or band_width[0] > 9.04E+01:
+                        test_passed_list.append(False)
+                        output_div_list.append(
+                            html.P(
+                                "INPUT ERROR: '{}': ['2.86E-04 \u2264 'Min.' \u2264 9.04E+01' is required!]".format(
+                                    'Band width')))
+                    if band_width[1] < 2.86E-04 or band_width[1] > 9.04E+01:
+                        test_passed_list.append(False)
+                        output_div_list.append(
+                            html.P(
+                                "INPUT ERROR: '{}': ['2.86E-04 \u2264 'Max.' \u2264 9.04E+01' is required!]".format(
+                                    'Band width')))
+                    _diff = round(band_width[1] - band_width[0], 5)
+                    if _diff < 1e-3:
+                        test_passed_list.append(False)
+                        output_div_list.append(
+                            html.P(
+                                "INPUT ERROR: '{} - {} = {}': ['Max.' minus 'Min.' >= {} required]".format(
+                                    band_width[1],
+                                    band_width[0],
+                                    _diff,
+                                    1e-3)))
+                else:
+                    if band_width[0] < 1e-5 or band_width[0] > 1e8:
+                        test_passed_list.append(False)
+                        output_div_list.append(
+                            html.P(
+                                "INPUT ERROR: '{}': ['1e-5 \u2264 'Min.' \u2264 1e8' is required!]".format(
+                                    'Band width')))
+                    if band_width[1] < 1e-5 or band_width[1] > 1e8:
+                        test_passed_list.append(False)
+                        output_div_list.append(
+                            html.P(
+                                "INPUT ERROR: '{}': ['1e-5 \u2264 'Max.' \u2264 1e8' is required!]".format(
+                                    'Band width')))
+                    _diff = round(band_width[1] - band_width[0], 7)
+                    if _diff < 1e-6:
+                        test_passed_list.append(False)
+                        output_div_list.append(
+                            html.P(
+                                "INPUT ERROR: '{} - {} = {}': ['Max.' minus 'Min.' >= {} required]".format(
+                                    band_width[1],
+                                    band_width[0],
+                                    _diff,
+                                    1e-6)))
     return test_passed_list, output_div_list
 
 
@@ -406,8 +445,9 @@ def load_beam_shape(relative_path_to_beam_shape):
     df.drop(df[df.flux <= 0].index, inplace=True)
     df.reset_index(drop=True, inplace=True)
     # Convert wavelength to energy
-    energy_list = ir_util.angstroms_to_ev(df['wavelength_A'])
-    df.insert(1, 'energy_eV', energy_list)
+    energy_array = ir_util.angstroms_to_ev(df['wavelength_A'])
+    df.insert(1, 'energy_eV', round(energy_array, 6))
+    # df.insert(1, 'energy_eV', energy_array)
     return df
 
 
@@ -452,45 +492,47 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
                            'snap': 'static/instrument_file/beam_shape_snap.txt',
                            # 'venus': 'static/instrument_file/beam_shape_venus.txt',
                            }
-    df = load_beam_shape(_path_to_beam_shape[beamline])
+    df_flux_raw = load_beam_shape(_path_to_beam_shape[beamline])
     if beamline == 'imaging':
-        __o_reso = Resonance(energy_min=0.00025, energy_max=0.12525, energy_step=0.000625)
+        e_min = df_flux_raw['energy_eV'].min()
+        e_max = df_flux_raw['energy_eV'].max()
     else:
         if band_type == 'lambda':
-            e_min = ir_util.angstroms_to_ev(band_max)
-            e_max = ir_util.angstroms_to_ev(band_min)
+            e_min = round(ir_util.angstroms_to_ev(band_max), 6)
+            e_max = round(ir_util.angstroms_to_ev(band_min), 6)
         else:  # band_type == 'energy'
             e_min = band_min
             e_max = band_max
-        e_diff = e_max - e_min
-        if e_diff > 300:
-            e_step = 0.1
-        elif 50 < e_diff <= 300:
-            e_step = 0.01
-        elif 10 < e_diff <= 50:
-            e_step = 0.001
-        else:
-            e_step = 0.000625
-        df = df[df.energy_eV > e_min]
-        df = df[df.energy_eV < e_max]
-        __o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
 
+    e_step = (e_max - e_min) / (100 - 1)
+    __o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
     _o_reso = unpack_sample_tb_df_and_add_layer(o_reso=__o_reso, sample_tb_df=sample_tb_df)
     o_reso = unpack_iso_tb_df_and_update(o_reso=_o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
+    o_stack = o_reso.stack
 
     # interpolate with the beam shape energy
     interp_type = 'cubic'
     energy = o_reso.total_signal['energy_eV']
     trans = o_reso.total_signal['transmission']
-    interp_function = interp1d(x=energy, y=trans, kind=interp_type)
-    # add interpolated transmission value to beam shape df
-    trans = interp_function(df['energy_eV'])
-    # calculated transmitted flux
-    trans_flux = trans * df['flux']
-    _total_trans = sum(trans_flux) / sum(df['flux']) * 100
-    # total_trans = round(_total_trans, 3)
 
-    o_stack = o_reso.stack
+    if beamline == 'imaging':
+        interp_trans_function = interp1d(x=energy, y=trans, kind=interp_type)
+        trans_interp = interp_trans_function(df_flux_raw['energy_eV'])
+        df_flux = df_flux_raw
+        trans_ = trans_interp
+    else:
+        interp_flux_function = interp1d(x=df_flux_raw['energy_eV'], y=df_flux_raw['flux'], kind=interp_type)
+        flux_interp = interp_flux_function(energy)
+        df_flux_interp = pd.DataFrame()
+        df_flux_interp['energy_eV'] = energy
+        df_flux_interp['flux'] = flux_interp
+        df_flux = df_flux_interp
+        trans_ = trans
+
+    # calculated transmitted flux
+    trans_flux = trans_ * df_flux['flux']
+    _total_trans = sum(trans_flux) / sum(df_flux['flux']) * 100
+    # total_trans = round(_total_trans, 3)
 
     return _total_trans, o_stack
 
