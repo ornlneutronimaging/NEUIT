@@ -567,9 +567,18 @@ def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_s
         plotly_fig.layout.xaxis1.titlefont.size = 18
         plotly_fig.layout.yaxis1.tickfont.size = 15
         plotly_fig.layout.yaxis1.titlefont.size = 18
+        plotly_fig.layout.xaxis.autorange = True
+        if y_type in ['attenuation', 'transmission']:
+            plotly_fig['layout']['yaxis']['autorange'] = False
+            if plot_scale in ['logy', 'loglog']:
+                plot_scale = 'linear'
+        else:
+            plotly_fig['layout']['yaxis']['autorange'] = True
+
         if plot_scale == 'logx':
             plotly_fig['layout']['xaxis']['type'] = 'log'
             plotly_fig['layout']['yaxis']['type'] = 'linear'
+            plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
         elif plot_scale == 'logy':
             if y_type not in ['attenuation', 'transmission']:
                 plotly_fig['layout']['xaxis']['type'] = 'linear'
@@ -581,8 +590,7 @@ def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_s
         else:
             plotly_fig['layout']['xaxis']['type'] = 'linear'
             plotly_fig['layout']['yaxis']['type'] = 'linear'
-        plotly_fig.layout.xaxis.autorange = True
-        plotly_fig.layout.yaxis.autorange = True
+            plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
 
         return html.Div([dcc.Graph(figure=plotly_fig, id=plot_fig_id)])
     else:
@@ -610,10 +618,18 @@ def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly
             each_trace['x'] = df_dict['x'][x_tag]
         plotly_fig['layout']['xaxis']['title']['text'] = x_tag
 
+    if y_type in ['attenuation', 'transmission']:
+        plotly_fig['layout']['yaxis']['autorange'] = False
+        if plot_scale in ['logy', 'loglog']:
+            plot_scale = 'linear'
+    else:
+        plotly_fig['layout']['yaxis']['autorange'] = True
+
     # Change plot scale between log and linear
     if plot_scale == 'logx':
         plotly_fig['layout']['xaxis']['type'] = 'log'
         plotly_fig['layout']['yaxis']['type'] = 'linear'
+        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
     elif plot_scale == 'logy':
         if y_type not in ['attenuation', 'transmission']:
             plotly_fig['layout']['xaxis']['type'] = 'linear'
@@ -625,8 +641,8 @@ def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly
     else:
         plotly_fig['layout']['xaxis']['type'] = 'linear'
         plotly_fig['layout']['yaxis']['type'] = 'linear'
-    plotly_fig['layout']['xaxis']['autorange'] = True
-    plotly_fig['layout']['yaxis']['autorange'] = True
+        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
+
     return plotly_fig
 
 
