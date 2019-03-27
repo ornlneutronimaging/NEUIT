@@ -232,8 +232,15 @@ layout = html.Div(
     ])
 def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
     old_range_tb_df = pd.read_json(old_range_tb_json, orient='split')
-    diff_indices = pd.DataFrame(new_range_tb_rows) == old_range_tb_df
+    new_range_tb_df = pd.DataFrame(new_range_tb_rows)
+    diff_indices = new_range_tb_df.round(5) == old_range_tb_df.round(5)
     _coord = np.where(diff_indices == False)
+    if len(_coord[0]) != 1 or len(_coord[1]) != 1:
+        print('Old:\n{}'.format(old_range_tb_df))
+        print('New:\n{}'.format(new_range_tb_df))
+        print(diff_indices)
+        print(_coord)
+        raise ValueError('Multiple input fields have been modified in the range table')
     modified_coord = (_coord[0][0], _coord[1][0])
     # print(modified_coord)
     return modified_coord
