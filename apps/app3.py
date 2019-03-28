@@ -25,11 +25,11 @@ output_id = app_name + '_output'
 # Create app layout
 layout = html.Div(
     [
-        dcc.Link('Home', href='/'),
+        html.A('Home', href='/', target="_blank"),
         html.Br(),
-        dcc.Link(app_dict['app1']['name'], href=app_dict['app1']['url']),
+        html.A(app_dict['app1']['name'], href=app_dict['app1']['url'], target="_blank"),
         html.Br(),
-        dcc.Link(app_dict['app2']['name'], href=app_dict['app2']['url']),
+        html.A(app_dict['app2']['name'], href=app_dict['app2']['url'], target="_blank"),
         html.H1(app_dict['app3']['name']),
 
         # Sample input

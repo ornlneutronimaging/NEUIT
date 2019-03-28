@@ -49,11 +49,12 @@ plot_loading = html.H2('Plot loading...')
 # Create app2 layout
 layout = html.Div(
     [
-        dcc.Link('Home', href='/'),
+        html.A('Home', href='/', target="_blank"),
         html.Br(),
-        dcc.Link(app_dict['app1']['name'], href=app_dict['app1']['url']),
+        # dcc.Link(app_dict['app1']['name'], href=app_dict['app1']['url']),
+        html.A(app_dict['app1']['name'], href=app_dict['app1']['url'], target="_blank"),
         html.Br(),
-        dcc.Link(app_dict['app3']['name'], href=app_dict['app3']['url']),
+        html.A(app_dict['app3']['name'], href=app_dict['app3']['url'], target="_blank"),
         html.H1(app_dict['app2']['name']),
         # Global parameters
         html.Div(
