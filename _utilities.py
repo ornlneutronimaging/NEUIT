@@ -488,9 +488,9 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
 
 def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_min, band_max, band_type):
     _main_path = os.path.abspath(os.path.dirname(__file__))
-    _path_to_beam_shape = {'imaging': 'static/instrument_file/beam_shape_cg1d.txt',
-                           'snap': 'static/instrument_file/beam_shape_snap.txt',
-                           # 'venus': 'static/instrument_file/beam_shape_venus.txt',
+    _path_to_beam_shape = {'imaging': 'static/instrument_file/beam_flux_cg1d.txt',
+                           'snap': 'static/instrument_file/beam_flux_snap.txt',
+                           # 'venus': 'static/instrument_file/beam_flux_venus.txt',
                            }
     df_flux_raw = load_beam_shape(_path_to_beam_shape[beamline])
     if beamline == 'imaging':
@@ -515,25 +515,26 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
     energy = o_reso.total_signal['energy_eV']
     trans = o_reso.total_signal['transmission']
 
-    if beamline == 'imaging':
-        interp_trans_function = interp1d(x=energy, y=trans, kind=interp_type)
-        trans_interp = interp_trans_function(df_flux_raw['energy_eV'])
-        df_flux = df_flux_raw
-        trans_ = trans_interp
-    else:
-        interp_flux_function = interp1d(x=df_flux_raw['energy_eV'], y=df_flux_raw['flux'], kind=interp_type)
-        flux_interp = interp_flux_function(energy)
-        df_flux_interp = pd.DataFrame()
-        df_flux_interp['energy_eV'] = energy
-        df_flux_interp['flux'] = flux_interp
-        df_flux = df_flux_interp
-        trans_ = trans
+    interp_flux_function = interp1d(x=df_flux_raw['energy_eV'], y=df_flux_raw['flux'], kind=interp_type)
+    flux_interp = interp_flux_function(energy)
+    df_flux_interp = pd.DataFrame()
+    df_flux_interp['energy_eV'] = energy
+    df_flux_interp['flux'] = flux_interp
+    df_flux = df_flux_interp[:]
+    trans_ = trans
 
     # calculated transmitted flux
     trans_flux = trans_ * df_flux['flux']
-    _total_trans = sum(trans_flux) / sum(df_flux['flux']) * 100
-    # total_trans = round(_total_trans, 3)
-
+    integr_total = np.trapz(y=df_flux['flux'], dx=0.0001).round(3)
+    integr_trans = np.trapz(y=trans_flux, dx=0.0001).round(3)
+    _total_trans = integr_trans/integr_total * 100
+    # integr = np.trapz(y=df_flux_raw['flux'], x=df_flux_raw['wavelength_A'], dx=0.00001).round(3)
+    # integr1 = np.trapz(y=df_flux_raw['flux'], dx=0.00001).round(3)
+    # print(integr_trans)
+    # print(integr_total)
+    # print(integr)
+    # print(integr1)
+    # print(_total_trans)
     return _total_trans, o_stack
 
 
