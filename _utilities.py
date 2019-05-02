@@ -540,12 +540,14 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
 
 
 def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min, band_max, band_type):
+    disclaimer = markdown_disclaimer_sns
     if beamline == 'snap':
         beamline_name = 'SNAP (BL-3), SNS'
     elif beamline == 'venus':
         beamline_name = 'VENUS (BL-10), SNS'
     else:  # beamline == 'imaging':
         beamline_name = 'IMAGING (CG-1D), HFIR'
+        disclaimer = markdown_disclaimer_hfir
     # Modify input for testing
     sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
     sample_tb_df = pd.DataFrame(sample_tb_dict)
@@ -568,6 +570,7 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, beaml
         html.H3('Result at ' + beamline_name),
         html.P('Transmission (total): {} %'.format(round(total_trans, 3))),
         html.P('Attenuation (total): {} %'.format(round(100 - total_trans, 3))),
+        disclaimer,
         # html.Div(sample_stack_div_list),
     ]
     return output_div_list, o_stack
@@ -979,6 +982,15 @@ gray_iso_cols = [
 markdown_sample = dcc.Markdown('''
 NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**. 
 Density input can **ONLY** be **omitted (leave as blank)** if the input formula is a single element.''')
+
+
+markdown_disclaimer_sns = dcc.Markdown('''
+**Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections 
+from ENDF/B-VII.1 database and the *simulated* beam spectrum at this beamline.''')
+
+markdown_disclaimer_hfir = dcc.Markdown('''
+**Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections 
+from ENDF/B-VII.1 database and the *measured* beam spectrum at this beamline.''')
 
 label_sample = html.Label(['Natural densities used are from ',
                            html.A("here", href='http://periodictable.com/Properties/A/Density.al.html',
