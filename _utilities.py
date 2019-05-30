@@ -9,6 +9,7 @@ from ImagingReso.resonance import Resonance
 from scipy.interpolate import interp1d
 import numpy as np
 import json
+from pprint import pprint
 from cerberus import Validator
 
 app_dict = {'app1': {'name': 'Neutron transmission',
@@ -657,10 +658,10 @@ def form_sample_stack_table_div(o_stack):
                                   'width': '14%'},
                              ]
                              ))
-
+        # Append current layer to the main list
         sample_stack_div_list.append(html.Div(current_layer_list))
         sample_stack_div_list.append(html.Br())
-        return sample_stack_div_list
+    return sample_stack_div_list
 
 
 def convert_input_to_composition(compos_df, compos_type, o_stack):
