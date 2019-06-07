@@ -513,10 +513,12 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
 
     # interpolate with the beam shape energy
     interp_type = 'cubic'
-    energy = o_reso.total_signal['energy_eV']
+    energy = o_reso.total_signal['energy_eV'].round(6)  # !!!need to fix ImagingReso energy_eV columns
     trans = o_reso.total_signal['transmission']
 
     interp_flux_function = interp1d(x=df_flux_raw['energy_eV'], y=df_flux_raw['flux'], kind=interp_type)
+    print(min(energy), max(energy))
+    print(min(df_flux_raw['energy_eV']), max(df_flux_raw['energy_eV']))
     flux_interp = interp_flux_function(energy)
     df_flux_interp = pd.DataFrame()
     df_flux_interp['energy_eV'] = energy
