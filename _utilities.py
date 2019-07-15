@@ -531,14 +531,7 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
     integr_total = np.trapz(y=df_flux['flux']/df_flux['energy_eV'], x=df_flux['energy_eV'], dx=1e-6).round(3)
     integr_trans = np.trapz(y=trans_flux/df_flux['energy_eV'], x=df_flux['energy_eV'], dx=1e-6).round(3)
     _total_trans = integr_trans/integr_total * 100
-    # df_flux_raw_e = df_flux_raw.sort_values(by=['energy_eV'])
-    # integr = np.trapz(y=df_flux_raw_e['flux']/df_flux_raw_e['energy_eV'], x=df_flux_raw_e['energy_eV'], dx=1e-6).round(3)
-    # integr1 = np.trapz(y=df_flux_raw['flux']/df_flux_raw['wavelength_A'], x=df_flux_raw['wavelength_A'], dx=1e-6).round(3)
-    # print(integr)
-    # print(integr1)
-    # print(integr_trans)
-    # print(integr_total)
-    # print(_total_trans)
+
     return _total_trans, o_stack
 
 
