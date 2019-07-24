@@ -51,8 +51,8 @@ layout = html.Div(
                     columns=compos_header_df.to_dict('records'),
                     editable=True,
                     row_selectable=False,
-                    filtering=False,
-                    sorting=False,
+                    filter_action=False,
+                    sort_action=False,
                     row_deletable=True,
                     style_cell_conditional=[
                         {'if': {'column_id': column_1},
@@ -69,7 +69,7 @@ layout = html.Div(
                 dcc.Checklist(id=iso_check_id,
                               options=[
                                   {'label': 'Modify isotopic ratios', 'value': True},
-                              ], values=[],
+                              ], value=[],
                               ),
                 html.Div(
                     [

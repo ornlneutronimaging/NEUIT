@@ -81,13 +81,13 @@ layout = html.Div(
                         html.Div(
                             [
                                 dcc.Input(id=band_min_id, type='number',
-                                          inputmode='numeric',
+                                          inputMode='numeric',
                                           placeholder='Min.',
                                           step=0.01,
                                           className='four columns',
                                           ),
                                 dcc.Input(id=band_max_id, type='number',
-                                          inputmode='numeric',
+                                          inputMode='numeric',
                                           placeholder='Max.',
                                           step=0.01,
                                           className='four columns',
@@ -115,8 +115,8 @@ layout = html.Div(
                     columns=sample_header_df.to_dict('records'),
                     editable=True,
                     row_selectable=False,
-                    filtering=False,
-                    sorting=False,
+                    filter_action='none',
+                    sort_action='none',
                     row_deletable=True,
                     style_cell_conditional=even_3_col,
                     id=sample_table_id
@@ -128,7 +128,7 @@ layout = html.Div(
                 dcc.Checklist(id=iso_check_id,
                               options=[
                                   {'label': 'Modify isotopic ratios', 'value': True},
-                              ], values=[],
+                              ], value=[],
                               ),
                 html.Div(
                     [
@@ -229,7 +229,7 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
 @app.callback(
     Output(iso_div_id, 'style'),
     [
-        Input(iso_check_id, 'values'),
+        Input(iso_check_id, 'value'),
     ])
 def show_hide_iso_table(iso_changed):
     if iso_changed:
@@ -262,7 +262,7 @@ def show_output_div(n_submit, test_passed):
     [
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
         State(beamline_id, 'value'),
         State(band_min_id, 'value'),
         State(band_max_id, 'value'),
@@ -322,7 +322,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min
     [
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
         State(beamline_id, 'value'),
         State(band_min_id, 'value'),
         State(band_max_id, 'value'),

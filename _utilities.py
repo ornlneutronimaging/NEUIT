@@ -595,8 +595,8 @@ def form_sample_stack_table_div(o_stack):
                          columns=output_stack_header_df.to_dict('records'),
                          editable=False,
                          row_selectable=False,
-                         filtering=False,
-                         sorting=False,
+                         filter_action='none',
+                         sort_action='none',
                          row_deletable=False,
                          style_cell_conditional=uneven_5_col,
                          ))
@@ -643,8 +643,8 @@ def form_sample_stack_table_div(o_stack):
                              columns=iso_output_header_df.to_dict('records'),
                              editable=False,
                              row_selectable=False,
-                             filtering=False,
-                             sorting=False,
+                             filter_action='none',
+                             sort_action='none',
                              row_deletable=False,
                              style_cell_conditional=[
                                  {'if': {'column_id': molar_name_id},
@@ -887,12 +887,12 @@ def init_iso_table(id_str: str):
         columns=iso_tb_header_df.to_dict('records'),
         editable=True,
         row_selectable=False,
-        filtering=False,
-        sorting=False,
+        filter_action='none',
+        sort_action='none',
         row_deletable=False,
         style_cell_conditional=even_4_col,
         style_data_conditional=gray_iso_cols,
-        n_fixed_rows=1,
+        fixed_rows={'headers': True, 'data': 0},
         style_table={
             'maxHeight': '300',
             'overflowY': 'scroll'
@@ -1063,7 +1063,7 @@ plot_option_div = html.Div(
                                           {'label': 'Element', 'value': 'ele'},
                                           {'label': 'Isotope', 'value': 'iso'},
                                       ],
-                                      values=['iso'],
+                                      value=['iso'],
                                       ),
                     ], className=col_width_3
                 ),

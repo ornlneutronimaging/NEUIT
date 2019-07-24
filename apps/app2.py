@@ -68,8 +68,8 @@ layout = html.Div(
                         columns=energy_range_header_df.to_dict('records'),
                         editable=True,
                         row_selectable=False,
-                        filtering=False,
-                        sorting=False,
+                        filter_action=False,
+                        sort_action=False,
                         row_deletable=False,
                         style_cell_conditional=even_5_col,
                         style_data_conditional=gray_range_cols,
@@ -118,7 +118,7 @@ layout = html.Div(
                                 html.Div(
                                     [
                                         dcc.Input(id=distance_id, type='number', value=16.45, min=1,
-                                                  inputmode='numeric',
+                                                  inputMode='numeric',
                                                   step=0.01,
                                                   className='nine columns'),
                                         html.P('(m)', className='one column',
@@ -149,8 +149,8 @@ layout = html.Div(
                     columns=sample_header_df.to_dict('records'),
                     editable=True,
                     row_selectable=False,
-                    filtering=False,
-                    sorting=False,
+                    filter_action=False,
+                    sort_action=False,
                     row_deletable=True,
                     style_cell_conditional=even_3_col,
                     id=sample_table_id
@@ -162,7 +162,7 @@ layout = html.Div(
                 dcc.Checklist(id=iso_check_id,
                               options=[
                                   {'label': 'Modify isotopic ratios', 'value': True},
-                              ], values=[],
+                              ], value=[],
                               ),
                 html.Div(
                     [
