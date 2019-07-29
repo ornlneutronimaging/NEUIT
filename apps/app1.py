@@ -127,7 +127,7 @@ layout = html.Div(
                 # Input table for isotopic ratios
                 dcc.Checklist(id=iso_check_id,
                               options=[
-                                  {'label': 'Modify isotopic ratios', 'value': True},
+                                  {'label': 'Modify isotopic ratios', 'value': 'yes'},
                               ], value=[],
                               ),
                 html.Div(
@@ -136,7 +136,7 @@ layout = html.Div(
                         init_iso_table(id_str=iso_table_id)
                     ],
                     id=iso_div_id,
-                    style={'display': 'none'},
+                    # style={'display': 'none'},
                 ),
                 html.Button('Submit', id=submit_button_id),
             ]
@@ -232,7 +232,7 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
         Input(iso_check_id, 'value'),
     ])
 def show_hide_iso_table(iso_changed):
-    if iso_changed:
+    if iso_changed == 'yes':
         return {'display': 'block'}
     else:
         return {'display': 'none'}
@@ -286,7 +286,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min
 
         # Test iso input format and sum
         if all(test_passed_list):
-            if iso_changed:
+            if iso_changed == 'yes':
                 iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
                 iso_tb_df = pd.DataFrame(iso_tb_dict)
             else:
