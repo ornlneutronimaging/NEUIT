@@ -51,8 +51,8 @@ layout = html.Div(
                     columns=compos_header_df.to_dict('records'),
                     editable=True,
                     row_selectable=False,
-                    filter_action=False,
-                    sort_action=False,
+                    filter_action='none',
+                    sort_action='none',
                     row_deletable=True,
                     style_cell_conditional=[
                         {'if': {'column_id': column_1},
@@ -164,13 +164,17 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
 @app.callback(
     Output(iso_div_id, 'style'),
     [
-        Input(iso_check_id, 'values'),
+        Input(iso_check_id, 'value'),
+    ],
+    [
+        State(iso_div_id, 'style'),
     ])
-def show_hide_iso_table(iso_changed):
-    if iso_changed:
-        return {'display': 'block'}
+def show_hide_iso_table(iso_changed, style):
+    if len(iso_changed) == 1:
+        style['display'] = 'block'
     else:
-        return {'display': 'none'}
+        style['display'] = 'none'
+    return style
 
 
 @app.callback(
@@ -197,7 +201,7 @@ def show_output_div(n_submit, test_passed):
     [
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
     ])
 def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_submit is not None:
@@ -211,7 +215,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
 
         # Test iso input format and sum
         if all(test_passed_list):
-            if iso_changed:
+            if len(iso_changed) == 1:
                 iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
                 iso_tb_df = pd.DataFrame(iso_tb_dict)
             else:
@@ -240,7 +244,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
     [
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
         State(compos_type_id, 'value'),
     ])
 def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
@@ -249,7 +253,7 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
         compos_tb_dict = force_dict_to_numeric(input_dict_list=compos_tb_rows)
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
         compos_tb_df = pd.DataFrame(compos_tb_dict)
-        if iso_changed:
+        if len(iso_changed) == 1:
             iso_tb_df = pd.DataFrame(iso_tb_dict)
         else:
             iso_tb_df = form_iso_table(sample_df=compos_tb_df)

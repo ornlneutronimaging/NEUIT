@@ -119,6 +119,7 @@ layout = html.Div(
                     sort_action='none',
                     row_deletable=True,
                     style_cell_conditional=even_3_col,
+                    style_data_conditional=[striped_rows],
                     id=sample_table_id
                 ),
                 markdown_sample,
@@ -136,7 +137,7 @@ layout = html.Div(
                         init_iso_table(id_str=iso_table_id)
                     ],
                     id=iso_div_id,
-                    # style={'display': 'none'},
+                    style={'display': 'none'},
                 ),
                 html.Button('Submit', id=submit_button_id),
             ]
@@ -230,12 +231,16 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
     Output(iso_div_id, 'style'),
     [
         Input(iso_check_id, 'value'),
+    ],
+    [
+        State(iso_div_id, 'style'),
     ])
-def show_hide_iso_table(iso_changed):
-    if iso_changed == 'yes':
-        return {'display': 'block'}
+def show_hide_iso_table(iso_changed, style):
+    if len(iso_changed) == 1:
+        style['display'] = 'block'
     else:
-        return {'display': 'none'}
+        style['display'] = 'none'
+    return style
 
 
 @app.callback(
@@ -286,7 +291,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min
 
         # Test iso input format and sum
         if all(test_passed_list):
-            if iso_changed == 'yes':
+            if len(iso_changed) == 1:
                 iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
                 iso_tb_df = pd.DataFrame(iso_tb_dict)
             else:
@@ -338,7 +343,7 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
                                                                 band_min=band_min,
                                                                 band_max=band_max,
                                                                 band_type=band_type)
-        if beamline != 'imaging':
+        if beamline != 'imaging':  # add CG-1D anyway if not selected
             trans_div_list_tof, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
                                                                        iso_tb_rows=iso_tb_rows,
                                                                        iso_changed=iso_changed,

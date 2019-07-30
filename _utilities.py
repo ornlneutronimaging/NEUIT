@@ -480,9 +480,9 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
             element_list = o_reso.stack[each_layer]['elements']
             for each_ele in element_list:
                 _ele_ratio_list = []
-                for i in range(len(iso_tb_df)):
-                    if each_layer == iso_tb_df[column_1][i] and each_ele == iso_tb_df[column_2][i]:
-                        _ele_ratio_list.append(float(iso_tb_df[column_4][i]))
+                for iso_i in range(len(iso_tb_df)):
+                    if each_layer == iso_tb_df[column_1][iso_i] and each_ele == iso_tb_df[column_2][iso_i]:
+                        _ele_ratio_list.append(float(iso_tb_df[column_4][iso_i]))
                 o_reso.set_isotopic_ratio(compound=each_layer, element=each_ele, list_ratio=_ele_ratio_list)
         return o_reso
 
@@ -528,9 +528,9 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
 
     # calculated transmitted flux
     trans_flux = trans_ * df_flux['flux']
-    integr_total = np.trapz(y=df_flux['flux']/df_flux['energy_eV'], x=df_flux['energy_eV'], dx=1e-6).round(3)
-    integr_trans = np.trapz(y=trans_flux/df_flux['energy_eV'], x=df_flux['energy_eV'], dx=1e-6).round(3)
-    _total_trans = integr_trans/integr_total * 100
+    integr_total = np.trapz(y=df_flux['flux'] / df_flux['energy_eV'], x=df_flux['energy_eV'], dx=1e-6).round(3)
+    integr_trans = np.trapz(y=trans_flux / df_flux['energy_eV'], x=df_flux['energy_eV'], dx=1e-6).round(3)
+    _total_trans = integr_trans / integr_total * 100
 
     return _total_trans, o_stack
 
@@ -547,7 +547,7 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, beaml
     # Modify input for testing
     sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
     sample_tb_df = pd.DataFrame(sample_tb_dict)
-    if iso_changed:
+    if len(iso_changed) == 1:
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
         iso_tb_df = pd.DataFrame(iso_tb_dict)
     else:
@@ -881,6 +881,14 @@ def fill_df_x_types(df: pd.DataFrame, distance_m):
 
 
 # Layout
+striped_rows = {'if': {'row_index': 'odd'},
+                'backgroundColor': 'rgb(248, 248, 248)'}
+
+editable_white = {'if': {'column_editable': False},
+                  'backgroundColor': 'rgb(30, 30, 30)',
+                  'color': 'white'}
+
+
 def init_iso_table(id_str: str):
     iso_table = dt.DataTable(
         data=iso_tb_df_default.to_dict('records'),
@@ -973,12 +981,12 @@ gray_iso_cols = [
      'backgroundColor': color},
     {'if': {'column_id': column_3},
      'backgroundColor': color},
+    # striped_rows,
 ]
 
 markdown_sample = dcc.Markdown('''
 NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**. 
 Density input can **ONLY** be **omitted (leave as blank)** if the input formula is a single element.''')
-
 
 markdown_disclaimer_sns = dcc.Markdown('''
 **Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections 

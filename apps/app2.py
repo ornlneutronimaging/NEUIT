@@ -68,8 +68,8 @@ layout = html.Div(
                         columns=energy_range_header_df.to_dict('records'),
                         editable=True,
                         row_selectable=False,
-                        filter_action=False,
-                        sort_action=False,
+                        filter_action='none',
+                        sort_action='none',
                         row_deletable=False,
                         style_cell_conditional=even_5_col,
                         style_data_conditional=gray_range_cols,
@@ -149,10 +149,11 @@ layout = html.Div(
                     columns=sample_header_df.to_dict('records'),
                     editable=True,
                     row_selectable=False,
-                    filter_action=False,
-                    sort_action=False,
+                    filter_action='none',
+                    sort_action='none',
                     row_deletable=True,
                     style_cell_conditional=even_3_col,
+                    style_data_conditional=[striped_rows],
                     id=sample_table_id
                 ),
                 markdown_sample,
@@ -161,7 +162,7 @@ layout = html.Div(
                 # Input table for isotopic ratios
                 dcc.Checklist(id=iso_check_id,
                               options=[
-                                  {'label': 'Modify isotopic ratios', 'value': True},
+                                  {'label': 'Modify isotopic ratios', 'value': 'yes'},
                               ], value=[],
                               ),
                 html.Div(
@@ -325,13 +326,17 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
 @app.callback(
     Output(iso_div_id, 'style'),
     [
-        Input(iso_check_id, 'values'),
+        Input(iso_check_id, 'value'),
+    ],
+    [
+        State(iso_div_id, 'style'),
     ])
-def show_hide_iso_table(iso_changed):
-    if iso_changed:
-        return {'display': 'block'}
+def show_hide_iso_table(iso_changed, style):
+    if len(iso_changed) == 1:
+        style['display'] = 'block'
     else:
-        return {'display': 'none'}
+        style['display'] = 'none'
+    return style
 
 
 @app.callback(
@@ -411,7 +416,7 @@ def show_output_div(n_submit, test_passed):
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
         State(range_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
     ])
 def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
     if n_submit is not None:
@@ -430,7 +435,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
                                                                        output_div_list=output_div_list)
         # Test iso input format and sum
         if all(test_passed_list):
-            if iso_changed:
+            if len(iso_changed) == 1:
                 iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
                 iso_tb_df = pd.DataFrame(iso_tb_dict)
             else:
@@ -480,7 +485,7 @@ def store_x_type(x_type):
         State(distance_id, 'value'),
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
     ])
 def store_reso_df_in_json(n_submit,
                           test_passed,
@@ -493,7 +498,7 @@ def store_reso_df_in_json(n_submit,
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
         sample_tb_df = pd.DataFrame(sample_tb_dict)
-        if iso_changed:
+        if len(iso_changed) == 1:
             iso_tb_df = pd.DataFrame(iso_tb_dict)
         else:
             iso_tb_df = form_iso_table(sample_df=sample_tb_df)
@@ -535,13 +540,13 @@ def store_reso_df_in_json(n_submit,
     [
         Input(submit_button_id, 'n_clicks'),
         Input(error_id, 'children'),
-        Input('show_opt', 'values'),
+        Input('show_opt', 'value'),
         Input(hidden_df_json_id, 'children'),
         Input('y_type', 'value'),
     ],
     [
         State('x_type', 'value'),
-        State('show_opt', 'values'),
+        State('show_opt', 'value'),
         State('plot_scale', 'value'),
     ])
 def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_show_opt, plot_scale):
@@ -663,7 +668,7 @@ def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly
     [
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
         State(range_table_id, 'data'),
     ])
 def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed, range_table_rows):
@@ -707,7 +712,7 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
         State(error_id, 'children'),
         State('x_type', 'value'),
         State('y_type', 'value'),
-        State('show_opt', 'values'),
+        State('show_opt', 'value'),
         State(hidden_df_json_id, 'children'),
     ])
 def export_plot_data(n_export, test_passed, x_type, y_type, show_opt, jsonified_data):
