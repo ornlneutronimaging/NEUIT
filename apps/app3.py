@@ -68,7 +68,7 @@ layout = html.Div(
                 # Input table for isotopic ratios
                 dcc.Checklist(id=iso_check_id,
                               options=[
-                                  {'label': 'Modify isotopic ratios', 'value': True},
+                                  {'label': 'Modify isotopic ratios', 'value': 'yes'},
                               ], value=[],
                               ),
                 html.Div(
@@ -298,8 +298,8 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
                          columns=compos_header_p_df.to_dict('records'),
                          editable=False,
                          row_selectable=False,
-                         filtering=False,
-                         sorting=False,
+                         filter_action='none',
+                         sort_action='none',
                          row_deletable=False,
                          style_cell_conditional=[
                              {'if': {'column_id': column_1},

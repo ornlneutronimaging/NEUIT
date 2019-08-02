@@ -1,4 +1,4 @@
-dash>=0.39.0
+dash>=1.0.2
 plotly>=3.7.1
 matplotlib
 ImagingReso >= 1.6.16
