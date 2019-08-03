@@ -4,9 +4,9 @@ from _app import app
 from _utilities import *
 
 compos_df_default = pd.DataFrame({
-    'column_1': ['B4C', 'SiC'],
-    'column_2': ['50', '50'],
-    'column_3': ['1', '1'],
+    chem_name: ['B4C', 'SiC'],
+    weight_name: ['50', '50'],
+    # 'column_3': ['1', '1'],
 })
 
 app_name = 'app3'
@@ -59,8 +59,8 @@ layout = html.Div(
                          'width': '50%'},
                         {'if': {'column_id': column_2},
                          'width': '50%'},
-                        {'if': {'column_id': column_3},
-                         'width': '50%'},
+                        # {'if': {'column_id': column_3},
+                        #  'width': '50%'},
                     ],
                     id=sample_table_id
                 ),
@@ -103,14 +103,18 @@ layout = html.Div(
     Output(sample_table_id, 'columns'),
     [
         Input(compos_type_id, 'value'),
+    ],
+    [
+        State(sample_table_id, 'columns'),
     ])
-def update_input_columns(compos_type):
+def update_input_columns(compos_type, columns):
+    print(columns)
     if compos_type == weight_name:
-        compos_drop = atomic_name
+        columns[1]['name'] = weight_name
     else:
-        compos_drop = weight_name
-    compos_header_df_new = compos_header_df[compos_header_df.name != compos_drop]
-    return compos_header_df_new.to_dict('records')
+        columns[1]['name'] = atomic_name
+    print(columns)
+    return columns
 
 
 @app.callback(
@@ -250,6 +254,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
 def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
     if test_passed is True:
         # Modify input for testing
+        print(compos_tb_rows)
         compos_tb_dict = force_dict_to_numeric(input_dict_list=compos_tb_rows)
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
         compos_tb_df = pd.DataFrame(compos_tb_dict)
@@ -269,7 +274,9 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
         # Remove rows contains no chemical input
         _compos_df = compos_tb_df[:]
         _compos_df = _compos_df[_compos_df.column_1 != '']
-        _compos_df = drop_df_column_not_needed(input_df=_compos_df, column_name=_rm_name)
+        print(_compos_df)
+
+        # _compos_df = drop_df_column_not_needed(input_df=_compos_df, column_name=_rm_name)
         _sample_df = creat_sample_df_from_compos_df(compos_tb_df=_compos_df)
         _iso_tb_df = iso_tb_df[:]
 
@@ -295,7 +302,7 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
             html.P('The effective chemical formula after conversion: {}'.format(effective_formula)),
             html.P("(This can be passed as 'Chemical formula' for other apps)"),
             dt.DataTable(data=compos_output_df.to_dict('records'),
-                         columns=compos_header_p_df.to_dict('records'),
+                         columns=compos_header_percent_df.to_dict('records'),
                          editable=False,
                          row_selectable=False,
                          filter_action='none',
