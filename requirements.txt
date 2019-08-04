@@ -1,7 +1,7 @@
 dash>=1.0.2
-plotly>=3.7.1
+plotly>=3.10.0
 matplotlib
-ImagingReso >= 1.6.16
+ImagingReso>=1.6.16
 pandas
 numpy
 scipy
