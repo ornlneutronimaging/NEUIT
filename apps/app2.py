@@ -5,17 +5,17 @@ import matplotlib.pyplot as plt
 from _utilities import *
 
 energy_range_df_default = pd.DataFrame({
-    'column_1': [1, 100],
-    'column_2': [0.28598, 0.0286],
-    'column_3': [13832.93, 138329.29],
-    'column_4': [1189.1914, 118.9191],
-    'column_5': ['Epithermal', 'Epithermal'],
+    energy_name: [1, 100],
+    wave_name: [0.28598, 0.0286],
+    speed_name: [13832.93, 138329.29],
+    tof_name: [1189.1914, 118.9191],
+    class_name: ['Epithermal', 'Epithermal'],
 })
 
 sample_df_default = pd.DataFrame({
-    'column_1': ['Ag'],
-    'column_2': ['1'],
-    'column_3': [''],
+    chem_name: ['Ag'],
+    thick_name: ['1'],
+    density_name: [''],
 })
 
 plot_data_filename = "plot_data.csv"
@@ -71,8 +71,8 @@ layout = html.Div(
                         filter_action='none',
                         sort_action='none',
                         row_deletable=False,
-                        style_cell_conditional=even_5_col,
-                        style_data_conditional=gray_range_cols,
+                        style_cell_conditional=range_tb_even_5_col,
+                        style_data_conditional=range_tb_gray_cols,
                         id=range_table_id
                     ),
                 ]),
@@ -152,7 +152,7 @@ layout = html.Div(
                     filter_action='none',
                     sort_action='none',
                     row_deletable=True,
-                    style_cell_conditional=even_3_col,
+                    style_cell_conditional=sample_tb_even_3_col,
                     style_data_conditional=[striped_rows],
                     id=sample_table_id
                 ),
@@ -315,12 +315,9 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
     prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
     sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    try:
-        new_iso_df = form_iso_table(sample_df=sample_df)
-        new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
-        return new_iso_df.to_dict('records')
-    except ValueError:
-        return None
+    new_iso_df = form_iso_table(sample_df=sample_df)
+    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
+    return new_iso_df.to_dict('records')
 
 
 @app.callback(
@@ -673,12 +670,12 @@ def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly
     ])
 def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed, range_table_rows):
     if test_passed is True:
-        if range_table_rows[0][column_1] < range_table_rows[1][column_1]:
-            e_min = range_table_rows[0][column_1]
-            e_max = range_table_rows[1][column_1]
+        if range_table_rows[0][energy_name] < range_table_rows[1][energy_name]:
+            e_min = range_table_rows[0][energy_name]
+            e_max = range_table_rows[1][energy_name]
         else:
-            e_min = range_table_rows[1][column_1]
-            e_max = range_table_rows[0][column_1]
+            e_min = range_table_rows[1][energy_name]
+            e_max = range_table_rows[0][energy_name]
         output_div_list, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
                                                                 iso_tb_rows=iso_tb_rows,
                                                                 iso_changed=iso_changed,

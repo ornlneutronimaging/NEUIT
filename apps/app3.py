@@ -5,8 +5,7 @@ from _utilities import *
 
 compos_df_default = pd.DataFrame({
     chem_name: ['B4C', 'SiC'],
-    weight_name: ['50', '50'],
-    # 'column_3': ['1', '1'],
+    compos_2nd_col_id: ['50', '50'],
 })
 
 app_name = 'app3'
@@ -55,13 +54,12 @@ layout = html.Div(
                     sort_action='none',
                     row_deletable=True,
                     style_cell_conditional=[
-                        {'if': {'column_id': column_1},
+                        {'if': {'column_id': chem_name},
                          'width': '50%'},
-                        {'if': {'column_id': column_2},
+                        {'if': {'column_id': compos_2nd_col_id},
                          'width': '50%'},
-                        # {'if': {'column_id': column_3},
-                        #  'width': '50%'},
                     ],
+                    style_data_conditional=[striped_rows],
                     id=sample_table_id
                 ),
                 markdown_compos,
@@ -108,12 +106,10 @@ layout = html.Div(
         State(sample_table_id, 'columns'),
     ])
 def update_input_columns(compos_type, columns):
-    print(columns)
     if compos_type == weight_name:
         columns[1]['name'] = weight_name
     else:
         columns[1]['name'] = atomic_name
-    print(columns)
     return columns
 
 
@@ -125,19 +121,10 @@ def update_input_columns(compos_type, columns):
     ],
     [
         State(sample_table_id, 'data'),
-        # State('app3_sample_table', 'columns'),
-        State(compos_type_id, 'value'),
     ])
-def update_rows(n_add, n_del, rows, input_type):
+def update_rows(n_add, n_del, rows):
     if n_add > n_del:
-        if input_type == weight_name:
-            empty_col_id = column_2
-            fake_col_id = column_3
-        else:
-            empty_col_id = column_3
-            fake_col_id = column_2
-        # rows.append({c['id']: '' for c in columns})
-        rows.append({'column_1': '', empty_col_id: '', fake_col_id: '1'})
+        rows.append({chem_name: '', compos_2nd_col_id: ''})
     elif n_add < n_del:
         rows = rows[:-1]
     else:
@@ -157,12 +144,9 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
     prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
     sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    try:
-        new_iso_df = form_iso_table(sample_df=sample_df)
-        new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
-        return new_iso_df.to_dict('records')
-    except ValueError:
-        return None
+    new_iso_df = form_iso_table(sample_df=sample_df)
+    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
+    return new_iso_df.to_dict('records')
 
 
 @app.callback(
@@ -254,7 +238,6 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
 def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
     if test_passed is True:
         # Modify input for testing
-        print(compos_tb_rows)
         compos_tb_dict = force_dict_to_numeric(input_dict_list=compos_tb_rows)
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
         compos_tb_df = pd.DataFrame(compos_tb_dict)
@@ -264,19 +247,11 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
             iso_tb_df = form_iso_table(sample_df=compos_tb_df)
 
         # Calculation start
-        if compos_type == weight_name:
-            _col_name = column_2
-            _rm_name = column_3
-        else:
-            _col_name = column_3
-            _rm_name = column_2
 
         # Remove rows contains no chemical input
         _compos_df = compos_tb_df[:]
-        _compos_df = _compos_df[_compos_df.column_1 != '']
-        print(_compos_df)
+        _compos_df = _compos_df[_compos_df[_compos_df.columns[0]] != '']
 
-        # _compos_df = drop_df_column_not_needed(input_df=_compos_df, column_name=_rm_name)
         _sample_df = creat_sample_df_from_compos_df(compos_tb_df=_compos_df)
         _iso_tb_df = iso_tb_df[:]
 
@@ -309,11 +284,11 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
                          sort_action='none',
                          row_deletable=False,
                          style_cell_conditional=[
-                             {'if': {'column_id': column_1},
+                             {'if': {'column_id': chem_name},
                               'width': '33%'},
-                             {'if': {'column_id': column_2},
+                             {'if': {'column_id': weight_name_p},
                               'width': '33%'},
-                             {'if': {'column_id': column_3},
+                             {'if': {'column_id': atomic_name_p},
                               'width': '33%'},
                          ],
                          ),

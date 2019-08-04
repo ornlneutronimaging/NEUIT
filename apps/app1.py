@@ -4,9 +4,9 @@ from _app import app
 from _utilities import *
 
 sample_df_default = pd.DataFrame({
-    'column_1': ['H2O'],
-    'column_2': [2],
-    'column_3': [1],
+    chem_name: ['H2O'],
+    thick_name: [2],
+    density_name: [1],
 })
 
 app_name = 'app1'
@@ -118,7 +118,7 @@ layout = html.Div(
                     filter_action='none',
                     sort_action='none',
                     row_deletable=True,
-                    style_cell_conditional=even_3_col,
+                    style_cell_conditional=sample_tb_even_3_col,
                     style_data_conditional=[striped_rows],
                     id=sample_table_id
                 ),
@@ -219,12 +219,9 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
     prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
     sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    try:
-        new_iso_df = form_iso_table(sample_df=sample_df)
-        new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
-        return new_iso_df.to_dict('records')
-    except ValueError:
-        return None
+    new_iso_df = form_iso_table(sample_df=sample_df)
+    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
+    return new_iso_df.to_dict('records')
 
 
 @app.callback(

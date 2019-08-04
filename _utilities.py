@@ -9,7 +9,6 @@ from ImagingReso.resonance import Resonance
 from scipy.interpolate import interp1d
 import numpy as np
 import json
-from pprint import pprint
 from cerberus import Validator
 
 app_dict = {'app1': {'name': 'Neutron transmission',
@@ -39,11 +38,7 @@ weight_name = 'Weight (g)'
 weight_name_p = 'Weight %'
 atomic_name = 'Atoms (mol)'
 atomic_name_p = 'Atomic %'
-# column_1 = 'column_1'
-# column_2 = 'column_2'
-# column_3 = 'column_3'
-# column_4 = 'column_4'
-# column_5 = 'column_5'
+compos_2nd_col_id = '2nd_input_column'
 
 energy_range_header_df = pd.DataFrame({
     'name': [energy_name, wave_name, speed_name, tof_name, class_name],
@@ -63,7 +58,7 @@ sample_header_df = pd.DataFrame({
 
 compos_header_df = pd.DataFrame({
     'name': [chem_name, weight_name],
-    'id': [chem_name, weight_name],
+    'id': [chem_name, compos_2nd_col_id],
     # 'deletable': [False, False, False],
     # 'editable': [True, True, True],
     'type': ['text', 'numeric']
@@ -90,6 +85,13 @@ iso_tb_df_default = pd.DataFrame({
     iso_name: [None],
     iso_ratio_name: [None],
 })
+
+# iso_tb_df_default = pd.DataFrame()
+# iso_tb_df_default[layer_name] = [None]
+# iso_tb_df_default[ele_name] = [None]
+# iso_tb_df_default[iso_name] = [None]
+# iso_tb_df_default[iso_ratio_name] = [None]
+
 
 output_stack_header_df = pd.DataFrame({
     'name': [thick_name, density_name, ratio_name, molar_name, number_density_name],
@@ -129,8 +131,7 @@ def valid_chem_name(field, value, error):
 
 compos_dict_schema = {
     chem_name: {'type': 'string', 'empty': False, 'required': True, 'validator': valid_chem_name, },
-    weight_name: {'type': 'number', 'validator': greater_than_zero},
-    atomic_name: {'type': 'number', 'validator': greater_than_zero},
+    compos_2nd_col_id: {'type': 'number', 'validator': greater_than_zero},
 }
 
 iso_dict_schema = {
@@ -455,11 +456,18 @@ def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
     num_layer = len(sample_tb_df[chem_name])
     for layer_index in range(num_layer):
         if density_name not in sample_tb_df.columns:
-            try:
-                o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
-                                 thickness=float(sample_tb_df[column_2][layer_index]))
-            except ValueError:
-                pass
+            if thick_name not in sample_tb_df.columns:  # for compos_df, only have column "compos_2nd_col_id"
+                try:
+                    o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
+                                     thickness=1)
+                except ValueError:
+                    pass
+            else:
+                try:
+                    o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
+                                     thickness=float(sample_tb_df[thick_name][layer_index]))
+                except ValueError:
+                    pass
         elif sample_tb_df[density_name][layer_index] == '':
             try:
                 o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
@@ -469,8 +477,8 @@ def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
         else:
             try:
                 o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
-                                 thickness=float(sample_tb_df[column_2][layer_index]),
-                                 density=float(sample_tb_df[column_3][layer_index]))
+                                 thickness=float(sample_tb_df[thick_name][layer_index]),
+                                 density=float(sample_tb_df[density_name][layer_index]))
             except ValueError:
                 pass
     return o_reso
@@ -486,8 +494,8 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
             for each_ele in element_list:
                 _ele_ratio_list = []
                 for iso_i in range(len(iso_tb_df)):
-                    if each_layer == iso_tb_df[column_1][iso_i] and each_ele == iso_tb_df[column_2][iso_i]:
-                        _ele_ratio_list.append(float(iso_tb_df[column_4][iso_i]))
+                    if each_layer == iso_tb_df[layer_name][iso_i] and each_ele == iso_tb_df[ele_name][iso_i]:
+                        _ele_ratio_list.append(float(iso_tb_df[iso_ratio_name][iso_i]))
                 o_reso.set_isotopic_ratio(compound=each_layer, element=each_ele, list_ratio=_ele_ratio_list)
         return o_reso
 
@@ -587,13 +595,12 @@ def form_sample_stack_table_div(o_stack):
         current_layer_list = [
             html.P("Layer {}: {}".format(l_str, layer)),
         ]
-        layer_dict[column_1] = o_stack[layer]['thickness']['value']
-        layer_dict[column_2] = round(o_stack[layer]['density']['value'], 3)
-        # layer_dict[density_name] = round(o_stack[layer]['density']['value'], 4)
+        layer_dict[thick_name] = o_stack[layer]['thickness']['value']
+        layer_dict[density_name] = round(o_stack[layer]['density']['value'], 3)
         _ratio_str_list = [str(_p) for _p in o_stack[layer]['stoichiometric_ratio']]
-        layer_dict[column_3] = ":".join(_ratio_str_list)
-        layer_dict[column_4] = round(o_stack[layer]['molar_mass']['value'], 4)
-        layer_dict[column_5] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
+        layer_dict[ratio_name] = ":".join(_ratio_str_list)
+        layer_dict[molar_name] = round(o_stack[layer]['molar_mass']['value'], 4)
+        layer_dict[number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
             dt.DataTable(data=_df_layer.to_dict('records'),
@@ -603,7 +610,7 @@ def form_sample_stack_table_div(o_stack):
                          filter_action='none',
                          sort_action='none',
                          row_deletable=False,
-                         style_cell_conditional=uneven_5_col,
+                         style_cell_conditional=output_tb_uneven_5_col,
                          ))
 
         for e, ele in enumerate(elements_in_current_layer):
@@ -666,19 +673,19 @@ def form_sample_stack_table_div(o_stack):
 
 def convert_input_to_composition(compos_df, compos_type, o_stack):
     if compos_type == weight_name:
-        fill_name = atomic_name
-        update_name = weight_name
+        fill_name = atomic_name_p
+        update_name = weight_name_p
     else:
-        fill_name = weight_name
-        update_name = atomic_name
+        fill_name = weight_name_p
+        update_name = atomic_name_p
     result_list = []
     _ele_list = []
     _mol_list = []
     _input_converted_p_list = []
-    _input_sum = compos_df[update_name].sum()
-    for _n, each_chem in enumerate(compos_df[column_1]):
+    _input_sum = compos_df[compos_2nd_col_id].sum()
+    for _n, each_chem in enumerate(compos_df[chem_name]):
         _molar_mass = o_stack[each_chem]['molar_mass']['value']
-        input_num = compos_df[update_name][_n]
+        input_num = compos_df[compos_2nd_col_id][_n]
         _current_ele_list = o_stack[each_chem]['elements']
         _current_ratio_list = o_stack[each_chem]['stoichiometric_ratio']
         _input_percentage = input_num * 100 / _input_sum
@@ -736,13 +743,12 @@ def form_iso_table(sample_df: pd.DataFrame):
                 iso_list.append(each_iso)
                 iso_ratio_list.append(round(current_iso_ratio_list[i], 4))
 
-    _dict = {column_1: lay_list,
-             column_2: ele_list,
-             column_3: iso_list,
-             column_4: iso_ratio_list,
-             }
-    _df = pd.DataFrame(_dict)
-
+    _df = pd.DataFrame({
+        layer_name: lay_list,
+        ele_name: ele_list,
+        iso_name: iso_list,
+        iso_ratio_name: iso_ratio_list,
+    })
     return _df
 
 
@@ -755,34 +761,33 @@ def update_new_iso_table(prev_iso_df: pd.DataFrame, new_iso_df: pd.DataFrame):
     elif pre_len > new_len:
         while len(new_iso_df) < len(prev_iso_df):
             new_iso_df = new_iso_df.append(iso_tb_df_default, ignore_index=True)
-
+    prev_iso_df = prev_iso_df[[layer_name, ele_name, iso_name, iso_ratio_name]]  # Force order of col to be the same
     _indices = prev_iso_df == new_iso_df
-    new_iso_df[column_4][_indices[column_1]] = prev_iso_df[column_4][_indices[column_1]]
-    new_iso_df = new_iso_df[new_iso_df.column_1.notnull()]
+    new_iso_df[iso_ratio_name][_indices[layer_name]] = prev_iso_df[iso_ratio_name][_indices[layer_name]]
+    new_iso_df = new_iso_df[new_iso_df[new_iso_df.columns[0]].notnull()]
     return new_iso_df
 
 
 def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
-    # print(range_table_rows)
     row = modified_coord[0]
     col = modified_coord[1]
     if col == 0:
-        input_value = range_table_rows[row][column_1]
+        input_value = range_table_rows[row][energy_name]
         if is_number(input_value) and float(input_value) > 0:
             things_to_fill = fill_range_table_by_e(e_ev=float(input_value), distance_m=distance)
             for each_col in range_table_rows[row].keys():
                 range_table_rows[row][each_col] = things_to_fill[each_col]
         else:
-            for each_col in [column_2, column_3, column_4, column_5]:
+            for each_col in [wave_name, speed_name, tof_name, class_name]:
                 range_table_rows[row][each_col] = 'N/A'
     elif col == 1:
-        input_value = range_table_rows[row][column_2]
+        input_value = range_table_rows[row][wave_name]
         if is_number(input_value) and float(input_value) > 0:
             things_to_fill = fill_range_table_by_wave(wave_angstroms=float(input_value), distance_m=distance)
             for each_col in range_table_rows[row].keys():
                 range_table_rows[row][each_col] = things_to_fill[each_col]
         else:
-            for each_col in [column_1, column_3, column_4, column_5]:
+            for each_col in [energy_name, speed_name, tof_name, class_name]:
                 range_table_rows[row][each_col] = 'N/A'
 
     return range_table_rows
@@ -898,13 +903,13 @@ def init_iso_table(id_str: str):
     iso_table = dt.DataTable(
         data=iso_tb_df_default.to_dict('records'),
         columns=iso_tb_header_df.to_dict('records'),
-        editable=True,
+        # editable=True,
         row_selectable=False,
         filter_action='none',
         sort_action='none',
         row_deletable=False,
-        style_cell_conditional=even_4_col,
-        style_data_conditional=gray_iso_cols,
+        style_cell_conditional=iso_tb_even_4_col,
+        style_data_conditional=iso_tb_gray_cols,
         fixed_rows={'headers': True, 'data': 0},
         style_table={
             'maxHeight': '300',
@@ -923,68 +928,68 @@ for i, each_app in enumerate(app_dict.keys()):
     app_links_list.append(html.Br())
 app_links_div = html.Div(app_links_list)
 
-even_3_col = [
-    {'if': {'column_id': column_1},
+sample_tb_even_3_col = [
+    {'if': {'column_id': chem_name},
      'width': '33%'},
-    {'if': {'column_id': column_2},
+    {'if': {'column_id': thick_name},
      'width': '33%'},
-    {'if': {'column_id': column_3},
+    {'if': {'column_id': density_name},
      'width': '33%'},
 ]
 
-even_4_col = [
-    {'if': {'column_id': column_1},
+iso_tb_even_4_col = [
+    {'if': {'column_id': layer_name},
      'width': '25%'},
-    {'if': {'column_id': column_2},
+    {'if': {'column_id': ele_name},
      'width': '25%'},
-    {'if': {'column_id': column_3},
+    {'if': {'column_id': iso_name},
      'width': '25%'},
-    {'if': {'column_id': column_4},
+    {'if': {'column_id': iso_ratio_name},
      'width': '25%'},
 ]
 
-even_5_col = [
-    {'if': {'column_id': column_1},
+range_tb_even_5_col = [
+    {'if': {'column_id': energy_name},
      'width': '20%'},
-    {'if': {'column_id': column_2},
+    {'if': {'column_id': wave_name},
      'width': '20%'},
-    {'if': {'column_id': column_3},
+    {'if': {'column_id': speed_name},
      'width': '20%'},
-    {'if': {'column_id': column_4},
+    {'if': {'column_id': tof_name},
      'width': '20%'},
-    {'if': {'column_id': column_5},
+    {'if': {'column_id': class_name},
      'width': '20%'},
 ]
 
-uneven_5_col = [
-    {'if': {'column_id': column_1},
+output_tb_uneven_5_col = [
+    {'if': {'column_id': thick_name},
      'width': '24%'},
-    {'if': {'column_id': column_2},
+    {'if': {'column_id': density_name},
      'width': '24%'},
-    {'if': {'column_id': column_3},
+    {'if': {'column_id': ratio_name},
      'width': '24%'},
-    {'if': {'column_id': column_4},
+    {'if': {'column_id': molar_name},
      'width': '14%'},
-    {'if': {'column_id': column_5},
+    {'if': {'column_id': number_density_name},
      'width': '14%'},
 ]
 
 color = 'rgb(240, 240, 240)'
-gray_range_cols = [
-    {'if': {'column_id': column_3},
+range_tb_gray_cols = [
+    {'if': {'column_id': speed_name},
      'backgroundColor': color},
-    {'if': {'column_id': column_4},
+    {'if': {'column_id': tof_name},
      'backgroundColor': color},
-    {'if': {'column_id': column_5},
+    {'if': {'column_id': class_name},
      'backgroundColor': color},
 ]
 
-gray_iso_cols = [
-    {'if': {'column_id': column_1},
+iso_tb_gray_cols = [
+    {'if': {'column_id': layer_name},
      'backgroundColor': color},
-    {'if': {'column_id': column_2},
+    {'if': {'column_id': ele_name},
      'backgroundColor': color},
-    {'if': {'column_id': column_3},
+    {'if': {'column_id': iso_name},
      'backgroundColor': color},
     # striped_rows,
 ]
