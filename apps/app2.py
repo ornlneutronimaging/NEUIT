@@ -20,6 +20,8 @@ sample_df_default = pd.DataFrame({
 
 plot_data_filename = "plot_data.csv"
 
+distance_default = 16.45
+
 app_name = 'app2'
 slider_id = app_name + '_e_range_slider'
 range_table_id = app_name + '_range_table'
@@ -35,7 +37,7 @@ submit_button_id = app_name + '_submit'
 error_id = app_name + '_error'
 output_id = app_name + '_output'
 result_id = app_name + '_result'
-hidden_range_tb_id = app_name + '_hidden_range_table'
+hidden_prev_distance_id = app_name + '_hidden_prev_distance'
 hidden_range_input_coord_id = app_name + '_hidden_range_input_coord'
 hidden_df_json_id = app_name + '_hidden_df_json'
 plot_div_id = app_name + '_plot'
@@ -78,8 +80,6 @@ layout = html.Div(
                 ]),
                 dcc.Markdown('''NOTE: '**Energy (eV)**' and '**Wavelength (\u212B)**' are editable.'''),
 
-                # Hidden div to store previous range table
-                html.Div(id=hidden_range_tb_id, style={'display': 'none'}),
                 # Hidden div to store range input type
                 html.Div(id=hidden_range_input_coord_id, children=[0, 0], style={'display': 'none'}),
 
@@ -117,7 +117,7 @@ layout = html.Div(
                                 html.H6('Source-to-detector (optional):'),
                                 html.Div(
                                     [
-                                        dcc.Input(id=distance_id, type='number', value=16.45, min=1,
+                                        dcc.Input(id=distance_id, type='number', value=distance_default, min=1,
                                                   inputMode='numeric',
                                                   step=0.01,
                                                   className='nine columns'),
@@ -180,6 +180,9 @@ layout = html.Div(
         # Error message div
         html.Div(id=error_id, children=None),
 
+        # Hidden div to store prev_distance
+        html.Div(id=hidden_prev_distance_id, children=distance_default, style={'display': 'none'}),
+
         # Hidden div to store json
         html.Div(id=hidden_df_json_id, style={'display': 'none'}),
 
@@ -230,10 +233,10 @@ layout = html.Div(
     ],
     [
         State(range_table_id, 'data'),
-        State(hidden_range_tb_id, 'children'),
+        State(range_table_id, 'data_previous'),
     ])
-def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
-    old_range_tb_df = pd.read_json(old_range_tb_json, orient='split')
+def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
+    old_range_tb_df = pd.DataFrame(old_range_tb_rows)
     new_range_tb_df = pd.DataFrame(new_range_tb_rows)
     diff_indices = new_range_tb_df.round(5) == old_range_tb_df.round(5)
     _coord = np.where(diff_indices == False)
@@ -249,38 +252,28 @@ def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
 
 
 @app.callback(
-    Output(range_table_id, 'data'),
     [
-        Input(range_table_id, 'data_timestamp'),
-        Input(distance_id, 'value'),
-        Input(hidden_range_input_coord_id, 'children'),
+        Output(range_table_id, 'data'),
+        Output(hidden_prev_distance_id, 'children'),
     ],
     [
-        State(range_table_id, 'data'),
-    ])
-def form_range_table(timestamp, distance, modified_coord, range_table_rows):
-    range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
-                                                     distance=distance,
-                                                     modified_coord=modified_coord)
-    return range_table_rows
-
-
-@app.callback(
-    Output(hidden_range_tb_id, 'children'),
-    [
         Input(range_table_id, 'data_timestamp'),
-        Input(distance_id, 'value'),
         Input(hidden_range_input_coord_id, 'children'),
+        Input(distance_id, 'value'),
     ],
     [
+        State(hidden_prev_distance_id, 'children'),
         State(range_table_id, 'data'),
     ])
-def store_prev_range_table_in_json(timestamp, distance, modified_coord, range_table_rows):
-    range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
-                                                     distance=distance,
-                                                     modified_coord=modified_coord)
-    df_range = pd.DataFrame(range_table_rows)
-    return df_range.to_json(date_format='iso', orient='split')
+def form_range_table(timestamp, modified_coord, distance, prev_distance, range_table_rows):
+    if distance == prev_distance:
+        range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
+                                                         distance=distance,
+                                                         modified_coord=modified_coord)
+    else:
+        range_table_rows[0] = fill_range_table_by_e(e_ev=range_table_rows[0][energy_name], distance_m=distance)
+        range_table_rows[1] = fill_range_table_by_e(e_ev=range_table_rows[1][energy_name], distance_m=distance)
+    return range_table_rows, distance
 
 
 @app.callback(
