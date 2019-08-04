@@ -1,15 +1,11 @@
 import dash
 import os
 
-app = dash.Dash()
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 server.secret_key = os.environ.get('secret_key', 'secret')
 app.config.suppress_callback_exceptions = True
 app.title = 'NEUIT'
-
-external_css = [
-    'https://codepen.io/chriddyp/pen/bWLwgP.css',
-]
-for css in external_css:
-    app.css.append_css({"external_url": css})
 

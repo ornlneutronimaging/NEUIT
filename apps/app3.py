@@ -4,9 +4,8 @@ from _app import app
 from _utilities import *
 
 compos_df_default = pd.DataFrame({
-    'column_1': ['B4C', 'SiC'],
-    'column_2': ['50', '50'],
-    'column_3': ['1', '1'],
+    chem_name: ['B4C', 'SiC'],
+    compos_2nd_col_id: ['50', '50'],
 })
 
 app_name = 'app3'
@@ -51,25 +50,24 @@ layout = html.Div(
                     columns=compos_header_df.to_dict('records'),
                     editable=True,
                     row_selectable=False,
-                    filtering=False,
-                    sorting=False,
+                    filter_action='none',
+                    sort_action='none',
                     row_deletable=True,
                     style_cell_conditional=[
-                        {'if': {'column_id': column_1},
+                        {'if': {'column_id': chem_name},
                          'width': '50%'},
-                        {'if': {'column_id': column_2},
-                         'width': '50%'},
-                        {'if': {'column_id': column_3},
+                        {'if': {'column_id': compos_2nd_col_id},
                          'width': '50%'},
                     ],
+                    style_data_conditional=[striped_rows],
                     id=sample_table_id
                 ),
                 markdown_compos,
                 # Input table for isotopic ratios
                 dcc.Checklist(id=iso_check_id,
                               options=[
-                                  {'label': 'Modify isotopic ratios', 'value': True},
-                              ], values=[],
+                                  {'label': 'Modify isotopic ratios', 'value': 'yes'},
+                              ], value=[],
                               ),
                 html.Div(
                     [
@@ -103,14 +101,16 @@ layout = html.Div(
     Output(sample_table_id, 'columns'),
     [
         Input(compos_type_id, 'value'),
+    ],
+    [
+        State(sample_table_id, 'columns'),
     ])
-def update_input_columns(compos_type):
+def update_input_columns(compos_type, columns):
     if compos_type == weight_name:
-        compos_drop = atomic_name
+        columns[1]['name'] = weight_name
     else:
-        compos_drop = weight_name
-    compos_header_df_new = compos_header_df[compos_header_df.name != compos_drop]
-    return compos_header_df_new.to_dict('records')
+        columns[1]['name'] = atomic_name
+    return columns
 
 
 @app.callback(
@@ -121,19 +121,10 @@ def update_input_columns(compos_type):
     ],
     [
         State(sample_table_id, 'data'),
-        # State('app3_sample_table', 'columns'),
-        State(compos_type_id, 'value'),
     ])
-def update_rows(n_add, n_del, rows, input_type):
+def update_rows(n_add, n_del, rows):
     if n_add > n_del:
-        if input_type == weight_name:
-            empty_col_id = column_2
-            fake_col_id = column_3
-        else:
-            empty_col_id = column_3
-            fake_col_id = column_2
-        # rows.append({c['id']: '' for c in columns})
-        rows.append({'column_1': '', empty_col_id: '', fake_col_id: '1'})
+        rows.append({chem_name: '', compos_2nd_col_id: ''})
     elif n_add < n_del:
         rows = rows[:-1]
     else:
@@ -153,24 +144,25 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
     prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
     sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    try:
-        new_iso_df = form_iso_table(sample_df=sample_df)
-        new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
-        return new_iso_df.to_dict('records')
-    except ValueError:
-        return None
+    new_iso_df = form_iso_table(sample_df=sample_df)
+    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
+    return new_iso_df.to_dict('records')
 
 
 @app.callback(
     Output(iso_div_id, 'style'),
     [
-        Input(iso_check_id, 'values'),
+        Input(iso_check_id, 'value'),
+    ],
+    [
+        State(iso_div_id, 'style'),
     ])
-def show_hide_iso_table(iso_changed):
-    if iso_changed:
-        return {'display': 'block'}
+def show_hide_iso_table(iso_changed, style):
+    if len(iso_changed) == 1:
+        style['display'] = 'block'
     else:
-        return {'display': 'none'}
+        style['display'] = 'none'
+    return style
 
 
 @app.callback(
@@ -197,7 +189,7 @@ def show_output_div(n_submit, test_passed):
     [
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
     ])
 def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_submit is not None:
@@ -211,7 +203,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
 
         # Test iso input format and sum
         if all(test_passed_list):
-            if iso_changed:
+            if len(iso_changed) == 1:
                 iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
                 iso_tb_df = pd.DataFrame(iso_tb_dict)
             else:
@@ -240,7 +232,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
     [
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
         State(compos_type_id, 'value'),
     ])
 def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
@@ -249,23 +241,17 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
         compos_tb_dict = force_dict_to_numeric(input_dict_list=compos_tb_rows)
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
         compos_tb_df = pd.DataFrame(compos_tb_dict)
-        if iso_changed:
+        if len(iso_changed) == 1:
             iso_tb_df = pd.DataFrame(iso_tb_dict)
         else:
             iso_tb_df = form_iso_table(sample_df=compos_tb_df)
 
         # Calculation start
-        if compos_type == weight_name:
-            _col_name = column_2
-            _rm_name = column_3
-        else:
-            _col_name = column_3
-            _rm_name = column_2
 
         # Remove rows contains no chemical input
         _compos_df = compos_tb_df[:]
-        _compos_df = _compos_df[_compos_df.column_1 != '']
-        _compos_df = drop_df_column_not_needed(input_df=_compos_df, column_name=_rm_name)
+        _compos_df = _compos_df[_compos_df[_compos_df.columns[0]] != '']
+
         _sample_df = creat_sample_df_from_compos_df(compos_tb_df=_compos_df)
         _iso_tb_df = iso_tb_df[:]
 
@@ -291,18 +277,18 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
             html.P('The effective chemical formula after conversion: {}'.format(effective_formula)),
             html.P("(This can be passed as 'Chemical formula' for other apps)"),
             dt.DataTable(data=compos_output_df.to_dict('records'),
-                         columns=compos_header_p_df.to_dict('records'),
+                         columns=compos_header_percent_df.to_dict('records'),
                          editable=False,
                          row_selectable=False,
-                         filtering=False,
-                         sorting=False,
+                         filter_action='none',
+                         sort_action='none',
                          row_deletable=False,
                          style_cell_conditional=[
-                             {'if': {'column_id': column_1},
+                             {'if': {'column_id': chem_name},
                               'width': '33%'},
-                             {'if': {'column_id': column_2},
+                             {'if': {'column_id': weight_name_p},
                               'width': '33%'},
-                             {'if': {'column_id': column_3},
+                             {'if': {'column_id': atomic_name_p},
                               'width': '33%'},
                          ],
                          ),

@@ -14,11 +14,12 @@ server = app.server
 app.layout = html.Div(
     [
         dcc.Location(id='url', refresh=False),
-        # html.Div(dt.DataTable(data=[{}]), style={'display': 'none'}),
-        # The above line is a get-around this issue by rendering a hidden dash-table-experiments component in the layout
         html.Div(id='page-content'),
     ], className='ten columns offset-by-one'
 )
+
+app_name = 'home'
+
 
 index_page = html.Div(
     [

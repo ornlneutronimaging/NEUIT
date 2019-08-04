@@ -4,9 +4,9 @@ from _app import app
 from _utilities import *
 
 sample_df_default = pd.DataFrame({
-    'column_1': ['H2O'],
-    'column_2': [2],
-    'column_3': [1],
+    chem_name: ['H2O'],
+    thick_name: [2],
+    density_name: [1],
 })
 
 app_name = 'app1'
@@ -81,13 +81,13 @@ layout = html.Div(
                         html.Div(
                             [
                                 dcc.Input(id=band_min_id, type='number',
-                                          inputmode='numeric',
+                                          inputMode='numeric',
                                           placeholder='Min.',
                                           step=0.01,
                                           className='four columns',
                                           ),
                                 dcc.Input(id=band_max_id, type='number',
-                                          inputmode='numeric',
+                                          inputMode='numeric',
                                           placeholder='Max.',
                                           step=0.01,
                                           className='four columns',
@@ -115,10 +115,11 @@ layout = html.Div(
                     columns=sample_header_df.to_dict('records'),
                     editable=True,
                     row_selectable=False,
-                    filtering=False,
-                    sorting=False,
+                    filter_action='none',
+                    sort_action='none',
                     row_deletable=True,
-                    style_cell_conditional=even_3_col,
+                    style_cell_conditional=sample_tb_even_3_col,
+                    style_data_conditional=[striped_rows],
                     id=sample_table_id
                 ),
                 markdown_sample,
@@ -127,8 +128,8 @@ layout = html.Div(
                 # Input table for isotopic ratios
                 dcc.Checklist(id=iso_check_id,
                               options=[
-                                  {'label': 'Modify isotopic ratios', 'value': True},
-                              ], values=[],
+                                  {'label': 'Modify isotopic ratios', 'value': 'yes'},
+                              ], value=[],
                               ),
                 html.Div(
                     [
@@ -218,24 +219,25 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
     prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
     sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    try:
-        new_iso_df = form_iso_table(sample_df=sample_df)
-        new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
-        return new_iso_df.to_dict('records')
-    except ValueError:
-        return None
+    new_iso_df = form_iso_table(sample_df=sample_df)
+    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
+    return new_iso_df.to_dict('records')
 
 
 @app.callback(
     Output(iso_div_id, 'style'),
     [
-        Input(iso_check_id, 'values'),
+        Input(iso_check_id, 'value'),
+    ],
+    [
+        State(iso_div_id, 'style'),
     ])
-def show_hide_iso_table(iso_changed):
-    if iso_changed:
-        return {'display': 'block'}
+def show_hide_iso_table(iso_changed, style):
+    if len(iso_changed) == 1:
+        style['display'] = 'block'
     else:
-        return {'display': 'none'}
+        style['display'] = 'none'
+    return style
 
 
 @app.callback(
@@ -262,7 +264,7 @@ def show_output_div(n_submit, test_passed):
     [
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
         State(beamline_id, 'value'),
         State(band_min_id, 'value'),
         State(band_max_id, 'value'),
@@ -286,7 +288,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min
 
         # Test iso input format and sum
         if all(test_passed_list):
-            if iso_changed:
+            if len(iso_changed) == 1:
                 iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
                 iso_tb_df = pd.DataFrame(iso_tb_dict)
             else:
@@ -322,7 +324,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min
     [
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
         State(beamline_id, 'value'),
         State(band_min_id, 'value'),
         State(band_max_id, 'value'),
@@ -338,7 +340,7 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
                                                                 band_min=band_min,
                                                                 band_max=band_max,
                                                                 band_type=band_type)
-        if beamline != 'imaging':
+        if beamline != 'imaging':  # add CG-1D anyway if not selected
             trans_div_list_tof, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
                                                                        iso_tb_rows=iso_tb_rows,
                                                                        iso_changed=iso_changed,

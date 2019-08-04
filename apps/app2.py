@@ -5,20 +5,22 @@ import matplotlib.pyplot as plt
 from _utilities import *
 
 energy_range_df_default = pd.DataFrame({
-    'column_1': [1, 100],
-    'column_2': [0.28598, 0.0286],
-    'column_3': [13832.93, 138329.29],
-    'column_4': [1189.1914, 118.9191],
-    'column_5': ['Epithermal', 'Epithermal'],
+    energy_name: [1, 100],
+    wave_name: [0.28598, 0.0286],
+    speed_name: [13832.93, 138329.29],
+    tof_name: [1189.1914, 118.9191],
+    class_name: ['Epithermal', 'Epithermal'],
 })
 
 sample_df_default = pd.DataFrame({
-    'column_1': ['Ag'],
-    'column_2': ['1'],
-    'column_3': [''],
+    chem_name: ['Ag'],
+    thick_name: ['1'],
+    density_name: [''],
 })
 
 plot_data_filename = "plot_data.csv"
+
+distance_default = 16.45
 
 app_name = 'app2'
 slider_id = app_name + '_e_range_slider'
@@ -35,7 +37,7 @@ submit_button_id = app_name + '_submit'
 error_id = app_name + '_error'
 output_id = app_name + '_output'
 result_id = app_name + '_result'
-hidden_range_tb_id = app_name + '_hidden_range_table'
+hidden_prev_distance_id = app_name + '_hidden_prev_distance'
 hidden_range_input_coord_id = app_name + '_hidden_range_input_coord'
 hidden_df_json_id = app_name + '_hidden_df_json'
 plot_div_id = app_name + '_plot'
@@ -68,18 +70,16 @@ layout = html.Div(
                         columns=energy_range_header_df.to_dict('records'),
                         editable=True,
                         row_selectable=False,
-                        filtering=False,
-                        sorting=False,
+                        filter_action='none',
+                        sort_action='none',
                         row_deletable=False,
-                        style_cell_conditional=even_5_col,
-                        style_data_conditional=gray_range_cols,
+                        style_cell_conditional=range_tb_even_5_col,
+                        style_data_conditional=range_tb_gray_cols,
                         id=range_table_id
                     ),
                 ]),
                 dcc.Markdown('''NOTE: '**Energy (eV)**' and '**Wavelength (\u212B)**' are editable.'''),
 
-                # Hidden div to store previous range table
-                html.Div(id=hidden_range_tb_id, style={'display': 'none'}),
                 # Hidden div to store range input type
                 html.Div(id=hidden_range_input_coord_id, children=[0, 0], style={'display': 'none'}),
 
@@ -117,8 +117,8 @@ layout = html.Div(
                                 html.H6('Source-to-detector (optional):'),
                                 html.Div(
                                     [
-                                        dcc.Input(id=distance_id, type='number', value=16.45, min=1,
-                                                  inputmode='numeric',
+                                        dcc.Input(id=distance_id, type='number', value=distance_default, min=1,
+                                                  inputMode='numeric',
                                                   step=0.01,
                                                   className='nine columns'),
                                         html.P('(m)', className='one column',
@@ -149,10 +149,11 @@ layout = html.Div(
                     columns=sample_header_df.to_dict('records'),
                     editable=True,
                     row_selectable=False,
-                    filtering=False,
-                    sorting=False,
+                    filter_action='none',
+                    sort_action='none',
                     row_deletable=True,
-                    style_cell_conditional=even_3_col,
+                    style_cell_conditional=sample_tb_even_3_col,
+                    style_data_conditional=[striped_rows],
                     id=sample_table_id
                 ),
                 markdown_sample,
@@ -161,8 +162,8 @@ layout = html.Div(
                 # Input table for isotopic ratios
                 dcc.Checklist(id=iso_check_id,
                               options=[
-                                  {'label': 'Modify isotopic ratios', 'value': True},
-                              ], values=[],
+                                  {'label': 'Modify isotopic ratios', 'value': 'yes'},
+                              ], value=[],
                               ),
                 html.Div(
                     [
@@ -178,6 +179,9 @@ layout = html.Div(
 
         # Error message div
         html.Div(id=error_id, children=None),
+
+        # Hidden div to store prev_distance
+        html.Div(id=hidden_prev_distance_id, children=distance_default, style={'display': 'none'}),
 
         # Hidden div to store json
         html.Div(id=hidden_df_json_id, style={'display': 'none'}),
@@ -229,10 +233,10 @@ layout = html.Div(
     ],
     [
         State(range_table_id, 'data'),
-        State(hidden_range_tb_id, 'children'),
+        State(range_table_id, 'data_previous'),
     ])
-def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
-    old_range_tb_df = pd.read_json(old_range_tb_json, orient='split')
+def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
+    old_range_tb_df = pd.DataFrame(old_range_tb_rows)
     new_range_tb_df = pd.DataFrame(new_range_tb_rows)
     diff_indices = new_range_tb_df.round(5) == old_range_tb_df.round(5)
     _coord = np.where(diff_indices == False)
@@ -248,38 +252,28 @@ def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
 
 
 @app.callback(
-    Output(range_table_id, 'data'),
     [
-        Input(range_table_id, 'data_timestamp'),
-        Input(distance_id, 'value'),
-        Input(hidden_range_input_coord_id, 'children'),
+        Output(range_table_id, 'data'),
+        Output(hidden_prev_distance_id, 'children'),
     ],
     [
-        State(range_table_id, 'data'),
-    ])
-def form_range_table(timestamp, distance, modified_coord, range_table_rows):
-    range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
-                                                     distance=distance,
-                                                     modified_coord=modified_coord)
-    return range_table_rows
-
-
-@app.callback(
-    Output(hidden_range_tb_id, 'children'),
-    [
         Input(range_table_id, 'data_timestamp'),
-        Input(distance_id, 'value'),
         Input(hidden_range_input_coord_id, 'children'),
+        Input(distance_id, 'value'),
     ],
     [
+        State(hidden_prev_distance_id, 'children'),
         State(range_table_id, 'data'),
     ])
-def store_prev_range_table_in_json(timestamp, distance, modified_coord, range_table_rows):
-    range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
-                                                     distance=distance,
-                                                     modified_coord=modified_coord)
-    df_range = pd.DataFrame(range_table_rows)
-    return df_range.to_json(date_format='iso', orient='split')
+def form_range_table(timestamp, modified_coord, distance, prev_distance, range_table_rows):
+    if distance == prev_distance:
+        range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
+                                                         distance=distance,
+                                                         modified_coord=modified_coord)
+    else:
+        range_table_rows[0] = fill_range_table_by_e(e_ev=range_table_rows[0][energy_name], distance_m=distance)
+        range_table_rows[1] = fill_range_table_by_e(e_ev=range_table_rows[1][energy_name], distance_m=distance)
+    return range_table_rows, distance
 
 
 @app.callback(
@@ -314,24 +308,25 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
     prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
     sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    try:
-        new_iso_df = form_iso_table(sample_df=sample_df)
-        new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
-        return new_iso_df.to_dict('records')
-    except ValueError:
-        return None
+    new_iso_df = form_iso_table(sample_df=sample_df)
+    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
+    return new_iso_df.to_dict('records')
 
 
 @app.callback(
     Output(iso_div_id, 'style'),
     [
-        Input(iso_check_id, 'values'),
+        Input(iso_check_id, 'value'),
+    ],
+    [
+        State(iso_div_id, 'style'),
     ])
-def show_hide_iso_table(iso_changed):
-    if iso_changed:
-        return {'display': 'block'}
+def show_hide_iso_table(iso_changed, style):
+    if len(iso_changed) == 1:
+        style['display'] = 'block'
     else:
-        return {'display': 'none'}
+        style['display'] = 'none'
+    return style
 
 
 @app.callback(
@@ -411,7 +406,7 @@ def show_output_div(n_submit, test_passed):
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
         State(range_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
     ])
 def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
     if n_submit is not None:
@@ -430,7 +425,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
                                                                        output_div_list=output_div_list)
         # Test iso input format and sum
         if all(test_passed_list):
-            if iso_changed:
+            if len(iso_changed) == 1:
                 iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
                 iso_tb_df = pd.DataFrame(iso_tb_dict)
             else:
@@ -480,7 +475,7 @@ def store_x_type(x_type):
         State(distance_id, 'value'),
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
     ])
 def store_reso_df_in_json(n_submit,
                           test_passed,
@@ -493,7 +488,7 @@ def store_reso_df_in_json(n_submit,
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
         sample_tb_df = pd.DataFrame(sample_tb_dict)
-        if iso_changed:
+        if len(iso_changed) == 1:
             iso_tb_df = pd.DataFrame(iso_tb_dict)
         else:
             iso_tb_df = form_iso_table(sample_df=sample_tb_df)
@@ -535,13 +530,13 @@ def store_reso_df_in_json(n_submit,
     [
         Input(submit_button_id, 'n_clicks'),
         Input(error_id, 'children'),
-        Input('show_opt', 'values'),
+        Input('show_opt', 'value'),
         Input(hidden_df_json_id, 'children'),
         Input('y_type', 'value'),
     ],
     [
         State('x_type', 'value'),
-        State('show_opt', 'values'),
+        State('show_opt', 'value'),
         State('plot_scale', 'value'),
     ])
 def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_show_opt, plot_scale):
@@ -663,17 +658,17 @@ def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly
     [
         State(sample_table_id, 'data'),
         State(iso_table_id, 'data'),
-        State(iso_check_id, 'values'),
+        State(iso_check_id, 'value'),
         State(range_table_id, 'data'),
     ])
 def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed, range_table_rows):
     if test_passed is True:
-        if range_table_rows[0][column_1] < range_table_rows[1][column_1]:
-            e_min = range_table_rows[0][column_1]
-            e_max = range_table_rows[1][column_1]
+        if range_table_rows[0][energy_name] < range_table_rows[1][energy_name]:
+            e_min = range_table_rows[0][energy_name]
+            e_max = range_table_rows[1][energy_name]
         else:
-            e_min = range_table_rows[1][column_1]
-            e_max = range_table_rows[0][column_1]
+            e_min = range_table_rows[1][energy_name]
+            e_max = range_table_rows[0][energy_name]
         output_div_list, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
                                                                 iso_tb_rows=iso_tb_rows,
                                                                 iso_changed=iso_changed,
@@ -707,7 +702,7 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
         State(error_id, 'children'),
         State('x_type', 'value'),
         State('y_type', 'value'),
-        State('show_opt', 'values'),
+        State('show_opt', 'value'),
         State(hidden_df_json_id, 'children'),
     ])
 def export_plot_data(n_export, test_passed, x_type, y_type, show_opt, jsonified_data):
