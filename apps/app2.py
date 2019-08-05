@@ -271,8 +271,8 @@ def form_range_table(timestamp, modified_coord, distance, prev_distance, range_t
                                                          distance=distance,
                                                          modified_coord=modified_coord)
     else:
-        range_table_rows[0] = fill_range_table_by_e(e_ev=range_table_rows[0][energy_name], distance_m=distance)
-        range_table_rows[1] = fill_range_table_by_e(e_ev=range_table_rows[1][energy_name], distance_m=distance)
+        range_table_rows[0][tof_name] = fill_range_table_by_e(e_ev=range_table_rows[0][energy_name], distance_m=distance)[tof_name]
+        range_table_rows[1][tof_name] = fill_range_table_by_e(e_ev=range_table_rows[1][energy_name], distance_m=distance)[tof_name]
     return range_table_rows, distance
 
 
