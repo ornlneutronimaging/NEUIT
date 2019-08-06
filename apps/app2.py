@@ -39,7 +39,7 @@ output_id = app_name + '_output'
 result_id = app_name + '_result'
 hidden_prev_distance_id = app_name + '_hidden_prev_distance'
 hidden_range_input_coord_id = app_name + '_hidden_range_input_coord'
-hidden_range_tb_id = app_name + '_hidden_range_table'
+# hidden_range_tb_id = app_name + '_hidden_range_table'
 hidden_df_json_id = app_name + '_hidden_df_json'
 plot_div_id = app_name + '_plot'
 plot_fig_id = app_name + '_plot_fig'
@@ -87,8 +87,8 @@ layout = html.Div(
                 # Hidden div to store range input type
                 html.Div(id=hidden_range_input_coord_id, children=[0, 0], style={'display': 'none'}),
 
-                # Hidden div to store previous range table
-                html.Div(id=hidden_range_tb_id, style={'display': 'none'}),
+                # # Hidden div to store previous range table
+                # html.Div(id=hidden_range_tb_id, style={'display': 'none'}),
 
                 # Step/distance input
                 html.Div(
@@ -237,10 +237,10 @@ layout = html.Div(
     ],
     [
         State(range_table_id, 'data'),
-        State(hidden_range_tb_id, 'children'),
+        State(range_table_id, 'data_previous'),
     ])
-def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
-    old_range_tb_df = pd.read_json(old_range_tb_json, orient='split')
+def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
+    old_range_tb_df = pd.DataFrame(old_range_tb_rows)
     new_range_tb_df = pd.DataFrame(new_range_tb_rows)
     diff_indices = new_range_tb_df.round(5) == old_range_tb_df.round(5)
     _coord = np.where(diff_indices == False)
@@ -282,30 +282,30 @@ def form_range_table(timestamp, modified_coord, distance, prev_distance, range_t
     return range_table_rows, distance
 
 
-@app.callback(
-    Output(hidden_range_tb_id, 'children'),
-
-    [
-        Input(range_table_id, 'data_timestamp'),
-        Input(hidden_range_input_coord_id, 'children'),
-        Input(distance_id, 'value'),
-    ],
-    [
-        State(hidden_prev_distance_id, 'children'),
-        State(range_table_id, 'data'),
-    ])
-def store_prev_range_table_in_json(timestamp, modified_coord, distance, prev_distance, range_table_rows):
-    if distance == prev_distance:
-        range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
-                                                         distance=distance,
-                                                         modified_coord=modified_coord)
-    else:
-        range_table_rows[0][tof_name] = \
-            fill_range_table_by_e(e_ev=range_table_rows[0][energy_name], distance_m=distance)[tof_name]
-        range_table_rows[1][tof_name] = \
-            fill_range_table_by_e(e_ev=range_table_rows[1][energy_name], distance_m=distance)[tof_name]
-    df_range = pd.DataFrame(range_table_rows)
-    return df_range.to_json(date_format='iso', orient='split')
+# @app.callback(
+#     Output(hidden_range_tb_id, 'children'),
+#
+#     [
+#         Input(range_table_id, 'data_timestamp'),
+#         Input(hidden_range_input_coord_id, 'children'),
+#         Input(distance_id, 'value'),
+#     ],
+#     [
+#         State(hidden_prev_distance_id, 'children'),
+#         State(range_table_id, 'data'),
+#     ])
+# def store_prev_range_table_in_json(timestamp, modified_coord, distance, prev_distance, range_table_rows):
+#     if distance == prev_distance:
+#         range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
+#                                                          distance=distance,
+#                                                          modified_coord=modified_coord)
+#     else:
+#         range_table_rows[0][tof_name] = \
+#             fill_range_table_by_e(e_ev=range_table_rows[0][energy_name], distance_m=distance)[tof_name]
+#         range_table_rows[1][tof_name] = \
+#             fill_range_table_by_e(e_ev=range_table_rows[1][energy_name], distance_m=distance)[tof_name]
+#     df_range = pd.DataFrame(range_table_rows)
+#     return df_range.to_json(date_format='iso', orient='split')
 
 
 @app.callback(
