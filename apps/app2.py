@@ -237,11 +237,8 @@ layout = html.Div(
     ],
     [
         State(range_table_id, 'data'),
-        # State(range_table_id, 'data_previous'),
         State(hidden_range_tb_id, 'children'),
     ])
-# def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
-#     old_range_tb_df = pd.DataFrame(old_range_tb_rows)
 def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
     old_range_tb_df = pd.read_json(old_range_tb_json, orient='split')
     new_range_tb_df = pd.DataFrame(new_range_tb_rows)
@@ -262,7 +259,6 @@ def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_json):
     [
         Output(range_table_id, 'data'),
         Output(hidden_prev_distance_id, 'children'),
-        Output(hidden_range_tb_id, 'children'),
     ],
     [
         Input(range_table_id, 'data_timestamp'),
@@ -283,8 +279,33 @@ def form_range_table(timestamp, modified_coord, distance, prev_distance, range_t
             fill_range_table_by_e(e_ev=range_table_rows[0][energy_name], distance_m=distance)[tof_name]
         range_table_rows[1][tof_name] = \
             fill_range_table_by_e(e_ev=range_table_rows[1][energy_name], distance_m=distance)[tof_name]
+    return range_table_rows, distance
+
+
+@app.callback(
+    Output(hidden_range_tb_id, 'children'),
+
+    [
+        Input(range_table_id, 'data_timestamp'),
+        Input(hidden_range_input_coord_id, 'children'),
+        Input(distance_id, 'value'),
+    ],
+    [
+        State(hidden_prev_distance_id, 'children'),
+        State(range_table_id, 'data'),
+    ])
+def store_prev_range_table_in_json(timestamp, modified_coord, distance, prev_distance, range_table_rows):
+    if distance == prev_distance:
+        range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
+                                                         distance=distance,
+                                                         modified_coord=modified_coord)
+    else:
+        range_table_rows[0][tof_name] = \
+            fill_range_table_by_e(e_ev=range_table_rows[0][energy_name], distance_m=distance)[tof_name]
+        range_table_rows[1][tof_name] = \
+            fill_range_table_by_e(e_ev=range_table_rows[1][energy_name], distance_m=distance)[tof_name]
     df_range = pd.DataFrame(range_table_rows)
-    return range_table_rows, distance, df_range.to_json(date_format='iso', orient='split')
+    return df_range.to_json(date_format='iso', orient='split')
 
 
 @app.callback(
