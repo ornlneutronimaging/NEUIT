@@ -180,7 +180,7 @@ layout = html.Div(
                     id=iso_div_id,
                     style={'display': 'none'},
                 ),
-                html.Button('Submit', id=submit_button_id),
+                html.Button('Submit', id=submit_button_id, n_clicks_timestamp=0),
             ]
         ),
 
@@ -209,6 +209,7 @@ layout = html.Div(
                             'Export to Clipboard',
                             id=export_plot_data_button_id,
                             style={'display': 'inline-block'},
+                            n_clicks_timestamp=0
                         ),
                         html.Div(
                             id=export_plot_data_notice_id,
@@ -587,7 +588,10 @@ def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_s
         ax1 = fig.add_subplot(111)
 
         # Plot
-        ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
+        try:
+            ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
+        except TypeError:
+            pass
         ax1.set_ylabel(y_label)
 
         plotly_fig = tls.mpl_to_plotly(fig)
@@ -728,7 +732,8 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
 @app.callback(
     Output(export_plot_data_notice_id, 'children'),
     [
-        Input(export_plot_data_button_id, 'n_clicks'),
+        Input(submit_button_id, 'n_clicks_timestamp'),
+        Input(export_plot_data_button_id, 'n_clicks_timestamp'),
     ],
     [
         State(error_id, 'children'),
@@ -737,23 +742,28 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
         State('show_opt', 'value'),
         State(hidden_df_json_id, 'children'),
     ])
-def export_plot_data(n_export, test_passed, x_type, y_type, show_opt, jsonified_data):
-    if n_export is not None:
-        if test_passed is True:
-            # Load and shape the data
-            df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
-                                                                                 y_type=y_type,
-                                                                                 show_opt=show_opt,
-                                                                                 jsonified_data=jsonified_data,
-                                                                                 prev_show_opt=None,
-                                                                                 to_csv=True)
-            df_to_export = df_y[to_export_list]
-            df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
-            df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
-            df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
+def export_plot_data(n_submit, n_export, test_passed, x_type, y_type, show_opt, jsonified_data):
+    if n_export != 0:
+        if n_export > n_submit:
+            if test_passed is True:
+                # Load and shape the data
+                df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
+                                                                                     y_type=y_type,
+                                                                                     show_opt=show_opt,
+                                                                                     jsonified_data=jsonified_data,
+                                                                                     prev_show_opt=None,
+                                                                                     to_csv=True)
+                df_to_export = df_y[to_export_list]
+                x_tag = x_type_to_x_tag(x_type)
+                df_to_export.insert(loc=0, column=x_tag, value=df_x[x_tag])
+                # df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
+                # df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
+                # df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
 
-            df_to_export.to_clipboard(index=False, excel=True)
-            return '\u2705'
+                df_to_export.to_clipboard(index=False, excel=True)
+                return '\u2705'
+            else:
+                return None
         else:
             return None
     else:
