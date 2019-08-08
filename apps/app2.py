@@ -41,6 +41,8 @@ hidden_prev_distance_id = app_name + '_hidden_prev_distance'
 hidden_range_input_coord_id = app_name + '_hidden_range_input_coord'
 # hidden_range_tb_id = app_name + '_hidden_range_table'
 hidden_df_json_id = app_name + '_hidden_df_json'
+hidden_df_tb_div = app_name + '_hidden_df_tb_div'
+hidden_df_tb = app_name + '_hidden_df_tb'
 plot_div_id = app_name + '_plot'
 plot_fig_id = app_name + '_plot_fig'
 plot_options_div_id = app_name + '_plot_options'
@@ -227,6 +229,7 @@ layout = html.Div(
             id=output_id,
             style={'display': 'none'},
         ),
+        html.Div(id=hidden_df_tb_div)
     ]
 )
 
@@ -730,19 +733,28 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
 
 
 @app.callback(
-    Output(export_plot_data_notice_id, 'children'),
+    [
+        Output(hidden_df_tb_div, 'children'),
+        Output(export_plot_data_notice_id, 'children'),
+    ],
     [
         Input(submit_button_id, 'n_clicks_timestamp'),
         Input(export_plot_data_button_id, 'n_clicks_timestamp'),
+        # Input('x_type', 'n_clicks_timestamp'),
+        # Input('y_type', 'n_clicks_timestamp'),
+        # Input('show_opt', 'n_clicks_timestamp'),
+        # Input('x_type', 'value'),
+        # Input('y_type', 'value'),
+        # Input('show_opt', 'value'),
     ],
     [
-        State(error_id, 'children'),
         State('x_type', 'value'),
         State('y_type', 'value'),
         State('show_opt', 'value'),
+        State(error_id, 'children'),
         State(hidden_df_json_id, 'children'),
     ])
-def export_plot_data(n_submit, n_export, test_passed, x_type, y_type, show_opt, jsonified_data):
+def export_plot_data(n_submit, n_export, x_type, y_type, show_opt, test_passed, jsonified_data):
     if n_export != 0:
         if n_export > n_submit:
             if test_passed is True:
@@ -761,10 +773,19 @@ def export_plot_data(n_submit, n_export, test_passed, x_type, y_type, show_opt, 
                 # df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
 
                 df_to_export.to_clipboard(index=False, excel=True)
-                return '\u2705'
+                df_tb_div_list = [
+                    html.Hr(),
+                    html.H5('Data in current plot:'),
+                    dt.DataTable(
+                        id=hidden_df_tb,
+                        columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
+                        data=df_to_export.to_dict('records'),
+                    )
+                ]
+                return df_tb_div_list, '\u2705'
             else:
-                return None
+                return None, None
         else:
-            return None
+            return None, None
     else:
-        return None
+        return None, None

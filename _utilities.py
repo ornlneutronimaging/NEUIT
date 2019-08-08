@@ -1039,6 +1039,7 @@ plot_option_div = html.Div(
                                            {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
                                        ],
                                        value='energy',
+                                       # n_clicks_timestamp=0,
                                        )
                     ], className=col_width_3
                 ),
@@ -1054,6 +1055,7 @@ plot_option_div = html.Div(
                                            {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
                                        ],
                                        value='attenuation',
+                                       # n_clicks_timestamp=0,
                                        )
                     ], className=col_width_3
                 ),
@@ -1068,6 +1070,7 @@ plot_option_div = html.Div(
                                            {'label': 'Loglog', 'value': 'loglog'},
                                        ],
                                        value='linear',
+                                       # n_clicks_timestamp=0,
                                        )
                     ], className=col_width_3
                 ),
@@ -1082,6 +1085,7 @@ plot_option_div = html.Div(
                                           {'label': 'Isotope', 'value': 'iso'},
                                       ],
                                       value=['iso'],
+                                      # n_clicks_timestamp=0,
                                       ),
                     ], className=col_width_3
                 ),
