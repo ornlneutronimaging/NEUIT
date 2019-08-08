@@ -218,6 +218,8 @@ layout = html.Div(
                         ),
                     ], className='row'
                 ),
+                # Data table for the plotted data
+                html.Div(id=hidden_df_tb_div),
 
                 # Transmission at CG-1D and sample stack
                 html.Div(id=result_id),
@@ -225,7 +227,6 @@ layout = html.Div(
             id=output_id,
             style={'display': 'none'},
         ),
-        html.Div(id=hidden_df_tb_div)
     ]
 )
 
@@ -770,13 +771,14 @@ def export_plot_data(n_submit, n_export, x_type, y_type, show_opt, test_passed, 
                 # df_to_export.to_clipboard(index=False, excel=True)  # Does not work on the Heroku server
                 df_tb_div_list = [
                     html.Hr(),
-                    html.H5('Data in current plot:'),
+                    # html.H5('Data in current plot:'),
                     dt.DataTable(
                         id=hidden_df_tb,
                         columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
                         data=df_to_export.to_dict('records'),
                         export_format='csv',
                         # export_headers=True,
+                        style_data_conditional=[striped_rows],
                         fixed_rows={'headers': True, 'data': 0},
                         style_table={
                             'maxHeight': '300',
