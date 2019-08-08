@@ -780,7 +780,7 @@ def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
         else:
             for each_col in [wave_name, speed_name, tof_name, class_name]:
                 range_table_rows[row][each_col] = 'N/A'
-    elif col == 1:
+    elif col == 4:  # Changed from 1 to 4 due to the sorting difference in header
         input_value = range_table_rows[row][wave_name]
         if is_number(input_value) and float(input_value) > 0:
             things_to_fill = fill_range_table_by_wave(wave_angstroms=float(input_value), distance_m=distance)

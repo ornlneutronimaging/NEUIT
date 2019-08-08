@@ -251,7 +251,6 @@ def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
         print(_coord)
         raise ValueError('Multiple input fields have been modified in the range table')
     modified_coord = (_coord[0][0], _coord[1][0])
-    print(modified_coord)
     return modified_coord
 
 
@@ -279,7 +278,6 @@ def form_range_table(timestamp, modified_coord, distance, prev_distance, range_t
                                                               distance_m=distance)[tof_name]
         range_table_rows[1][tof_name] = fill_range_table_by_e(e_ev=range_table_rows[1][energy_name],
                                                               distance_m=distance)[tof_name]
-    print(range_table_rows)
     return range_table_rows, distance
 
 
