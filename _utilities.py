@@ -775,8 +775,13 @@ def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
         input_value = range_table_rows[row][energy_name]
         if is_number(input_value) and float(input_value) > 0:
             things_to_fill = fill_range_table_by_e(e_ev=float(input_value), distance_m=distance)
-            for each_col in range_table_rows[row].keys():
-                range_table_rows[row][each_col] = things_to_fill[each_col]
+            # for each_col in range_table_rows[row].keys():
+            #     range_table_rows[row][each_col] = things_to_fill[each_col]
+            range_table_rows[row][energy_name] = input_value
+            range_table_rows[row][wave_name] = things_to_fill[wave_name]
+            range_table_rows[row][speed_name] = things_to_fill[speed_name]
+            range_table_rows[row][tof_name] = things_to_fill[tof_name]
+            range_table_rows[row][class_name] = things_to_fill[class_name]
         else:
             for each_col in [wave_name, speed_name, tof_name, class_name]:
                 range_table_rows[row][each_col] = 'N/A'
@@ -784,8 +789,12 @@ def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
         input_value = range_table_rows[row][wave_name]
         if is_number(input_value) and float(input_value) > 0:
             things_to_fill = fill_range_table_by_wave(wave_angstroms=float(input_value), distance_m=distance)
-            for each_col in range_table_rows[row].keys():
-                range_table_rows[row][each_col] = things_to_fill[each_col]
+            # for each_col in range_table_rows[row].keys():
+            range_table_rows[row][energy_name] = things_to_fill[energy_name]
+            range_table_rows[row][wave_name] = input_value
+            range_table_rows[row][speed_name] = things_to_fill[speed_name]
+            range_table_rows[row][tof_name] = things_to_fill[tof_name]
+            range_table_rows[row][class_name] = things_to_fill[class_name]
         else:
             for each_col in [energy_name, speed_name, tof_name, class_name]:
                 range_table_rows[row][each_col] = 'N/A'
