@@ -769,7 +769,7 @@ def export_plot_data(n_submit, n_export, x_type, y_type, show_opt, test_passed, 
                 # df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
                 # df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
 
-                df_to_export.to_clipboard(index=False, excel=True)
+                # df_to_export.to_clipboard(index=False, excel=True)
                 df_tb_div_list = [
                     html.Hr(),
                     html.H5('Data in current plot:'),
