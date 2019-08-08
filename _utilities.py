@@ -1017,10 +1017,6 @@ markdown_iso = dcc.Markdown('''
 NOTE: Uncheck the box will **NOT RESET** this table if you have edited it,
 but the input will not be used in calculations.''')
 
-label_plotly = html.Label(['NOTE: This plot can be customized and/or exported by following instructions ',
-                           html.A("here", href='https://help.plot.ly/save-share-and-export-in-plotly/',
-                                  target="_blank")])
-
 # Plot control buttons
 plot_option_div = html.Div(
     [

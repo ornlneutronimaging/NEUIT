@@ -208,7 +208,7 @@ layout = html.Div(
                 html.Div(
                     [
                         html.Button(
-                            'Export to Clipboard',
+                            'Display data table',
                             id=export_plot_data_button_id,
                             style={'display': 'inline-block'},
                             n_clicks_timestamp=0
@@ -219,9 +219,6 @@ layout = html.Div(
                         ),
                     ], className='row'
                 ),
-
-                # Instruction link
-                label_plotly,
 
                 # Transmission at CG-1D and sample stack
                 html.Div(id=result_id),
@@ -780,6 +777,13 @@ def export_plot_data(n_submit, n_export, x_type, y_type, show_opt, test_passed, 
                         id=hidden_df_tb,
                         columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
                         data=df_to_export.to_dict('records'),
+                        export_format='csv',
+                        # export_headers=True,
+                        fixed_rows={'headers': True, 'data': 0},
+                        style_table={
+                            'maxHeight': '300',
+                            'overflowY': 'scroll'
+                        },
                     )
                 ]
                 return df_tb_div_list, '\u2705'
