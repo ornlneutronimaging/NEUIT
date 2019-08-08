@@ -39,7 +39,6 @@ output_id = app_name + '_output'
 result_id = app_name + '_result'
 hidden_prev_distance_id = app_name + '_hidden_prev_distance'
 hidden_range_input_coord_id = app_name + '_hidden_range_input_coord'
-# hidden_range_tb_id = app_name + '_hidden_range_table'
 hidden_df_json_id = app_name + '_hidden_df_json'
 hidden_df_tb_div = app_name + '_hidden_df_tb_div'
 hidden_df_tb = app_name + '_hidden_df_tb'
@@ -252,7 +251,7 @@ def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
         print(_coord)
         raise ValueError('Multiple input fields have been modified in the range table')
     modified_coord = (_coord[0][0], _coord[1][0])
-    # print(modified_coord)
+    print(modified_coord)
     return modified_coord
 
 
@@ -280,6 +279,7 @@ def form_range_table(timestamp, modified_coord, distance, prev_distance, range_t
                                                               distance_m=distance)[tof_name]
         range_table_rows[1][tof_name] = fill_range_table_by_e(e_ev=range_table_rows[1][energy_name],
                                                               distance_m=distance)[tof_name]
+    print(range_table_rows)
     return range_table_rows, distance
 
 
