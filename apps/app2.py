@@ -282,32 +282,6 @@ def form_range_table(timestamp, modified_coord, distance, prev_distance, range_t
     return range_table_rows, distance
 
 
-# @app.callback(
-#     Output(hidden_range_tb_id, 'children'),
-#
-#     [
-#         Input(range_table_id, 'data_timestamp'),
-#         Input(hidden_range_input_coord_id, 'children'),
-#         Input(distance_id, 'value'),
-#     ],
-#     [
-#         State(hidden_prev_distance_id, 'children'),
-#         State(range_table_id, 'data'),
-#     ])
-# def store_prev_range_table_in_json(timestamp, modified_coord, distance, prev_distance, range_table_rows):
-#     if distance == prev_distance:
-#         range_table_rows = update_range_tb_by_coordinate(range_table_rows=range_table_rows,
-#                                                          distance=distance,
-#                                                          modified_coord=modified_coord)
-#     else:
-#         range_table_rows[0][tof_name] = \
-#             fill_range_table_by_e(e_ev=range_table_rows[0][energy_name], distance_m=distance)[tof_name]
-#         range_table_rows[1][tof_name] = \
-#             fill_range_table_by_e(e_ev=range_table_rows[1][energy_name], distance_m=distance)[tof_name]
-#     df_range = pd.DataFrame(range_table_rows)
-#     return df_range.to_json(date_format='iso', orient='split')
-
-
 @app.callback(
     Output(sample_table_id, 'data'),
     [
@@ -771,7 +745,6 @@ def export_plot_data(n_submit, n_export, x_type, y_type, show_opt, test_passed, 
                 # df_to_export.to_clipboard(index=False, excel=True)  # Does not work on the Heroku server
                 df_tb_div_list = [
                     html.Hr(),
-                    # html.H5('Data in current plot:'),
                     dt.DataTable(
                         id=hidden_df_tb,
                         columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],

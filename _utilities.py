@@ -769,6 +769,7 @@ def update_new_iso_table(prev_iso_df: pd.DataFrame, new_iso_df: pd.DataFrame):
 
 
 def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
+    print(modified_coord)
     row = modified_coord[0]
     col = modified_coord[1]
     if col == 0:
