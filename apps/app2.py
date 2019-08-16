@@ -27,10 +27,12 @@ slider_id = app_name + '_e_range_slider'
 range_table_id = app_name + '_range_table'
 e_step_id = app_name + '_e_step'
 distance_id = app_name + '_distance'
+sample_upload_id = app_name + 'sample_upload'
 add_row_id = app_name + '_add_row'
 del_row_id = app_name + '_del_row'
 sample_table_id = app_name + '_sample_table'
 iso_check_id = app_name + '_iso_check'
+# iso_upload_id = app_name + 'iso_upload'
 iso_div_id = app_name + '_iso_input'
 iso_table_id = app_name + '_iso_table'
 submit_button_id = app_name + '_submit'
@@ -87,9 +89,6 @@ layout = html.Div(
 
                 # Hidden div to store range input type
                 html.Div(id=hidden_range_input_coord_id, children=[0, 0], style={'display': 'none'}),
-
-                # # Hidden div to store previous range table
-                # html.Div(id=hidden_range_tb_id, style={'display': 'none'}),
 
                 # Step/distance input
                 html.Div(
@@ -149,6 +148,7 @@ layout = html.Div(
         html.H3('Sample info'),
         html.Div(
             [
+                init_upload_field(id_str=sample_upload_id),
                 html.Button('+', id=add_row_id, n_clicks_timestamp=0),
                 html.Button('-', id=del_row_id, n_clicks_timestamp=0),
                 dt.DataTable(
@@ -160,6 +160,7 @@ layout = html.Div(
                     filter_action='none',
                     sort_action='none',
                     row_deletable=True,
+                    export_format='csv',
                     style_cell_conditional=sample_tb_even_3_col,
                     style_data_conditional=[striped_rows],
                     id=sample_table_id
@@ -176,6 +177,7 @@ layout = html.Div(
                 html.Div(
                     [
                         markdown_iso,
+                        # init_upload_field(id_str=iso_upload_id),
                         init_iso_table(id_str=iso_table_id)
                     ],
                     id=iso_div_id,
@@ -286,19 +288,28 @@ def form_range_table(timestamp, modified_coord, distance, prev_distance, range_t
     Output(sample_table_id, 'data'),
     [
         Input(add_row_id, 'n_clicks_timestamp'),
-        Input(del_row_id, 'n_clicks_timestamp')
+        Input(del_row_id, 'n_clicks_timestamp'),
+        Input(sample_upload_id, 'last_modified'),
+        Input(sample_upload_id, 'contents'),
     ],
     [
+        State(sample_upload_id, 'filename'),
         State(sample_table_id, 'data'),
         State(sample_table_id, 'columns')
     ])
-def update_rows(n_add, n_del, rows, columns):
-    if n_add > n_del:
-        rows.append({c['id']: '' for c in columns})
-    elif n_add < n_del:
-        rows = rows[:-1]
+def update_rows(n_add, n_del, upload_time, list_of_contents, list_of_names, rows, columns):
+    # print(n_add)
+    # print(n_del)
+    # if upload_time > max(n_add, n_del):
+    print(list_of_contents)
+    if list_of_contents is not None:
+        rows = []
+        for c, n in zip(list_of_contents, list_of_names):
+            current_rows = parse_contents(c, n)
+            rows.extend(current_rows)
+        print(rows)
     else:
-        rows = rows
+        rows = add_del_rows(n_add=n_add, n_del=n_del, rows=rows, columns=columns)
     return rows
 
 
@@ -747,15 +758,14 @@ def export_plot_data(n_submit, n_export, x_type, y_type, show_opt, test_passed, 
                     html.Hr(),
                     dt.DataTable(
                         id=hidden_df_tb,
-                        columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
                         data=df_to_export.to_dict('records'),
+                        columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
                         export_format='csv',
-                        # export_headers=True,
                         style_data_conditional=[striped_rows],
                         fixed_rows={'headers': True, 'data': 0},
                         style_table={
                             'maxHeight': '300',
-                            'overflowY': 'scroll'
+                            'overflowY': 'scroll',
                         },
                     )
                 ]

@@ -5,6 +5,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
 import pandas as pd
+import io
+import base64
 from ImagingReso.resonance import Resonance
 from scipy.interpolate import interp1d
 import numpy as np
@@ -85,13 +87,6 @@ iso_tb_df_default = pd.DataFrame({
     iso_name: [None],
     iso_ratio_name: [None],
 })
-
-# iso_tb_df_default = pd.DataFrame()
-# iso_tb_df_default[layer_name] = [None]
-# iso_tb_df_default[ele_name] = [None]
-# iso_tb_df_default[iso_name] = [None]
-# iso_tb_df_default[iso_ratio_name] = [None]
-
 
 output_stack_header_df = pd.DataFrame({
     'name': [thick_name, density_name, ratio_name, molar_name, number_density_name],
@@ -193,14 +188,6 @@ def fill_range_table_by_wave(wave_angstroms, distance_m):
             speed_name: _v,
             tof_name: _tof,
             class_name: _class}
-
-
-# def drop_df_column_not_needed(input_df: pd.DataFrame, column_name: str):
-#     if column_name in input_df.columns:
-#         _dropped_df = input_df.drop(columns=[column_name])
-#         return _dropped_df
-#     else:
-#         return input_df
 
 
 def creat_sample_df_from_compos_df(compos_tb_df):
@@ -469,6 +456,9 @@ def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
                 except ValueError:
                     pass
         elif sample_tb_df[density_name][layer_index] == '':
+            print(sample_tb_df[chem_name][layer_index])
+            print(sample_tb_df[thick_name][layer_index])
+            print(sample_tb_df[density_name][layer_index])
             try:
                 o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
                                  thickness=float(sample_tb_df[thick_name][layer_index]))
@@ -769,7 +759,6 @@ def update_new_iso_table(prev_iso_df: pd.DataFrame, new_iso_df: pd.DataFrame):
 
 
 def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
-    print(modified_coord)
     row = modified_coord[0]
     col = modified_coord[1]
     if col == 0:
@@ -781,7 +770,7 @@ def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
         else:
             for each_col in [wave_name, speed_name, tof_name, class_name]:
                 range_table_rows[row][each_col] = 'N/A'
-    elif col == 4:  # Changed from 1 to 4 due to the sorting difference in header
+    elif col == 1:  # Changed back to 1 from 4 after updating to pandas>=0.25.0
         input_value = range_table_rows[row][wave_name]
         if is_number(input_value) and float(input_value) > 0:
             things_to_fill = fill_range_table_by_wave(wave_angstroms=float(input_value), distance_m=distance)
@@ -900,6 +889,67 @@ editable_white = {'if': {'column_editable': False},
                   'color': 'white'}
 
 
+def add_del_rows(n_add, n_del, rows, columns):
+    if n_add > n_del:
+        rows.append({c['id']: '' for c in columns})
+    elif n_add < n_del:
+        rows = rows[:-1]
+    else:
+        rows = rows[:]
+    return rows
+
+
+def parse_contents(contents, filename):
+    content_type, content_string = contents.split(',')
+
+    decoded = base64.b64decode(content_string)
+    try:
+        if 'csv' in filename:
+            # Assume that the user uploaded a CSV file
+            df = pd.read_csv(
+                io.StringIO(decoded.decode('utf-8')))
+        elif 'xls' in filename:
+            # Assume that the user uploaded an excel file
+            df = pd.read_excel(io.BytesIO(decoded))
+    except Exception as e:
+        print(e)
+        return html.Div([
+            'There was an error processing this file.'
+        ])
+
+    return df.to_dict('records')
+
+    # # For debugging, display the raw contents provided by the web browser
+    # html.Div('Raw Content'),
+    # html.Pre(contents[0:200] + '...', style={
+    #     'whiteSpace': 'pre-wrap',
+    #     'wordBreak': 'break-all'
+    # })
+
+
+def init_upload_field(id_str: str):
+    upload_field = dcc.Upload(id=id_str,
+                              children=html.Div([
+                                  'Drag and Drop or ',
+                                  html.A('Select Files')
+                              ]),
+                              style={
+                                  'width': '100%',
+                                  'height': '60px',
+                                  'lineHeight': '60px',
+                                  'borderWidth': '1px',
+                                  'borderStyle': 'dashed',
+                                  'borderRadius': '5px',
+                                  'textAlign': 'center',
+                                  'margin': '10px'
+                              },
+                              # Allow multiple files to be uploaded
+                              multiple=True,
+                              last_modified=0,
+                              )
+    return upload_field
+
+
 def init_iso_table(id_str: str):
     iso_table = dt.DataTable(
         data=iso_tb_df_default.to_dict('records'),
@@ -909,6 +959,7 @@ def init_iso_table(id_str: str):
         filter_action='none',
         sort_action='none',
         row_deletable=False,
+        # export_format='csv',
         style_cell_conditional=iso_tb_even_4_col,
         style_data_conditional=iso_tb_gray_cols,
         fixed_rows={'headers': True, 'data': 0},
