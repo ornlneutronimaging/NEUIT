@@ -10,6 +10,8 @@ compos_df_default = pd.DataFrame({
 
 app_name = 'app3'
 compos_type_id = app_name + 'compos_input_type'
+sample_upload_id = app_name + 'sample_upload'
+error_upload_id = app_name + 'error_upload'
 add_row_id = app_name + '_add_row'
 del_row_id = app_name + '_del_row'
 sample_table_id = app_name + '_sample_table'
@@ -42,6 +44,7 @@ layout = html.Div(
                                ],
                                value=weight_name,
                                ),
+                init_upload_field(id_str=sample_upload_id, div_str=error_upload_id),
                 html.Button('+', id=add_row_id, n_clicks_timestamp=0),
                 html.Button('-', id=del_row_id, n_clicks_timestamp=0),
                 dt.DataTable(
@@ -52,7 +55,8 @@ layout = html.Div(
                     row_selectable=False,
                     filter_action='none',
                     sort_action='none',
-                    row_deletable=True,
+                    row_deletable=False,
+                    export_format='csv',
                     style_cell_conditional=[
                         {'if': {'column_id': chem_name},
                          'width': '50%'},
@@ -114,22 +118,35 @@ def update_input_columns(compos_type, columns):
 
 
 @app.callback(
-    Output(sample_table_id, 'data'),
     [
-        Input(add_row_id, 'n_clicks_timestamp'),
-        Input(del_row_id, 'n_clicks_timestamp')
+        Output(sample_table_id, 'data'),
+        Output(error_upload_id, 'children'),
     ],
     [
+        Input(add_row_id, 'n_clicks_timestamp'),
+        Input(del_row_id, 'n_clicks_timestamp'),
+        Input(sample_upload_id, 'last_modified'),
+        Input(sample_upload_id, 'contents'),
+    ],
+    [
+        State(sample_upload_id, 'filename'),
         State(sample_table_id, 'data'),
+        State(sample_table_id, 'columns')
     ])
-def update_rows(n_add, n_del, rows):
-    if n_add > n_del:
-        rows.append({chem_name: '', compos_2nd_col_id: ''})
-    elif n_add < n_del:
-        rows = rows[:-1]
+def update_rows(n_add, n_del, upload_time, list_of_contents, list_of_names, rows, columns):
+    # print(n_add)
+    # print(n_del)
+    # if upload_time > max(n_add, n_del):
+    error_message = None
+    if list_of_contents is not None:
+        _rows = []
+        for c, n in zip(list_of_contents, list_of_names):
+            current_rows, error_message = parse_contents(c, n, rows)
+            _rows.extend(current_rows)
+        rows = _rows
     else:
-        rows = rows
-    return rows
+        rows = add_del_rows(n_add=n_add, n_del=n_del, rows=rows, columns=columns)
+    return rows, error_message
 
 
 @app.callback(

@@ -456,9 +456,6 @@ def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
                 except ValueError:
                     pass
         elif sample_tb_df[density_name][layer_index] == '':
-            print(sample_tb_df[chem_name][layer_index])
-            print(sample_tb_df[thick_name][layer_index])
-            print(sample_tb_df[density_name][layer_index])
             try:
                 o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
                                  thickness=float(sample_tb_df[thick_name][layer_index]))
@@ -893,60 +890,71 @@ def add_del_rows(n_add, n_del, rows, columns):
     if n_add > n_del:
         rows.append({c['id']: '' for c in columns})
     elif n_add < n_del:
-        rows = rows[:-1]
+        if len(rows) > 1:
+            rows = rows[:-1]
     else:
         rows = rows[:]
     return rows
 
 
-def parse_contents(contents, filename):
+def parse_contents(contents, filename, rows):
     content_type, content_string = contents.split(',')
-
     decoded = base64.b64decode(content_string)
-    try:
-        if 'csv' in filename:
-            # Assume that the user uploaded a CSV file
-            df = pd.read_csv(
-                io.StringIO(decoded.decode('utf-8')))
-        elif 'xls' in filename:
-            # Assume that the user uploaded an excel file
-            df = pd.read_excel(io.BytesIO(decoded))
-    except Exception as e:
-        print(e)
-        return html.Div([
-            'There was an error processing this file.'
-        ])
+    div = None
 
-    return df.to_dict('records')
+    if 'csv' in filename:
+        # Assume that the user uploaded a CSV file
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False)
+    elif 'xls' in filename:
+        # Assume that the user uploaded an excel file
+        df = pd.read_excel(io.BytesIO(decoded), na_filter=False)
+    else:
+        df = None
+        div = html.Div(["ERROR: '{}', only '.csv' and '.xls' are supported.".format(filename)])
 
-    # # For debugging, display the raw contents provided by the web browser
-    # html.Div('Raw Content'),
-    # html.Pre(contents[0:200] + '...', style={
-    #     'whiteSpace': 'pre-wrap',
-    #     'wordBreak': 'break-all'
-    # })
+    if df is not None:
+        if len(df) == 0:
+            div = html.Div(["ERROR: '{}', contains no data.".format(filename)])
+        # if df.columns != list(rows[0].keys()):
+        elif list(df.columns) != list(rows[0].keys()):
+            div = html.Div(["ERROR: '{}', contains invalid column name.".format(filename)])
+        else:
+            df = df[df[chem_name] != '']
+            rows = df.to_dict('records')
+
+    return rows, div
 
 
-def init_upload_field(id_str: str):
-    upload_field = dcc.Upload(id=id_str,
-                              children=html.Div([
-                                  'Drag and Drop or ',
-                                  html.A('Select Files')
-                              ]),
-                              style={
-                                  'width': '100%',
-                                  'height': '60px',
-                                  'lineHeight': '60px',
-                                  'borderWidth': '1px',
-                                  'borderStyle': 'dashed',
-                                  'borderRadius': '5px',
-                                  'textAlign': 'center',
-                                  'margin': '10px'
-                              },
-                              # Allow multiple files to be uploaded
-                              multiple=True,
-                              last_modified=0,
-                              )
+# # For debugging, display the raw contents provided by the web browser
+# html.Div('Raw Content'),
+# html.Pre(contents[0:200] + '...', style={
+#     'whiteSpace': 'pre-wrap',
+#     'wordBreak': 'break-all'
+# })
+
+
+def init_upload_field(id_str: str, div_str: str):
+    upload_field = html.Div([dcc.Upload(id=id_str,
+                                        children=html.Div([
+                                            'Drag and Drop or ',
+                                            html.A('Select Files')
+                                        ]),
+                                        style={
+                                            'width': '100%',
+                                            'height': '60px',
+                                            'lineHeight': '60px',
+                                            'borderWidth': '1px',
+                                            'borderStyle': 'dashed',
+                                            'borderRadius': '5px',
+                                            'textAlign': 'center',
+                                            'margin': '10px'
+                                        },
+                                        # Allow multiple files to be uploaded
+                                        multiple=True,
+                                        last_modified=0,
+                                        ),
+                             html.Div(id=div_str)
+                             ])
     return upload_field
 
 
