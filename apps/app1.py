@@ -9,26 +9,7 @@ sample_df_default = pd.DataFrame({
     density_name: [1],
 })
 
-app_name = 'app1'
-sample_upload_id = app_name + 'sample_upload'
-error_upload_id = app_name + 'error_upload'
-hidden_upload_time_id = app_name + 'time_upload'
-add_row_id = app_name + '_add_row'
-del_row_id = app_name + '_del_row'
-sample_table_id = app_name + '_sample_table'
-iso_check_id = app_name + '_iso_check'
-iso_div_id = app_name + '_iso_input'
-iso_table_id = app_name + '_iso_table'
-submit_button_id = app_name + '_submit'
-result_id = app_name + '_result'
-error_id = app_name + '_error'
-output_id = app_name + '_output'
-beamline_id = app_name + '_beamline'
-band_div_id = app_name + '_band_div'
-band_min_id = app_name + '_band_min'
-band_max_id = app_name + '_band_max'
-band_type_id = app_name + '_band_type'
-band_unit_id = app_name + '_band_unit'
+app_id_dict = init_app_ids(app_name='app1')
 
 # Create app layout
 layout = html.Div(
@@ -49,7 +30,7 @@ layout = html.Div(
                         html.Div(
                             [
                                 dcc.Dropdown(
-                                    id=beamline_id,
+                                    id=app_id_dict['beamline_id'],
                                     options=[
                                         {'label': 'IMAGING (CG-1D), HFIR', 'value': 'imaging'},
                                         {'label': 'SNAP (BL-3), SNS', 'value': 'snap'},
@@ -70,7 +51,7 @@ layout = html.Div(
                                 html.H3('Band width',
                                         className='four columns'
                                         ),
-                                dcc.RadioItems(id=band_type_id,
+                                dcc.RadioItems(id=app_id_dict['band_type_id'],
                                                options=[
                                                    {'label': 'Energy (eV)', 'value': 'energy'},
                                                    {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
@@ -83,26 +64,26 @@ layout = html.Div(
                         ),
                         html.Div(
                             [
-                                dcc.Input(id=band_min_id, type='number',
+                                dcc.Input(id=app_id_dict['band_min_id'], type='number',
                                           inputMode='numeric',
                                           placeholder='Min.',
                                           step=0.01,
                                           className='four columns',
                                           ),
-                                dcc.Input(id=band_max_id, type='number',
+                                dcc.Input(id=app_id_dict['band_max_id'], type='number',
                                           inputMode='numeric',
                                           placeholder='Max.',
                                           step=0.01,
                                           className='four columns',
                                           ),
                                 html.P('\u212B',
-                                       id=band_unit_id,
+                                       id=app_id_dict['band_unit_id'],
                                        style={'marginBottom': 10, 'marginTop': 5},
                                        className='one column',
                                        ),
                             ], className='row', style={'verticalAlign': 'middle'},
                         ),
-                    ], className=col_width_6, style={'display': 'none'}, id=band_div_id,
+                    ], className=col_width_6, style={'display': 'none'}, id=app_id_dict['band_div_id'],
                 ),
             ], className='row',
         ),
@@ -110,11 +91,12 @@ layout = html.Div(
         html.H3('Sample info'),
         html.Div(
             [
-                init_upload_field(id_str=sample_upload_id,
-                                  div_str=error_upload_id,
-                                  hidden_div_str=hidden_upload_time_id),
-                html.Button('+', id=add_row_id, n_clicks_timestamp=0),
-                html.Button('-', id=del_row_id, n_clicks_timestamp=0),
+                init_upload_field(id_str=app_id_dict['sample_upload_id'],
+                                  div_str=app_id_dict['error_upload_id'],
+                                  hidden_div_str=app_id_dict['hidden_upload_time_id'],
+                                  add_row_id=app_id_dict['add_row_id'],
+                                  del_row_id=app_id_dict['del_row_id'],
+                                  ),
                 dt.DataTable(
                     data=sample_df_default.to_dict('records'),
                     # optional - sets the order of columns
@@ -127,13 +109,13 @@ layout = html.Div(
                     export_format='csv',
                     style_cell_conditional=sample_tb_even_3_col,
                     style_data_conditional=[striped_rows],
-                    id=sample_table_id
+                    id=app_id_dict['sample_table_id']
                 ),
                 markdown_sample,
                 label_sample,
 
                 # Input table for isotopic ratios
-                dcc.Checklist(id=iso_check_id,
+                dcc.Checklist(id=app_id_dict['iso_check_id'],
                               options=[
                                   {'label': 'Modify isotopic ratios', 'value': 'yes'},
                               ], value=[],
@@ -141,25 +123,25 @@ layout = html.Div(
                 html.Div(
                     [
                         markdown_iso,
-                        init_iso_table(id_str=iso_table_id)
+                        init_iso_table(id_str=app_id_dict['iso_table_id'])
                     ],
-                    id=iso_div_id,
+                    id=app_id_dict['iso_div_id'],
                     style={'display': 'none'},
                 ),
-                html.Button('Submit', id=submit_button_id),
+                html.Button('Submit', id=app_id_dict['submit_button_id']),
             ]
         ),
 
         # Error message div
-        html.Div(id=error_id, children=None),
+        html.Div(id=app_id_dict['error_id'], children=None),
 
         # Output div
         html.Div(
             [
                 # Transmission at CG-1D and stack info
-                html.Div(id=result_id),
+                html.Div(id=app_id_dict['result_id']),
             ],
-            id=output_id,
+            id=app_id_dict['output_id'],
             style={'display': 'none'},
         ),
     ]
@@ -167,12 +149,12 @@ layout = html.Div(
 
 
 @app.callback(
-    Output(band_div_id, 'style'),
+    Output(app_id_dict['band_div_id'], 'style'),
     [
-        Input(beamline_id, 'value'),
+        Input(app_id_dict['beamline_id'], 'value'),
     ],
     [
-        State(band_div_id, 'style'),
+        State(app_id_dict['band_div_id'], 'style'),
     ])
 def show_hide_band_input(beamline, style):
     if beamline == 'imaging':
@@ -183,9 +165,9 @@ def show_hide_band_input(beamline, style):
 
 
 @app.callback(
-    Output(band_unit_id, 'children'),
+    Output(app_id_dict['band_unit_id'], 'children'),
     [
-        Input(band_type_id, 'value'),
+        Input(app_id_dict['band_type_id'], 'value'),
     ])
 def show_band_units(band_type):
     if band_type == 'lambda':
@@ -196,21 +178,21 @@ def show_band_units(band_type):
 
 @app.callback(
     [
-        Output(sample_table_id, 'data'),
-        Output(error_upload_id, 'children'),
-        Output(hidden_upload_time_id, 'children'),
+        Output(app_id_dict['sample_table_id'], 'data'),
+        Output(app_id_dict['error_upload_id'], 'children'),
+        Output(app_id_dict['hidden_upload_time_id'], 'children'),
     ],
     [
-        Input(add_row_id, 'n_clicks_timestamp'),
-        Input(del_row_id, 'n_clicks_timestamp'),
-        Input(sample_upload_id, 'contents'),
-        Input(sample_upload_id, 'last_modified'),
+        Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
+        Input(app_id_dict['del_row_id'], 'n_clicks_timestamp'),
+        Input(app_id_dict['sample_upload_id'], 'contents'),
+        Input(app_id_dict['sample_upload_id'], 'last_modified'),
     ],
     [
-        State(hidden_upload_time_id, 'children'),
-        State(sample_upload_id, 'filename'),
-        State(sample_table_id, 'data'),
-        State(sample_table_id, 'columns')
+        State(app_id_dict['hidden_upload_time_id'], 'children'),
+        State(app_id_dict['sample_upload_id'], 'filename'),
+        State(app_id_dict['sample_table_id'], 'data'),
+        State(app_id_dict['sample_table_id'], 'columns')
     ])
 def update_rows(n_add, n_del, list_of_contents, upload_time, prev_upload_time, list_of_names, rows, columns):
     rows, error_message, upload_t = update_rows_util(n_add=n_add,
@@ -225,12 +207,12 @@ def update_rows(n_add, n_del, list_of_contents, upload_time, prev_upload_time, l
 
 
 @app.callback(
-    Output(iso_table_id, 'data'),
+    Output(app_id_dict['iso_table_id'], 'data'),
     [
-        Input(sample_table_id, 'data'),
+        Input(app_id_dict['sample_table_id'], 'data'),
     ],
     [
-        State(iso_table_id, 'data'),
+        State(app_id_dict['iso_table_id'], 'data'),
     ])
 def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
@@ -242,12 +224,12 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
 
 
 @app.callback(
-    Output(iso_div_id, 'style'),
+    Output(app_id_dict['iso_div_id'], 'style'),
     [
-        Input(iso_check_id, 'value'),
+        Input(app_id_dict['iso_check_id'], 'value'),
     ],
     [
-        State(iso_div_id, 'style'),
+        State(app_id_dict['iso_div_id'], 'style'),
     ])
 def show_hide_iso_table(iso_changed, style):
     if len(iso_changed) == 1:
@@ -258,10 +240,10 @@ def show_hide_iso_table(iso_changed, style):
 
 
 @app.callback(
-    Output(output_id, 'style'),
+    Output(app_id_dict['output_id'], 'style'),
     [
-        Input(submit_button_id, 'n_clicks'),
-        Input(error_id, 'children'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Input(app_id_dict['error_id'], 'children'),
     ])
 def show_output_div(n_submit, test_passed):
     if n_submit is not None:
@@ -274,18 +256,18 @@ def show_output_div(n_submit, test_passed):
 
 
 @app.callback(
-    Output(error_id, 'children'),
+    Output(app_id_dict['error_id'], 'children'),
     [
-        Input(submit_button_id, 'n_clicks'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
     ],
     [
-        State(sample_table_id, 'data'),
-        State(iso_table_id, 'data'),
-        State(iso_check_id, 'value'),
-        State(beamline_id, 'value'),
-        State(band_min_id, 'value'),
-        State(band_max_id, 'value'),
-        State(band_type_id, 'value'),
+        State(app_id_dict['sample_table_id'], 'data'),
+        State(app_id_dict['iso_table_id'], 'data'),
+        State(app_id_dict['iso_check_id'], 'value'),
+        State(app_id_dict['beamline_id'], 'value'),
+        State(app_id_dict['band_min_id'], 'value'),
+        State(app_id_dict['band_max_id'], 'value'),
+        State(app_id_dict['band_type_id'], 'value'),
     ])
 def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min, band_max, band_type):
     if n_submit is not None:
@@ -333,19 +315,19 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min
 
 
 @app.callback(
-    Output(result_id, 'children'),
+    Output(app_id_dict['result_id'], 'children'),
     [
-        Input(submit_button_id, 'n_clicks'),
-        Input(error_id, 'children'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Input(app_id_dict['error_id'], 'children'),
     ],
     [
-        State(sample_table_id, 'data'),
-        State(iso_table_id, 'data'),
-        State(iso_check_id, 'value'),
-        State(beamline_id, 'value'),
-        State(band_min_id, 'value'),
-        State(band_max_id, 'value'),
-        State(band_type_id, 'value'),
+        State(app_id_dict['sample_table_id'], 'data'),
+        State(app_id_dict['iso_table_id'], 'data'),
+        State(app_id_dict['iso_check_id'], 'value'),
+        State(app_id_dict['beamline_id'], 'value'),
+        State(app_id_dict['band_min_id'], 'value'),
+        State(app_id_dict['band_max_id'], 'value'),
+        State(app_id_dict['band_type_id'], 'value'),
     ])
 def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed,
                                   beamline, band_min, band_max, band_type):

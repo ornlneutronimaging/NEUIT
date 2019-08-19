@@ -18,40 +18,10 @@ sample_df_default = pd.DataFrame({
     density_name: [''],
 })
 
+app_id_dict = init_app_ids(app_name='app2')
+
 plot_data_filename = "plot_data.csv"
-
 distance_default = 16.45
-
-app_name = 'app2'
-slider_id = app_name + '_e_range_slider'
-range_table_id = app_name + '_range_table'
-e_step_id = app_name + '_e_step'
-distance_id = app_name + '_distance'
-sample_upload_id = app_name + 'sample_upload'
-error_upload_id = app_name + 'error_upload'
-hidden_upload_time_id = app_name + 'time_upload'
-add_row_id = app_name + '_add_row'
-del_row_id = app_name + '_del_row'
-sample_table_id = app_name + '_sample_table'
-iso_check_id = app_name + '_iso_check'
-# iso_upload_id = app_name + 'iso_upload'
-iso_div_id = app_name + '_iso_input'
-iso_table_id = app_name + '_iso_table'
-submit_button_id = app_name + '_submit'
-error_id = app_name + '_error'
-output_id = app_name + '_output'
-result_id = app_name + '_result'
-hidden_prev_distance_id = app_name + '_hidden_prev_distance'
-hidden_range_input_coord_id = app_name + '_hidden_range_input_coord'
-hidden_df_json_id = app_name + '_hidden_df_json'
-hidden_df_tb_div = app_name + '_hidden_df_tb_div'
-hidden_df_tb = app_name + '_hidden_df_tb'
-plot_div_id = app_name + '_plot'
-plot_fig_id = app_name + '_plot_fig'
-plot_options_div_id = app_name + '_plot_options'
-export_plot_data_button_id = app_name + '_plot_data_export'
-export_plot_data_notice_id = app_name + '_export_notice'
-prev_x_type_id = app_name + '_prev_x_type'
 plot_loading = html.H2('Plot loading...')
 
 # Create app2 layout
@@ -81,16 +51,16 @@ layout = html.Div(
                         row_deletable=False,
                         style_cell_conditional=range_tb_even_5_col,
                         style_data_conditional=range_tb_gray_cols,
-                        id=range_table_id
+                        id=app_id_dict['range_table_id']
                     ),
                 ]),
                 dcc.Markdown('''NOTE: '**Energy (eV)**' and '**Wavelength (\u212B)**' are editable.'''),
 
                 # Hidden div to store prev_distance
-                html.Div(id=hidden_prev_distance_id, children=distance_default, style={'display': 'none'}),
+                html.Div(id=app_id_dict['hidden_prev_distance_id'], children=distance_default, style={'display': 'none'}),
 
                 # Hidden div to store range input type
-                html.Div(id=hidden_range_input_coord_id, children=[0, 0], style={'display': 'none'}),
+                html.Div(id=app_id_dict['hidden_range_input_coord_id'], children=[0, 0], style={'display': 'none'}),
 
                 # Step/distance input
                 html.Div(
@@ -101,7 +71,7 @@ layout = html.Div(
                                 html.Div(
                                     [
                                         dcc.Dropdown(
-                                            id=e_step_id,
+                                            id=app_id_dict['e_step_id'],
                                             options=[
                                                 {'label': '0.001 (eV)  (NOT recommended if energy range > 10 eV)',
                                                  'value': 0.001},
@@ -126,7 +96,7 @@ layout = html.Div(
                                 html.H6('Source-to-detector (optional):'),
                                 html.Div(
                                     [
-                                        dcc.Input(id=distance_id, type='number', value=distance_default, min=1,
+                                        dcc.Input(id=app_id_dict['distance_id'], type='number', value=distance_default, min=1,
                                                   inputMode='numeric',
                                                   step=0.01,
                                                   className='nine columns'),
@@ -150,11 +120,12 @@ layout = html.Div(
         html.H3('Sample info'),
         html.Div(
             [
-                init_upload_field(id_str=sample_upload_id,
-                                  div_str=error_upload_id,
-                                  hidden_div_str=hidden_upload_time_id),
-                html.Button('+', id=add_row_id, n_clicks_timestamp=0),
-                html.Button('-', id=del_row_id, n_clicks_timestamp=0),
+                init_upload_field(id_str=app_id_dict['sample_upload_id'],
+                                  div_str=app_id_dict['error_upload_id'],
+                                  hidden_div_str=app_id_dict['hidden_upload_time_id'],
+                                  add_row_id=app_id_dict['add_row_id'],
+                                  del_row_id=app_id_dict['del_row_id'],
+                                  ),
                 dt.DataTable(
                     data=sample_df_default.to_dict('records'),
                     # optional - sets the order of columns
@@ -167,13 +138,13 @@ layout = html.Div(
                     export_format='csv',
                     style_cell_conditional=sample_tb_even_3_col,
                     style_data_conditional=[striped_rows],
-                    id=sample_table_id
+                    id=app_id_dict['sample_table_id']
                 ),
                 markdown_sample,
                 label_sample,
 
                 # Input table for isotopic ratios
-                dcc.Checklist(id=iso_check_id,
+                dcc.Checklist(id=app_id_dict['iso_check_id'],
                               options=[
                                   {'label': 'Modify isotopic ratios', 'value': 'yes'},
                               ], value=[],
@@ -182,55 +153,55 @@ layout = html.Div(
                     [
                         markdown_iso,
                         # init_upload_field(id_str=iso_upload_id),
-                        init_iso_table(id_str=iso_table_id)
+                        init_iso_table(id_str=app_id_dict['iso_table_id'])
                     ],
-                    id=iso_div_id,
+                    id=app_id_dict['iso_div_id'],
                     style={'display': 'none'},
                 ),
-                html.Button('Submit', id=submit_button_id, n_clicks_timestamp=0),
+                html.Button('Submit', id=app_id_dict['submit_button_id'], n_clicks_timestamp=0),
             ]
         ),
 
         # Error message div
-        html.Div(id=error_id, children=None),
+        html.Div(id=app_id_dict['error_id'], children=None),
 
         # Hidden div to store json
-        html.Div(id=hidden_df_json_id, style={'display': 'none'}),
+        html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),
 
         # Hidden div to store x_type
-        html.Div(id=prev_x_type_id, children='energy', style={'display': 'none'}),
+        html.Div(id=app_id_dict['prev_x_type_id'], children='energy', style={'display': 'none'}),
 
         # Output div
         html.Div(
             [
                 # Plot options
-                html.Div(id=plot_options_div_id, children=plot_option_div),
+                html.Div(id=app_id_dict['plot_options_div_id'], children=plot_option_div),
 
                 # Plot
-                html.Div(id=plot_div_id, children=plot_loading, className='container'),
+                html.Div(id=app_id_dict['plot_div_id'], children=plot_loading, className='container'),
 
                 # Export plot data button
                 html.Div(
                     [
                         html.Button(
                             'Display data table',
-                            id=export_plot_data_button_id,
+                            id=app_id_dict['export_plot_data_button_id'],
                             style={'display': 'inline-block'},
                             n_clicks_timestamp=0
                         ),
                         html.Div(
-                            id=export_plot_data_notice_id,
+                            id=app_id_dict['export_plot_data_notice_id'],
                             style={'display': 'inline-block'},
                         ),
                     ], className='row'
                 ),
                 # Data table for the plotted data
-                html.Div(id=hidden_df_tb_div),
+                html.Div(id=app_id_dict['hidden_df_tb_div']),
 
                 # Transmission at CG-1D and sample stack
-                html.Div(id=result_id),
+                html.Div(id=app_id_dict['result_id']),
             ],
-            id=output_id,
+            id=app_id_dict['output_id'],
             style={'display': 'none'},
         ),
     ]
@@ -238,13 +209,13 @@ layout = html.Div(
 
 
 @app.callback(
-    Output(hidden_range_input_coord_id, 'children'),
+    Output(app_id_dict['hidden_range_input_coord_id'], 'children'),
     [
-        Input(range_table_id, 'data_timestamp'),
+        Input(app_id_dict['range_table_id'], 'data_timestamp'),
     ],
     [
-        State(range_table_id, 'data'),
-        State(range_table_id, 'data_previous'),
+        State(app_id_dict['range_table_id'], 'data'),
+        State(app_id_dict['range_table_id'], 'data_previous'),
     ])
 def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
     old_range_tb_df = pd.DataFrame(old_range_tb_rows)
@@ -263,17 +234,17 @@ def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
 
 @app.callback(
     [
-        Output(range_table_id, 'data'),
-        Output(hidden_prev_distance_id, 'children'),
+        Output(app_id_dict['range_table_id'], 'data'),
+        Output(app_id_dict['hidden_prev_distance_id'], 'children'),
     ],
     [
-        Input(range_table_id, 'data_timestamp'),
-        Input(hidden_range_input_coord_id, 'children'),
-        Input(distance_id, 'value'),
+        Input(app_id_dict['range_table_id'], 'data_timestamp'),
+        Input(app_id_dict['hidden_range_input_coord_id'], 'children'),
+        Input(app_id_dict['distance_id'], 'value'),
     ],
     [
-        State(hidden_prev_distance_id, 'children'),
-        State(range_table_id, 'data'),
+        State(app_id_dict['hidden_prev_distance_id'], 'children'),
+        State(app_id_dict['range_table_id'], 'data'),
     ])
 def form_range_table(timestamp, modified_coord, distance, prev_distance, range_table_rows):
     if distance == prev_distance:
@@ -290,21 +261,21 @@ def form_range_table(timestamp, modified_coord, distance, prev_distance, range_t
 
 @app.callback(
     [
-        Output(sample_table_id, 'data'),
-        Output(error_upload_id, 'children'),
-        Output(hidden_upload_time_id, 'children'),
+        Output(app_id_dict['sample_table_id'], 'data'),
+        Output(app_id_dict['error_upload_id'], 'children'),
+        Output(app_id_dict['hidden_upload_time_id'], 'children'),
     ],
     [
-        Input(add_row_id, 'n_clicks_timestamp'),
-        Input(del_row_id, 'n_clicks_timestamp'),
-        Input(sample_upload_id, 'contents'),
-        Input(sample_upload_id, 'last_modified'),
+        Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
+        Input(app_id_dict['del_row_id'], 'n_clicks_timestamp'),
+        Input(app_id_dict['sample_upload_id'], 'contents'),
+        Input(app_id_dict['sample_upload_id'], 'last_modified'),
     ],
     [
-        State(hidden_upload_time_id, 'children'),
-        State(sample_upload_id, 'filename'),
-        State(sample_table_id, 'data'),
-        State(sample_table_id, 'columns')
+        State(app_id_dict['hidden_upload_time_id'], 'children'),
+        State(app_id_dict['sample_upload_id'], 'filename'),
+        State(app_id_dict['sample_table_id'], 'data'),
+        State(app_id_dict['sample_table_id'], 'columns')
     ])
 def update_rows(n_add, n_del, list_of_contents, upload_time, prev_upload_time, list_of_names, rows, columns):
     rows, error_message, upload_t = update_rows_util(n_add=n_add,
@@ -319,12 +290,12 @@ def update_rows(n_add, n_del, list_of_contents, upload_time, prev_upload_time, l
 
 
 @app.callback(
-    Output(iso_table_id, 'data'),
+    Output(app_id_dict['iso_table_id'], 'data'),
     [
-        Input(sample_table_id, 'data'),
+        Input(app_id_dict['sample_table_id'], 'data'),
     ],
     [
-        State(iso_table_id, 'data'),
+        State(app_id_dict['iso_table_id'], 'data'),
     ])
 def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
@@ -336,12 +307,12 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
 
 
 @app.callback(
-    Output(iso_div_id, 'style'),
+    Output(app_id_dict['iso_div_id'], 'style'),
     [
-        Input(iso_check_id, 'value'),
+        Input(app_id_dict['iso_check_id'], 'value'),
     ],
     [
-        State(iso_div_id, 'style'),
+        State(app_id_dict['iso_div_id'], 'style'),
     ])
 def show_hide_iso_table(iso_changed, style):
     if len(iso_changed) == 1:
@@ -404,10 +375,10 @@ def disable_plot_scale_options(y_type):
 
 
 @app.callback(
-    Output(output_id, 'style'),
+    Output(app_id_dict['output_id'], 'style'),
     [
-        Input(submit_button_id, 'n_clicks'),
-        Input(error_id, 'children'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Input(app_id_dict['error_id'], 'children'),
     ])
 def show_output_div(n_submit, test_passed):
     if n_submit is not None:
@@ -420,15 +391,15 @@ def show_output_div(n_submit, test_passed):
 
 
 @app.callback(
-    Output(error_id, 'children'),
+    Output(app_id_dict['error_id'], 'children'),
     [
-        Input(submit_button_id, 'n_clicks'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
     ],
     [
-        State(sample_table_id, 'data'),
-        State(iso_table_id, 'data'),
-        State(range_table_id, 'data'),
-        State(iso_check_id, 'value'),
+        State(app_id_dict['sample_table_id'], 'data'),
+        State(app_id_dict['iso_table_id'], 'data'),
+        State(app_id_dict['range_table_id'], 'data'),
+        State(app_id_dict['iso_check_id'], 'value'),
     ])
 def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
     if n_submit is not None:
@@ -476,7 +447,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
 
 
 @app.callback(
-    Output(prev_x_type_id, 'children'),
+    Output(app_id_dict['prev_x_type_id'], 'children'),
     [
         Input('x_type', 'value'),
     ])
@@ -485,19 +456,19 @@ def store_x_type(x_type):
 
 
 @app.callback(
-    Output(hidden_df_json_id, 'children'),
+    Output(app_id_dict['hidden_df_json_id'], 'children'),
     [
-        Input(submit_button_id, 'n_clicks'),
-        Input(error_id, 'children'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Input(app_id_dict['error_id'], 'children'),
         Input('y_type', 'value'),
     ],
     [
-        State(range_table_id, 'data'),
-        State(e_step_id, 'value'),
-        State(distance_id, 'value'),
-        State(sample_table_id, 'data'),
-        State(iso_table_id, 'data'),
-        State(iso_check_id, 'value'),
+        State(app_id_dict['range_table_id'], 'data'),
+        State(app_id_dict['e_step_id'], 'value'),
+        State(app_id_dict['distance_id'], 'value'),
+        State(app_id_dict['sample_table_id'], 'data'),
+        State(app_id_dict['iso_table_id'], 'data'),
+        State(app_id_dict['iso_check_id'], 'value'),
     ])
 def store_reso_df_in_json(n_submit,
                           test_passed,
@@ -548,12 +519,12 @@ def store_reso_df_in_json(n_submit,
 
 
 @app.callback(
-    Output(plot_div_id, 'children'),
+    Output(app_id_dict['plot_div_id'], 'children'),
     [
-        Input(submit_button_id, 'n_clicks'),
-        Input(error_id, 'children'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Input(app_id_dict['error_id'], 'children'),
         Input('show_opt', 'value'),
-        Input(hidden_df_json_id, 'children'),
+        Input(app_id_dict['hidden_df_json_id'], 'children'),
         Input('y_type', 'value'),
     ],
     [
@@ -620,22 +591,22 @@ def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_s
             plotly_fig['layout']['yaxis']['type'] = 'linear'
             plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
 
-        return html.Div([dcc.Graph(figure=plotly_fig, id=plot_fig_id)])
+        return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])])
     else:
         return plot_loading
 
 
 @app.callback(
-    Output(plot_fig_id, 'figure'),
+    Output(app_id_dict['plot_fig_id'], 'figure'),
     [
         Input('plot_scale', 'value'),
         Input('x_type', 'value'),
     ],
     [
         State('y_type', 'value'),
-        State(prev_x_type_id, 'children'),
-        State(plot_fig_id, 'figure'),
-        State(hidden_df_json_id, 'children'),
+        State(app_id_dict['prev_x_type_id'], 'children'),
+        State(app_id_dict['plot_fig_id'], 'figure'),
+        State(app_id_dict['hidden_df_json_id'], 'children'),
     ])
 def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly_fig, jsonified_data):
     # Change plot x type
@@ -675,16 +646,16 @@ def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly
 
 
 @app.callback(
-    Output(result_id, 'children'),
+    Output(app_id_dict['result_id'], 'children'),
     [
-        Input(submit_button_id, 'n_clicks'),
-        Input(error_id, 'children'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Input(app_id_dict['error_id'], 'children'),
     ],
     [
-        State(sample_table_id, 'data'),
-        State(iso_table_id, 'data'),
-        State(iso_check_id, 'value'),
-        State(range_table_id, 'data'),
+        State(app_id_dict['sample_table_id'], 'data'),
+        State(app_id_dict['iso_table_id'], 'data'),
+        State(app_id_dict['iso_check_id'], 'value'),
+        State(app_id_dict['range_table_id'], 'data'),
     ])
 def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed, range_table_rows):
     if test_passed is True:
@@ -720,19 +691,19 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
 
 @app.callback(
     [
-        Output(hidden_df_tb_div, 'children'),
-        Output(export_plot_data_notice_id, 'children'),
+        Output(app_id_dict['hidden_df_tb_div'], 'children'),
+        Output(app_id_dict['export_plot_data_notice_id'], 'children'),
     ],
     [
-        Input(submit_button_id, 'n_clicks_timestamp'),
-        Input(export_plot_data_button_id, 'n_clicks_timestamp'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks_timestamp'),
+        Input(app_id_dict['export_plot_data_button_id'], 'n_clicks_timestamp'),
     ],
     [
         State('x_type', 'value'),
         State('y_type', 'value'),
         State('show_opt', 'value'),
-        State(error_id, 'children'),
-        State(hidden_df_json_id, 'children'),
+        State(app_id_dict['error_id'], 'children'),
+        State(app_id_dict['hidden_df_json_id'], 'children'),
     ])
 def export_plot_data(n_submit, n_export, x_type, y_type, show_opt, test_passed, jsonified_data):
     if n_export != 0:
@@ -756,7 +727,7 @@ def export_plot_data(n_submit, n_export, x_type, y_type, show_opt, test_passed, 
                 df_tb_div_list = [
                     html.Hr(),
                     dt.DataTable(
-                        id=hidden_df_tb,
+                        id=app_id_dict['hidden_df_tb'],
                         data=df_to_export.to_dict('records'),
                         columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
                         export_format='csv',

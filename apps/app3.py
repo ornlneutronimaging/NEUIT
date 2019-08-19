@@ -8,21 +8,7 @@ compos_df_default = pd.DataFrame({
     compos_2nd_col_id: ['50', '50'],
 })
 
-app_name = 'app3'
-compos_type_id = app_name + 'compos_input_type'
-sample_upload_id = app_name + 'sample_upload'
-error_upload_id = app_name + 'error_upload'
-hidden_upload_time_id = app_name + 'time_upload'
-add_row_id = app_name + '_add_row'
-del_row_id = app_name + '_del_row'
-sample_table_id = app_name + '_sample_table'
-iso_check_id = app_name + '_iso_check'
-iso_div_id = app_name + '_iso_input'
-iso_table_id = app_name + '_iso_table'
-submit_button_id = app_name + '_submit'
-result_id = app_name + '_result'
-error_id = app_name + '_error'
-output_id = app_name + '_output'
+app_id_dict = init_app_ids(app_name='app3')
 
 # Create app layout
 layout = html.Div(
@@ -38,18 +24,19 @@ layout = html.Div(
         html.H3('Sample composition'),
         html.Div(
             [
-                dcc.RadioItems(id=compos_type_id,
+                dcc.RadioItems(id=app_id_dict['compos_type_id'],
                                options=[
                                    {'label': weight_name, 'value': weight_name},
                                    {'label': atomic_name, 'value': atomic_name},
                                ],
                                value=weight_name,
                                ),
-                init_upload_field(id_str=sample_upload_id,
-                                  div_str=error_upload_id,
-                                  hidden_div_str=hidden_upload_time_id),
-                html.Button('+', id=add_row_id, n_clicks_timestamp=0),
-                html.Button('-', id=del_row_id, n_clicks_timestamp=0),
+                init_upload_field(id_str=app_id_dict['sample_upload_id'],
+                                  div_str=app_id_dict['error_upload_id'],
+                                  hidden_div_str=app_id_dict['hidden_upload_time_id'],
+                                  add_row_id=app_id_dict['add_row_id'],
+                                  del_row_id=app_id_dict['del_row_id'],
+                                  ),
                 dt.DataTable(
                     data=compos_df_default.to_dict('records'),
                     # optional - sets the order of columns
@@ -67,11 +54,12 @@ layout = html.Div(
                          'width': '50%'},
                     ],
                     style_data_conditional=[striped_rows],
-                    id=sample_table_id
+                    id=app_id_dict['sample_table_id']
                 ),
                 markdown_compos,
+
                 # Input table for isotopic ratios
-                dcc.Checklist(id=iso_check_id,
+                dcc.Checklist(id=app_id_dict['iso_check_id'],
                               options=[
                                   {'label': 'Modify isotopic ratios', 'value': 'yes'},
                               ], value=[],
@@ -79,25 +67,25 @@ layout = html.Div(
                 html.Div(
                     [
                         markdown_iso,
-                        init_iso_table(id_str=iso_table_id)
+                        init_iso_table(id_str=app_id_dict['iso_table_id'])
                     ],
-                    id=iso_div_id,
+                    id=app_id_dict['iso_div_id'],
                     style={'display': 'none'},
                 ),
-                html.Button('Submit', id=submit_button_id),
+                html.Button('Submit', id=app_id_dict['submit_button_id']),
             ]
         ),
 
         # Error message div
-        html.Div(id=error_id, children=None),
+        html.Div(id=app_id_dict['error_id'], children=None),
 
         # Output div
         html.Div(
             [
                 # Effective formula and stack info
-                html.Div(id=result_id),
+                html.Div(id=app_id_dict['result_id']),
             ],
-            id=output_id,
+            id=app_id_dict['output_id'],
             style={'display': 'none'},
         ),
     ]
@@ -105,12 +93,12 @@ layout = html.Div(
 
 
 @app.callback(
-    Output(sample_table_id, 'columns'),
+    Output(app_id_dict['sample_table_id'], 'columns'),
     [
-        Input(compos_type_id, 'value'),
+        Input(app_id_dict['compos_type_id'], 'value'),
     ],
     [
-        State(sample_table_id, 'columns'),
+        State(app_id_dict['sample_table_id'], 'columns'),
     ])
 def update_input_columns(compos_type, columns):
     if compos_type == weight_name:
@@ -122,21 +110,21 @@ def update_input_columns(compos_type, columns):
 
 @app.callback(
     [
-        Output(sample_table_id, 'data'),
-        Output(error_upload_id, 'children'),
-        Output(hidden_upload_time_id, 'children'),
+        Output(app_id_dict['sample_table_id'], 'data'),
+        Output(app_id_dict['error_upload_id'], 'children'),
+        Output(app_id_dict['hidden_upload_time_id'], 'children'),
     ],
     [
-        Input(add_row_id, 'n_clicks_timestamp'),
-        Input(del_row_id, 'n_clicks_timestamp'),
-        Input(sample_upload_id, 'contents'),
-        Input(sample_upload_id, 'last_modified'),
+        Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
+        Input(app_id_dict['del_row_id'], 'n_clicks_timestamp'),
+        Input(app_id_dict['sample_upload_id'], 'contents'),
+        Input(app_id_dict['sample_upload_id'], 'last_modified'),
     ],
     [
-        State(hidden_upload_time_id, 'children'),
-        State(sample_upload_id, 'filename'),
-        State(sample_table_id, 'data'),
-        State(sample_table_id, 'columns')
+        State(app_id_dict['hidden_upload_time_id'], 'children'),
+        State(app_id_dict['sample_upload_id'], 'filename'),
+        State(app_id_dict['sample_table_id'], 'data'),
+        State(app_id_dict['sample_table_id'], 'columns')
     ])
 def update_rows(n_add, n_del, list_of_contents, upload_time, prev_upload_time, list_of_names, rows, columns):
     rows, error_message, upload_t = update_rows_util(n_add=n_add,
@@ -151,12 +139,12 @@ def update_rows(n_add, n_del, list_of_contents, upload_time, prev_upload_time, l
 
 
 @app.callback(
-    Output(iso_table_id, 'data'),
+    Output(app_id_dict['iso_table_id'], 'data'),
     [
-        Input(sample_table_id, 'data'),
+        Input(app_id_dict['sample_table_id'], 'data'),
     ],
     [
-        State(iso_table_id, 'data'),
+        State(app_id_dict['iso_table_id'], 'data'),
     ])
 def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
@@ -168,12 +156,12 @@ def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
 
 
 @app.callback(
-    Output(iso_div_id, 'style'),
+    Output(app_id_dict['iso_div_id'], 'style'),
     [
-        Input(iso_check_id, 'value'),
+        Input(app_id_dict['iso_check_id'], 'value'),
     ],
     [
-        State(iso_div_id, 'style'),
+        State(app_id_dict['iso_div_id'], 'style'),
     ])
 def show_hide_iso_table(iso_changed, style):
     if len(iso_changed) == 1:
@@ -184,10 +172,10 @@ def show_hide_iso_table(iso_changed, style):
 
 
 @app.callback(
-    Output(output_id, 'style'),
+    Output(app_id_dict['output_id'], 'style'),
     [
-        Input(submit_button_id, 'n_clicks'),
-        Input(error_id, 'children'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Input(app_id_dict['error_id'], 'children'),
     ])
 def show_output_div(n_submit, test_passed):
     if n_submit is not None:
@@ -200,14 +188,14 @@ def show_output_div(n_submit, test_passed):
 
 
 @app.callback(
-    Output(error_id, 'children'),
+    Output(app_id_dict['error_id'], 'children'),
     [
-        Input(submit_button_id, 'n_clicks'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
     ],
     [
-        State(sample_table_id, 'data'),
-        State(iso_table_id, 'data'),
-        State(iso_check_id, 'value'),
+        State(app_id_dict['sample_table_id'], 'data'),
+        State(app_id_dict['iso_table_id'], 'data'),
+        State(app_id_dict['iso_check_id'], 'value'),
     ])
 def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_submit is not None:
@@ -242,16 +230,16 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
 
 
 @app.callback(
-    Output(result_id, 'children'),
+    Output(app_id_dict['result_id'], 'children'),
     [
-        Input(submit_button_id, 'n_clicks'),
-        Input(error_id, 'children'),
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Input(app_id_dict['error_id'], 'children'),
     ],
     [
-        State(sample_table_id, 'data'),
-        State(iso_table_id, 'data'),
-        State(iso_check_id, 'value'),
-        State(compos_type_id, 'value'),
+        State(app_id_dict['sample_table_id'], 'data'),
+        State(app_id_dict['iso_table_id'], 'data'),
+        State(app_id_dict['iso_check_id'], 'value'),
+        State(app_id_dict['compos_type_id'], 'value'),
     ])
 def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
     if test_passed is True:
@@ -292,8 +280,8 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
         output_div_list = [
             html.Hr(),
             html.H3('Result'),
-            html.P('The effective chemical formula after conversion: {}'.format(effective_formula)),
-            html.P("(This can be passed as 'Chemical formula' for other apps)"),
+            html.P('Effective chemical formula: {}'.format(effective_formula)),
+            html.P("(Above 'effective chemical formula' can be used as 'Chemical formula' in other apps)"),
             dt.DataTable(data=compos_output_df.to_dict('records'),
                          columns=compos_header_percent_df.to_dict('records'),
                          editable=False,

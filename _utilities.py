@@ -946,9 +946,49 @@ def parse_contents(contents, filename, rows):
 #     'whiteSpace': 'pre-wrap',
 #     'wordBreak': 'break-all'
 # })
+def init_app_ids(app_name: str):
+    id_dict = {}
+    id_dict['sample_upload_id'] = app_name + '_sample_upload'
+    id_dict['error_upload_id'] = app_name + '_error_upload'
+    id_dict['hidden_upload_time_id'] = app_name + '_time_upload'
+    id_dict['add_row_id'] = app_name + '_add_row'
+    id_dict['del_row_id'] = app_name + '_del_row'
+    id_dict['sample_table_id'] = app_name + '_sample_table'
+    id_dict['iso_check_id'] = app_name + '_iso_check'
+    id_dict['iso_div_id'] = app_name + '_iso_input'
+    id_dict['iso_table_id'] = app_name + '_iso_table'
+    id_dict['submit_button_id'] = app_name + '_submit'
+    id_dict['result_id'] = app_name + '_result'
+    id_dict['error_id'] = app_name + '_error'
+    id_dict['output_id'] = app_name + '_output'
+    id_dict['beamline_id'] = app_name + '_beamline'
+    id_dict['band_div_id'] = app_name + '_band_div'
+    id_dict['band_min_id'] = app_name + '_band_min'
+    id_dict['band_max_id'] = app_name + '_band_max'
+    id_dict['band_type_id'] = app_name + '_band_type'
+    id_dict['band_unit_id'] = app_name + '_band_unit'
+
+    id_dict['slider_id'] = app_name + '_e_range_slider'
+    id_dict['range_table_id'] = app_name + '_range_table'
+    id_dict['e_step_id'] = app_name + '_e_step'
+    id_dict['distance_id'] = app_name + '_distance'
+    id_dict['hidden_prev_distance_id'] = app_name + '_hidden_prev_distance'
+    id_dict['hidden_range_input_coord_id'] = app_name + '_hidden_range_input_coord'
+    id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
+    id_dict['hidden_df_tb_div'] = app_name + '_hidden_df_tb_div'
+    id_dict['hidden_df_tb'] = app_name + '_hidden_df_tb'
+    id_dict['plot_div_id'] = app_name + '_plot'
+    id_dict['plot_fig_id'] = app_name + '_plot_fig'
+    id_dict['plot_options_div_id'] = app_name + '_plot_options'
+    id_dict['export_plot_data_button_id'] = app_name + '_plot_data_export'
+    id_dict['export_plot_data_notice_id'] = app_name + '_export_notice'
+    id_dict['prev_x_type_id'] = app_name + '_prev_x_type'
+
+    id_dict['compos_type_id'] = app_name + 'compos_input_type'
+    return id_dict
 
 
-def init_upload_field(id_str: str, div_str: str, hidden_div_str: str):
+def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id: str, del_row_id):
     upload_field = html.Div([dcc.Upload(id=id_str,
                                         children=html.Div([
                                             'Drag and Drop or ',
@@ -970,6 +1010,8 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str):
                                         ),
                              html.Div(id=div_str),
                              html.Div(id=hidden_div_str, style={'display': 'none'}, children=0),
+                             html.Button('+', id=add_row_id, n_clicks_timestamp=0),
+                             html.Button('-', id=del_row_id, n_clicks_timestamp=0),
                              ])
     return upload_field
 
