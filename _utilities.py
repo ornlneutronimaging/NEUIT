@@ -897,6 +897,19 @@ def add_del_rows(n_add, n_del, rows, columns):
     return rows
 
 
+def update_rows_util(n_add, n_del, upload_time, list_of_contents, list_of_names, rows, columns):
+    error_message = None
+    if list_of_contents is not None:
+        _rows = []
+        for c, n in zip(list_of_contents, list_of_names):
+            current_rows, error_message = parse_contents(c, n, rows)
+            _rows.extend(current_rows)
+        rows = _rows
+    else:
+        rows = add_del_rows(n_add=n_add, n_del=n_del, rows=rows, columns=columns)
+    return rows, error_message
+
+
 def parse_contents(contents, filename, rows):
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
@@ -917,7 +930,8 @@ def parse_contents(contents, filename, rows):
             div = html.Div(["ERROR: '{}', contains no data.".format(filename)])
         # if df.columns != list(rows[0].keys()):
         elif list(df.columns) != list(rows[0].keys()):
-            div = html.Div(["ERROR: '{}', contains invalid column name.".format(filename)])
+            div = html.Div(
+                ["ERROR: '{}', contains invalid column name. '{}' required.".format(filename, list(rows[0].keys()))])
         else:
             df = df[df[chem_name] != '']
             rows = df.to_dict('records')

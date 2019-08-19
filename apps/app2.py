@@ -302,18 +302,13 @@ def form_range_table(timestamp, modified_coord, distance, prev_distance, range_t
         State(sample_table_id, 'columns')
     ])
 def update_rows(n_add, n_del, upload_time, list_of_contents, list_of_names, rows, columns):
-    # print(n_add)
-    # print(n_del)
-    # if upload_time > max(n_add, n_del):
-    error_message = None
-    if list_of_contents is not None:
-        _rows = []
-        for c, n in zip(list_of_contents, list_of_names):
-            current_rows, error_message = parse_contents(c, n, rows)
-            _rows.extend(current_rows)
-        rows = _rows
-    else:
-        rows = add_del_rows(n_add=n_add, n_del=n_del, rows=rows, columns=columns)
+    rows, error_message = update_rows_util(n_add=n_add,
+                                           n_del=n_del,
+                                           upload_time=upload_time,
+                                           list_of_contents=list_of_contents,
+                                           list_of_names=list_of_names,
+                                           rows=rows,
+                                           columns=columns)
     return rows, error_message
 
 
@@ -725,12 +720,6 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
     [
         Input(submit_button_id, 'n_clicks_timestamp'),
         Input(export_plot_data_button_id, 'n_clicks_timestamp'),
-        # Input('x_type', 'n_clicks_timestamp'),
-        # Input('y_type', 'n_clicks_timestamp'),
-        # Input('show_opt', 'n_clicks_timestamp'),
-        # Input('x_type', 'value'),
-        # Input('y_type', 'value'),
-        # Input('show_opt', 'value'),
     ],
     [
         State('x_type', 'value'),
