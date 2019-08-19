@@ -12,6 +12,7 @@ sample_df_default = pd.DataFrame({
 app_name = 'app1'
 sample_upload_id = app_name + 'sample_upload'
 error_upload_id = app_name + 'error_upload'
+hidden_upload_time_id = app_name + 'time_upload'
 add_row_id = app_name + '_add_row'
 del_row_id = app_name + '_del_row'
 sample_table_id = app_name + '_sample_table'
@@ -109,7 +110,9 @@ layout = html.Div(
         html.H3('Sample info'),
         html.Div(
             [
-                init_upload_field(id_str=sample_upload_id, div_str=error_upload_id),
+                init_upload_field(id_str=sample_upload_id,
+                                  div_str=error_upload_id,
+                                  hidden_div_str=hidden_upload_time_id),
                 html.Button('+', id=add_row_id, n_clicks_timestamp=0),
                 html.Button('-', id=del_row_id, n_clicks_timestamp=0),
                 dt.DataTable(
@@ -195,27 +198,30 @@ def show_band_units(band_type):
     [
         Output(sample_table_id, 'data'),
         Output(error_upload_id, 'children'),
+        Output(hidden_upload_time_id, 'children'),
     ],
     [
         Input(add_row_id, 'n_clicks_timestamp'),
         Input(del_row_id, 'n_clicks_timestamp'),
-        Input(sample_upload_id, 'last_modified'),
         Input(sample_upload_id, 'contents'),
+        Input(sample_upload_id, 'last_modified'),
     ],
     [
+        State(hidden_upload_time_id, 'children'),
         State(sample_upload_id, 'filename'),
         State(sample_table_id, 'data'),
         State(sample_table_id, 'columns')
     ])
-def update_rows(n_add, n_del, upload_time, list_of_contents, list_of_names, rows, columns):
-    rows, error_message = update_rows_util(n_add=n_add,
-                                           n_del=n_del,
-                                           upload_time=upload_time,
-                                           list_of_contents=list_of_contents,
-                                           list_of_names=list_of_names,
-                                           rows=rows,
-                                           columns=columns)
-    return rows, error_message
+def update_rows(n_add, n_del, list_of_contents, upload_time, prev_upload_time, list_of_names, rows, columns):
+    rows, error_message, upload_t = update_rows_util(n_add=n_add,
+                                                     n_del=n_del,
+                                                     list_of_contents=list_of_contents,
+                                                     upload_time=upload_time,
+                                                     prev_upload_time=prev_upload_time,
+                                                     list_of_names=list_of_names,
+                                                     rows=rows,
+                                                     columns=columns)
+    return rows, error_message, upload_t
 
 
 @app.callback(

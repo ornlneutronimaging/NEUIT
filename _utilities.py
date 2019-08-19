@@ -897,17 +897,18 @@ def add_del_rows(n_add, n_del, rows, columns):
     return rows
 
 
-def update_rows_util(n_add, n_del, upload_time, list_of_contents, list_of_names, rows, columns):
+def update_rows_util(n_add, n_del, list_of_contents, upload_time, prev_upload_time, list_of_names, rows, columns):
     error_message = None
-    if list_of_contents is not None:
-        _rows = []
-        for c, n in zip(list_of_contents, list_of_names):
-            current_rows, error_message = parse_contents(c, n, rows)
-            _rows.extend(current_rows)
-        rows = _rows
+    if upload_time != prev_upload_time:
+        if list_of_contents is not None:
+            _rows = []
+            for c, n in zip(list_of_contents, list_of_names):
+                current_rows, error_message = parse_contents(c, n, rows)
+                _rows.extend(current_rows)
+            rows = _rows
     else:
         rows = add_del_rows(n_add=n_add, n_del=n_del, rows=rows, columns=columns)
-    return rows, error_message
+    return rows, error_message, upload_time
 
 
 def parse_contents(contents, filename, rows):
@@ -947,7 +948,7 @@ def parse_contents(contents, filename, rows):
 # })
 
 
-def init_upload_field(id_str: str, div_str: str):
+def init_upload_field(id_str: str, div_str: str, hidden_div_str: str):
     upload_field = html.Div([dcc.Upload(id=id_str,
                                         children=html.Div([
                                             'Drag and Drop or ',
@@ -967,7 +968,8 @@ def init_upload_field(id_str: str, div_str: str):
                                         multiple=True,
                                         last_modified=0,
                                         ),
-                             html.Div(id=div_str)
+                             html.Div(id=div_str),
+                             html.Div(id=hidden_div_str, style={'display': 'none'}, children=0),
                              ])
     return upload_field
 
