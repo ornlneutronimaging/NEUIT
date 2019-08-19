@@ -961,30 +961,35 @@ def init_app_ids(app_name: str):
     id_dict['result_id'] = app_name + '_result'
     id_dict['error_id'] = app_name + '_error'
     id_dict['output_id'] = app_name + '_output'
-    id_dict['beamline_id'] = app_name + '_beamline'
-    id_dict['band_div_id'] = app_name + '_band_div'
-    id_dict['band_min_id'] = app_name + '_band_min'
-    id_dict['band_max_id'] = app_name + '_band_max'
-    id_dict['band_type_id'] = app_name + '_band_type'
-    id_dict['band_unit_id'] = app_name + '_band_unit'
 
-    id_dict['slider_id'] = app_name + '_e_range_slider'
-    id_dict['range_table_id'] = app_name + '_range_table'
-    id_dict['e_step_id'] = app_name + '_e_step'
-    id_dict['distance_id'] = app_name + '_distance'
-    id_dict['hidden_prev_distance_id'] = app_name + '_hidden_prev_distance'
-    id_dict['hidden_range_input_coord_id'] = app_name + '_hidden_range_input_coord'
-    id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
-    id_dict['hidden_df_tb_div'] = app_name + '_hidden_df_tb_div'
-    id_dict['hidden_df_tb'] = app_name + '_hidden_df_tb'
-    id_dict['plot_div_id'] = app_name + '_plot'
-    id_dict['plot_fig_id'] = app_name + '_plot_fig'
-    id_dict['plot_options_div_id'] = app_name + '_plot_options'
-    id_dict['export_plot_data_button_id'] = app_name + '_plot_data_export'
-    id_dict['export_plot_data_notice_id'] = app_name + '_export_notice'
-    id_dict['prev_x_type_id'] = app_name + '_prev_x_type'
+    if app_name == 'app1':  # id names for app1 only
+        id_dict['beamline_id'] = app_name + '_beamline'
+        id_dict['band_div_id'] = app_name + '_band_div'
+        id_dict['band_min_id'] = app_name + '_band_min'
+        id_dict['band_max_id'] = app_name + '_band_max'
+        id_dict['band_type_id'] = app_name + '_band_type'
+        id_dict['band_unit_id'] = app_name + '_band_unit'
 
-    id_dict['compos_type_id'] = app_name + 'compos_input_type'
+    elif app_name == 'app2': # id names for app2 only
+        id_dict['slider_id'] = app_name + '_e_range_slider'
+        id_dict['range_table_id'] = app_name + '_range_table'
+        id_dict['e_step_id'] = app_name + '_e_step'
+        id_dict['distance_id'] = app_name + '_distance'
+        id_dict['hidden_prev_distance_id'] = app_name + '_hidden_prev_distance'
+        id_dict['hidden_range_input_coord_id'] = app_name + '_hidden_range_input_coord'
+        id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
+        id_dict['hidden_df_tb_div'] = app_name + '_hidden_df_tb_div'
+        id_dict['hidden_df_tb'] = app_name + '_hidden_df_tb'
+        id_dict['plot_div_id'] = app_name + '_plot'
+        id_dict['plot_fig_id'] = app_name + '_plot_fig'
+        id_dict['plot_options_div_id'] = app_name + '_plot_options'
+        id_dict['export_plot_data_button_id'] = app_name + '_plot_data_export'
+        id_dict['export_plot_data_notice_id'] = app_name + '_export_notice'
+        id_dict['prev_x_type_id'] = app_name + '_prev_x_type'
+
+    else:  # id names for app3 only
+        id_dict['compos_type_id'] = app_name + 'compos_input_type'
+
     return id_dict
 
 
