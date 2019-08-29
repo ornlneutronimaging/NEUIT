@@ -1119,7 +1119,7 @@ iso_tb_gray_cols = [
 
 markdown_sample = dcc.Markdown('''
 NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**, *same element symbol* 
-can **ONLY APPEAR ONCE** within each formula input. Density input can **ONLY** be **omitted (leave as blank)** 
+can **ONLY APPEAR ONCE** within each formula input row. Density input can **ONLY** be **omitted (leave as blank)** 
 if the input formula is a single element.''')
 
 markdown_disclaimer_sns = dcc.Markdown('''
@@ -1135,7 +1135,8 @@ label_sample = html.Label(['When omitted, natural densities will be used. List o
                                   target="_blank")])
 
 markdown_compos = dcc.Markdown('''
-NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**.''')
+NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**, *same element symbol* 
+can **ONLY APPEAR ONCE** within each formula input row.''')
 
 markdown_iso = dcc.Markdown('''
 NOTE: Uncheck the box will **NOT RESET** this table if you have edited it,
