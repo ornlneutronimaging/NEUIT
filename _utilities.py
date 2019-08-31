@@ -1021,7 +1021,7 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
                              html.Div(id=hidden_div_str, style={'display': 'none'}, children=0),
                              html.Button('+', id=add_row_id, n_clicks_timestamp=0),
                              html.Button('-', id=del_row_id, n_clicks_timestamp=0),
-                             # Database dropdown not implemented yet
+                             # Database dropdown (not implemented yet)
                              dcc.Dropdown(
                                  id=database_id,
                                  options=[
