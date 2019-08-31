@@ -125,6 +125,7 @@ layout = html.Div(
                                   hidden_div_str=app_id_dict['hidden_upload_time_id'],
                                   add_row_id=app_id_dict['add_row_id'],
                                   del_row_id=app_id_dict['del_row_id'],
+                                  database_id=app_id_dict['database_id'],
                                   ),
                 dt.DataTable(
                     data=sample_df_default.to_dict('records'),

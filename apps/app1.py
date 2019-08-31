@@ -96,6 +96,7 @@ layout = html.Div(
                                   hidden_div_str=app_id_dict['hidden_upload_time_id'],
                                   add_row_id=app_id_dict['add_row_id'],
                                   del_row_id=app_id_dict['del_row_id'],
+                                  database_id=app_id_dict['database_id'],
                                   ),
                 dt.DataTable(
                     data=sample_df_default.to_dict('records'),
@@ -261,6 +262,7 @@ def show_output_div(n_submit, test_passed):
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
     ],
     [
+        State(app_id_dict['database_id'], 'value'),
         State(app_id_dict['sample_table_id'], 'data'),
         State(app_id_dict['iso_table_id'], 'data'),
         State(app_id_dict['iso_check_id'], 'value'),
@@ -269,7 +271,7 @@ def show_output_div(n_submit, test_passed):
         State(app_id_dict['band_max_id'], 'value'),
         State(app_id_dict['band_type_id'], 'value'),
     ])
-def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min, band_max, band_type):
+def error(n_submit, database, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min, band_max, band_type):
     if n_submit is not None:
         # Convert all number str to numeric and keep rest invalid input
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
@@ -277,8 +279,7 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min
 
         # Test sample input format
         test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
-                                                                  sample_schema=sample_dict_schema)
-
+                                                                  sample_schema=sample_dict_schema,)
         # Test density required or not
         if all(test_passed_list):
             test_passed_list, output_div_list = validate_density_input(sample_tb_df=sample_tb_df,

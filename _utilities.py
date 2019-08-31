@@ -21,6 +21,8 @@ app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/converter'},
             }
 
+database_default = 'ENDF_VIII'
+
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
 speed_name = 'Speed (m/s)'
@@ -118,7 +120,7 @@ def empty_str(field, value, error):
 
 def valid_chem_name(field, value, error):
     if not is_number(value):
-        if not validate_chem_name(value):
+        if not validate_chem_name(value, database=database_default):
             error(field, "must be a valid 'chemical formula', input is case sensitive")
     else:
         error(field, "must be a valid 'chemical formula', input is case sensitive")
@@ -405,10 +407,10 @@ def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
         return [False], [None]
 
 
-def validate_chem_name(input_name: str):
+def validate_chem_name(input_name: str, database: str):
     """ Returns True if string is a number. """
     try:
-        ir_util.formula_to_dictionary(input_name)
+        ir_util.formula_to_dictionary(formula=input_name, database=database)
         return True
     except ValueError:
         return False
@@ -418,9 +420,9 @@ def init_reso_from_tb(range_tb_df, e_step):
     v_1 = range_tb_df[energy_name][0]
     v_2 = range_tb_df[energy_name][1]
     if v_1 < v_2:
-        o_reso = Resonance(energy_min=v_1, energy_max=v_2, energy_step=e_step)
+        o_reso = Resonance(energy_min=v_1, energy_max=v_2, energy_step=e_step, database=database_default)
     else:
-        o_reso = Resonance(energy_min=v_2, energy_max=v_1, energy_step=e_step)
+        o_reso = Resonance(energy_min=v_2, energy_max=v_1, energy_step=e_step, database=database_default)
     return o_reso
 
 
@@ -506,7 +508,7 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
             e_max = band_max
 
     e_step = (e_max - e_min) / (100 - 1)
-    __o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    __o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step, database=database_default)
     _o_reso = unpack_sample_tb_df_and_add_layer(o_reso=__o_reso, sample_tb_df=sample_tb_df)
     o_reso = unpack_iso_tb_df_and_update(o_reso=_o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
     o_stack = o_reso.stack
@@ -712,7 +714,7 @@ def convert_to_effective_formula(ele_list, mol_list):
 
 
 def form_iso_table(sample_df: pd.DataFrame):
-    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
+    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1, database=database_default)
     o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_df)
     layer_list = list(o_reso.stack.keys())
     lay_list = []
@@ -953,6 +955,7 @@ def init_app_ids(app_name: str):
     id_dict['hidden_upload_time_id'] = app_name + '_time_upload'
     id_dict['add_row_id'] = app_name + '_add_row'
     id_dict['del_row_id'] = app_name + '_del_row'
+    id_dict['database_id'] = app_name + '_database'
     id_dict['sample_table_id'] = app_name + '_sample_table'
     id_dict['iso_check_id'] = app_name + '_iso_check'
     id_dict['iso_div_id'] = app_name + '_iso_input'
@@ -970,7 +973,7 @@ def init_app_ids(app_name: str):
         id_dict['band_type_id'] = app_name + '_band_type'
         id_dict['band_unit_id'] = app_name + '_band_unit'
 
-    elif app_name == 'app2': # id names for app2 only
+    elif app_name == 'app2':  # id names for app2 only
         id_dict['slider_id'] = app_name + '_e_range_slider'
         id_dict['range_table_id'] = app_name + '_range_table'
         id_dict['e_step_id'] = app_name + '_e_step'
@@ -993,7 +996,8 @@ def init_app_ids(app_name: str):
     return id_dict
 
 
-def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id: str, del_row_id):
+def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id: str, del_row_id: str,
+                      database_id: str):
     upload_field = html.Div([dcc.Upload(id=id_str,
                                         children=html.Div([
                                             'Drag and Drop or ',
@@ -1017,6 +1021,18 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
                              html.Div(id=hidden_div_str, style={'display': 'none'}, children=0),
                              html.Button('+', id=add_row_id, n_clicks_timestamp=0),
                              html.Button('-', id=del_row_id, n_clicks_timestamp=0),
+                             # Database dropdown not implemented yet
+                             dcc.Dropdown(
+                                 id=database_id,
+                                 options=[
+                                     {'label': 'ENDF/B-VII.1', 'value': 'ENDF_VII'},
+                                     {'label': 'ENDF/B-VIII.0', 'value': 'ENDF_VIII'},
+                                 ],
+                                 value='ENDF_VIII',
+                                 searchable=False,
+                                 clearable=False,
+                                 style={'display': 'none'}
+                             ),
                              ])
     return upload_field
 
