@@ -282,7 +282,8 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
             html.Hr(),
             html.H3('Result'),
             html.P('Effective chemical formula: {}'.format(effective_formula)),
-            html.P("(Above 'effective chemical formula' can be used as 'Chemical formula' in other apps)"),
+            dcc.Markdown('''Above '**effective chemical formula**' can be used as '**Chemical formula**' 
+            in other apps)'''),
             dt.DataTable(data=compos_output_df.to_dict('records'),
                          columns=compos_header_percent_df.to_dict('records'),
                          editable=False,

@@ -20,7 +20,6 @@ app.layout = html.Div(
 
 app_name = 'home'
 
-
 index_page = html.Div(
     [
         # Heading section
@@ -47,12 +46,13 @@ the expected resonance peaks for a selected neutron energy range.
 The energy dependent cross-section data used are from
 [National Nuclear Data Center](http://www.nndc.bnl.gov/), a published
 online database. [Evaluated Nuclear Data File](http://www.nndc.bnl.gov/exfor/endf00.jsp)
-([ENDF/B-VII.1](https://www.sciencedirect.com/science/article/pii/S009037521100113X)) 
+([ENDF/B-VIII.0](https://www.sciencedirect.com/science/article/pii/S0090375218300206)) 
 is currently supported and more evaluated databases will be added in the future.
 
 *[PeriodicTable](https://periodictable.readthedocs.io/en/latest/)* provides various 
 elements/isotopes related properties in the calculations.
 '''),
+        # [ENDF/B-VII.1](https://www.sciencedirect.com/science/article/pii/S009037521100113X)
         dcc.Markdown('''
 #### Acknowledgments
 
@@ -71,7 +71,7 @@ Journal of Open Source Software, 2(19), 407,
         dcc.Markdown('''
 #### Contact
 
-Yuxuan (Shawn) Zhang -- zhangy6@ornl.gov
+Yuxuan Zhang -- zhangy6@ornl.gov
 
 Jean Bilheux -- bilheuxjm@ornl.gov
 '''),

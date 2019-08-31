@@ -1140,11 +1140,11 @@ if the input formula is a single element.''')
 
 markdown_disclaimer_sns = dcc.Markdown('''
 **Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections 
-from ENDF/B-VII.1 database and the *simulated* beam spectrum at this beamline.''')
+from **ENDF/B-VIII.0** database and the **simulated** beam spectrum at this beamline.''')
 
 markdown_disclaimer_hfir = dcc.Markdown('''
 **Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections 
-from ENDF/B-VII.1 database and the *measured* beam spectrum at this beamline.''')
+from **ENDF/B-VIII.0** database and the **measured** beam spectrum at this beamline.''')
 
 label_sample = html.Label(['When omitted, natural densities will be used. List of densities can be found ',
                            html.A("here.", href='http://periodictable.com/Properties/A/Density.al.html',
