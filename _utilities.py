@@ -1134,9 +1134,8 @@ iso_tb_gray_cols = [
 ]
 
 markdown_sample = dcc.Markdown('''
-NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**, *same element symbol* 
-can **ONLY APPEAR ONCE** within each formula input row. Density input can **ONLY** be **omitted (leave as blank)** 
-if the input formula is a single element.''')
+NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**. Density input can **ONLY**
+be **omitted (leave as blank)** if the input formula is a single element.''')
 
 markdown_disclaimer_sns = dcc.Markdown('''
 **Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections 
@@ -1151,12 +1150,11 @@ label_sample = html.Label(['When omitted, natural densities will be used. List o
                                   target="_blank")])
 
 markdown_compos = dcc.Markdown('''
-NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**, *same element symbol* 
-can **ONLY APPEAR ONCE** within each formula input row.''')
+NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**.''')
 
 markdown_iso = dcc.Markdown('''
-NOTE: Uncheck the box will **NOT RESET** this table if you have edited it,
-but the input will not be used in calculations.''')
+NOTE: Uncheck the box will **NOT RESET** this table if you have edited it, but the input will not be used in the
+calculations.''')
 
 # Plot control buttons
 plot_option_div = html.Div(
@@ -1191,7 +1189,7 @@ plot_option_div = html.Div(
                                            {'label': "Cross-section (weighted)", 'value': 'sigma'},
                                            {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
                                        ],
-                                       value='attenuation',
+                                       value='transmission',
                                        # n_clicks_timestamp=0,
                                        )
                     ], className=col_width_3
