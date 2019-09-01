@@ -336,7 +336,7 @@ def disable_show_options(y_type):
             {'label': 'Element', 'value': 'ele'},
             {'label': 'Isotope', 'value': 'iso'},
         ]
-    elif y_type == 'miu_per_cm':
+    elif y_type == 'mu_per_cm':
         options = [
             {'label': 'Layer', 'value': 'layer'},
             {'label': 'Element', 'value': 'ele'},

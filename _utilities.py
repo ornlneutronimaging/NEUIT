@@ -823,7 +823,7 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
         y_label = 'Cross-sections (barn)'
     elif y_type == 'sigma_raw':
         y_label = 'Cross-sections (barn)'
-    else:  # y_type == 'miu_per_cm':
+    else:  # y_type == 'mu_per_cm':
         y_label = 'Attenuation coefficient \u03BC (cm\u207B\u00B9)'
 
     df_x = df_dict['x']
@@ -1183,9 +1183,9 @@ plot_option_div = html.Div(
                         html.P('Y options: '),
                         dcc.RadioItems(id='y_type',
                                        options=[
-                                           {'label': 'Attenuation', 'value': 'attenuation'},
                                            {'label': 'Transmission', 'value': 'transmission'},
-                                           {'label': 'Attenuation coefficient', 'value': 'miu_per_cm'},
+                                           {'label': 'Attenuation', 'value': 'attenuation'},
+                                           {'label': 'Attenuation coefficient', 'value': 'mu_per_cm'},
                                            {'label': "Cross-section (weighted)", 'value': 'sigma'},
                                            {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
                                        ],
