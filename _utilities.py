@@ -5,6 +5,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_table as dt
 import pandas as pd
+import io
+import base64
 from ImagingReso.resonance import Resonance
 from scipy.interpolate import interp1d
 import numpy as np
@@ -86,13 +88,6 @@ iso_tb_df_default = pd.DataFrame({
     iso_ratio_name: [None],
 })
 
-# iso_tb_df_default = pd.DataFrame()
-# iso_tb_df_default[layer_name] = [None]
-# iso_tb_df_default[ele_name] = [None]
-# iso_tb_df_default[iso_name] = [None]
-# iso_tb_df_default[iso_ratio_name] = [None]
-
-
 output_stack_header_df = pd.DataFrame({
     'name': [thick_name, density_name, ratio_name, molar_name, number_density_name],
     'id': [thick_name, density_name, ratio_name, molar_name, number_density_name],
@@ -100,51 +95,111 @@ output_stack_header_df = pd.DataFrame({
     'editable': [False, False, False, False, False],
 })
 
+col_width_1 = 'one column'
 col_width_3 = 'three columns'
 col_width_6 = 'six columns'
 empty_div = html.Div()
 
 
-def greater_than_zero(field, value, error):
-    if not value > 0:
-        error(field, "must be greater than '0'")
+class MyValidator(Validator):
+    def _validate_greater_than_zero(self, greater_than_zero, field, value):
+        """ Test if a value is greater but not equals to zero.
+
+        The rule's arguments are validated against this schema:
+        {'type': 'boolean'}
+        """
+        _boo = bool(value > 0)
+        if greater_than_zero and not _boo:
+            self._error(field, "'{}' must be greater than '0'".format(value))
+
+    def _validate_between_zero_and_one(self, between_zero_and_one, field, value):
+        """ Test if a value is "0 <= value <= 1"'.
+
+        The rule's arguments are validated against this schema:
+        {'type': 'boolean'}
+        """
+        _boo = bool(0 <= value <= 1)
+        if between_zero_and_one and not _boo:
+            self._error(field, "'{}' must be a number between '0' and '1'".format(value))
+
+    def _validate_empty_str(self, empty_str, field, value):
+        """ Test when input type is str, the value must be an empty str.
+
+        The rule's arguments are validated against this schema:
+        {'type': 'boolean'}
+        """
+        if type(value) is str:
+            _boo = bool(value == '')
+            if empty_str and not _boo:
+                self._error(field,
+                            "'{}' must be a number >= '0' or leave as 'blank' to use natural density".format(value))
+
+    def _validate_ENDF_VIII(self, ENDF_VIII, field, value):
+        """ Test if the value is a valid chemical formula.
+
+        The rule's arguments are validated against this schema:
+        {'type': 'boolean'}
+        """
+        if not is_number(value):
+            __validated_result = _validate_chem_name(value, database='ENDF_VIII')
+            _boo = __validated_result[0]
+            if ENDF_VIII and not _boo:
+                self._error(field, __validated_result[1])
+        else:
+            self._error(field, "must be a valid 'chemical formula', input is case sensitive")
+
+    def _validate_ENDF_VII(self, ENDF_VII, field, value):
+        """ Test if the value is a valid chemical formula.
+
+        The rule's arguments are validated against this schema:
+        {'type': 'boolean'}
+        """
+        if not is_number(value):
+            __validated_result = _validate_chem_name(value, database='ENDF_VII')
+            _boo = __validated_result[0]
+            if ENDF_VII and not _boo:
+                self._error(field, __validated_result[1])
+        else:
+            self._error(field, "must be a valid 'chemical formula', input is case sensitive")
 
 
-def type_is_str(field, value, error):
-    if type(value) is str:
-        error(field, "must be a number between '0' and '1'")
+def _validate_chem_name(input_name: str, database: str):
+    """ Returns True if string is a number. """
+    try:
+        ir_util.formula_to_dictionary(formula=input_name, database=database)
+        return [True, None]
+    except ValueError as error_massage:
+        return [False, error_massage.__str__()]
 
 
-def empty_str(field, value, error):
-    if type(value) is str:
-        if not value == '':
-            error(field, "must be a number >= '0' or leave as 'blank'")
-
-
-def valid_chem_name(field, value, error):
-    if not is_number(value):
-        if not validate_chem_name(value):
-            error(field, "must be a valid 'chemical formula', input is case sensitive")
-    else:
-        error(field, "must be a valid 'chemical formula', input is case sensitive")
+def is_number(s):
+    """ Returns True if string is a number. """
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 
 compos_dict_schema = {
-    chem_name: {'type': 'string', 'empty': False, 'required': True, 'validator': valid_chem_name, },
-    compos_2nd_col_id: {'type': 'number', 'validator': greater_than_zero},
+    # chem_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
+    chem_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
+    compos_2nd_col_id: {'type': 'number', 'greater_than_zero': True},
 }
 
 iso_dict_schema = {
-    layer_name: {'type': 'string', 'empty': False, 'required': True, 'validator': valid_chem_name, },
+    # layer_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
+    layer_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
     ele_name: {'type': 'string', 'empty': False, 'required': True, },
     iso_name: {'type': 'string', 'empty': False, 'required': True, },
-    iso_ratio_name: {'type': 'number', 'min': 0, 'max': 1, 'required': True, 'validator': type_is_str, },
+    iso_ratio_name: {'type': 'number', 'min': 0, 'max': 1, 'required': True, 'between_zero_and_one': True, },
 }
 
 sample_dict_schema = {
-    chem_name: {'type': 'string', 'empty': False, 'required': True, 'validator': valid_chem_name, },
+    # chem_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
+    chem_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
     thick_name: {'type': 'number', 'min': 0, 'required': True, },
-    density_name: {'anyof_type': ['string', 'number'], 'min': 0, 'validator': empty_str, },
+    density_name: {'anyof_type': ['string', 'number'], 'min': 0, 'empty_str': True, },
 }
 
 
@@ -170,7 +225,6 @@ def classify_neutron(energy_ev):
 def fill_range_table_by_e(e_ev, distance_m):
     _e = e_ev
     _lambda = round(ir_util.ev_to_angstroms(array=_e), 5)
-    # _lambda = ir_util.ev_to_angstroms(array=_e)
     _v = round(3956. / np.sqrt(81.787 / (_e * 1000.)), 2)
     _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _class = classify_neutron(_e)
@@ -184,7 +238,6 @@ def fill_range_table_by_e(e_ev, distance_m):
 def fill_range_table_by_wave(wave_angstroms, distance_m):
     _lambda = wave_angstroms
     _e = round(ir_util.angstroms_to_ev(array=_lambda), 5)
-    # _e = ir_util.angstroms_to_ev(array=_lambda)
     _v = round(3956. / np.sqrt(81.787 / (_e * 1000.)), 2)
     _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _class = classify_neutron(_e)
@@ -195,14 +248,6 @@ def fill_range_table_by_wave(wave_angstroms, distance_m):
             class_name: _class}
 
 
-# def drop_df_column_not_needed(input_df: pd.DataFrame, column_name: str):
-#     if column_name in input_df.columns:
-#         _dropped_df = input_df.drop(columns=[column_name])
-#         return _dropped_df
-#     else:
-#         return input_df
-
-
 def creat_sample_df_from_compos_df(compos_tb_df):
     _compos_tb_df = compos_tb_df[:]
     sample_df = pd.DataFrame()
@@ -210,15 +255,6 @@ def creat_sample_df_from_compos_df(compos_tb_df):
     sample_df[thick_name] = 1
     sample_df[density_name] = ''
     return sample_df
-
-
-def is_number(s):
-    """ Returns True if string is a number. """
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
 
 
 def force_dict_to_numeric(input_dict_list: list):
@@ -238,14 +274,31 @@ def force_dict_to_numeric(input_dict_list: list):
     return output_dict
 
 
-def validate_sample_input(sample_df: pd.DataFrame, sample_schema: dict):
+def update_database_key_in_schema(schema, database):
+    _new_key = database
+    try:
+        _old_key = list(schema[chem_name].keys())[3]
+        if _new_key is not _old_key:
+            schema[chem_name][_new_key] = schema[chem_name].pop(_old_key)
+        return schema
+    except KeyError:
+        _old_key = list(schema[layer_name].keys())[3]
+        if _new_key is not _old_key:
+            schema[layer_name][_new_key] = schema[layer_name].pop(_old_key)
+        return schema
+
+
+def validate_sample_input(sample_df: pd.DataFrame, sample_schema: dict, database: str):
     # Test sample input format
+    sample_schema = update_database_key_in_schema(schema=sample_schema, database=database)
     test_passed_list, output_div_list = validate_input_tb_rows(schema=sample_schema, input_df=sample_df)
     return test_passed_list, output_div_list
 
 
-def validate_iso_input(iso_df: pd.DataFrame, iso_schema: dict, test_passed_list: list, output_div_list: list):
+def validate_iso_input(iso_df: pd.DataFrame, iso_schema: dict, database: str,
+                       test_passed_list: list, output_div_list: list):
     # Test iso input format
+    iso_schema = update_database_key_in_schema(schema=iso_schema, database=database)
     iso_test_passed_list, iso_output_div_list = validate_input_tb_rows(schema=iso_schema, input_df=iso_df)
     test_passed_list += iso_test_passed_list
     output_div_list += iso_output_div_list
@@ -376,7 +429,8 @@ def validate_band_width_input(beamline, band_width, band_type, test_passed_list:
 
 def validate_input_tb_rows(schema: dict, input_df: pd.DataFrame):
     input_dict_list = input_df.to_dict('records')
-    v = Validator(schema)
+    v = MyValidator(schema)
+    # v = Validator(schema)
     passed_list = []
     div_list = []
     for each_input_dict in input_dict_list:
@@ -418,22 +472,25 @@ def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
         return [False], [None]
 
 
-def validate_chem_name(input_name: str):
-    """ Returns True if string is a number. """
+def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
+    compos_tb_df = pd.DataFrame(sample_tb_rows)
+    prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
+    sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
+    new_iso_df = form_iso_table(sample_df=sample_df, database=database)
+    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
     try:
-        ir_util.formula_to_dictionary(input_name)
-        return True
-    except ValueError:
-        return False
+        return new_iso_df.to_dict('records')
+    except AttributeError:
+        return iso_tb_df_default.to_dict('records')
 
 
-def init_reso_from_tb(range_tb_df, e_step):
+def init_reso_from_tb(range_tb_df, e_step, database):
     v_1 = range_tb_df[energy_name][0]
     v_2 = range_tb_df[energy_name][1]
     if v_1 < v_2:
-        o_reso = Resonance(energy_min=v_1, energy_max=v_2, energy_step=e_step)
+        o_reso = Resonance(energy_min=v_1, energy_max=v_2, energy_step=e_step, database=database)
     else:
-        o_reso = Resonance(energy_min=v_2, energy_max=v_1, energy_step=e_step)
+        o_reso = Resonance(energy_min=v_2, energy_max=v_1, energy_step=e_step, database=database)
     return o_reso
 
 
@@ -500,7 +557,7 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
         return o_reso
 
 
-def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_min, band_max, band_type):
+def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_min, band_max, band_type, database):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = {'imaging': 'static/instrument_file/beam_flux_cg1d.txt',
                            'snap': 'static/instrument_file/beam_flux_snap.txt',
@@ -519,7 +576,7 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
             e_max = band_max
 
     e_step = (e_max - e_min) / (100 - 1)
-    __o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step)
+    __o_reso = Resonance(energy_min=e_min, energy_max=e_max, energy_step=e_step, database=database)
     _o_reso = unpack_sample_tb_df_and_add_layer(o_reso=__o_reso, sample_tb_df=sample_tb_df)
     o_reso = unpack_iso_tb_df_and_update(o_reso=_o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
     o_stack = o_reso.stack
@@ -548,7 +605,8 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
     return _total_trans, o_stack
 
 
-def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, beamline, band_min, band_max, band_type):
+def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, database,
+                                 beamline, band_min, band_max, band_type):
     disclaimer = markdown_disclaimer_sns
     if beamline == 'snap':
         beamline_name = 'SNAP (BL-3), SNS'
@@ -564,7 +622,7 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, beaml
         iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
         iso_tb_df = pd.DataFrame(iso_tb_dict)
     else:
-        iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+        iso_tb_df = form_iso_table(sample_df=sample_tb_df, database=database)
 
     # Calculation starts
     total_trans, o_stack = calculate_transmission(sample_tb_df=sample_tb_df,
@@ -573,7 +631,8 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, beaml
                                                   beamline=beamline,
                                                   band_min=band_min,
                                                   band_max=band_max,
-                                                  band_type=band_type)
+                                                  band_type=band_type,
+                                                  database=database)
     output_div_list = [
         html.Hr(),
         html.H3('Result at ' + beamline_name),
@@ -724,8 +783,8 @@ def convert_to_effective_formula(ele_list, mol_list):
     return effective_str
 
 
-def form_iso_table(sample_df: pd.DataFrame):
-    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1)
+def form_iso_table(sample_df: pd.DataFrame, database: str):
+    o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1, database=database)
     o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_df)
     layer_list = list(o_reso.stack.keys())
     lay_list = []
@@ -761,11 +820,14 @@ def update_new_iso_table(prev_iso_df: pd.DataFrame, new_iso_df: pd.DataFrame):
     elif pre_len > new_len:
         while len(new_iso_df) < len(prev_iso_df):
             new_iso_df = new_iso_df.append(iso_tb_df_default, ignore_index=True)
-    prev_iso_df = prev_iso_df[[layer_name, ele_name, iso_name, iso_ratio_name]]  # Force order of col to be the same
-    _indices = prev_iso_df == new_iso_df
-    new_iso_df[iso_ratio_name][_indices[layer_name]] = prev_iso_df[iso_ratio_name][_indices[layer_name]]
-    new_iso_df = new_iso_df[new_iso_df[new_iso_df.columns[0]].notnull()]
-    return new_iso_df
+    try:
+        prev_iso_df = prev_iso_df[[layer_name, ele_name, iso_name, iso_ratio_name]]  # Force order of col to be the same
+        _indices = prev_iso_df == new_iso_df
+        new_iso_df[iso_ratio_name][_indices[layer_name]] = prev_iso_df[iso_ratio_name][_indices[layer_name]]
+        new_iso_df = new_iso_df[new_iso_df[new_iso_df.columns[0]].notnull()]
+        return new_iso_df
+    except KeyError:
+        return None
 
 
 def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
@@ -780,7 +842,7 @@ def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
         else:
             for each_col in [wave_name, speed_name, tof_name, class_name]:
                 range_table_rows[row][each_col] = 'N/A'
-    elif col == 1:
+    elif col == 1:  # Changed back to 1 from 4 after updating to pandas>=0.25.0
         input_value = range_table_rows[row][wave_name]
         if is_number(input_value) and float(input_value) > 0:
             things_to_fill = fill_range_table_by_wave(wave_angstroms=float(input_value), distance_m=distance)
@@ -834,7 +896,7 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
         y_label = 'Cross-sections (barn)'
     elif y_type == 'sigma_raw':
         y_label = 'Cross-sections (barn)'
-    else:  # y_type == 'miu_per_cm':
+    else:  # y_type == 'mu_per_cm':
         y_label = 'Attenuation coefficient \u03BC (cm\u207B\u00B9)'
 
     df_x = df_dict['x']
@@ -899,6 +961,181 @@ editable_white = {'if': {'column_editable': False},
                   'color': 'white'}
 
 
+def add_del_rows(n_add, n_del, rows, columns):
+    if n_add > n_del:
+        rows.append({c['id']: '' for c in columns})
+    elif n_add < n_del:
+        if len(rows) > 1:
+            rows = rows[:-1]
+    else:
+        rows = rows[:]
+    return rows
+
+
+def update_rows_util(n_add, n_del, list_of_contents, upload_time, prev_upload_time, list_of_names, rows, columns):
+    error_message = None
+    if upload_time != prev_upload_time:
+        if list_of_contents is not None:
+            _rows = []
+            for c, n in zip(list_of_contents, list_of_names):
+                current_rows, error_message = parse_contents(c, n, rows)
+                _rows.extend(current_rows)
+            rows = _rows
+    else:
+        rows = add_del_rows(n_add=n_add, n_del=n_del, rows=rows, columns=columns)
+    return rows, error_message, upload_time
+
+
+def parse_contents(contents, filename, rows):
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+    div = None
+
+    if 'csv' in filename:
+        # Assume that the user uploaded a CSV file
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False)
+    elif 'xls' in filename:
+        # Assume that the user uploaded an excel file
+        df = pd.read_excel(io.BytesIO(decoded), na_filter=False)
+    else:
+        df = None
+        div = html.Div(["ERROR: '{}', only '.csv' and '.xls' are supported.".format(filename)])
+
+    if df is not None:
+        if len(df) == 0:
+            div = html.Div(["ERROR: '{}', contains no data.".format(filename)])
+        # if df.columns != list(rows[0].keys()):
+        elif list(df.columns) != list(rows[0].keys()):
+            div = html.Div(
+                ["ERROR: '{}', contains invalid column name. '{}' required.".format(filename, list(rows[0].keys()))])
+        else:
+            df = df[df[chem_name] != '']
+            rows = df.to_dict('records')
+
+    return rows, div
+
+
+def init_app_ids(app_name: str):
+    id_dict = {}
+    id_dict['sample_upload_id'] = app_name + '_sample_upload'
+    id_dict['error_upload_id'] = app_name + '_error_upload'
+    id_dict['hidden_upload_time_id'] = app_name + '_time_upload'
+    id_dict['add_row_id'] = app_name + '_add_row'
+    id_dict['del_row_id'] = app_name + '_del_row'
+    id_dict['database_id'] = app_name + '_database'
+    id_dict['sample_table_id'] = app_name + '_sample_table'
+    id_dict['iso_check_id'] = app_name + '_iso_check'
+    id_dict['iso_div_id'] = app_name + '_iso_input'
+    id_dict['iso_table_id'] = app_name + '_iso_table'
+    id_dict['submit_button_id'] = app_name + '_submit'
+    id_dict['result_id'] = app_name + '_result'
+    id_dict['error_id'] = app_name + '_error'
+    id_dict['output_id'] = app_name + '_output'
+
+    if app_name == 'app1':  # id names for app1 only
+        id_dict['beamline_id'] = app_name + '_beamline'
+        id_dict['band_div_id'] = app_name + '_band_div'
+        id_dict['band_min_id'] = app_name + '_band_min'
+        id_dict['band_max_id'] = app_name + '_band_max'
+        id_dict['band_type_id'] = app_name + '_band_type'
+        id_dict['band_unit_id'] = app_name + '_band_unit'
+
+    elif app_name == 'app2':  # id names for app2 only
+        id_dict['slider_id'] = app_name + '_e_range_slider'
+        id_dict['range_table_id'] = app_name + '_range_table'
+        id_dict['e_step_id'] = app_name + '_e_step'
+        id_dict['distance_id'] = app_name + '_distance'
+        id_dict['hidden_prev_distance_id'] = app_name + '_hidden_prev_distance'
+        id_dict['hidden_range_input_coord_id'] = app_name + '_hidden_range_input_coord'
+        id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
+        id_dict['hidden_df_tb_div'] = app_name + '_hidden_df_tb_div'
+        id_dict['hidden_df_tb'] = app_name + '_hidden_df_tb'
+        id_dict['plot_div_id'] = app_name + '_plot'
+        id_dict['plot_fig_id'] = app_name + '_plot_fig'
+        id_dict['plot_options_div_id'] = app_name + '_plot_options'
+        id_dict['export_plot_data_button_id'] = app_name + '_plot_data_export'
+        id_dict['export_plot_data_notice_id'] = app_name + '_export_notice'
+        id_dict['prev_x_type_id'] = app_name + '_prev_x_type'
+
+    else:  # id names for app3 only
+        id_dict['compos_type_id'] = app_name + '_compos_input_type'
+
+    return id_dict
+
+
+def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id: str, del_row_id: str,
+                      database_id: str, app_id: str):
+    if app_id == 'app3':
+        _compos_type_div = html.Div(
+            [
+                html.H6('Composition input type:'),
+                dcc.RadioItems(id=app_id + '_compos_input_type',
+                               options=[
+                                   {'label': weight_name, 'value': weight_name},
+                                   {'label': atomic_name, 'value': atomic_name},
+                               ],
+                               value=weight_name,
+                               # labelStyle={'display': 'inline-block'},
+                               ),
+            ], className='row',
+        )
+        _nuclear_database_div_style = {'display': 'none'}
+    else:
+        _compos_type_div = None
+        _nuclear_database_div_style = {'display': 'block'}
+
+    # Upload div
+    upload_field = html.Div(
+        [
+            # Database dropdown
+            html.Div(
+                [
+                    html.H6('Nuclear database:',
+                            # className=col_width_3,
+                            ),
+                    dcc.Dropdown(
+                        id=database_id,
+                        options=[
+                            {'label': 'ENDF/B-VII.1', 'value': 'ENDF_VII'},
+                            {'label': 'ENDF/B-VIII.0', 'value': 'ENDF_VIII'},
+                        ],
+                        value='ENDF_VIII',
+                        searchable=False,
+                        clearable=False,
+                        className=col_width_3,
+                    ),
+                ], className='row', style=_nuclear_database_div_style,
+            ),
+            _compos_type_div,
+            # Sample input
+            html.H3('Sample info'),
+            dcc.Upload(id=id_str,
+                       children=html.Div([
+                           'Drag and Drop or ',
+                           html.A('Select Files')
+                       ]),
+                       style={
+                           'width': '100%',
+                           'height': '60px',
+                           'lineHeight': '60px',
+                           'borderWidth': '1px',
+                           'borderStyle': 'dashed',
+                           'borderRadius': '5px',
+                           'textAlign': 'center',
+                           'margin': '10px'
+                       },
+                       # Allow multiple files to be uploaded
+                       multiple=True,
+                       last_modified=0,
+                       ),
+            html.Div(id=div_str),
+            html.Div(id=hidden_div_str, style={'display': 'none'}, children=0),
+            html.Button('+', id=add_row_id, n_clicks_timestamp=0),
+            html.Button('-', id=del_row_id, n_clicks_timestamp=0),
+        ])
+    return upload_field
+
+
 def init_iso_table(id_str: str):
     iso_table = dt.DataTable(
         data=iso_tb_df_default.to_dict('records'),
@@ -908,6 +1145,7 @@ def init_iso_table(id_str: str):
         filter_action='none',
         sort_action='none',
         row_deletable=False,
+        # export_format='csv',
         style_cell_conditional=iso_tb_even_4_col,
         style_data_conditional=iso_tb_gray_cols,
         fixed_rows={'headers': True, 'data': 0},
@@ -995,31 +1233,27 @@ iso_tb_gray_cols = [
 ]
 
 markdown_sample = dcc.Markdown('''
-NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**. 
-Density input can **ONLY** be **omitted (leave as blank)** if the input formula is a single element.''')
+NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**. Density input can **ONLY**
+be **omitted (leave as blank)** if the input formula is a single element.''')
 
 markdown_disclaimer_sns = dcc.Markdown('''
 **Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections 
-from ENDF/B-VII.1 database and the *simulated* beam spectrum at this beamline.''')
+from **ENDF/B** database and the **simulated** beam spectrum at this beamline.''')
 
 markdown_disclaimer_hfir = dcc.Markdown('''
 **Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections 
-from ENDF/B-VII.1 database and the *measured* beam spectrum at this beamline.''')
+from **ENDF/B** database and the **measured** beam spectrum at this beamline.''')
 
-label_sample = html.Label(['Natural densities used are from ',
-                           html.A("here", href='http://periodictable.com/Properties/A/Density.al.html',
+label_sample = html.Label(['When omitted, natural densities will be used. List of densities can be found ',
+                           html.A("here.", href='http://periodictable.com/Properties/A/Density.al.html',
                                   target="_blank")])
 
 markdown_compos = dcc.Markdown('''
-NOTE: Formula is **case sensitive**, stoichiometric ratio must be **integer**.''')
+NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**.''')
 
 markdown_iso = dcc.Markdown('''
-NOTE: Uncheck the box will **NOT RESET** this table if you have edited it,
-but the input will not be used in calculations.''')
-
-label_plotly = html.Label(['NOTE: This plot can be customized and/or exported by following instructions ',
-                           html.A("here", href='https://help.plot.ly/save-share-and-export-in-plotly/',
-                                  target="_blank")])
+NOTE: Uncheck the box will **NOT RESET** this table if you have edited it, but the input will not be used in the
+calculations.''')
 
 # Plot control buttons
 plot_option_div = html.Div(
@@ -1039,6 +1273,7 @@ plot_option_div = html.Div(
                                            {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
                                        ],
                                        value='energy',
+                                       # n_clicks_timestamp=0,
                                        )
                     ], className=col_width_3
                 ),
@@ -1047,13 +1282,14 @@ plot_option_div = html.Div(
                         html.P('Y options: '),
                         dcc.RadioItems(id='y_type',
                                        options=[
-                                           {'label': 'Attenuation', 'value': 'attenuation'},
                                            {'label': 'Transmission', 'value': 'transmission'},
-                                           {'label': 'Attenuation coefficient', 'value': 'miu_per_cm'},
+                                           {'label': 'Attenuation', 'value': 'attenuation'},
+                                           {'label': 'Attenuation coefficient', 'value': 'mu_per_cm'},
                                            {'label': "Cross-section (weighted)", 'value': 'sigma'},
                                            {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
                                        ],
-                                       value='attenuation',
+                                       value='transmission',
+                                       # n_clicks_timestamp=0,
                                        )
                     ], className=col_width_3
                 ),
@@ -1068,6 +1304,7 @@ plot_option_div = html.Div(
                                            {'label': 'Loglog', 'value': 'loglog'},
                                        ],
                                        value='linear',
+                                       # n_clicks_timestamp=0,
                                        )
                     ], className=col_width_3
                 ),
@@ -1081,7 +1318,8 @@ plot_option_div = html.Div(
                                           {'label': 'Element', 'value': 'ele'},
                                           {'label': 'Isotope', 'value': 'iso'},
                                       ],
-                                      value=['iso'],
+                                      value=['layer'],
+                                      # n_clicks_timestamp=0,
                                       ),
                     ], className=col_width_3
                 ),
