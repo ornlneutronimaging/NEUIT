@@ -8,7 +8,8 @@ compos_df_default = pd.DataFrame({
     compos_2nd_col_id: ['50', '50'],
 })
 
-app_id_dict = init_app_ids(app_name='app3')
+app_name = 'app3'
+app_id_dict = init_app_ids(app_name=app_name)
 
 # Create app layout
 layout = html.Div(
@@ -21,22 +22,16 @@ layout = html.Div(
         html.H1(app_dict['app3']['name']),
 
         # Sample input
-        html.H3('Sample composition'),
         html.Div(
             [
-                dcc.RadioItems(id=app_id_dict['compos_type_id'],
-                               options=[
-                                   {'label': weight_name, 'value': weight_name},
-                                   {'label': atomic_name, 'value': atomic_name},
-                               ],
-                               value=weight_name,
-                               ),
                 init_upload_field(id_str=app_id_dict['sample_upload_id'],
                                   div_str=app_id_dict['error_upload_id'],
                                   hidden_div_str=app_id_dict['hidden_upload_time_id'],
                                   add_row_id=app_id_dict['add_row_id'],
                                   del_row_id=app_id_dict['del_row_id'],
                                   database_id=app_id_dict['database_id'],
+                                  app_id=app_name,
+                                  app_id_dict=app_id_dict,
                                   ),
                 dt.DataTable(
                     data=compos_df_default.to_dict('records'),
@@ -142,18 +137,17 @@ def update_rows(n_add, n_del, list_of_contents, upload_time, prev_upload_time, l
 @app.callback(
     Output(app_id_dict['iso_table_id'], 'data'),
     [
+        Input(app_id_dict['database_id'], 'value'),
         Input(app_id_dict['sample_table_id'], 'data'),
     ],
     [
         State(app_id_dict['iso_table_id'], 'data'),
     ])
-def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
-    compos_tb_df = pd.DataFrame(sample_tb_rows)
-    prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
-    sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    new_iso_df = form_iso_table(sample_df=sample_df)
-    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
-    return new_iso_df.to_dict('records')
+def update_iso_table(database, sample_tb_rows, prev_iso_tb_rows):
+    return_dict = update_iso_table_callback(sample_tb_rows=sample_tb_rows,
+                                            prev_iso_tb_rows=prev_iso_tb_rows,
+                                            database=database)
+    return return_dict
 
 
 @app.callback(
@@ -194,11 +188,12 @@ def show_output_div(n_submit, test_passed):
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
     ],
     [
+        State(app_id_dict['database_id'], 'value'),
         State(app_id_dict['sample_table_id'], 'data'),
         State(app_id_dict['iso_table_id'], 'data'),
         State(app_id_dict['iso_check_id'], 'value'),
     ])
-def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
+def error(n_submit, database, sample_tb_rows, iso_tb_rows, iso_changed):
     if n_submit is not None:
         # Convert all number str to numeric and keep rest invalid input
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
@@ -206,7 +201,8 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
 
         # Test sample input format
         test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
-                                                                  sample_schema=compos_dict_schema)  # different schema)
+                                                                  sample_schema=compos_dict_schema,
+                                                                  database=database)  # different schema)
 
         # Test iso input format and sum
         if all(test_passed_list):
@@ -214,12 +210,13 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
                 iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
                 iso_tb_df = pd.DataFrame(iso_tb_dict)
             else:
-                iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+                iso_tb_df = form_iso_table(sample_df=sample_tb_df, database=database)
 
             test_passed_list, output_div_list = validate_iso_input(iso_df=iso_tb_df,
                                                                    iso_schema=iso_dict_schema,
                                                                    test_passed_list=test_passed_list,
-                                                                   output_div_list=output_div_list)
+                                                                   output_div_list=output_div_list,
+                                                                   database=database)
 
         # Return result
         if all(test_passed_list):
@@ -237,12 +234,13 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, iso_changed):
         Input(app_id_dict['error_id'], 'children'),
     ],
     [
+        State(app_id_dict['database_id'], 'value'),
         State(app_id_dict['sample_table_id'], 'data'),
         State(app_id_dict['iso_table_id'], 'data'),
         State(app_id_dict['iso_check_id'], 'value'),
         State(app_id_dict['compos_type_id'], 'value'),
     ])
-def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
+def output(n_submit, test_passed, database, compos_tb_rows, iso_tb_rows, iso_changed, compos_type):
     if test_passed is True:
         # Modify input for testing
         compos_tb_dict = force_dict_to_numeric(input_dict_list=compos_tb_rows)
@@ -251,7 +249,7 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
         if len(iso_changed) == 1:
             iso_tb_df = pd.DataFrame(iso_tb_dict)
         else:
-            iso_tb_df = form_iso_table(sample_df=compos_tb_df)
+            iso_tb_df = form_iso_table(sample_df=compos_tb_df, database=database)
 
         # Calculation start
 
@@ -269,7 +267,8 @@ def output(n_submit, test_passed, compos_tb_rows, iso_tb_rows, iso_changed, comp
                                                                       beamline='imaging',
                                                                       band_min=None,
                                                                       band_max=None,
-                                                                      band_type='energy')
+                                                                      band_type='energy',
+                                                                      database=database)
         sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack)
 
         compos_output_df, ele_list, mol_list = convert_input_to_composition(compos_df=_compos_df,

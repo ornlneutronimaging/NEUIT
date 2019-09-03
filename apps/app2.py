@@ -18,7 +18,8 @@ sample_df_default = pd.DataFrame({
     density_name: [''],
 })
 
-app_id_dict = init_app_ids(app_name='app2')
+app_name = 'app2'
+app_id_dict = init_app_ids(app_name=app_name)
 
 plot_data_filename = "plot_data.csv"
 distance_default = 16.45
@@ -54,10 +55,11 @@ layout = html.Div(
                         id=app_id_dict['range_table_id']
                     ),
                 ]),
-                dcc.Markdown('''NOTE: '**Energy (eV)**' and '**Wavelength (\u212B)**' are editable.'''),
+                dcc.Markdown('''NOTE: **Energy (eV)** and **Wavelength (\u212B)** columns are editable.'''),
 
                 # Hidden div to store prev_distance
-                html.Div(id=app_id_dict['hidden_prev_distance_id'], children=distance_default, style={'display': 'none'}),
+                html.Div(id=app_id_dict['hidden_prev_distance_id'], children=distance_default,
+                         style={'display': 'none'}),
 
                 # Hidden div to store range input type
                 html.Div(id=app_id_dict['hidden_range_input_coord_id'], children=[0, 0], style={'display': 'none'}),
@@ -96,7 +98,8 @@ layout = html.Div(
                                 html.H6('Source-to-detector (optional):'),
                                 html.Div(
                                     [
-                                        dcc.Input(id=app_id_dict['distance_id'], type='number', value=distance_default, min=1,
+                                        dcc.Input(id=app_id_dict['distance_id'], type='number', value=distance_default,
+                                                  min=1,
                                                   inputMode='numeric',
                                                   step=0.01,
                                                   className='nine columns'),
@@ -117,7 +120,6 @@ layout = html.Div(
         ),
 
         # Sample input
-        html.H3('Sample info'),
         html.Div(
             [
                 init_upload_field(id_str=app_id_dict['sample_upload_id'],
@@ -126,6 +128,8 @@ layout = html.Div(
                                   add_row_id=app_id_dict['add_row_id'],
                                   del_row_id=app_id_dict['del_row_id'],
                                   database_id=app_id_dict['database_id'],
+                                  app_id=app_name,
+                                  app_id_dict=app_id_dict,
                                   ),
                 dt.DataTable(
                     data=sample_df_default.to_dict('records'),
@@ -293,18 +297,17 @@ def update_rows(n_add, n_del, list_of_contents, upload_time, prev_upload_time, l
 @app.callback(
     Output(app_id_dict['iso_table_id'], 'data'),
     [
+        Input(app_id_dict['database_id'], 'value'),
         Input(app_id_dict['sample_table_id'], 'data'),
     ],
     [
         State(app_id_dict['iso_table_id'], 'data'),
     ])
-def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
-    compos_tb_df = pd.DataFrame(sample_tb_rows)
-    prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
-    sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    new_iso_df = form_iso_table(sample_df=sample_df)
-    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
-    return new_iso_df.to_dict('records')
+def update_iso_table(database, sample_tb_rows, prev_iso_tb_rows):
+    return_dict = update_iso_table_callback(sample_tb_rows=sample_tb_rows,
+                                            prev_iso_tb_rows=prev_iso_tb_rows,
+                                            database=database)
+    return return_dict
 
 
 @app.callback(
@@ -397,12 +400,13 @@ def show_output_div(n_submit, test_passed):
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
     ],
     [
+        State(app_id_dict['database_id'], 'value'),
         State(app_id_dict['sample_table_id'], 'data'),
         State(app_id_dict['iso_table_id'], 'data'),
         State(app_id_dict['range_table_id'], 'data'),
         State(app_id_dict['iso_check_id'], 'value'),
     ])
-def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
+def error(n_submit, database, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
     if n_submit is not None:
         # Convert all number str to numeric and keep rest invalid input
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
@@ -410,8 +414,8 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
 
         # Test sample input format
         test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
-                                                                  sample_schema=sample_dict_schema)
-
+                                                                  sample_schema=sample_dict_schema,
+                                                                  database=database)
         # Test density required or not
         if all(test_passed_list):
             test_passed_list, output_div_list = validate_density_input(sample_tb_df=sample_tb_df,
@@ -423,12 +427,13 @@ def error(n_submit, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_changed):
                 iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
                 iso_tb_df = pd.DataFrame(iso_tb_dict)
             else:
-                iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+                iso_tb_df = form_iso_table(sample_df=sample_tb_df, database=database)
 
             test_passed_list, output_div_list = validate_iso_input(iso_df=iso_tb_df,
                                                                    iso_schema=iso_dict_schema,
                                                                    test_passed_list=test_passed_list,
-                                                                   output_div_list=output_div_list)
+                                                                   output_div_list=output_div_list,
+                                                                   database=database)
         # Test range table
         if all(test_passed_list):
             range_tb_dict = force_dict_to_numeric(input_dict_list=range_tb_rows)
@@ -470,13 +475,14 @@ def store_x_type(x_type):
         State(app_id_dict['sample_table_id'], 'data'),
         State(app_id_dict['iso_table_id'], 'data'),
         State(app_id_dict['iso_check_id'], 'value'),
+        State(app_id_dict['database_id'], 'value'),
     ])
 def store_reso_df_in_json(n_submit,
                           test_passed,
                           y_type,
                           range_tb_rows, e_step, distance_m,
                           sample_tb_rows, iso_tb_rows,
-                          iso_changed):
+                          iso_changed, database):
     if test_passed is True:
         # Modify input for testing
         sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
@@ -485,11 +491,11 @@ def store_reso_df_in_json(n_submit,
         if len(iso_changed) == 1:
             iso_tb_df = pd.DataFrame(iso_tb_dict)
         else:
-            iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+            iso_tb_df = form_iso_table(sample_df=sample_tb_df, database=database)
 
         # Calculation starts
         range_tb_df = pd.DataFrame(range_tb_rows)
-        o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step)
+        o_reso = init_reso_from_tb(range_tb_df=range_tb_df, e_step=e_step, database=database)
         o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_tb_df)
         o_reso = unpack_iso_tb_df_and_update(o_reso=o_reso, iso_tb_df=iso_tb_df, iso_changed=iso_changed)
 
@@ -653,12 +659,14 @@ def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly
         Input(app_id_dict['error_id'], 'children'),
     ],
     [
+        State(app_id_dict['database_id'], 'value'),
         State(app_id_dict['sample_table_id'], 'data'),
         State(app_id_dict['iso_table_id'], 'data'),
         State(app_id_dict['iso_check_id'], 'value'),
         State(app_id_dict['range_table_id'], 'data'),
     ])
-def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed, range_table_rows):
+def output_transmission_and_stack(n_submit, test_passed, database,
+                                  sample_tb_rows, iso_tb_rows, iso_changed, range_table_rows):
     if test_passed is True:
         if range_table_rows[0][energy_name] < range_table_rows[1][energy_name]:
             e_min = range_table_rows[0][energy_name]
@@ -672,14 +680,16 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
                                                                 beamline='snap',
                                                                 band_min=e_min,
                                                                 band_max=e_max,
-                                                                band_type='energy')
+                                                                band_type='energy',
+                                                                database=database)
         trans_div_list_tof, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
                                                                    iso_tb_rows=iso_tb_rows,
                                                                    iso_changed=iso_changed,
                                                                    beamline='imaging',
                                                                    band_min=None,
                                                                    band_max=None,
-                                                                   band_type=None)
+                                                                   band_type=None,
+                                                                   database=database)
         output_div_list.extend(trans_div_list_tof)
 
         # Sample stack table div

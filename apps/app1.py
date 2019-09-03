@@ -9,7 +9,8 @@ sample_df_default = pd.DataFrame({
     density_name: [1],
 })
 
-app_id_dict = init_app_ids(app_name='app1')
+app_name = 'app1'
+app_id_dict = init_app_ids(app_name=app_name)
 
 # Create app layout
 layout = html.Div(
@@ -26,7 +27,7 @@ layout = html.Div(
             [
                 html.Div(
                     [
-                        html.H3('Beamline'),
+                        html.H6('Beamline spectrum from:'),
                         html.Div(
                             [
                                 dcc.Dropdown(
@@ -48,7 +49,7 @@ layout = html.Div(
                     [
                         html.Div(
                             [
-                                html.H3('Band width',
+                                html.H6('Band width:',
                                         className='four columns'
                                         ),
                                 dcc.RadioItems(id=app_id_dict['band_type_id'],
@@ -88,7 +89,6 @@ layout = html.Div(
             ], className='row',
         ),
         # Sample input
-        html.H3('Sample info'),
         html.Div(
             [
                 init_upload_field(id_str=app_id_dict['sample_upload_id'],
@@ -97,6 +97,8 @@ layout = html.Div(
                                   add_row_id=app_id_dict['add_row_id'],
                                   del_row_id=app_id_dict['del_row_id'],
                                   database_id=app_id_dict['database_id'],
+                                  app_id=app_name,
+                                  app_id_dict=app_id_dict,
                                   ),
                 dt.DataTable(
                     data=sample_df_default.to_dict('records'),
@@ -210,18 +212,18 @@ def update_rows(n_add, n_del, list_of_contents, upload_time, prev_upload_time, l
 @app.callback(
     Output(app_id_dict['iso_table_id'], 'data'),
     [
+        Input(app_id_dict['database_id'], 'value'),
         Input(app_id_dict['sample_table_id'], 'data'),
+
     ],
     [
         State(app_id_dict['iso_table_id'], 'data'),
     ])
-def update_iso_table(sample_tb_rows, prev_iso_tb_rows):
-    compos_tb_df = pd.DataFrame(sample_tb_rows)
-    prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
-    sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    new_iso_df = form_iso_table(sample_df=sample_df)
-    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
-    return new_iso_df.to_dict('records')
+def update_iso_table(database, sample_tb_rows, prev_iso_tb_rows):
+    return_dict = update_iso_table_callback(sample_tb_rows=sample_tb_rows,
+                                            prev_iso_tb_rows=prev_iso_tb_rows,
+                                            database=database)
+    return return_dict
 
 
 @app.callback(
@@ -279,25 +281,26 @@ def error(n_submit, database, sample_tb_rows, iso_tb_rows, iso_changed, beamline
 
         # Test sample input format
         test_passed_list, output_div_list = validate_sample_input(sample_df=sample_tb_df,
-                                                                  sample_schema=sample_dict_schema,)
+                                                                  sample_schema=sample_dict_schema,
+                                                                  database=database)
         # Test density required or not
         if all(test_passed_list):
             test_passed_list, output_div_list = validate_density_input(sample_tb_df=sample_tb_df,
                                                                        test_passed_list=test_passed_list,
                                                                        output_div_list=output_div_list)
-
         # Test iso input format and sum
         if all(test_passed_list):
             if len(iso_changed) == 1:
                 iso_tb_dict = force_dict_to_numeric(input_dict_list=iso_tb_rows)
                 iso_tb_df = pd.DataFrame(iso_tb_dict)
             else:
-                iso_tb_df = form_iso_table(sample_df=sample_tb_df)
+                iso_tb_df = form_iso_table(sample_df=sample_tb_df, database=database)
 
             test_passed_list, output_div_list = validate_iso_input(iso_df=iso_tb_df,
                                                                    iso_schema=iso_dict_schema,
                                                                    test_passed_list=test_passed_list,
-                                                                   output_div_list=output_div_list)
+                                                                   output_div_list=output_div_list,
+                                                                   database=database)
         # Test band width input
         if all(test_passed_list):
             test_passed_list, output_div_list = validate_band_width_input(beamline=beamline,
@@ -322,6 +325,7 @@ def error(n_submit, database, sample_tb_rows, iso_tb_rows, iso_changed, beamline
         Input(app_id_dict['error_id'], 'children'),
     ],
     [
+        State(app_id_dict['database_id'], 'value'),
         State(app_id_dict['sample_table_id'], 'data'),
         State(app_id_dict['iso_table_id'], 'data'),
         State(app_id_dict['iso_check_id'], 'value'),
@@ -330,7 +334,7 @@ def error(n_submit, database, sample_tb_rows, iso_tb_rows, iso_changed, beamline
         State(app_id_dict['band_max_id'], 'value'),
         State(app_id_dict['band_type_id'], 'value'),
     ])
-def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_rows, iso_changed,
+def output_transmission_and_stack(n_submit, test_passed, database, sample_tb_rows, iso_tb_rows, iso_changed,
                                   beamline, band_min, band_max, band_type):
     if test_passed is True:
         output_div_list, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
@@ -339,7 +343,8 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
                                                                 beamline=beamline,
                                                                 band_min=band_min,
                                                                 band_max=band_max,
-                                                                band_type=band_type)
+                                                                band_type=band_type,
+                                                                database=database)
         if beamline != 'imaging':  # add CG-1D anyway if not selected
             trans_div_list_tof, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
                                                                        iso_tb_rows=iso_tb_rows,
@@ -347,7 +352,8 @@ def output_transmission_and_stack(n_submit, test_passed, sample_tb_rows, iso_tb_
                                                                        beamline='imaging',
                                                                        band_min=band_min,
                                                                        band_max=band_max,
-                                                                       band_type=band_type)
+                                                                       band_type=band_type,
+                                                                       database=database)
             output_div_list.extend(trans_div_list_tof)
 
         # Sample stack table div

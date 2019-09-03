@@ -45,14 +45,15 @@ the expected resonance peaks for a selected neutron energy range.
 
 The energy dependent cross-section data used are from
 [National Nuclear Data Center](http://www.nndc.bnl.gov/), a published
-online database. [Evaluated Nuclear Data File](http://www.nndc.bnl.gov/exfor/endf00.jsp)
-([ENDF/B-VIII.0](https://www.sciencedirect.com/science/article/pii/S0090375218300206)) 
-is currently supported and more evaluated databases will be added in the future.
+online database. [Evaluated Nuclear Data File](http://www.nndc.bnl.gov/exfor/endf00.jsp),
+[ENDF/B-VIII.0](https://www.sciencedirect.com/science/article/pii/S0090375218300206) and 
+[ENDF/B-VII.1](https://www.sciencedirect.com/science/article/pii/S009037521100113X)
+are currently supported. More evaluated database will be added in the future.
 
 *[PeriodicTable](https://periodictable.readthedocs.io/en/latest/)* provides various 
 elements/isotopes related properties in the calculations.
 '''),
-        # [ENDF/B-VII.1](https://www.sciencedirect.com/science/article/pii/S009037521100113X)
+
         dcc.Markdown('''
 #### Acknowledgments
 
