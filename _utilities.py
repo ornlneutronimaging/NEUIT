@@ -278,12 +278,12 @@ def update_database_key_in_schema(schema, database):
     _new_key = database
     try:
         _old_key = list(schema[chem_name].keys())[3]
-        if _new_key != _old_key:
+        if _new_key is not _old_key:
             schema[chem_name][_new_key] = schema[chem_name].pop(_old_key)
         return schema
     except KeyError:
         _old_key = list(schema[layer_name].keys())[3]
-        if _new_key != _old_key:
+        if _new_key is not _old_key:
             schema[layer_name][_new_key] = schema[layer_name].pop(_old_key)
         return schema
 
@@ -1058,18 +1058,18 @@ def init_app_ids(app_name: str):
         id_dict['prev_x_type_id'] = app_name + '_prev_x_type'
 
     else:  # id names for app3 only
-        id_dict['compos_type_id'] = app_name + 'compos_input_type'
+        id_dict['compos_type_id'] = app_name + '_compos_input_type'
 
     return id_dict
 
 
 def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id: str, del_row_id: str,
-                      database_id: str, app_id: str, app_id_dict: dict):
+                      database_id: str, app_id: str):
     if app_id == 'app3':
         _compos_type_div = html.Div(
             [
                 html.H6('Composition input type:'),
-                dcc.RadioItems(id=app_id_dict['compos_type_id'],
+                dcc.RadioItems(id='app3' + '_compos_input_type',
                                options=[
                                    {'label': weight_name, 'value': weight_name},
                                    {'label': atomic_name, 'value': atomic_name},
@@ -1079,10 +1079,10 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
                                ),
             ], className='row',
         )
-        _nuclear_database_div_style = style={'display': 'none'}
+        _nuclear_database_div_style = {'display': 'none'}
     else:
         _compos_type_div = None
-        _nuclear_database_div_style = style={'display': 'block'}
+        _nuclear_database_div_style = {'display': 'block'}
 
     # Upload div
     upload_field = html.Div(
