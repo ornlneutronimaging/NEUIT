@@ -1069,7 +1069,7 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
         _compos_type_div = html.Div(
             [
                 html.H6('Composition input type:'),
-                dcc.RadioItems(id='app3' + '_compos_input_type',
+                dcc.RadioItems(id=app_id + '_compos_input_type',
                                options=[
                                    {'label': weight_name, 'value': weight_name},
                                    {'label': atomic_name, 'value': atomic_name},

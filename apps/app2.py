@@ -129,7 +129,6 @@ layout = html.Div(
                                   del_row_id=app_id_dict['del_row_id'],
                                   database_id=app_id_dict['database_id'],
                                   app_id=app_name,
-                                  app_id_dict=app_id_dict,
                                   ),
                 dt.DataTable(
                     data=sample_df_default.to_dict('records'),
