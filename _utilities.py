@@ -1112,7 +1112,8 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
             dcc.Upload(id=id_str,
                        children=html.Div([
                            'Drag and Drop or ',
-                           html.A('Select Files')
+                           html.A('Select Files'),
+                           " (previously exported '###.csv')",
                        ]),
                        style={
                            'width': '100%',
