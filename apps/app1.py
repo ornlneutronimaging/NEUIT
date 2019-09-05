@@ -27,7 +27,7 @@ layout = html.Div(
             [
                 html.Div(
                     [
-                        html.H6('Beamline spectrum from:'),
+                        html.H6('Beam spectrum from:'),
                         html.Div(
                             [
                                 dcc.Dropdown(
