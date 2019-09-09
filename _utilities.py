@@ -32,6 +32,7 @@ density_name = 'Density (g/cm\u00B3)'
 ratio_name = 'Stoichiometric ratio'
 molar_name = 'Molar mass (g/mol)'
 number_density_name = 'Atoms (#/cm\u00B3)'
+mu_per_cm_name = 'Attenuation coefficient (/cm)'
 layer_name = 'Layer'
 ele_name = 'Element'
 iso_name = 'Isotope'
@@ -89,10 +90,10 @@ iso_tb_df_default = pd.DataFrame({
 })
 
 output_stack_header_df = pd.DataFrame({
-    'name': [thick_name, density_name, ratio_name, molar_name, number_density_name],
-    'id': [thick_name, density_name, ratio_name, molar_name, number_density_name],
-    'deletable': [False, False, False, False, False],
-    'editable': [False, False, False, False, False],
+    'name': [thick_name, density_name, ratio_name, molar_name, number_density_name, mu_per_cm_name],
+    'id': [thick_name, density_name, ratio_name, molar_name, number_density_name, mu_per_cm_name],
+    'deletable': [False, False, False, False, False, False],
+    'editable': [False, False, False, False, False, False],
 })
 
 col_width_1 = 'one column'
@@ -594,7 +595,7 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
     df_flux_interp['energy_eV'] = energy
     df_flux_interp['flux'] = flux_interp
     df_flux = df_flux_interp[:]
-    trans_ = trans
+    trans_ = trans[:]
 
     # calculated transmitted flux
     trans_flux = trans_ * df_flux['flux']
@@ -660,6 +661,9 @@ def form_sample_stack_table_div(o_stack):
         layer_dict[ratio_name] = ":".join(_ratio_str_list)
         layer_dict[molar_name] = round(o_stack[layer]['molar_mass']['value'], 4)
         layer_dict[number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
+
+        layer_dict[mu_per_cm_name] = 'test'
+        # layer_dict[mu_per_cm_name] = '{:0.3e}'.format(o_stack[layer]['mu_per_cm'])
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
             dt.DataTable(data=_df_layer.to_dict('records'),
@@ -669,7 +673,7 @@ def form_sample_stack_table_div(o_stack):
                          filter_action='none',
                          sort_action='none',
                          row_deletable=False,
-                         style_cell_conditional=output_tb_uneven_5_col,
+                         style_cell_conditional=output_tb_uneven_6_col,
                          ))
 
         for e, ele in enumerate(elements_in_current_layer):
@@ -680,13 +684,13 @@ def form_sample_stack_table_div(o_stack):
             id_list = []
             deletable_list = []
             editable_list = []
-            for i, iso in enumerate(_iso_list):
-                current_id = 'column_' + str(i + 1)
+            for _index, iso in enumerate(_iso_list):
+                current_id = 'column_' + str(_index + 1)
                 name_list.append(iso)
                 id_list.append(current_id)
                 deletable_list.append(False)
                 editable_list.append(False)
-                iso_dict[current_id] = round(_iso_ratios[i], 4)
+                iso_dict[current_id] = round(_iso_ratios[_index], 4)
 
             _i = len(id_list)
             name_list.append(molar_name)
@@ -699,9 +703,16 @@ def form_sample_stack_table_div(o_stack):
             id_list.append(number_density_name_id)
             deletable_list.append(False)
             editable_list.append(False)
+            name_list.append(mu_per_cm_name)
+            mu_per_cm_name_id = 'column_' + str(_i + 3)
+            id_list.append(mu_per_cm_name_id)
+            deletable_list.append(False)
+            editable_list.append(False)
 
             iso_dict[molar_name_id] = round(o_stack[layer][ele]['molar_mass']['value'], 4)
             iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['atoms_per_cm3'])
+            iso_dict[mu_per_cm_name_id] = 'test'
+
             _df_iso = pd.DataFrame([iso_dict])
             iso_output_header_df = pd.DataFrame({
                 'name': name_list,
@@ -719,9 +730,11 @@ def form_sample_stack_table_div(o_stack):
                              row_deletable=False,
                              style_cell_conditional=[
                                  {'if': {'column_id': molar_name_id},
-                                  'width': '14%'},
+                                  'width': '11%'},
                                  {'if': {'column_id': number_density_name_id},
-                                  'width': '14%'},
+                                  'width': '11%'},
+                                 {'if': {'column_id': mu_per_cm_name_id},
+                                  'width': '11%'},
                              ]
                              ))
         # Append current layer to the main list
@@ -1161,9 +1174,11 @@ def init_iso_table(id_str: str):
 
 app_links_list = []
 for i, each_app in enumerate(app_dict.keys()):
-    current_str = str(i + 1) + '. ' + app_dict[each_app]['name']
+    current_number_str = str(i + 1) + '. '
+    current_app_name = app_dict[each_app]['name']
     current_url = app_dict[each_app]['url']
-    app_links_list.append(dcc.Link(current_str, href=current_url))
+    app_links_list.append(current_number_str)
+    app_links_list.append(dcc.Link(current_app_name, href=current_url))
     app_links_list.append(html.Br())
 app_links_div = html.Div(app_links_list)
 
@@ -1200,17 +1215,19 @@ range_tb_even_5_col = [
      'width': '20%'},
 ]
 
-output_tb_uneven_5_col = [
+output_tb_uneven_6_col = [
     {'if': {'column_id': thick_name},
-     'width': '24%'},
+     'width': '22%'},
     {'if': {'column_id': density_name},
-     'width': '24%'},
+     'width': '22%'},
     {'if': {'column_id': ratio_name},
-     'width': '24%'},
+     'width': '22%'},
     {'if': {'column_id': molar_name},
-     'width': '14%'},
+     'width': '11%'},
     {'if': {'column_id': number_density_name},
-     'width': '14%'},
+     'width': '11%'},
+    {'if': {'column_id': mu_per_cm_name},
+     'width': '11%'},
 ]
 
 color = 'rgb(240, 240, 240)'
