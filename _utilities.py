@@ -32,7 +32,7 @@ density_name = 'Density (g/cm\u00B3)'
 ratio_name = 'Stoichiometric ratio'
 molar_name = 'Molar mass (g/mol)'
 number_density_name = 'Atoms (#/cm\u00B3)'
-mu_per_cm_name = 'Attenuation coefficient (/cm)'
+mu_per_cm_name = 'Attenu. co. (/cm) at CG-1D'
 layer_name = 'Layer'
 ele_name = 'Element'
 iso_name = 'Isotope'
@@ -583,27 +583,52 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
     o_stack = o_reso.stack
 
     # interpolate with the beam shape energy
-    interp_type = 'cubic'
     energy = o_reso.total_signal['energy_eV'].round(6)  # !!!need to fix ImagingReso energy_eV columns
-    trans = o_reso.total_signal['transmission']
-
+    interp_type = 'cubic'
     interp_flux_function = interp1d(x=df_flux_raw['energy_eV'], y=df_flux_raw['flux'], kind=interp_type)
-    print(min(energy), max(energy))
-    print(min(df_flux_raw['energy_eV']), max(df_flux_raw['energy_eV']))
     flux_interp = interp_flux_function(energy)
     df_flux_interp = pd.DataFrame()
     df_flux_interp['energy_eV'] = energy
     df_flux_interp['flux'] = flux_interp
     df_flux = df_flux_interp[:]
-    trans_ = trans[:]
+    trans_tag = 'transmission'
+    mu_tag = 'mu_per_cm'
+    o_signal = o_reso.stack_signal
 
-    # calculated transmitted flux
-    trans_flux = trans_ * df_flux['flux']
-    integr_total = np.trapz(y=df_flux['flux'] / df_flux['energy_eV'], x=df_flux['energy_eV'], dx=1e-6).round(3)
-    integr_trans = np.trapz(y=trans_flux / df_flux['energy_eV'], x=df_flux['energy_eV'], dx=1e-6).round(3)
-    _total_trans = integr_trans / integr_total * 100
+    _total_trans = _calculate_transmission(flux_df=df_flux, trans_array=o_reso.total_signal[trans_tag])
 
+    for each_layer in o_stack.keys():
+        if len(o_stack.keys()) == 1:
+            _current_layer_trans = _total_trans
+        else:
+            _current_layer_trans = _calculate_transmission(flux_df=df_flux,
+                                                           trans_array=o_signal[each_layer][trans_tag])
+        o_stack[each_layer][trans_tag] = _current_layer_trans
+        o_stack[each_layer][mu_tag] = _transmission_to_mu_per_cm(transmission=_current_layer_trans,
+                                                                 thickness=o_stack[each_layer]['thickness']['value'])
+        for each_ele in o_stack[each_layer]['elements']:
+            _current_ele_trans = _calculate_transmission(flux_df=df_flux,
+                                                         trans_array=o_signal[each_layer][each_ele][trans_tag])
+            o_stack[each_layer][each_ele][trans_tag] = _current_ele_trans
+            o_stack[each_layer][each_ele][mu_tag] = _transmission_to_mu_per_cm(transmission=_current_ele_trans,
+                                                                               thickness=
+                                                                               o_stack[each_layer]['thickness'][
+                                                                                   'value'])
     return _total_trans, o_stack
+
+
+def _calculate_transmission(flux_df: pd.DataFrame, trans_array: np.array):
+    # calculated transmitted flux
+    trans_flux = trans_array * flux_df['flux']
+    integr_total = np.trapz(y=flux_df['flux'] / flux_df['energy_eV'], x=flux_df['energy_eV'], dx=1e-6).round(3)
+    integr_trans = np.trapz(y=trans_flux / flux_df['energy_eV'], x=flux_df['energy_eV'], dx=1e-6).round(3)
+    _trans = integr_trans / integr_total * 100
+    return _trans
+
+
+def _transmission_to_mu_per_cm(transmission, thickness):
+    mu_per_cm = -np.log(transmission / 100) / (thickness / 10)
+    return mu_per_cm
 
 
 def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, database,
@@ -661,9 +686,8 @@ def form_sample_stack_table_div(o_stack):
         layer_dict[ratio_name] = ":".join(_ratio_str_list)
         layer_dict[molar_name] = round(o_stack[layer]['molar_mass']['value'], 4)
         layer_dict[number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
+        layer_dict[mu_per_cm_name] = '{:0.3e}'.format(o_stack[layer]['mu_per_cm'])
 
-        layer_dict[mu_per_cm_name] = 'test'
-        # layer_dict[mu_per_cm_name] = '{:0.3e}'.format(o_stack[layer]['mu_per_cm'])
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
             dt.DataTable(data=_df_layer.to_dict('records'),
@@ -711,7 +735,7 @@ def form_sample_stack_table_div(o_stack):
 
             iso_dict[molar_name_id] = round(o_stack[layer][ele]['molar_mass']['value'], 4)
             iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['atoms_per_cm3'])
-            iso_dict[mu_per_cm_name_id] = 'test'
+            iso_dict[mu_per_cm_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['mu_per_cm'])
 
             _df_iso = pd.DataFrame([iso_dict])
             iso_output_header_df = pd.DataFrame({
