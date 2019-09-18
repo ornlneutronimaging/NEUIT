@@ -40,7 +40,7 @@ layout = html.Div(
                     row_selectable=False,
                     filter_action='none',
                     sort_action='none',
-                    row_deletable=False,
+                    row_deletable=True,
                     export_format='csv',
                     style_cell_conditional=[
                         {'if': {'column_id': chem_name},

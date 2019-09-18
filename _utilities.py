@@ -476,12 +476,15 @@ def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
 def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
     prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
-    sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    new_iso_df = form_iso_table(sample_df=sample_df, database=database)
-    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
     try:
-        return new_iso_df.to_dict('records')
-    except AttributeError:
+        sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
+        new_iso_df = form_iso_table(sample_df=sample_df, database=database)
+        new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
+        try:
+            return new_iso_df.to_dict('records')
+        except AttributeError:
+            return iso_tb_df_default.to_dict('records')
+    except KeyError:
         return iso_tb_df_default.to_dict('records')
 
 
