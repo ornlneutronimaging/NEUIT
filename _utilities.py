@@ -674,14 +674,14 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, datab
 
 
 def form_sample_stack_table_div(o_stack):
-    sample_stack_div_list = [html.Hr(), html.H5('Sample stack:')]
+    sample_stack_div_list = [html.Hr(), html.H4('Sample stack:')]
     layers = list(o_stack.keys())
     layer_dict = {}
     for l, layer in enumerate(layers):
         elements_in_current_layer = o_stack[layer]['elements']
         l_str = str(l + 1)
         current_layer_list = [
-            html.P("Layer {}: {}".format(l_str, layer)),
+            html.H5("Layer {}: {}".format(l_str, layer)),
         ]
         layer_dict[thick_name] = o_stack[layer]['thickness']['value']
         layer_dict[density_name] = round(o_stack[layer]['density']['value'], 3)
@@ -704,6 +704,8 @@ def form_sample_stack_table_div(o_stack):
                          ))
 
         for e, ele in enumerate(elements_in_current_layer):
+            e_str = str(e + 1)
+            current_layer_list.append(html.P("Element {}: {}".format(e_str, ele)))
             _iso_list = o_stack[layer][ele]['isotopes']['list']
             _iso_ratios = o_stack[layer][ele]['isotopes']['isotopic_ratio']
             iso_dict = {}
