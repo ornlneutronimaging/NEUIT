@@ -173,6 +173,15 @@ def _validate_chem_name(input_name: str, database: str):
         return [False, error_massage.__str__()]
 
 
+# def _validate_no_duplicated_layer_name(layer_name: str, o_stack: dict):
+#     """ Returns True if string is a number. """
+#     try:
+#         ir_util.formula_to_dictionary(formula=input_name, database=database)
+#         return [True, None]
+#     except ValueError as error_massage:
+#         return [False, error_massage.__str__()]
+
+
 def is_number(s):
     """ Returns True if string is a number. """
     try:
@@ -516,26 +525,26 @@ def load_beam_shape(relative_path_to_beam_shape):
 def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
     num_layer = len(sample_tb_df[chem_name])
     for layer_index in range(num_layer):
-        if density_name not in sample_tb_df.columns:
+        if density_name not in sample_tb_df.columns:  # sample density name is NOT in the tb
             if thick_name not in sample_tb_df.columns:  # for compos_df, only have column "compos_2nd_col_id"
                 try:
                     o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
-                                     thickness=1)
+                                     thickness=1)  # dummy layer to generate the stack
                 except ValueError:
                     pass
-            else:
+            else:  # sample thickness is in the tb
                 try:
                     o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
                                      thickness=float(sample_tb_df[thick_name][layer_index]))
                 except ValueError:
                     pass
-        elif sample_tb_df[density_name][layer_index] == '':
+        elif sample_tb_df[density_name][layer_index] == '':  # sample density name is in the tb
             try:
                 o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
                                  thickness=float(sample_tb_df[thick_name][layer_index]))
             except ValueError:
                 pass
-        else:
+        else:  # sample density is NOT in the tb
             try:
                 o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
                                  thickness=float(sample_tb_df[thick_name][layer_index]),
