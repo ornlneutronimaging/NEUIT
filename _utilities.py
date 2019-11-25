@@ -173,15 +173,6 @@ def _validate_chem_name(input_name: str, database: str):
         return [False, error_massage.__str__()]
 
 
-# def _validate_no_duplicated_layer_name(layer_name: str, o_stack: dict):
-#     """ Returns True if string is a number. """
-#     try:
-#         ir_util.formula_to_dictionary(formula=input_name, database=database)
-#         return [True, None]
-#     except ValueError as error_massage:
-#         return [False, error_massage.__str__()]
-
-
 def is_number(s):
     """ Returns True if string is a number. """
     try:
@@ -302,7 +293,26 @@ def validate_sample_input(sample_df: pd.DataFrame, sample_schema: dict, database
     # Test sample input format
     sample_schema = update_database_key_in_schema(schema=sample_schema, database=database)
     test_passed_list, output_div_list = validate_input_tb_rows(schema=sample_schema, input_df=sample_df)
+
+    # Test no duplicate layer name
+    if all(test_passed_list):
+        duplicate_test_passed, duplicate_test_output_div = validate_no_duplicated_layer_name(sample_df=sample_df)
+        test_passed_list += duplicate_test_passed
+        output_div_list += duplicate_test_output_div
+
     return test_passed_list, output_div_list
+
+
+def validate_no_duplicated_layer_name(sample_df: pd.DataFrame):
+    """ Returns True when no duplicated layer name. """
+    try:
+        layer_list = sample_df[chem_name].tolist()
+        if len(layer_list) == len(set(layer_list)):
+            return [True], [None]
+        else:
+            return [False], [html.P("INPUT ERROR: same '{}' has been entered more than once.".format(chem_name))]
+    except KeyError as error_massage:
+        return [False], [error_massage.__str__()]
 
 
 def validate_iso_input(iso_df: pd.DataFrame, iso_schema: dict, database: str,
@@ -312,7 +322,6 @@ def validate_iso_input(iso_df: pd.DataFrame, iso_schema: dict, database: str,
     iso_test_passed_list, iso_output_div_list = validate_input_tb_rows(schema=iso_schema, input_df=iso_df)
     test_passed_list += iso_test_passed_list
     output_div_list += iso_output_div_list
-
     # Test the sum of iso ratio == 1
     if all(test_passed_list):
         sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=iso_df)
@@ -320,6 +329,29 @@ def validate_iso_input(iso_df: pd.DataFrame, iso_schema: dict, database: str,
         output_div_list += sum_test_output_div
 
     return test_passed_list, output_div_list
+
+
+def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
+    try:
+        df = iso_df.groupby([layer_name, ele_name]).sum()
+        df_boo = df[iso_ratio_name] - 1.0
+        boo = df_boo.abs() >= 0.005
+        failed_list = list(boo)
+        passed_list = []
+        div_list = []
+        if any(failed_list):
+            _list = df.index[boo].tolist()
+            for _index, each_fail_layer in enumerate(_list):
+                div = html.P("INPUT ERROR: '{}': [sum of isotopic ratios is '{}' not '1']".format(
+                    str(each_fail_layer), float(df[boo][iso_ratio_name][_index])))
+                passed_list.append(False)
+                div_list.append(div)
+        else:
+            passed_list.append(True)
+            div_list.append(None)
+        return passed_list, div_list
+    except KeyError:
+        return [False], [None]
 
 
 def validate_density_input(sample_tb_df: pd.DataFrame, test_passed_list: list, output_div_list: list):
@@ -457,29 +489,6 @@ def _validate_input(v: Validator, input_dict: dict):
     else:
         error_message_str = v.errors
     return passed, html.P('INPUT ERROR: {}'.format(error_message_str))
-
-
-def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
-    try:
-        df = iso_df.groupby([layer_name, ele_name]).sum()
-        df_boo = df[iso_ratio_name] - 1.0
-        boo = df_boo.abs() >= 0.005
-        failed_list = list(boo)
-        passed_list = []
-        div_list = []
-        if any(failed_list):
-            _list = df.index[boo].tolist()
-            for _index, each_fail_layer in enumerate(_list):
-                div = html.P("INPUT ERROR: '{}': [sum of isotopic ratios is '{}' not '1']".format(
-                    str(each_fail_layer), float(df[boo][iso_ratio_name][_index])))
-                passed_list.append(False)
-                div_list.append(div)
-        else:
-            passed_list.append(True)
-            div_list.append(None)
-        return passed_list, div_list
-    except KeyError:
-        return [False], [None]
 
 
 def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
