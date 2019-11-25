@@ -96,6 +96,13 @@ output_stack_header_df = pd.DataFrame({
     'editable': [False, False, False, False, False, False],
 })
 
+output_stack_header_short_df = pd.DataFrame({
+    'name': [ratio_name, molar_name],
+    'id': [ratio_name, molar_name],
+    'deletable': [False, False],
+    'editable': [False, False],
+})
+
 col_width_1 = 'one column'
 col_width_3 = 'three columns'
 col_width_6 = 'six columns'
@@ -691,10 +698,17 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, datab
     return output_div_list, o_stack
 
 
-def form_sample_stack_table_div(o_stack):
+def form_sample_stack_table_div(o_stack, full_stack=True):
     sample_stack_div_list = [html.Hr(), html.H4('Sample stack:')]
     layers = list(o_stack.keys())
     layer_dict = {}
+
+    # For short sample stack output
+    if full_stack:
+        output_header_df = output_stack_header_df
+    else:
+        output_header_df = output_stack_header_short_df
+
     for l, layer in enumerate(layers):
         elements_in_current_layer = o_stack[layer]['elements']
         l_str = str(l + 1)
@@ -712,7 +726,7 @@ def form_sample_stack_table_div(o_stack):
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
             dt.DataTable(data=_df_layer.to_dict('records'),
-                         columns=output_stack_header_df.to_dict('records'),
+                         columns=output_header_df.to_dict('records'),
                          editable=False,
                          row_selectable=False,
                          filter_action='none',
@@ -745,20 +759,32 @@ def form_sample_stack_table_div(o_stack):
             id_list.append(molar_name_id)
             deletable_list.append(False)
             editable_list.append(False)
-            name_list.append(number_density_name)
-            number_density_name_id = 'column_' + str(_i + 2)
-            id_list.append(number_density_name_id)
-            deletable_list.append(False)
-            editable_list.append(False)
-            name_list.append(mu_per_cm_name)
-            mu_per_cm_name_id = 'column_' + str(_i + 3)
-            id_list.append(mu_per_cm_name_id)
-            deletable_list.append(False)
-            editable_list.append(False)
-
             iso_dict[molar_name_id] = round(o_stack[layer][ele]['molar_mass']['value'], 4)
-            iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['atoms_per_cm3'])
-            iso_dict[mu_per_cm_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['mu_per_cm'])
+
+            # For short sample stack output
+            if full_stack:
+                name_list.append(number_density_name)
+                number_density_name_id = 'column_' + str(_i + 2)
+                id_list.append(number_density_name_id)
+                deletable_list.append(False)
+                editable_list.append(False)
+                name_list.append(mu_per_cm_name)
+                mu_per_cm_name_id = 'column_' + str(_i + 3)
+                id_list.append(mu_per_cm_name_id)
+                deletable_list.append(False)
+                editable_list.append(False)
+                iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['atoms_per_cm3'])
+                iso_dict[mu_per_cm_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['mu_per_cm'])
+                cell_conditional = [
+                    {'if': {'column_id': molar_name_id},
+                     'width': '11%'},
+                    {'if': {'column_id': number_density_name_id},
+                     'width': '11%'},
+                    {'if': {'column_id': mu_per_cm_name_id},
+                     'width': '11%'},
+                ]
+            else:
+                cell_conditional = []
 
             _df_iso = pd.DataFrame([iso_dict])
             iso_output_header_df = pd.DataFrame({
@@ -775,14 +801,7 @@ def form_sample_stack_table_div(o_stack):
                              filter_action='none',
                              sort_action='none',
                              row_deletable=False,
-                             style_cell_conditional=[
-                                 {'if': {'column_id': molar_name_id},
-                                  'width': '11%'},
-                                 {'if': {'column_id': number_density_name_id},
-                                  'width': '11%'},
-                                 {'if': {'column_id': mu_per_cm_name_id},
-                                  'width': '11%'},
-                             ]
+                             style_cell_conditional=cell_conditional
                              ))
         # Append current layer to the main list
         sample_stack_div_list.append(html.Div(current_layer_list))

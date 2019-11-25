@@ -268,7 +268,7 @@ def output(n_submit, test_passed, database, compos_tb_rows, iso_tb_rows, iso_cha
                                                                       band_max=None,
                                                                       band_type='energy',
                                                                       database=database)
-        sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack)
+        sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack, full_stack=False)
 
         compos_output_df, ele_list, mol_list = convert_input_to_composition(compos_df=_compos_df,
                                                                             compos_type=compos_type,
