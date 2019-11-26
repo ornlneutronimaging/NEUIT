@@ -555,12 +555,12 @@ def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
                 except ValueError:
                     pass
         elif sample_tb_df[density_name][layer_index] == '':  # sample density name is in the tb
-            try:
+            try:  # sample density is NOT in the tb
                 o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
                                  thickness=float(sample_tb_df[thick_name][layer_index]))
             except ValueError:
                 pass
-        else:  # sample density is NOT in the tb
+        else:  # sample density is in the tb
             try:
                 o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
                                  thickness=float(sample_tb_df[thick_name][layer_index]),
