@@ -1,6 +1,7 @@
 import unittest
 
 from _utilities import *
+from _utilities import _validate_chem_name
 
 
 class TestUtilities(unittest.TestCase):
@@ -184,25 +185,28 @@ class TestUtilities(unittest.TestCase):
     def test_chem_name_validator(self):
         database_endf7 = 'ENDF_VII'
         database_endf8 = 'ENDF_VIII'
-        self.assertTrue(__validate_chem_name('Ag', database=database_endf7)[0])
-        self.assertTrue(__validate_chem_name('U2O3', database=database_endf7)[0])
-        self.assertTrue(__validate_chem_name('CH3COOH', database=database_endf7)[0])
-        self.assertTrue(__validate_chem_name('CuO2H2', database=database_endf7)[0])
-        self.assertTrue(__validate_chem_name('LiMg', database=database_endf7)[0])
-        self.assertTrue(__validate_chem_name('Li-Mg', database=database_endf7)[0])
-        self.assertFalse(__validate_chem_name('88', database=database_endf7)[0])
-        self.assertFalse(__validate_chem_name('Dg', database=database_endf7)[0])
-        self.assertFalse(__validate_chem_name('Ci', database=database_endf7)[0])
-        self.assertFalse(__validate_chem_name('Xo', database=database_endf7)[0])
-        self.assertFalse(__validate_chem_name('Asd', database=database_endf7)[0])
-        self.assertFalse(__validate_chem_name('Hug', database=database_endf7)[0])
-        self.assertFalse(__validate_chem_name('AA', database=database_endf7)[0])
-        self.assertFalse(__validate_chem_name('ab', database=database_endf7)[0])
-        self.assertFalse(__validate_chem_name('dd', database=database_endf7)[0])
-        self.assertFalse(__validate_chem_name('Co1.2Cu1.4', database=database_endf7)[0])
-        self.assertFalse(__validate_chem_name('aa', database=database_endf7)[0])
+        self.assertTrue(_validate_chem_name('Ag', database=database_endf7)[0])
+        self.assertTrue(_validate_chem_name('U2O3', database=database_endf7)[0])
+        self.assertTrue(_validate_chem_name('CH3COOH', database=database_endf7)[0])
+        print(ir_util.formula_to_dictionary('CH3COOH'))
+        self.assertTrue(_validate_chem_name('CuO2H2', database=database_endf7)[0])
+        self.assertTrue(_validate_chem_name('LiMg', database=database_endf7)[0])
+        self.assertTrue(_validate_chem_name('Li-Mg', database=database_endf7)[0])
+        self.assertFalse(_validate_chem_name('88', database=database_endf7)[0])
+        self.assertFalse(_validate_chem_name('Dg', database=database_endf7)[0])
+        self.assertFalse(_validate_chem_name('Ci', database=database_endf7)[0])
+        self.assertFalse(_validate_chem_name('Xo', database=database_endf7)[0])
+        self.assertFalse(_validate_chem_name('Asd', database=database_endf7)[0])
+        self.assertFalse(_validate_chem_name('Hug', database=database_endf7)[0])
+        self.assertFalse(_validate_chem_name('AA', database=database_endf7)[0])
+        self.assertFalse(_validate_chem_name('ab', database=database_endf7)[0])
+        self.assertFalse(_validate_chem_name('dd', database=database_endf7)[0])
+        self.assertFalse(_validate_chem_name('Co1.2Cu1.4', database=database_endf7)[0])
+        self.assertFalse(_validate_chem_name('aa', database=database_endf7)[0])
         # self.assertFalse(validate_chem_name('aO'))  # need to work on restricting this type of input
         print(ir_util.formula_to_dictionary('aO'))
+        # self.assertFalse(validate_chem_name('H2o'))  # need to work on restricting this type of input
+        print(ir_util.formula_to_dictionary('H2o'))
         # Test database used
-        self.assertTrue(__validate_chem_name('Pt', database=database_endf8)[0])
-        self.assertFalse(__validate_chem_name('Pt', database=database_endf7)[0])
+        self.assertTrue(_validate_chem_name('Pt', database=database_endf8)[0])
+        self.assertFalse(_validate_chem_name('Pt', database=database_endf7)[0])

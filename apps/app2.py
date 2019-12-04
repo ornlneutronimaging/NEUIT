@@ -130,7 +130,7 @@ layout = html.Div(
                     row_selectable=False,
                     filter_action='none',
                     sort_action='none',
-                    row_deletable=False,
+                    row_deletable=True,
                     export_format='csv',
                     style_cell_conditional=sample_tb_even_3_col,
                     style_data_conditional=[striped_rows],
@@ -673,15 +673,15 @@ def output_transmission_and_stack(n_submit, test_passed, database,
                                                                 band_max=e_max,
                                                                 band_type='energy',
                                                                 database=database)
-        trans_div_list_tof, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
-                                                                   iso_tb_rows=iso_tb_rows,
-                                                                   iso_changed=iso_changed,
-                                                                   beamline='imaging',
-                                                                   band_min=None,
-                                                                   band_max=None,
-                                                                   band_type=None,
-                                                                   database=database)
-        output_div_list.extend(trans_div_list_tof)
+        # trans_div_list_tof, o_stack_cg1d = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
+        #                                                                 iso_tb_rows=iso_tb_rows,
+        #                                                                 iso_changed=iso_changed,
+        #                                                                 beamline='imaging',
+        #                                                                 band_min=None,
+        #                                                                 band_max=None,
+        #                                                                 band_type=None,
+        #                                                                 database=database)
+        # output_div_list.extend(trans_div_list_tof)
 
         # Sample stack table div
         sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack)
