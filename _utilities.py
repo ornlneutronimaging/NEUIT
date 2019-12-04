@@ -32,6 +32,7 @@ density_name = 'Density (g/cm\u00B3)'
 ratio_name = 'Stoichiometric ratio'
 molar_name = 'Molar mass (g/mol)'
 number_density_name = 'Atoms (#/cm\u00B3)'
+mu_per_cm_name = 'Attenu. co. (/cm)'
 layer_name = 'Layer'
 ele_name = 'Element'
 iso_name = 'Isotope'
@@ -89,10 +90,17 @@ iso_tb_df_default = pd.DataFrame({
 })
 
 output_stack_header_df = pd.DataFrame({
-    'name': [thick_name, density_name, ratio_name, molar_name, number_density_name],
-    'id': [thick_name, density_name, ratio_name, molar_name, number_density_name],
-    'deletable': [False, False, False, False, False],
-    'editable': [False, False, False, False, False],
+    'name': [thick_name, density_name, ratio_name, molar_name, number_density_name, mu_per_cm_name],
+    'id': [thick_name, density_name, ratio_name, molar_name, number_density_name, mu_per_cm_name],
+    'deletable': [False, False, False, False, False, False],
+    'editable': [False, False, False, False, False, False],
+})
+
+output_stack_header_short_df = pd.DataFrame({
+    'name': [ratio_name, molar_name],
+    'id': [ratio_name, molar_name],
+    'deletable': [False, False],
+    'editable': [False, False],
 })
 
 col_width_1 = 'one column'
@@ -292,7 +300,26 @@ def validate_sample_input(sample_df: pd.DataFrame, sample_schema: dict, database
     # Test sample input format
     sample_schema = update_database_key_in_schema(schema=sample_schema, database=database)
     test_passed_list, output_div_list = validate_input_tb_rows(schema=sample_schema, input_df=sample_df)
+
+    # Test no duplicate layer name
+    if all(test_passed_list):
+        duplicate_test_passed, duplicate_test_output_div = validate_no_duplicated_layer_name(sample_df=sample_df)
+        test_passed_list += duplicate_test_passed
+        output_div_list += duplicate_test_output_div
+
     return test_passed_list, output_div_list
+
+
+def validate_no_duplicated_layer_name(sample_df: pd.DataFrame):
+    """ Returns True when no duplicated layer name. """
+    try:
+        layer_list = sample_df[chem_name].tolist()
+        if len(layer_list) == len(set(layer_list)):
+            return [True], [None]
+        else:
+            return [False], [html.P("INPUT ERROR: same '{}' has been entered more than once.".format(chem_name))]
+    except KeyError as error_massage:
+        return [False], [error_massage.__str__()]
 
 
 def validate_iso_input(iso_df: pd.DataFrame, iso_schema: dict, database: str,
@@ -302,7 +329,6 @@ def validate_iso_input(iso_df: pd.DataFrame, iso_schema: dict, database: str,
     iso_test_passed_list, iso_output_div_list = validate_input_tb_rows(schema=iso_schema, input_df=iso_df)
     test_passed_list += iso_test_passed_list
     output_div_list += iso_output_div_list
-
     # Test the sum of iso ratio == 1
     if all(test_passed_list):
         sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=iso_df)
@@ -310,6 +336,29 @@ def validate_iso_input(iso_df: pd.DataFrame, iso_schema: dict, database: str,
         output_div_list += sum_test_output_div
 
     return test_passed_list, output_div_list
+
+
+def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
+    try:
+        df = iso_df.groupby([layer_name, ele_name]).sum()
+        df_boo = df[iso_ratio_name] - 1.0
+        boo = df_boo.abs() >= 0.005
+        failed_list = list(boo)
+        passed_list = []
+        div_list = []
+        if any(failed_list):
+            _list = df.index[boo].tolist()
+            for _index, each_fail_layer in enumerate(_list):
+                div = html.P("INPUT ERROR: '{}': [sum of isotopic ratios is '{}' not '1']".format(
+                    str(each_fail_layer), float(df[boo][iso_ratio_name][_index])))
+                passed_list.append(False)
+                div_list.append(div)
+        else:
+            passed_list.append(True)
+            div_list.append(None)
+        return passed_list, div_list
+    except KeyError:
+        return [False], [None]
 
 
 def validate_density_input(sample_tb_df: pd.DataFrame, test_passed_list: list, output_div_list: list):
@@ -449,38 +498,18 @@ def _validate_input(v: Validator, input_dict: dict):
     return passed, html.P('INPUT ERROR: {}'.format(error_message_str))
 
 
-def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
-    try:
-        df = iso_df.groupby([layer_name, ele_name]).sum()
-        df_boo = df[iso_ratio_name] - 1.0
-        boo = df_boo.abs() >= 0.005
-        failed_list = list(boo)
-        passed_list = []
-        div_list = []
-        if any(failed_list):
-            _list = df.index[boo].tolist()
-            for _index, each_fail_layer in enumerate(_list):
-                div = html.P("INPUT ERROR: '{}': [sum of isotopic ratios is '{}' not '1']".format(
-                    str(each_fail_layer), float(df[boo][iso_ratio_name][_index])))
-                passed_list.append(False)
-                div_list.append(div)
-        else:
-            passed_list.append(True)
-            div_list.append(None)
-        return passed_list, div_list
-    except KeyError:
-        return [False], [None]
-
-
 def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
     prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
-    sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-    new_iso_df = form_iso_table(sample_df=sample_df, database=database)
-    new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
     try:
-        return new_iso_df.to_dict('records')
-    except AttributeError:
+        sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
+        new_iso_df = form_iso_table(sample_df=sample_df, database=database)
+        new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
+        try:
+            return new_iso_df.to_dict('records')
+        except AttributeError:
+            return iso_tb_df_default.to_dict('records')
+    except KeyError:
         return iso_tb_df_default.to_dict('records')
 
 
@@ -512,26 +541,26 @@ def load_beam_shape(relative_path_to_beam_shape):
 def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
     num_layer = len(sample_tb_df[chem_name])
     for layer_index in range(num_layer):
-        if density_name not in sample_tb_df.columns:
+        if density_name not in sample_tb_df.columns:  # sample density name is NOT in the tb
             if thick_name not in sample_tb_df.columns:  # for compos_df, only have column "compos_2nd_col_id"
                 try:
                     o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
-                                     thickness=1)
+                                     thickness=1)  # dummy layer to generate the stack
                 except ValueError:
                     pass
-            else:
+            else:  # sample thickness is in the tb
                 try:
                     o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
                                      thickness=float(sample_tb_df[thick_name][layer_index]))
                 except ValueError:
                     pass
-        elif sample_tb_df[density_name][layer_index] == '':
-            try:
+        elif sample_tb_df[density_name][layer_index] == '':  # sample density name is in the tb
+            try:  # sample density is NOT in the tb
                 o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
                                  thickness=float(sample_tb_df[thick_name][layer_index]))
             except ValueError:
                 pass
-        else:
+        else:  # sample density is in the tb
             try:
                 o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
                                  thickness=float(sample_tb_df[thick_name][layer_index]),
@@ -582,27 +611,52 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
     o_stack = o_reso.stack
 
     # interpolate with the beam shape energy
-    interp_type = 'cubic'
     energy = o_reso.total_signal['energy_eV'].round(6)  # !!!need to fix ImagingReso energy_eV columns
-    trans = o_reso.total_signal['transmission']
-
+    interp_type = 'cubic'
     interp_flux_function = interp1d(x=df_flux_raw['energy_eV'], y=df_flux_raw['flux'], kind=interp_type)
-    print(min(energy), max(energy))
-    print(min(df_flux_raw['energy_eV']), max(df_flux_raw['energy_eV']))
     flux_interp = interp_flux_function(energy)
     df_flux_interp = pd.DataFrame()
     df_flux_interp['energy_eV'] = energy
     df_flux_interp['flux'] = flux_interp
     df_flux = df_flux_interp[:]
-    trans_ = trans
+    trans_tag = 'transmission'
+    mu_tag = 'mu_per_cm'
+    o_signal = o_reso.stack_signal
 
-    # calculated transmitted flux
-    trans_flux = trans_ * df_flux['flux']
-    integr_total = np.trapz(y=df_flux['flux'] / df_flux['energy_eV'], x=df_flux['energy_eV'], dx=1e-6).round(3)
-    integr_trans = np.trapz(y=trans_flux / df_flux['energy_eV'], x=df_flux['energy_eV'], dx=1e-6).round(3)
-    _total_trans = integr_trans / integr_total * 100
+    _total_trans = _calculate_transmission(flux_df=df_flux, trans_array=o_reso.total_signal[trans_tag])
 
+    for each_layer in o_stack.keys():
+        if len(o_stack.keys()) == 1:
+            _current_layer_trans = _total_trans
+        else:
+            _current_layer_trans = _calculate_transmission(flux_df=df_flux,
+                                                           trans_array=o_signal[each_layer][trans_tag])
+        o_stack[each_layer][trans_tag] = _current_layer_trans
+        o_stack[each_layer][mu_tag] = _transmission_to_mu_per_cm(transmission=_current_layer_trans,
+                                                                 thickness=o_stack[each_layer]['thickness']['value'])
+        for each_ele in o_stack[each_layer]['elements']:
+            _current_ele_trans = _calculate_transmission(flux_df=df_flux,
+                                                         trans_array=o_signal[each_layer][each_ele][trans_tag])
+            o_stack[each_layer][each_ele][trans_tag] = _current_ele_trans
+            o_stack[each_layer][each_ele][mu_tag] = _transmission_to_mu_per_cm(transmission=_current_ele_trans,
+                                                                               thickness=
+                                                                               o_stack[each_layer]['thickness'][
+                                                                                   'value'])
     return _total_trans, o_stack
+
+
+def _calculate_transmission(flux_df: pd.DataFrame, trans_array: np.array):
+    # calculated transmitted flux
+    trans_flux = trans_array * flux_df['flux']
+    integr_total = np.trapz(y=flux_df['flux'] / flux_df['energy_eV'], x=flux_df['energy_eV'], dx=1e-6).round(3)
+    integr_trans = np.trapz(y=trans_flux / flux_df['energy_eV'], x=flux_df['energy_eV'], dx=1e-6).round(3)
+    _trans = integr_trans / integr_total * 100
+    return _trans
+
+
+def _transmission_to_mu_per_cm(transmission, thickness):
+    mu_per_cm = -np.log(transmission / 100) / (thickness / 10)
+    return mu_per_cm
 
 
 def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, database,
@@ -644,15 +698,22 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, datab
     return output_div_list, o_stack
 
 
-def form_sample_stack_table_div(o_stack):
-    sample_stack_div_list = [html.Hr(), html.H5('Sample stack:')]
+def form_sample_stack_table_div(o_stack, full_stack=True):
+    sample_stack_div_list = [html.Hr(), html.H4('Sample stack:')]
     layers = list(o_stack.keys())
     layer_dict = {}
+
+    # For short sample stack output
+    if full_stack:
+        output_header_df = output_stack_header_df
+    else:
+        output_header_df = output_stack_header_short_df
+
     for l, layer in enumerate(layers):
         elements_in_current_layer = o_stack[layer]['elements']
         l_str = str(l + 1)
         current_layer_list = [
-            html.P("Layer {}: {}".format(l_str, layer)),
+            html.H5("Layer {}: {}".format(l_str, layer)),
         ]
         layer_dict[thick_name] = o_stack[layer]['thickness']['value']
         layer_dict[density_name] = round(o_stack[layer]['density']['value'], 3)
@@ -660,19 +721,23 @@ def form_sample_stack_table_div(o_stack):
         layer_dict[ratio_name] = ":".join(_ratio_str_list)
         layer_dict[molar_name] = round(o_stack[layer]['molar_mass']['value'], 4)
         layer_dict[number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
+        layer_dict[mu_per_cm_name] = '{:0.3e}'.format(o_stack[layer]['mu_per_cm'])
+
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
             dt.DataTable(data=_df_layer.to_dict('records'),
-                         columns=output_stack_header_df.to_dict('records'),
+                         columns=output_header_df.to_dict('records'),
                          editable=False,
                          row_selectable=False,
                          filter_action='none',
                          sort_action='none',
                          row_deletable=False,
-                         style_cell_conditional=output_tb_uneven_5_col,
+                         style_cell_conditional=output_tb_uneven_6_col,
                          ))
 
         for e, ele in enumerate(elements_in_current_layer):
+            e_str = str(e + 1)
+            current_layer_list.append(html.P("Element {}: {}".format(e_str, ele)))
             _iso_list = o_stack[layer][ele]['isotopes']['list']
             _iso_ratios = o_stack[layer][ele]['isotopes']['isotopic_ratio']
             iso_dict = {}
@@ -680,13 +745,13 @@ def form_sample_stack_table_div(o_stack):
             id_list = []
             deletable_list = []
             editable_list = []
-            for i, iso in enumerate(_iso_list):
-                current_id = 'column_' + str(i + 1)
+            for _index, iso in enumerate(_iso_list):
+                current_id = 'column_' + str(_index + 1)
                 name_list.append(iso)
                 id_list.append(current_id)
                 deletable_list.append(False)
                 editable_list.append(False)
-                iso_dict[current_id] = round(_iso_ratios[i], 4)
+                iso_dict[current_id] = round(_iso_ratios[_index], 4)
 
             _i = len(id_list)
             name_list.append(molar_name)
@@ -694,14 +759,33 @@ def form_sample_stack_table_div(o_stack):
             id_list.append(molar_name_id)
             deletable_list.append(False)
             editable_list.append(False)
-            name_list.append(number_density_name)
-            number_density_name_id = 'column_' + str(_i + 2)
-            id_list.append(number_density_name_id)
-            deletable_list.append(False)
-            editable_list.append(False)
-
             iso_dict[molar_name_id] = round(o_stack[layer][ele]['molar_mass']['value'], 4)
-            iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['atoms_per_cm3'])
+
+            # For short sample stack output
+            if full_stack:
+                name_list.append(number_density_name)
+                number_density_name_id = 'column_' + str(_i + 2)
+                id_list.append(number_density_name_id)
+                deletable_list.append(False)
+                editable_list.append(False)
+                name_list.append(mu_per_cm_name)
+                mu_per_cm_name_id = 'column_' + str(_i + 3)
+                id_list.append(mu_per_cm_name_id)
+                deletable_list.append(False)
+                editable_list.append(False)
+                iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['atoms_per_cm3'])
+                iso_dict[mu_per_cm_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['mu_per_cm'])
+                cell_conditional = [
+                    {'if': {'column_id': molar_name_id},
+                     'width': '11%'},
+                    {'if': {'column_id': number_density_name_id},
+                     'width': '11%'},
+                    {'if': {'column_id': mu_per_cm_name_id},
+                     'width': '11%'},
+                ]
+            else:
+                cell_conditional = []
+
             _df_iso = pd.DataFrame([iso_dict])
             iso_output_header_df = pd.DataFrame({
                 'name': name_list,
@@ -717,12 +801,7 @@ def form_sample_stack_table_div(o_stack):
                              filter_action='none',
                              sort_action='none',
                              row_deletable=False,
-                             style_cell_conditional=[
-                                 {'if': {'column_id': molar_name_id},
-                                  'width': '14%'},
-                                 {'if': {'column_id': number_density_name_id},
-                                  'width': '14%'},
-                             ]
+                             style_cell_conditional=cell_conditional
                              ))
         # Append current layer to the main list
         sample_stack_div_list.append(html.Div(current_layer_list))
@@ -1161,9 +1240,11 @@ def init_iso_table(id_str: str):
 
 app_links_list = []
 for i, each_app in enumerate(app_dict.keys()):
-    current_str = str(i + 1) + '. ' + app_dict[each_app]['name']
+    current_number_str = str(i + 1) + '. '
+    current_app_name = app_dict[each_app]['name']
     current_url = app_dict[each_app]['url']
-    app_links_list.append(dcc.Link(current_str, href=current_url))
+    app_links_list.append(current_number_str)
+    app_links_list.append(dcc.Link(current_app_name, href=current_url))
     app_links_list.append(html.Br())
 app_links_div = html.Div(app_links_list)
 
@@ -1200,17 +1281,19 @@ range_tb_even_5_col = [
      'width': '20%'},
 ]
 
-output_tb_uneven_5_col = [
+output_tb_uneven_6_col = [
     {'if': {'column_id': thick_name},
-     'width': '24%'},
+     'width': '22%'},
     {'if': {'column_id': density_name},
-     'width': '24%'},
+     'width': '22%'},
     {'if': {'column_id': ratio_name},
-     'width': '24%'},
+     'width': '22%'},
     {'if': {'column_id': molar_name},
-     'width': '14%'},
+     'width': '11%'},
     {'if': {'column_id': number_density_name},
-     'width': '14%'},
+     'width': '11%'},
+    {'if': {'column_id': mu_per_cm_name},
+     'width': '11%'},
 ]
 
 color = 'rgb(240, 240, 240)'
