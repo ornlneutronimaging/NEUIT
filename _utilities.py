@@ -19,12 +19,15 @@ app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/resonance'},
             'app3': {'name': 'Composition converter',
                      'url': '/apps/converter'},
+            'app4': {'name': 'Experiment plotter',
+                     'url': '/apps/plot'},
             }
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
 speed_name = 'Speed (m/s)'
 tof_name = 'Time-of-flight (\u03BCs)'
+number_name = 'Image index (#)'
 class_name = 'Neutron classification'
 chem_name = 'Chemical formula'
 thick_name = 'Thickness (mm)'
@@ -97,8 +100,13 @@ output_stack_header_df = pd.DataFrame({
 
 col_width_1 = 'one column'
 col_width_3 = 'three columns'
+col_width_5 = 'five columns'
 col_width_6 = 'six columns'
 empty_div = html.Div()
+
+distance_default = 16.45
+delay_default = 0
+plot_loading = html.H2('Plot loading...')
 
 
 class MyValidator(Validator):
@@ -885,9 +893,7 @@ def x_type_to_x_tag(x_type):
     return x_tag
 
 
-def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_opt, to_csv):
-    df_dict = load_dfs(jsonified_data=jsonified_data)
-    # Determine Y df and y_label to plot
+def y_type_to_y_label(y_type):
     if y_type == 'transmission':
         y_label = 'Transmission'
     elif y_type == 'attenuation':
@@ -898,6 +904,26 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
         y_label = 'Cross-sections (barn)'
     else:  # y_type == 'mu_per_cm':
         y_label = 'Attenuation coefficient \u03BC (cm\u207B\u00B9)'
+    return y_label
+
+
+def x_type_to_x_label(x_type):
+    if x_type == 'energy':
+        x_label = energy_name
+    elif x_type == 'lambda':
+        x_label = wave_name
+    elif x_type == 'time':
+        x_label = tof_name
+    else:  # x_type == 'number':
+        x_label = number_name
+    return x_label
+
+
+def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_opt, to_csv):
+    df_dict = load_dfs(jsonified_data=jsonified_data)
+    # Determine Y df and y_label to plot
+
+    y_label = y_type_to_y_label
 
     df_x = df_dict['x']
     df_y = df_dict['y']
@@ -978,7 +1004,7 @@ def update_rows_util(n_add, n_del, list_of_contents, upload_time, prev_upload_ti
         if list_of_contents is not None:
             _rows = []
             for c, n in zip(list_of_contents, list_of_names):
-                current_rows, error_message = parse_contents(c, n, rows)
+                current_rows, error_message = parse_contents_to_rows(c, n, rows)
                 _rows.extend(current_rows)
             rows = _rows
     else:
@@ -986,7 +1012,7 @@ def update_rows_util(n_add, n_del, list_of_contents, upload_time, prev_upload_ti
     return rows, error_message, upload_time
 
 
-def parse_contents(contents, filename, rows):
+def parse_contents_to_rows(contents, filename, rows):
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
     div = None
@@ -1013,6 +1039,32 @@ def parse_contents(contents, filename, rows):
             rows = df.to_dict('records')
 
     return rows, div
+
+
+def parse_content(content, name, error_div_list: list):
+    content_type, content_string = content.split(',')
+    decoded = base64.b64decode(content_string)
+
+    if 'csv' in name:
+        # Assume that the user uploaded a CSV file
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False)
+    elif 'xls' in name:
+        # Assume that the user uploaded an excel file
+        df = pd.read_excel(io.BytesIO(decoded), na_filter=False)
+    else:
+        df = None
+        error_div_list.append(html.Div(["ERROR: '{}', only '.csv' and '.xls' are supported.".format(name)]))
+    return df, error_div_list
+
+
+def init_app_links(current_app, app_dict_all):
+    links_div_list = [html.A('Home', href='/', target="_blank")]
+    for _each_app in app_dict_all.keys():
+        if current_app != _each_app:
+            links_div_list.append(html.Br())
+            links_div_list.append(html.A(app_dict[_each_app]['name'], href=app_dict[_each_app]['url'], target="_blank"))
+    links_div_list.append(html.H1(app_dict[current_app]['name']))
+    return html.Div(links_div_list)
 
 
 def init_app_ids(app_name: str):
@@ -1057,8 +1109,15 @@ def init_app_ids(app_name: str):
         id_dict['export_plot_data_notice_id'] = app_name + '_export_notice'
         id_dict['prev_x_type_id'] = app_name + '_prev_x_type'
 
-    else:  # id names for app3 only
+    elif app_name == 'app3':  # id names for app3 only
         id_dict['compos_type_id'] = app_name + '_compos_input_type'
+    else:  # id names for app4 only
+        id_dict['distance_id'] = app_name + '_distance'
+        id_dict['delay_id'] = app_name + '_delay'
+        id_dict['spectra_upload_id'] = app_name + '_spectra'
+        id_dict['data_upload_id'] = app_name + '_data'
+        id_dict['plot_div_id'] = app_name + '_plot'
+        id_dict['plot_fig_id'] = app_name + '_plot_fig'
 
     return id_dict
 
