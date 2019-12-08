@@ -19,7 +19,7 @@ app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/resonance'},
             'app3': {'name': 'Composition converter',
                      'url': '/apps/converter'},
-            'app4': {'name': 'Experiment plotter',
+            'app4': {'name': 'Time-of-flight plotter',
                      'url': '/apps/plot'},
             }
 
@@ -112,8 +112,8 @@ col_width_5 = 'five columns'
 col_width_6 = 'six columns'
 empty_div = html.Div()
 
-distance_default = 16.45
-delay_default = 0
+distance_default = 16.45  # in meter
+delay_default = 0  # in us
 plot_loading = html.H2('Plot loading...')
 
 
