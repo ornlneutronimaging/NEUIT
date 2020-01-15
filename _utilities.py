@@ -20,7 +20,7 @@ app_dict = {'app1': {'name': 'Neutron transmission',
             'app3': {'name': 'Composition converter',
                      'url': '/apps/converter'},
             'app4': {'name': 'Time-of-flight plotter',
-                     'url': '/apps/plot'},
+                     'url': '/apps/tof_plotter'},
             }
 
 energy_name = 'Energy (eV)'
