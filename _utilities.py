@@ -977,6 +977,8 @@ def y_type_to_y_label(y_type):
         y_label = 'Transmission'
     elif y_type == 'attenuation':
         y_label = 'Attenuation'
+    elif y_type == 'counts':
+        y_label = 'Counts'
     elif y_type == 'sigma':
         y_label = 'Cross-sections (barn)'
     elif y_type == 'sigma_raw':
@@ -1002,7 +1004,7 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
     df_dict = load_dfs(jsonified_data=jsonified_data)
     # Determine Y df and y_label to plot
 
-    y_label = y_type_to_y_label
+    y_label = y_type_to_y_label(y_type)
 
     df_x = df_dict['x']
     df_y = df_dict['y']
@@ -1054,6 +1056,20 @@ def fill_df_x_types(df: pd.DataFrame, distance_m):
                                                             offset_us=0))
     df.insert(loc=1, column=wave_name, value=ir_util.ev_to_angstroms(df[energy_name]))
     df[tof_name] = df[tof_name] * 1e6
+    return df
+
+
+def shape_df_to_plot(df, x_type, y_type, distance, delay):
+    if x_type == 'lambda':
+        df['X'] = ir_util.s_to_angstroms(array=df['X'], source_to_detector_m=distance, offset_us=delay)
+    if x_type == 'energy':
+        df['X'] = ir_util.s_to_ev(array=df['X'], source_to_detector_m=distance, offset_us=delay)
+    if x_type == 'number':
+        df['X'] = range(1, len(df['X']) + 1)
+    if x_type == 'time':
+        df['X'] = df['X'] * 1e6
+    if y_type == 'attenuation':
+        df['Y'] = 1 - df['Y']
     return df
 
 
@@ -1120,16 +1136,15 @@ def parse_contents_to_rows(contents, filename, rows):
     return rows, div
 
 
-def parse_content(content, name, error_div_list: list):
+def parse_content(content, name, error_div_list: list, header):
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
-
     if 'csv' in name:
         # Assume that the user uploaded a CSV file
-        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False)
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False, header=header)
     elif 'xls' in name:
         # Assume that the user uploaded an excel file
-        df = pd.read_excel(io.BytesIO(decoded), na_filter=False)
+        df = pd.read_excel(io.BytesIO(decoded), na_filter=False, header=header)
     else:
         df = None
         error_div_list.append(html.Div(["ERROR: '{}', only '.csv' and '.xls' are supported.".format(name)]))
@@ -1195,6 +1210,7 @@ def init_app_ids(app_name: str):
         id_dict['delay_id'] = app_name + '_delay'
         id_dict['spectra_upload_id'] = app_name + '_spectra'
         id_dict['data_upload_id'] = app_name + '_data'
+        id_dict['background_upload_id'] = app_name + '_background'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
 
