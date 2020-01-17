@@ -237,70 +237,73 @@ def plot(spectra_contents, data_contents, bcgd_contents, distance, delay, x_type
                                                    error_div_list=error_div_list,
                                                    header=None)
         loaded.append('spectra')
-        print(df_spectra)
+        print('df_spectra {}'.format(spectra_names))
     if data_contents is not None:
         df_data, error_div_list = parse_content(content=data_contents,
                                                 name=data_names,
                                                 error_div_list=error_div_list,
                                                 header=0)
         loaded.append('data')
-        print(df_data)
+        print('df_data {}'.format(data_names))
     if bcgd_contents is not None:
         df_bcgd, error_div_list = parse_content(content=bcgd_contents,
                                                 name=bcgd_names,
                                                 error_div_list=error_div_list,
                                                 header=0)
         loaded.append('background')
-        print(df_bcgd)
-    if 'spectra' in loaded and 'data' in loaded:
-        df_plot['X'] = df_spectra[0]
-        df_plot['Y'] = df_data['Y']
-        if 'background' in loaded:
-            df_plot['Y'] = df_plot['Y'] / df_bcgd['Y']
-        df_plot = shape_df_to_plot(x_type=x_type, y_type=y_type, df=df_plot, distance=distance, delay=delay)
-        x_label = x_type_to_x_label(x_type)
-        y_label = y_type_to_y_label(y_type)
-        output_style['display'] = 'block'
-        fig = plt.figure()
-        ax1 = fig.add_subplot(111)
-        # Plot
-        try:
-            ax1 = df_plot.set_index(keys='X').plot(legend=False, ax=ax1)
-        except TypeError:
-            pass
-        ax1.set_ylabel(y_label)
-        ax1.set_xlabel(x_label)
+        print('df_bcgd {}'.format(bcgd_names))
+    if len(error_div_list) == 0:
+        if 'spectra' in loaded and 'data' in loaded:
+            df_plot['X'] = df_spectra[0]
+            df_plot['Y'] = df_data['Y']
+            if 'background' in loaded:
+                df_plot['Y'] = df_plot['Y'] / df_bcgd['Y']
+            df_plot = shape_df_to_plot(x_type=x_type, y_type=y_type, df=df_plot, distance=distance, delay=delay)
+            x_label = x_type_to_x_label(x_type)
+            y_label = y_type_to_y_label(y_type)
+            output_style['display'] = 'block'
+            fig = plt.figure()
+            ax1 = fig.add_subplot(111)
+            # Plot
+            try:
+                ax1 = df_plot.set_index(keys='X').plot(legend=False, ax=ax1)
+            except TypeError:
+                pass
+            ax1.set_ylabel(y_label)
+            ax1.set_xlabel(x_label)
+            plotly_fig = tls.mpl_to_plotly(fig)
 
-        plotly_fig = tls.mpl_to_plotly(fig)
+            # Layout
+            plotly_fig.layout.showlegend = True
+            plotly_fig.layout.autosize = True
+            plotly_fig.layout.height = 600
+            plotly_fig.layout.width = 900
+            plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
+            plotly_fig.layout.xaxis1.tickfont.size = 15
+            plotly_fig.layout.xaxis1.titlefont.size = 18
+            plotly_fig.layout.yaxis1.tickfont.size = 15
+            plotly_fig.layout.yaxis1.titlefont.size = 18
+            plotly_fig.layout.xaxis.autorange = True
+            plotly_fig['layout']['yaxis']['autorange'] = True
 
-        # Layout
-        plotly_fig.layout.showlegend = True
-        plotly_fig.layout.autosize = True
-        plotly_fig.layout.height = 600
-        plotly_fig.layout.width = 900
-        plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
-        plotly_fig.layout.xaxis1.tickfont.size = 15
-        plotly_fig.layout.xaxis1.titlefont.size = 18
-        plotly_fig.layout.yaxis1.tickfont.size = 15
-        plotly_fig.layout.yaxis1.titlefont.size = 18
-        plotly_fig.layout.xaxis.autorange = True
-        plotly_fig['layout']['yaxis']['autorange'] = True
-
-        if plot_scale == 'logx':
-            plotly_fig['layout']['xaxis']['type'] = 'log'
-            plotly_fig['layout']['yaxis']['type'] = 'linear'
-        elif plot_scale == 'logy':
-            if y_type not in ['attenuation', 'transmission']:
-                plotly_fig['layout']['xaxis']['type'] = 'linear'
-                plotly_fig['layout']['yaxis']['type'] = 'log'
-        elif plot_scale == 'loglog':
-            if y_type not in ['attenuation', 'transmission']:
+            if plot_scale == 'logx':
                 plotly_fig['layout']['xaxis']['type'] = 'log'
-                plotly_fig['layout']['yaxis']['type'] = 'log'
+                plotly_fig['layout']['yaxis']['type'] = 'linear'
+            elif plot_scale == 'logy':
+                if y_type not in ['attenuation', 'transmission']:
+                    plotly_fig['layout']['xaxis']['type'] = 'linear'
+                    plotly_fig['layout']['yaxis']['type'] = 'log'
+            elif plot_scale == 'loglog':
+                if y_type not in ['attenuation', 'transmission']:
+                    plotly_fig['layout']['xaxis']['type'] = 'log'
+                    plotly_fig['layout']['yaxis']['type'] = 'log'
+            else:
+                plotly_fig['layout']['xaxis']['type'] = 'linear'
+                plotly_fig['layout']['yaxis']['type'] = 'linear'
+            return error_div_list, html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), output_style
         else:
-            plotly_fig['layout']['xaxis']['type'] = 'linear'
-            plotly_fig['layout']['yaxis']['type'] = 'linear'
-
-        return error_div_list, html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), output_style
+            output_style['display'] = 'none'
+            return error_div_list, plot_loading, output_style
     else:
-        return error_div_list, plot_loading, output_style
+        output_style['display'] = 'none'
+        return error_div_list, None, output_style
