@@ -22,19 +22,11 @@ app_name = 'app2'
 app_id_dict = init_app_ids(app_name=app_name)
 
 plot_data_filename = "plot_data.csv"
-distance_default = 16.45
-plot_loading = html.H2('Plot loading...')
 
 # Create app2 layout
 layout = html.Div(
     [
-        html.A('Home', href='/', target="_blank"),
-        html.Br(),
-        # dcc.Link(app_dict['app1']['name'], href=app_dict['app1']['url']),
-        html.A(app_dict['app1']['name'], href=app_dict['app1']['url'], target="_blank"),
-        html.Br(),
-        html.A(app_dict['app3']['name'], href=app_dict['app3']['url'], target="_blank"),
-        html.H1(app_dict['app2']['name']),
+        init_app_links(current_app=app_name, app_dict_all=app_dict),
         # Global parameters
         html.Div(
             [

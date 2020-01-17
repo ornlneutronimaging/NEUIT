@@ -14,13 +14,7 @@ app_id_dict = init_app_ids(app_name=app_name)
 # Create app layout
 layout = html.Div(
     [
-        html.A('Home', href='/', target="_blank"),
-        html.Br(),
-        html.A(app_dict['app1']['name'], href=app_dict['app1']['url'], target="_blank"),
-        html.Br(),
-        html.A(app_dict['app2']['name'], href=app_dict['app2']['url'], target="_blank"),
-        html.H1(app_dict['app3']['name']),
-
+        init_app_links(current_app=app_name, app_dict_all=app_dict),
         # Sample input
         html.Div(
             [
