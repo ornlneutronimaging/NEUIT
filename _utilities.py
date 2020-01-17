@@ -19,7 +19,7 @@ app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/resonance'},
             'app3': {'name': 'Composition converter',
                      'url': '/apps/converter'},
-            'app4': {'name': 'Time-of-flight plotter',
+            'app4': {'name': 'Time-of-flight plotter (under testing)',
                      'url': '/apps/tof_plotter'},
             }
 
