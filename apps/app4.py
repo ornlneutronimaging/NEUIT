@@ -21,7 +21,7 @@ layout = html.Div(
         # Experiment input
         html.Div(
             [
-                html.H4('Instrument Parameters:'),
+                html.H3('Instrument Parameters:'),
                 html.Div(
                     [
                         html.H6('Source-to-detector distance:'),
@@ -61,6 +61,8 @@ layout = html.Div(
                 ),
             ], className='row',
         ),
+
+        html.H3('Upload files:'),
 
         html.Div(
             [
@@ -107,7 +109,7 @@ layout = html.Div(
                            ),
                 html.Div(id=app_id_dict['data_upload_fb_id']),
 
-                html.H6('Background:'),
+                html.H6('Background (optional):'),
                 dcc.Upload(id=app_id_dict['background_upload_id'],
                            children=html.Div([
                                'Drag and Drop or ',
@@ -128,7 +130,7 @@ layout = html.Div(
                            last_modified=0,
                            ),
                 html.Div(id=app_id_dict['background_upload_fb_id']),
-                html.Div(id=app_id_dict['error_upload_id']),
+
                 html.Div(id=app_id_dict['hidden_upload_time_id'], style={'display': 'none'}, children=0),
             ]
         ),
@@ -139,7 +141,7 @@ layout = html.Div(
         # Output div
         html.Div(
             [
-                html.H5('Plot:'),
+                html.H3('Plot:'),
                 html.Div(
                     [
                         html.Div(
@@ -162,11 +164,10 @@ layout = html.Div(
                                 html.P('Y options: '),
                                 dcc.RadioItems(id='y_type',
                                                options=[
-                                                   {'label': 'Counts', 'value': 'counts'},
                                                    {'label': 'Transmission', 'value': 'transmission'},
                                                    {'label': 'Attenuation', 'value': 'attenuation'},
                                                ],
-                                               value='counts',
+                                               value='transmission',
                                                # n_clicks_timestamp=0,
                                                )
                             ], className=col_width_3
@@ -243,7 +244,6 @@ def plot(spectra_contents, data_contents, bcgd_contents, distance, delay, x_type
                                                    error_div_list=error_div_list,
                                                    header=None)
         loaded.append('spectra')
-        print(spectra_names)
         if len(error_div_list) == 0:
             spectra_fb = '\u2705 Spectra file "{}" uploaded.'.format(spectra_names)
         else:
@@ -254,7 +254,6 @@ def plot(spectra_contents, data_contents, bcgd_contents, distance, delay, x_type
                                                 error_div_list=error_div_list,
                                                 header=0)
         loaded.append('data')
-        print(data_names)
         if len(error_div_list) == 0:
             data_fb = '\u2705 Data file "{}" uploaded.'.format(data_names)
         else:
@@ -265,7 +264,6 @@ def plot(spectra_contents, data_contents, bcgd_contents, distance, delay, x_type
                                                 error_div_list=error_div_list,
                                                 header=0)
         loaded.append('background')
-        print(bcgd_names)
         if len(error_div_list) == 0:
             bcgd_fb = '\u2705 Background file "{}" uploaded.'.format(bcgd_names)
         else:
@@ -318,7 +316,8 @@ def plot(spectra_contents, data_contents, bcgd_contents, distance, delay, x_type
             else:
                 plotly_fig['layout']['xaxis']['type'] = 'linear'
                 plotly_fig['layout']['yaxis']['type'] = 'linear'
-            return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), output_style, spectra_fb, data_fb, bcgd_fb
+            return html.Div([dcc.Graph(figure=plotly_fig,
+                                       id=app_id_dict['plot_fig_id'])]), output_style, spectra_fb, data_fb, bcgd_fb
         else:
             output_style['display'] = 'none'
             return plot_loading, output_style, spectra_fb, data_fb, bcgd_fb

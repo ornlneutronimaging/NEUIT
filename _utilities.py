@@ -1067,7 +1067,7 @@ def shape_df_to_plot(df, x_type, y_type, distance, delay):
     if x_type == 'number':
         df['X'] = range(1, len(df['X']) + 1)
     if x_type == 'time':
-        df['X'] = df['X'] * 1e6
+        df['X'] = df['X'] * 1e6 + delay
     if y_type == 'attenuation':
         df['Y'] = 1 - df['Y']
     return df
