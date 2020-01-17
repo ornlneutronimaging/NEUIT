@@ -64,7 +64,7 @@ layout = html.Div(
 
         html.Div(
             [
-                html.H6('Spectra:'),
+                html.H6('Spectrum:'),
                 dcc.Upload(id=app_id_dict['spectra_upload_id'],
                            children=html.Div([
                                'Drag and Drop or ',
@@ -83,6 +83,7 @@ layout = html.Div(
                            multiple=False,
                            last_modified=0,
                            ),
+                html.Div(id=app_id_dict['spectra_upload_fb_id']),
 
                 html.H6('Data:'),
                 dcc.Upload(id=app_id_dict['data_upload_id'],
@@ -104,8 +105,7 @@ layout = html.Div(
                            multiple=False,
                            last_modified=0,
                            ),
-                html.Div(id=app_id_dict['error_upload_id']),
-                html.Div(id=app_id_dict['hidden_upload_time_id'], style={'display': 'none'}, children=0),
+                html.Div(id=app_id_dict['data_upload_fb_id']),
 
                 html.H6('Background:'),
                 dcc.Upload(id=app_id_dict['background_upload_id'],
@@ -127,6 +127,7 @@ layout = html.Div(
                            multiple=False,
                            last_modified=0,
                            ),
+                html.Div(id=app_id_dict['background_upload_fb_id']),
                 html.Div(id=app_id_dict['error_upload_id']),
                 html.Div(id=app_id_dict['hidden_upload_time_id'], style={'display': 'none'}, children=0),
             ]
@@ -201,9 +202,11 @@ layout = html.Div(
 
 @app.callback(
     [
-        Output(app_id_dict['error_upload_id'], 'children'),
         Output(app_id_dict['plot_div_id'], 'children'),
         Output(app_id_dict['output_id'], 'style'),
+        Output(app_id_dict['spectra_upload_fb_id'], 'children'),
+        Output(app_id_dict['data_upload_fb_id'], 'children'),
+        Output(app_id_dict['background_upload_fb_id'], 'children'),
     ],
     [
         Input(app_id_dict['spectra_upload_id'], 'contents'),
@@ -231,27 +234,42 @@ def plot(spectra_contents, data_contents, bcgd_contents, distance, delay, x_type
     error_div_list = []
     df_plot = pd.DataFrame()
     loaded = []
+    spectra_fb = None
+    data_fb = None
+    bcgd_fb = None
     if spectra_contents is not None:
         df_spectra, error_div_list = parse_content(content=spectra_contents,
                                                    name=spectra_names,
                                                    error_div_list=error_div_list,
                                                    header=None)
         loaded.append('spectra')
-        print('df_spectra {}'.format(spectra_names))
+        print(spectra_names)
+        if len(error_div_list) == 0:
+            spectra_fb = '\u2705 Spectra file "{}" uploaded.'.format(spectra_names)
+        else:
+            spectra_fb = error_div_list
     if data_contents is not None:
         df_data, error_div_list = parse_content(content=data_contents,
                                                 name=data_names,
                                                 error_div_list=error_div_list,
                                                 header=0)
         loaded.append('data')
-        print('df_data {}'.format(data_names))
+        print(data_names)
+        if len(error_div_list) == 0:
+            data_fb = '\u2705 Data file "{}" uploaded.'.format(data_names)
+        else:
+            data_fb = error_div_list
     if bcgd_contents is not None:
         df_bcgd, error_div_list = parse_content(content=bcgd_contents,
                                                 name=bcgd_names,
                                                 error_div_list=error_div_list,
                                                 header=0)
         loaded.append('background')
-        print('df_bcgd {}'.format(bcgd_names))
+        print(bcgd_names)
+        if len(error_div_list) == 0:
+            bcgd_fb = '\u2705 Background file "{}" uploaded.'.format(bcgd_names)
+        else:
+            bcgd_fb = error_div_list
     if len(error_div_list) == 0:
         if 'spectra' in loaded and 'data' in loaded:
             df_plot['X'] = df_spectra[0]
@@ -300,10 +318,10 @@ def plot(spectra_contents, data_contents, bcgd_contents, distance, delay, x_type
             else:
                 plotly_fig['layout']['xaxis']['type'] = 'linear'
                 plotly_fig['layout']['yaxis']['type'] = 'linear'
-            return error_div_list, html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), output_style
+            return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), output_style, spectra_fb, data_fb, bcgd_fb
         else:
             output_style['display'] = 'none'
-            return error_div_list, plot_loading, output_style
+            return plot_loading, output_style, spectra_fb, data_fb, bcgd_fb
     else:
         output_style['display'] = 'none'
-        return error_div_list, None, output_style
+        return None, output_style, spectra_fb, data_fb, bcgd_fb
