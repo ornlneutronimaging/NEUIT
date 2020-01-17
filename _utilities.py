@@ -1213,7 +1213,7 @@ def init_app_ids(app_name: str):
         id_dict['spectra_upload_fb_id'] = app_name + '_spectra_fb'
         id_dict['data_upload_id'] = app_name + '_data'
         id_dict['data_upload_fb_id'] = app_name + '_data_fb'
-        id_dict['background_upload_id'] = app_name + '_background_fb'
+        id_dict['background_upload_id'] = app_name + '_background'
         id_dict['background_upload_fb_id'] = app_name + '_background_fb'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
