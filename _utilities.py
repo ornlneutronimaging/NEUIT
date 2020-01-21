@@ -1059,7 +1059,7 @@ def fill_df_x_types(df: pd.DataFrame, distance_m):
     return df
 
 
-def shape_df_to_plot(df, x_type, y_type, distance, delay):
+def shape_df_to_plot(df, x_type, distance, delay):
     if x_type == 'lambda':
         df['X'] = ir_util.s_to_angstroms(array=df['X'], source_to_detector_m=distance, offset_us=delay)
     if x_type == 'energy':
@@ -1068,8 +1068,6 @@ def shape_df_to_plot(df, x_type, y_type, distance, delay):
         df['X'] = range(1, len(df['X']) + 1)
     if x_type == 'time':
         df['X'] = df['X'] * 1e6 + delay
-    if y_type == 'attenuation':
-        df['Y'] = 1 - df['Y']
     return df
 
 

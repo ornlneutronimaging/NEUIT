@@ -104,7 +104,7 @@ layout = html.Div(
                                'margin': '10px'
                            },
                            # Allow multiple files to be uploaded
-                           multiple=False,
+                           multiple=True,
                            last_modified=0,
                            ),
                 html.Div(id=app_id_dict['data_upload_fb_id']),
@@ -239,42 +239,45 @@ def plot(spectra_contents, data_contents, bcgd_contents, distance, delay, x_type
     data_fb = None
     bcgd_fb = None
     if spectra_contents is not None:
+        loaded.append('spectra')
         df_spectra, error_div_list = parse_content(content=spectra_contents,
                                                    name=spectra_names,
                                                    error_div_list=error_div_list,
                                                    header=None)
-        loaded.append('spectra')
         if len(error_div_list) == 0:
             spectra_fb = '\u2705 Spectra file "{}" uploaded.'.format(spectra_names)
         else:
             spectra_fb = error_div_list
     if data_contents is not None:
-        df_data, error_div_list = parse_content(content=data_contents,
-                                                name=data_names,
-                                                error_div_list=error_div_list,
-                                                header=0)
         loaded.append('data')
-        if len(error_div_list) == 0:
-            data_fb = '\u2705 Data file "{}" uploaded.'.format(data_names)
-        else:
-            data_fb = error_div_list
+        for each_index, each_content in enumerate(data_contents):
+            _df_data, error_div_list = parse_content(content=each_content,
+                                                     name=data_names[each_index],
+                                                     error_div_list=error_div_list,
+                                                     header=0)
+            if len(error_div_list) == 0:
+                df_plot[data_names[each_index]] = _df_data['Y']
+                data_fb = '\u2705 Data file "{}" uploaded.'.format(data_names)
+            else:
+                data_fb = error_div_list
     if bcgd_contents is not None:
+        loaded.append('background')
         df_bcgd, error_div_list = parse_content(content=bcgd_contents,
                                                 name=bcgd_names,
                                                 error_div_list=error_div_list,
                                                 header=0)
-        loaded.append('background')
         if len(error_div_list) == 0:
             bcgd_fb = '\u2705 Background file "{}" uploaded.'.format(bcgd_names)
         else:
             bcgd_fb = error_div_list
     if len(error_div_list) == 0:
         if 'spectra' in loaded and 'data' in loaded:
-            df_plot['X'] = df_spectra[0]
-            df_plot['Y'] = df_data['Y']
             if 'background' in loaded:
-                df_plot['Y'] = df_plot['Y'] / df_bcgd['Y']
-            df_plot = shape_df_to_plot(x_type=x_type, y_type=y_type, df=df_plot, distance=distance, delay=delay)
+                df_plot = df_plot / df_bcgd['Y']
+            if y_type == 'attenuation':
+                df_plot = 1 - df_plot
+            df_plot['X'] = df_spectra[0]
+            df_plot = shape_df_to_plot(x_type=x_type, df=df_plot, distance=distance, delay=delay)
             x_label = x_type_to_x_label(x_type)
             y_label = y_type_to_y_label(y_type)
             output_style['display'] = 'block'
