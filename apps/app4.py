@@ -235,45 +235,61 @@ def plot(spectra_contents, data_contents, bcgd_contents, distance, delay, x_type
     error_div_list = []
     df_plot = pd.DataFrame()
     loaded = []
-    spectra_fb = None
-    data_fb = None
-    bcgd_fb = None
+    spectra_fb = []
+    data_fb = []
+    bcgd_fb = []
     if spectra_contents is not None:
-        loaded.append('spectra')
-        df_spectra, error_div_list = parse_content(content=spectra_contents,
-                                                   name=spectra_names,
-                                                   error_div_list=error_div_list,
-                                                   header=None)
-        if len(error_div_list) == 0:
-            spectra_fb = '\u2705 Spectra file "{}" uploaded.'.format(spectra_names)
+        df_spectra, spectra_error_div = parse_content(content=spectra_contents,
+                                                      name=spectra_names,
+                                                      header=None)
+        if spectra_error_div is None:
+            spectra_fb.append(html.Div(['\u2705 Spectra file "{}" uploaded.'.format(spectra_names)]))
+            loaded.append('spectra')
         else:
-            spectra_fb = error_div_list
+            spectra_fb.append(spectra_error_div)
+            error_div_list.append(spectra_error_div)
+
     if data_contents is not None:
-        loaded.append('data')
         for each_index, each_content in enumerate(data_contents):
-            _df_data, error_div_list = parse_content(content=each_content,
+            _df_data, data_error_div = parse_content(content=each_content,
                                                      name=data_names[each_index],
-                                                     error_div_list=error_div_list,
                                                      header=0)
-            if len(error_div_list) == 0:
+            if data_error_div is None:
                 df_plot[data_names[each_index]] = _df_data['Y']
-                data_fb = '\u2705 Data file "{}" uploaded.'.format(data_names)
+                loaded.append('data')
+                data_fb.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(data_names[each_index])]))
             else:
-                data_fb = error_div_list
+                data_fb.append(data_error_div)
+                error_div_list.append(data_error_div)
     if bcgd_contents is not None:
-        loaded.append('background')
-        df_bcgd, error_div_list = parse_content(content=bcgd_contents,
+        df_bcgd, bcgd_error_div = parse_content(content=bcgd_contents,
                                                 name=bcgd_names,
-                                                error_div_list=error_div_list,
                                                 header=0)
-        if len(error_div_list) == 0:
-            bcgd_fb = '\u2705 Background file "{}" uploaded.'.format(bcgd_names)
+        if bcgd_error_div is None:
+            bcgd_fb.append(html.Div(['\u2705 Background file "{}" uploaded.'.format(bcgd_names)]))
+            loaded.append('background')
         else:
-            bcgd_fb = error_div_list
+            bcgd_fb.append(bcgd_error_div)
+
+    # Verify the length of uploaded files
+    if 'spectra' in loaded and 'data' in loaded:
+        if len(df_plot) != len(df_spectra):
+            data_len_error = html.Div(["\u274C The length of data file ({}) is not the same as spectra file ({}).".format(
+                len(df_plot), len(df_spectra))])
+            data_fb.append(data_len_error)
+            error_div_list.append(data_len_error)
+        if 'background' in loaded:
+            if len(df_bcgd) != len(df_plot):
+                bcgd_len_error = html.Div(
+                    ["\u274C Unable to remove background. The length of background file ({}) is not the same as data file ({}).".format(
+                        len(df_bcgd), len(df_plot))])
+                bcgd_fb.append(bcgd_len_error)
+    # Plot
     if len(error_div_list) == 0:
         if 'spectra' in loaded and 'data' in loaded:
             if 'background' in loaded:
-                df_plot = df_plot / df_bcgd['Y']
+                if len(bcgd_fb) == 1:
+                    df_plot = df_plot.div(df_bcgd.Y, axis=0)
             if y_type == 'attenuation':
                 df_plot = 1 - df_plot
             df_plot['X'] = df_spectra[0]

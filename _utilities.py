@@ -1134,9 +1134,10 @@ def parse_contents_to_rows(contents, filename, rows):
     return rows, div
 
 
-def parse_content(content, name, error_div_list: list, header):
+def parse_content(content, name, header):
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
+    error_div = None
     if 'csv' in name:
         # Assume that the user uploaded a CSV file
         df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False, header=header)
@@ -1145,9 +1146,8 @@ def parse_content(content, name, error_div_list: list, header):
         df = pd.read_excel(io.BytesIO(decoded), na_filter=False, header=header)
     else:
         df = None
-        error_div_list.append(html.Div(["\u274C Uploaded file: '{}' is not supported, only '.csv' and '.xls' are "
-                                        "supported.".format(name)]))
-    return df, error_div_list
+        error_div = html.Div(["\u274C Uploaded file: '{}' is not supported, only '.csv' and '.xls' are ""supported.".format(name)])
+    return df, error_div
 
 
 def init_app_links(current_app, app_dict_all):
