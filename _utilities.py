@@ -634,6 +634,7 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
     _total_trans = _calculate_transmission(flux_df=df_flux, trans_array=o_reso.total_signal[trans_tag])
 
     for each_layer in o_stack.keys():
+        _current_layer_thickness = o_stack[each_layer]['thickness']['value']
         if len(o_stack.keys()) == 1:
             _current_layer_trans = _total_trans
         else:
@@ -641,15 +642,13 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
                                                            trans_array=o_signal[each_layer][trans_tag])
         o_stack[each_layer][trans_tag] = _current_layer_trans
         o_stack[each_layer][mu_tag] = _transmission_to_mu_per_cm(transmission=_current_layer_trans,
-                                                                 thickness=o_stack[each_layer]['thickness']['value'])
+                                                                 thickness=_current_layer_thickness)
         for each_ele in o_stack[each_layer]['elements']:
             _current_ele_trans = _calculate_transmission(flux_df=df_flux,
                                                          trans_array=o_signal[each_layer][each_ele][trans_tag])
             o_stack[each_layer][each_ele][trans_tag] = _current_ele_trans
             o_stack[each_layer][each_ele][mu_tag] = _transmission_to_mu_per_cm(transmission=_current_ele_trans,
-                                                                               thickness=
-                                                                               o_stack[each_layer]['thickness'][
-                                                                                   'value'])
+                                                                               thickness=_current_layer_thickness)
     return _total_trans, o_stack
 
 
