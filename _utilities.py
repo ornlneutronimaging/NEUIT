@@ -412,7 +412,7 @@ def validate_energy_input(range_tb_df: pd.DataFrame, test_passed_list: list, out
 
 
 def validate_band_width_input(beamline, band_width, band_type, test_passed_list: list, output_div_list: list):
-    if beamline == 'imaging':
+    if beamline in ['imaging', 'imaging_crop']:
         test_passed_list.append(True)
         output_div_list.append(None)
     else:
@@ -597,11 +597,12 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
 def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_min, band_max, band_type, database):
     _main_path = os.path.abspath(os.path.dirname(__file__))
     _path_to_beam_shape = {'imaging': 'static/instrument_file/beam_flux_cg1d.txt',
+                           'imaging_crop': 'static/instrument_file/beam_flux_cg1d_crop.txt',
                            'snap': 'static/instrument_file/beam_flux_snap.txt',
                            # 'venus': 'static/instrument_file/beam_flux_venus.txt',
                            }
     df_flux_raw = load_beam_shape(_path_to_beam_shape[beamline])
-    if beamline == 'imaging':
+    if beamline in ['imaging', 'imaging_crop']:
         e_min = df_flux_raw['energy_eV'].min()
         e_max = df_flux_raw['energy_eV'].max()
     else:
@@ -673,6 +674,9 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, datab
         beamline_name = 'SNAP (BL-3), SNS'
     elif beamline == 'venus':
         beamline_name = 'VENUS (BL-10), SNS'
+    elif beamline == 'imaging_crop':
+        beamline_name = u'IMAGING (CG-1D) \u2264 5.35 \u212B, HFIR'
+        disclaimer = markdown_disclaimer_hfir
     else:  # beamline == 'imaging':
         beamline_name = 'IMAGING (CG-1D), HFIR'
         disclaimer = markdown_disclaimer_hfir
@@ -898,22 +902,23 @@ def form_iso_table(sample_df: pd.DataFrame, database: str):
 
 
 def update_new_iso_table(prev_iso_df: pd.DataFrame, new_iso_df: pd.DataFrame):
-    pre_len = len(prev_iso_df)
-    new_len = len(new_iso_df)
-    if pre_len < new_len:
-        while len(prev_iso_df) < len(new_iso_df):
-            prev_iso_df = prev_iso_df.append(iso_tb_df_default, ignore_index=True)
-    elif pre_len > new_len:
-        while len(new_iso_df) < len(prev_iso_df):
-            new_iso_df = new_iso_df.append(iso_tb_df_default, ignore_index=True)
-    try:
-        prev_iso_df = prev_iso_df[[layer_name, ele_name, iso_name, iso_ratio_name]]  # Force order of col to be the same
-        _indices = prev_iso_df == new_iso_df
-        new_iso_df[iso_ratio_name][_indices[layer_name]] = prev_iso_df[iso_ratio_name][_indices[layer_name]]
-        new_iso_df = new_iso_df[new_iso_df[new_iso_df.columns[0]].notnull()]
-        return new_iso_df
-    except KeyError:
-        return None
+    prev_iso_layer_list = list(prev_iso_df[layer_name])  # previous list of layers
+    new_iso_layer_list = list(new_iso_df[layer_name])  # new list of layers
+
+    prev_index = []  # index of the new layers that exists in prev layers
+    new_index = []  # index of the prev layers that needs to be passed along
+    for line_idx, each_new_layer in enumerate(new_iso_layer_list):
+        if each_new_layer in prev_iso_layer_list:
+            new_index.append(line_idx)
+    for line_idx, each_prev_layer in enumerate(prev_iso_layer_list):
+        if each_prev_layer in new_iso_layer_list:
+            prev_index.append(line_idx)
+
+    if len(prev_index) != 0:
+        for idx, each in enumerate(new_index):
+            new_iso_df.iloc[each] = prev_iso_df.loc[prev_index[idx]]
+
+    return new_iso_df
 
 
 def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
@@ -1145,7 +1150,8 @@ def parse_content(content, name, header):
         df = pd.read_excel(io.BytesIO(decoded), na_filter=False, header=header)
     else:
         df = None
-        error_div = html.Div(["\u274C Uploaded file: '{}' is not supported, only '.csv' and '.xls' are ""supported.".format(name)])
+        error_div = html.Div(
+            ["\u274C Uploaded file: '{}' is not supported, only '.csv' and '.xls' are ""supported.".format(name)])
     return df, error_div
 
 

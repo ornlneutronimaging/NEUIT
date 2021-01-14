@@ -28,6 +28,7 @@ layout = html.Div(
                                     id=app_id_dict['beamline_id'],
                                     options=[
                                         {'label': 'IMAGING (CG-1D), HFIR', 'value': 'imaging'},
+                                        {'label': u'IMAGING (CG-1D) \u2264 5.35 \u212B, HFIR', 'value': 'imaging_crop'},
                                         {'label': 'SNAP (BL-3), SNS', 'value': 'snap'},
                                         # {'label': 'SNS, VENUS (BL-10)', 'value': 'venus'},
                                     ],
@@ -62,13 +63,13 @@ layout = html.Div(
                                 dcc.Input(id=app_id_dict['band_min_id'], type='number',
                                           inputMode='numeric',
                                           placeholder='Min.',
-                                          step=0.01,
+                                          step=0.001,
                                           className='four columns',
                                           ),
                                 dcc.Input(id=app_id_dict['band_max_id'], type='number',
                                           inputMode='numeric',
                                           placeholder='Max.',
-                                          step=0.01,
+                                          step=0.001,
                                           className='four columns',
                                           ),
                                 html.P('\u212B',
@@ -153,7 +154,7 @@ layout = html.Div(
         State(app_id_dict['band_div_id'], 'style'),
     ])
 def show_hide_band_input(beamline, style):
-    if beamline == 'imaging':
+    if beamline in ['imaging', 'imaging_crop']:
         style['display'] = 'none'
     else:
         style['display'] = 'block'
@@ -302,6 +303,39 @@ def error(n_submit, database, sample_tb_rows, iso_tb_rows, iso_changed, beamline
                                                                           test_passed_list=test_passed_list,
                                                                           output_div_list=output_div_list)
 
+        # Test energy range for bonded H cross-sections
+        if all(test_passed_list):
+            for each_chem in sample_tb_dict[chem_name]:
+                if each_chem in ir_util.h_bond_list:
+                    if beamline == 'imaging':
+                        test_passed_list.append(False)
+                        output_div_list.append(
+                            html.P(
+                                u"SPECTRUM ERROR: ['Only wavelengths <= 5.35 \u212B are currently supported for bonded H cross-sections in '{}'']".format(
+                                    each_chem)))
+                        output_div_list.append(
+                            html.P(u"Please use spectrum: ['IMAGING (CG-1D) \u2264 5.35 \u212B, HFIR']"))
+                    elif beamline == 'imaging_crop':
+                        test_passed_list.append(True)
+                    else:
+                        if band_type == 'lambda':
+                            if band_max > 5.35:
+                                test_passed_list.append(False)
+                                output_div_list.append(
+                                    html.P(
+                                        u"BAND WIDTH ERROR: ['Only wavelengths <= 5.35 \u212B are currently supported supported for bonded H cross-sections in '{}'']".format(
+                                            each_chem)
+                                    ))
+                        if band_type == 'energy':
+                            wave_max = ir_util.ev_to_angstroms(band_min)
+                            energy_min = ir_util.angstroms_to_ev(5.35)
+                            if wave_max > 5.35:
+                                test_passed_list.append(False)
+                                output_div_list.append(
+                                    html.P(
+                                        u"BAND WIDTH ERROR: ['Only energies >= {} eV are currently supported supported for bonded H cross-sections in '{}'']".format(
+                                            energy_min, each_chem)))
+
         # Return result
         if all(test_passed_list):
             return True
@@ -339,15 +373,18 @@ def output_transmission_and_stack(n_submit, test_passed, database, sample_tb_row
                                                                 band_type=band_type,
                                                                 database=database)
         if beamline != 'imaging':  # add CG-1D anyway if not selected
-            trans_div_list_tof, o_stack_cg1d = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
-                                                                            iso_tb_rows=iso_tb_rows,
-                                                                            iso_changed=iso_changed,
-                                                                            beamline='imaging',
-                                                                            band_min=band_min,
-                                                                            band_max=band_max,
-                                                                            band_type=band_type,
-                                                                            database=database)
-            output_div_list.extend(trans_div_list_tof)
+            try:
+                trans_div_list_tof, o_stack_cg1d = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
+                                                                                iso_tb_rows=iso_tb_rows,
+                                                                                iso_changed=iso_changed,
+                                                                                beamline='imaging',
+                                                                                band_min=band_min,
+                                                                                band_max=band_max,
+                                                                                band_type=band_type,
+                                                                                database=database)
+                output_div_list.extend(trans_div_list_tof)
+            except Exception:
+                pass
 
         # Sample stack table div
         sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack)

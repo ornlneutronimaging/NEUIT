@@ -257,7 +257,7 @@ def output(n_submit, test_passed, database, compos_tb_rows, iso_tb_rows, iso_cha
         transmission_div_list, o_stack = form_transmission_result_div(sample_tb_rows=_sample_df.to_dict('records'),
                                                                       iso_tb_rows=_iso_tb_df.to_dict('records'),
                                                                       iso_changed=iso_changed,
-                                                                      beamline='imaging',
+                                                                      beamline='imaging_crop',
                                                                       band_min=None,
                                                                       band_max=None,
                                                                       band_type='energy',

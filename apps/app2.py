@@ -434,6 +434,23 @@ def error(n_submit, database, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_ch
                                                                       test_passed_list=test_passed_list,
                                                                       output_div_list=output_div_list)
 
+        # Test energy range for bonded H cross-sections
+        if all(test_passed_list):
+            for each_chem in sample_tb_dict[chem_name]:
+                if each_chem in ir_util.h_bond_list:
+                    for each_row in range_tb_rows:
+                        if each_row[wave_name] > 5.35:
+                            energy_min = ir_util.angstroms_to_ev(5.35)
+                            test_passed_list.append(False)
+                            output_div_list.append(
+                                html.P(
+                                    u"INPUT ERROR: {}: ['Only wavelengths <= 5.35 \u212B are currently supported supported for bonded H cross-sections']".format(
+                                        str(wave_name))))
+                            output_div_list.append(
+                                html.P(
+                                    u"INPUT ERROR: {}: ['Only wavelengths >= {} \u212B are currently supported supported for bonded H cross-sections']".format(
+                                        str(energy_name), energy_min)))
+
         # Return result
         if all(test_passed_list):
             return True
