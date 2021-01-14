@@ -21,6 +21,8 @@ app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/converter'},
             'app4': {'name': 'Time-of-flight plotter (under testing)',
                      'url': '/apps/tof_plotter'},
+            'app5': {'name': 'Bragg-edge (under testing)',
+                     'url': '/apps/bragg'},
             }
 
 energy_name = 'Energy (eV)'
@@ -1209,7 +1211,7 @@ def init_app_ids(app_name: str):
 
     elif app_name == 'app3':  # id names for app3 only
         id_dict['compos_type_id'] = app_name + '_compos_input_type'
-    else:  # id names for app4 only
+    elif app_name == 'app4':  # id names for app4 only
         id_dict['distance_id'] = app_name + '_distance'
         id_dict['delay_id'] = app_name + '_delay'
         id_dict['spectra_upload_id'] = app_name + '_spectra'
@@ -1217,7 +1219,16 @@ def init_app_ids(app_name: str):
         id_dict['data_upload_id'] = app_name + '_data'
         id_dict['data_upload_fb_id'] = app_name + '_data_fb'
         id_dict['background_upload_id'] = app_name + '_background'
+        id_dict['background_check_id'] = app_name + '_background_ck'
         id_dict['background_upload_fb_id'] = app_name + '_background_fb'
+        id_dict['plot_div_id'] = app_name + '_plot'
+        id_dict['plot_fig_id'] = app_name + '_plot_fig'
+    else:     # id names for app5 only
+        id_dict['band_min_id'] = app_name + '_band_min'
+        id_dict['band_max_id'] = app_name + '_band_max'
+        id_dict['band_unit_id'] = app_name + '_band_unit'
+        id_dict['data_upload_id'] = app_name + '_data'
+        id_dict['data_upload_fb_id'] = app_name + '_data_fb'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
 

@@ -5,9 +5,9 @@ from _utilities import *
 import plotly.tools as tls
 import matplotlib.pyplot as plt
 
-# Time-of-flight plotter
+# Bragg-edge tool
 
-app_name = 'app4'
+app_name = 'app5'
 app_id_dict = init_app_ids(app_name=app_name)
 
 # Create app layout
@@ -15,75 +15,72 @@ layout = html.Div(
     [
         init_app_links(current_app=app_name, app_dict_all=app_dict),
 
-        # Experiment input
+        # # Experiment input
+        # html.Div(
+        #     [
+        #         html.H3('Instrument Parameters:'),
+        #         html.Div(
+        #             [
+        #                 html.H6('Source-to-detector distance:'),
+        #                 html.Div(
+        #                     [
+        #                         dcc.Input(id=app_id_dict['distance_id'], type='number', value=distance_default,
+        #                                   min=0,
+        #                                   inputMode='numeric',
+        #                                   step=0.01,
+        #                                   className='nine columns'),
+        #                         html.P('(m)', className='one column',
+        #                                style={'marginBottom': 10, 'marginTop': 5},
+        #                                # style={'verticalAlign': 'middle'},
+        #                                ),
+        #                     ], className='row', style={'verticalAlign': 'middle'},
+        #                 ),
+        #             ], className=col_width_5,
+        #         ),
+        #
+        #         html.Div(
+        #             [
+        #                 html.H6('Delay:'),
+        #                 html.Div(
+        #                     [
+        #                         dcc.Input(id=app_id_dict['delay_id'], type='number', value=delay_default,
+        #                                   min=0,
+        #                                   inputMode='numeric',
+        #                                   step=0.01,
+        #                                   className='nine columns'),
+        #                         html.P('(us)', className='one column',
+        #                                style={'marginBottom': 10, 'marginTop': 5},
+        #                                # style={'verticalAlign': 'middle'},
+        #                                ),
+        #                     ], className='row', style={'verticalAlign': 'middle'},
+        #                 ),
+        #             ], className=col_width_5, style={'verticalAlign': 'middle'},
+        #         ),
+        #     ], className='row',
+        # ),
+
         html.Div(
             [
-                html.H3('Instrument Parameters:'),
-                html.Div(
-                    [
-                        html.H6('Source-to-detector distance:'),
-                        html.Div(
-                            [
-                                dcc.Input(id=app_id_dict['distance_id'], type='number', value=distance_default,
-                                          min=0,
-                                          inputMode='numeric',
-                                          step=0.01,
-                                          className='nine columns'),
-                                html.P('(m)', className='one column',
-                                       style={'marginBottom': 10, 'marginTop': 5},
-                                       # style={'verticalAlign': 'middle'},
-                                       ),
-                            ], className='row', style={'verticalAlign': 'middle'},
-                        ),
-                    ], className=col_width_5,
-                ),
-
-                html.Div(
-                    [
-                        html.H6('Delay:'),
-                        html.Div(
-                            [
-                                dcc.Input(id=app_id_dict['delay_id'], type='number', value=delay_default,
-                                          min=0,
-                                          inputMode='numeric',
-                                          step=0.01,
-                                          className='nine columns'),
-                                html.P('(us)', className='one column',
-                                       style={'marginBottom': 10, 'marginTop': 5},
-                                       # style={'verticalAlign': 'middle'},
-                                       ),
-                            ], className='row', style={'verticalAlign': 'middle'},
-                        ),
-                    ], className=col_width_5, style={'verticalAlign': 'middle'},
-                ),
-            ], className='row',
+                html.H6('Wavelength band (\u212B):'),
+                dcc.Input(id=app_id_dict['band_min_id'], type='number',
+                          inputMode='numeric',
+                          placeholder='Min.',
+                          step=0.001,
+                          # className='one columns',
+                          ),
+                dcc.Input(id=app_id_dict['band_max_id'], type='number',
+                          inputMode='numeric',
+                          placeholder='Max.',
+                          step=0.001,
+                          # className='one columns',
+                          ),
+            ], className='row', style={'verticalAlign': 'middle'},
         ),
 
-        html.H3('Upload files:'),
+        html.H3('Upload cif file/files:'),
 
         html.Div(
             [
-                html.H6('Spectrum:'),
-                dcc.Upload(id=app_id_dict['spectra_upload_id'],
-                           children=html.Div([
-                               'Drag and Drop or ',
-                               html.A('Select Files'),
-                           ]),
-                           style={
-                               'width': '100%',
-                               'height': '60px',
-                               'lineHeight': '60px',
-                               'borderWidth': '1px',
-                               'borderStyle': 'dashed',
-                               'borderRadius': '5px',
-                               'textAlign': 'center',
-                               'margin': '10px'
-                           },
-                           multiple=False,
-                           last_modified=0,
-                           ),
-                html.Div(id=app_id_dict['spectra_upload_fb_id']),
-
                 html.H6('Data:'),
                 dcc.Upload(id=app_id_dict['data_upload_id'],
                            children=html.Div([
@@ -106,35 +103,27 @@ layout = html.Div(
                            ),
                 html.Div(id=app_id_dict['data_upload_fb_id']),
 
-                html.H6('Background (optional):'),
-                dcc.Checklist(
-                    id=app_id_dict['background_check_id'],
-                    options=[
-                        {'label': 'Ignore loaded background', 'value': 'ignore'},
-                    ],
-                    value=[],
-                    labelStyle={'display': 'inline-block'}
-                ),
-                dcc.Upload(id=app_id_dict['background_upload_id'],
-                           children=html.Div([
-                               'Drag and Drop or ',
-                               html.A('Select Files'),
-                           ]),
-                           style={
-                               'width': '100%',
-                               'height': '60px',
-                               'lineHeight': '60px',
-                               'borderWidth': '1px',
-                               'borderStyle': 'dashed',
-                               'borderRadius': '5px',
-                               'textAlign': 'center',
-                               'margin': '10px'
-                           },
-                           # Allow multiple files to be uploaded
-                           multiple=False,
-                           last_modified=0,
-                           ),
-                html.Div(id=app_id_dict['background_upload_fb_id']),
+                # html.H6('Background (optional):'),
+                # dcc.Upload(id=app_id_dict['background_upload_id'],
+                #            children=html.Div([
+                #                'Drag and Drop or ',
+                #                html.A('Select Files'),
+                #            ]),
+                #            style={
+                #                'width': '100%',
+                #                'height': '60px',
+                #                'lineHeight': '60px',
+                #                'borderWidth': '1px',
+                #                'borderStyle': 'dashed',
+                #                'borderRadius': '5px',
+                #                'textAlign': 'center',
+                #                'margin': '10px'
+                #            },
+                #            # Allow multiple files to be uploaded
+                #            multiple=False,
+                #            last_modified=0,
+                #            ),
+                # html.Div(id=app_id_dict['background_upload_fb_id']),
 
                 html.Div(id=app_id_dict['hidden_upload_time_id'], style={'display': 'none'}, children=0),
             ]
@@ -210,50 +199,25 @@ layout = html.Div(
     [
         Output(app_id_dict['plot_div_id'], 'children'),
         Output(app_id_dict['output_id'], 'style'),
-        Output(app_id_dict['spectra_upload_fb_id'], 'children'),
         Output(app_id_dict['data_upload_fb_id'], 'children'),
-        Output(app_id_dict['background_upload_fb_id'], 'children'),
     ],
     [
-        Input(app_id_dict['spectra_upload_id'], 'contents'),
         Input(app_id_dict['data_upload_id'], 'contents'),
-        Input(app_id_dict['background_upload_id'], 'contents'),
-        Input(app_id_dict['background_check_id'], 'value'),
-        Input(app_id_dict['distance_id'], 'value'),
-        Input(app_id_dict['delay_id'], 'value'),
         Input('x_type', 'value'),
         Input('y_type', 'value'),
         Input('plot_scale', 'value'),
     ],
     [
-        State(app_id_dict['spectra_upload_id'], 'filename'),
-        State(app_id_dict['spectra_upload_id'], 'last_modified'),
         State(app_id_dict['data_upload_id'], 'filename'),
         State(app_id_dict['data_upload_id'], 'last_modified'),
-        State(app_id_dict['background_upload_id'], 'filename'),
-        State(app_id_dict['background_upload_id'], 'last_modified'),
         State(app_id_dict['output_id'], 'style'),
     ])
-def plot(spectra_contents, data_contents, bcgd_contents, bcgd_ignore, distance, delay, x_type, y_type, plot_scale,
-         spectra_names, spectra_last_modified_time, data_names, data_last_modified_time,
-         bcgd_names, bcgd_last_modified_time,
-         output_style):
+def plot(data_contents, x_type, y_type, plot_scale,
+         data_names, data_last_modified_time, output_style):
     error_div_list = []
     df_plot = pd.DataFrame()
     loaded = []
-    spectra_fb = []
     data_fb = []
-    bcgd_fb = []
-    if spectra_contents is not None:
-        df_spectra, spectra_error_div = parse_content(content=spectra_contents,
-                                                      name=spectra_names,
-                                                      header=None)
-        if spectra_error_div is None:
-            spectra_fb.append(html.Div(['\u2705 Spectra file "{}" uploaded.'.format(spectra_names)]))
-            loaded.append('spectra')
-        else:
-            spectra_fb.append(spectra_error_div)
-            error_div_list.append(spectra_error_div)
 
     if data_contents is not None:
         for each_index, each_content in enumerate(data_contents):
@@ -267,15 +231,6 @@ def plot(spectra_contents, data_contents, bcgd_contents, bcgd_ignore, distance, 
             else:
                 data_fb.append(data_error_div)
                 error_div_list.append(data_error_div)
-    if bcgd_contents is not None:
-        df_bcgd, bcgd_error_div = parse_content(content=bcgd_contents,
-                                                name=bcgd_names,
-                                                header=0)
-        if bcgd_error_div is None:
-            bcgd_fb.append(html.Div(['\u2705 Background file "{}" uploaded.'.format(bcgd_names)]))
-            loaded.append('background')
-        else:
-            bcgd_fb.append(bcgd_error_div)
 
     # Verify the length of uploaded files
     if 'spectra' in loaded and 'data' in loaded:
@@ -297,8 +252,7 @@ def plot(spectra_contents, data_contents, bcgd_contents, bcgd_ignore, distance, 
         if 'spectra' in loaded and 'data' in loaded:
             if 'background' in loaded:
                 if len(bcgd_fb) == 1:
-                    if bcgd_ignore != ['ignore']:
-                        df_plot = df_plot.div(df_bcgd.Y, axis=0)
+                    df_plot = df_plot.div(df_bcgd.Y, axis=0)
             if y_type == 'attenuation':
                 df_plot = 1 - df_plot
             df_plot['X'] = df_spectra[0]

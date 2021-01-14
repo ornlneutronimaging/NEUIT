@@ -3,6 +3,8 @@ from dash.dependencies import Input, Output, State
 from _app import app
 from _utilities import *
 
+# Composition converter tool
+
 compos_df_default = pd.DataFrame({
     chem_name: ['B4C', 'SiC'],
     compos_2nd_col_id: ['50', '50'],

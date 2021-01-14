@@ -7,7 +7,7 @@
 A web-based Graphical User Interface (GUI) of [ImagingReso](https://github.com/ornlneutronimaging/imagingreso).
 A production site can be accessed by clicking [here](http://isc.sns.gov/).
 
-### Publications
+### How to cite our work?
 
 1. Yuxuan Zhang, Jean Bilheux, Hassina Bilheux and Jiao Lin, (2019) "An interactive web-based tool 
 to guide the preparation of neutron imaging experiments at oak ridge national laboratory", 

@@ -4,6 +4,8 @@ import plotly.tools as tls
 import matplotlib.pyplot as plt
 from _utilities import *
 
+# Neutron resonance tool
+
 energy_range_df_default = pd.DataFrame({
     energy_name: [1, 100],
     wave_name: [0.28598, 0.0286],
