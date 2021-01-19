@@ -1157,6 +1157,22 @@ def parse_content(content, name, header):
     return df, error_div
 
 
+def parse_cif_content(content, name, header):
+    content_type, content_string = content.split(',')
+    decoded = base64.b64decode(content_string)
+    error_div = None
+    if 'cif' in name:
+        # Assume that the user uploaded a CSV file
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False, header=header)
+        # Assume that the user uploaded an excel file
+        # df = pd.read_excel(io.BytesIO(decoded), na_filter=False, header=header)
+    else:
+        df = None
+        error_div = html.Div(
+            ["\u274C Uploaded file: '{}' is not supported, only '.cif' is ""supported.".format(name)])
+    return df, error_div
+
+
 def init_app_links(current_app, app_dict_all):
     links_div_list = [html.A('Home', href='/', target="_blank")]
     for _each_app in app_dict_all.keys():
@@ -1223,12 +1239,12 @@ def init_app_ids(app_name: str):
         id_dict['background_upload_fb_id'] = app_name + '_background_fb'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
-    else:     # id names for app5 only
+    else:  # id names for app5 only
         id_dict['band_min_id'] = app_name + '_band_min'
         id_dict['band_max_id'] = app_name + '_band_max'
         id_dict['band_unit_id'] = app_name + '_band_unit'
-        id_dict['data_upload_id'] = app_name + '_data'
-        id_dict['data_upload_fb_id'] = app_name + '_data_fb'
+        id_dict['cif_upload_id'] = app_name + '_cif'
+        id_dict['cif_upload_fb_id'] = app_name + '_cif_fb'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
 
