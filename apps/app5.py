@@ -17,7 +17,7 @@ app_id_dict = init_app_ids(app_name=app_name)
 # Create app layout
 layout = html.Div(
     [
-        init_app_links(current_app=app_name, app_dict_all=app_dict),
+        # init_app_links(current_app=app_name, app_dict_all=app_dict),
 
         # # Experiment input
         # html.Div(

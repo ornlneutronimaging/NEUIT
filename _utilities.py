@@ -21,8 +21,8 @@ app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/converter'},
             'app4': {'name': 'Time-of-flight plotter (under testing)',
                      'url': '/apps/tof_plotter'},
-            'app5': {'name': 'Bragg-edge (under testing)',
-                     'url': '/apps/bragg'},
+            # 'app5': {'name': 'Bragg-edge (under testing)',
+            #          'url': '/apps/bragg'},
             }
 
 energy_name = 'Energy (eV)'

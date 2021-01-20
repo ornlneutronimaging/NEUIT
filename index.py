@@ -97,8 +97,8 @@ def display_page(pathname):
         return app3.layout
     elif pathname == app_dict['app4']['url']:
         return app4.layout
-    elif pathname == app_dict['app5']['url']:
-        return app5.layout
+    # elif pathname == app_dict['app5']['url']:
+    #     return app5.layout
     elif pathname == '/':
         return index_page
     else:
