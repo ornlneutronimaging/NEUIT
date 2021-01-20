@@ -4,10 +4,10 @@ from _app import app
 from _utilities import *
 import plotly.tools as tls
 import matplotlib.pyplot as plt
-from bem.matter import Atom, Lattice, Structure
-from bem import xscalc
-from bem.matter import loadCif
-import numpy as np
+# from bem.matter import Atom, Lattice, Structure
+# from bem import xscalc
+# from bem.matter import loadCif
+# import numpy as np
 
 # Bragg-edge tool
 
