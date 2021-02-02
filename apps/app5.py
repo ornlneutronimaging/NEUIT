@@ -4,10 +4,6 @@ from _app import app
 from _utilities import *
 import plotly.tools as tls
 import matplotlib.pyplot as plt
-from bem.matter import Atom, Lattice, Structure
-from bem import xscalc
-from bem.matter import loadCif
-import numpy as np
 
 # Bragg-edge tool
 
@@ -19,66 +15,87 @@ layout = html.Div(
     [
         init_app_links(current_app=app_name, app_dict_all=app_dict),
 
-        # # Experiment input
-        # html.Div(
-        #     [
-        #         html.H3('Instrument Parameters:'),
-        #         html.Div(
-        #             [
-        #                 html.H6('Source-to-detector distance:'),
-        #                 html.Div(
-        #                     [
-        #                         dcc.Input(id=app_id_dict['distance_id'], type='number', value=distance_default,
-        #                                   min=0,
-        #                                   inputMode='numeric',
-        #                                   step=0.01,
-        #                                   className='nine columns'),
-        #                         html.P('(m)', className='one column',
-        #                                style={'marginBottom': 10, 'marginTop': 5},
-        #                                # style={'verticalAlign': 'middle'},
-        #                                ),
-        #                     ], className='row', style={'verticalAlign': 'middle'},
-        #                 ),
-        #             ], className=col_width_5,
-        #         ),
-        #
-        #         html.Div(
-        #             [
-        #                 html.H6('Delay:'),
-        #                 html.Div(
-        #                     [
-        #                         dcc.Input(id=app_id_dict['delay_id'], type='number', value=delay_default,
-        #                                   min=0,
-        #                                   inputMode='numeric',
-        #                                   step=0.01,
-        #                                   className='nine columns'),
-        #                         html.P('(us)', className='one column',
-        #                                style={'marginBottom': 10, 'marginTop': 5},
-        #                                # style={'verticalAlign': 'middle'},
-        #                                ),
-        #                     ], className='row', style={'verticalAlign': 'middle'},
-        #                 ),
-        #             ], className=col_width_5, style={'verticalAlign': 'middle'},
-        #         ),
-        #     ], className='row',
-        # ),
+        # Experiment input
+        html.Div(
+            [
+                html.H3('Global parameters:'),
+                html.Div(
+                    [
+
+                        html.Div(
+                            [
+                                html.H6('Temperature (K):'),
+                                dcc.Input(id=app_id_dict['temperature_id'],
+                                          type='number',
+                                          value=temperature_default,
+                                          min=0,
+                                          inputMode='numeric',
+                                          step=0.1,
+                                          ),
+                            ], className=col_width_3,
+                        ),
+
+                        # html.Div(
+                        #     [
+                        #         html.H6('Source-to-detector (m):'),
+                        #         dcc.Input(id=app_id_dict['distance_id'],
+                        #                   type='number',
+                        #                   value=distance_default,
+                        #                   min=0,
+                        #                   inputMode='numeric',
+                        #                   step=0.01,
+                        #                   ),
+                        #     ], className=col_width_3,
+                        # ),
+
+                    ], className='row', style={'verticalAlign': 'middle'},
+                ),
+            ], className='row', style={'verticalAlign': 'middle'},
+        ),
 
         html.Div(
             [
-                html.H6('Wavelength band (\u212B):'),
-                dcc.Input(id=app_id_dict['band_min_id'], type='number',
-                          inputMode='numeric',
-                          placeholder='Min.',
-                          step=0.001,
-                          # className='one columns',
-                          ),
-                dcc.Input(id=app_id_dict['band_max_id'], type='number',
-                          inputMode='numeric',
-                          placeholder='Max.',
-                          step=0.001,
-                          # className='one columns',
-                          ),
-            ], className='row', style={'verticalAlign': 'middle'},
+                html.H6('Wavelength band:'),
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                html.P('Min. (\u212B) :'),
+                                dcc.Input(id=app_id_dict['band_min_id'], type='number',
+                                          inputMode='numeric',
+                                          placeholder='Min.',
+                                          step=0.001,
+                                          value=0.05,
+                                          ),
+                            ], className=col_width_3,
+                        ),
+                        html.Div(
+                            [
+                                html.P('Max. (\u212B):'),
+                                dcc.Input(id=app_id_dict['band_max_id'], type='number',
+                                          inputMode='numeric',
+                                          placeholder='Max.',
+                                          step=0.001,
+                                          value=5.5,
+                                          ),
+                            ], className=col_width_3,
+                        ),
+                        html.Div(
+                            [
+                                html.P('Step (\u212B):'),
+                                dcc.Input(id=app_id_dict['band_step_id'], type='number',
+                                          inputMode='numeric',
+                                          placeholder='Max.',
+                                          step=0.001,
+                                          value=0.005,
+                                          ),
+                            ], className=col_width_3,
+                        ),
+                    ], className='row', style={'verticalAlign': 'middle'},
+                ),
+            ],
+            className='row',
+            style={'verticalAlign': 'middle'},
         ),
 
         html.H3('Upload cif file/files:'),
@@ -105,29 +122,7 @@ layout = html.Div(
                            last_modified=0,
                            ),
                 html.Div(id=app_id_dict['cif_upload_fb_id']),
-
-                # html.H6('Background (optional):'),
-                # dcc.Upload(id=app_id_dict['background_upload_id'],
-                #            children=html.Div([
-                #                'Drag and Drop or ',
-                #                html.A('Select Files'),
-                #            ]),
-                #            style={
-                #                'width': '100%',
-                #                'height': '60px',
-                #                'lineHeight': '60px',
-                #                'borderWidth': '1px',
-                #                'borderStyle': 'dashed',
-                #                'borderRadius': '5px',
-                #                'textAlign': 'center',
-                #                'margin': '10px'
-                #            },
-                #            # Allow multiple files to be uploaded
-                #            multiple=False,
-                #            last_modified=0,
-                #            ),
-                # html.Div(id=app_id_dict['background_upload_fb_id']),
-
+                html.Button('Submit', id=app_id_dict['submit_button_id'], n_clicks_timestamp=0),
                 html.Div(id=app_id_dict['hidden_upload_time_id'], style={'display': 'none'}, children=0),
             ]
         ),
@@ -146,12 +141,12 @@ layout = html.Div(
                                 html.P('X options: '),
                                 dcc.RadioItems(id='x_type',
                                                options=[
-                                                   {'label': 'Energy (eV)', 'value': 'energy'},
                                                    {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
-                                                   {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
-                                                   {'label': 'Image index (#)', 'value': 'number'},
+                                                   {'label': 'Energy (eV)', 'value': 'energy'},
+                                                   # {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
+                                                   # {'label': 'Image index (#)', 'value': 'number'},
                                                ],
-                                               value='number',
+                                               value='lambda',
                                                # n_clicks_timestamp=0,
                                                )
                             ], className=col_width_3
@@ -161,10 +156,13 @@ layout = html.Div(
                                 html.P('Y options: '),
                                 dcc.RadioItems(id='y_type',
                                                options=[
-                                                   {'label': 'Transmission', 'value': 'transmission'},
-                                                   {'label': 'Attenuation', 'value': 'attenuation'},
+                                                   # {'label': 'Transmission', 'value': 'transmission'},
+                                                   # {'label': 'Attenuation', 'value': 'attenuation'},
+                                                   # {'label': 'Attenuation coefficient', 'value': 'mu_per_cm'},
+                                                   # {'label': "Cross-section (weighted)", 'value': 'sigma'},
+                                                   {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
                                                ],
-                                               value='transmission',
+                                               value='sigma_raw',
                                                # n_clicks_timestamp=0,
                                                )
                             ], className=col_width_3
@@ -205,6 +203,7 @@ layout = html.Div(
         Output(app_id_dict['cif_upload_fb_id'], 'children'),
     ],
     [
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
         Input(app_id_dict['cif_upload_id'], 'contents'),
         Input('x_type', 'value'),
         Input('y_type', 'value'),
@@ -213,43 +212,55 @@ layout = html.Div(
     [
         State(app_id_dict['cif_upload_id'], 'filename'),
         State(app_id_dict['cif_upload_id'], 'last_modified'),
+        State(app_id_dict['temperature_id'], 'value'),
+        State(app_id_dict['band_min_id'], 'value'),
+        State(app_id_dict['band_max_id'], 'value'),
+        State(app_id_dict['band_step_id'], 'value'),
         State(app_id_dict['output_id'], 'style'),
     ])
-def plot(cif_contents, x_type, y_type, plot_scale,
-         cif_names, cif_last_modified_time, output_style):
+def plot(n_submit, cif_uploads, x_type, y_type, plot_scale,
+         cif_names, cif_last_modified_time,
+         temperature_K, band_min, band_max, band_step,
+         output_style):
     error_div_list = []
-    df_plot = pd.DataFrame()
-    loaded = []
     data_fb = []
-    print(cif_contents)
-
-    if cif_contents is not None:
-        for each_index, each_content in enumerate(cif_contents):
-            _df_data, data_error_div = parse_cif_content(content=each_content,
-                                                         name=cif_names[each_index],
-                                                         header=0)
+    xs_dict = {}
+    wavelengths_A = np.arange(band_min, band_max, band_step)
+    # xs_dict['Wavelength'] = wavelengths_A
+    if cif_uploads is not None:
+        for each_index, each_content in enumerate(cif_uploads):
+            _cif_struc, data_error_div = parse_cif_upload(content=each_content,
+                                                          fname=cif_names[each_index],
+                                                          )
             if data_error_div is None:
-                df_plot[cif_names[each_index]] = _df_data['Y']
-                loaded.append('data')
+                _name_only = cif_names[each_index].split('.')[0]
+                print("'{}' loaded. Calculating...".format(cif_names[each_index]))
+                xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
+                xs_dict[_name_only] = xscalculator.xs(wavelengths_A)
                 data_fb.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names[each_index])]))
             else:
                 data_fb.append(data_error_div)
                 error_div_list.append(data_error_div)
-
     # Plot
     if len(error_div_list) == 0:
+        df_plot = pd.DataFrame.from_dict(xs_dict)
         if y_type == 'attenuation':
             df_plot = 1 - df_plot
-        df_plot['X'] = df_spectra[0]
-        df_plot = shape_df_to_plot(x_type=x_type, df=df_plot, distance=distance, delay=delay)
+        if x_type == 'energy':
+            x_type_name = energy_name
+            df_plot[x_type_name] = ir_util.angstroms_to_ev(wavelengths_A)
+        else:
+            x_type_name = wave_name
+            df_plot[x_type_name] = wavelengths_A
+        df_plot = df_plot.set_index(x_type_name)
         x_label = x_type_to_x_label(x_type)
         y_label = y_type_to_y_label(y_type)
-        output_style['display'] = 'block'
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
         # Plot
         try:
-            ax1 = df_plot.set_index(keys='X').plot(legend=False, ax=ax1)
+            ax1 = df_plot.plot(legend=False, ax=ax1)
+            output_style['display'] = 'block'
         except TypeError:
             pass
         ax1.set_ylabel(y_label)

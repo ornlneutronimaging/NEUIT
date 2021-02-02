@@ -1,4 +1,5 @@
 import os
+import sys
 
 import ImagingReso._utilities as ir_util
 import dash_core_components as dcc
@@ -12,6 +13,14 @@ from scipy.interpolate import interp1d
 import numpy as np
 import json
 from cerberus import Validator
+from bem.matter import Atom, Lattice, Structure
+from bem import xscalc
+from bem.matter import loadCif
+
+if sys.version_info[0] < 3:
+    from diffpy.Structure.Parsers import getParser
+else:
+    from diffpy.structure.parsers import getParser
 
 app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/transmission'},
@@ -21,7 +30,7 @@ app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/converter'},
             'app4': {'name': 'Time-of-flight plotter (under testing)',
                      'url': '/apps/tof_plotter'},
-            'app5': {'name': 'Bragg-edge (under testing)',
+            'app5': {'name': 'Bragg-edge simulator (under testing)',
                      'url': '/apps/bragg'},
             }
 
@@ -116,6 +125,7 @@ empty_div = html.Div()
 
 distance_default = 16.45  # in meter
 delay_default = 0  # in us
+temperature_default = 300 # in Kelvin
 plot_loading = html.H2('Plot loading...')
 
 
@@ -1157,20 +1167,21 @@ def parse_content(content, name, header):
     return df, error_div
 
 
-def parse_cif_content(content, name, header):
+def parse_cif_upload(content, fname):
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
     error_div = None
-    if 'cif' in name:
-        # Assume that the user uploaded a CSV file
-        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False, header=header)
-        # Assume that the user uploaded an excel file
-        # df = pd.read_excel(io.BytesIO(decoded), na_filter=False, header=header)
+    if 'cif' in fname:
+        # User uploaded a CIF file
+        cif_s = decoded.decode('utf-8')
+        p = getParser('cif')
+        struc = p.parse(cif_s)
+        struc.sg = p.spacegroup
     else:
-        df = None
+        struc = None
         error_div = html.Div(
-            ["\u274C Uploaded file: '{}' is not supported, only '.cif' is ""supported.".format(name)])
-    return df, error_div
+            ["\u274C Uploaded file: '{}' is not supported, only '.cif' is ""supported.".format(fname)])
+    return struc, error_div
 
 
 def init_app_links(current_app, app_dict_all):
@@ -1240,8 +1251,11 @@ def init_app_ids(app_name: str):
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
     else:  # id names for app5 only
+        id_dict['temperature_id'] = app_name + '_temperature'
+        id_dict['distance_id'] = app_name + '_distance'
         id_dict['band_min_id'] = app_name + '_band_min'
         id_dict['band_max_id'] = app_name + '_band_max'
+        id_dict['band_step_id'] = app_name + '_band_step'
         id_dict['band_unit_id'] = app_name + '_band_unit'
         id_dict['cif_upload_id'] = app_name + '_cif'
         id_dict['cif_upload_fb_id'] = app_name + '_cif_fb'
