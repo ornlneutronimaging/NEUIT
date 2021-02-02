@@ -4,6 +4,7 @@ from _app import app
 from _utilities import *
 import plotly.tools as tls
 import matplotlib.pyplot as plt
+from bem import xscalc
 
 # Bragg-edge tool
 
@@ -130,9 +131,13 @@ layout = html.Div(
         # Error message div
         html.Div(id=app_id_dict['error_id'], children=None),
 
+        # Hidden div to store json
+        html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),
+
         # Output div
         html.Div(
             [
+                # Plot options
                 html.H3('Plot:'),
                 html.Div(
                     [
@@ -143,11 +148,8 @@ layout = html.Div(
                                                options=[
                                                    {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
                                                    {'label': 'Energy (eV)', 'value': 'energy'},
-                                                   # {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
-                                                   # {'label': 'Image index (#)', 'value': 'number'},
                                                ],
                                                value='lambda',
-                                               # n_clicks_timestamp=0,
                                                )
                             ], className=col_width_3
                         ),
@@ -163,7 +165,6 @@ layout = html.Div(
                                                    {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
                                                ],
                                                value='sigma_raw',
-                                               # n_clicks_timestamp=0,
                                                )
                             ], className=col_width_3
                         ),
@@ -182,12 +183,47 @@ layout = html.Div(
                                                )
                             ], className=col_width_3
                         ),
+                        html.Div(
+                            [
+                                html.P('Interactions: '),
+                                dcc.Checklist(id='xs_type',
+                                              options=[
+                                                  {'label': 'Total', 'value': 'total'},
+                                                  {'label': 'Elastic', 'value': 'el'},
+                                                  {'label': 'Inelastic', 'value': 'inel'},
+                                                  # {'label': 'Coherent', 'value': 'coh'},
+                                                  # {'label': 'Incoherent', 'value': 'inc'},
+                                              ],
+                                              value=['total'],
+                                              # n_clicks_timestamp=0,
+                                              )
+                            ], className=col_width_3
+                        ),
                     ], className='row'
                 ),
-                # Transmission at CG-1D and stack info
-                html.Div(id=app_id_dict['result_id']),
+
                 # Plot
                 html.Div(id=app_id_dict['plot_div_id'], children=plot_loading, className='container'),
+
+                # Export plot data button
+                html.Div(
+                    [
+                        dcc.Checklist(
+                            id=app_id_dict['display_plot_data_id'],
+                            options=[
+                                {'label': 'Display plotted data', 'value': 'display'},
+                            ],
+                            value=[],
+                            labelStyle={'display': 'inline-block'}
+                        ),
+                    ], className='row'
+                ),
+
+                # Data table for the plotted data
+                html.Div(id=app_id_dict['hidden_df_tb_div']),
+
+                # Transmission at CG-1D and stack info
+                html.Div(id=app_id_dict['result_id']),
             ],
             id=app_id_dict['output_id'],
             style={'display': 'none'},
@@ -201,6 +237,7 @@ layout = html.Div(
         Output(app_id_dict['plot_div_id'], 'children'),
         Output(app_id_dict['output_id'], 'style'),
         Output(app_id_dict['cif_upload_fb_id'], 'children'),
+        Output(app_id_dict['hidden_df_json_id'], 'children'),
     ],
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
@@ -208,6 +245,7 @@ layout = html.Div(
         Input('x_type', 'value'),
         Input('y_type', 'value'),
         Input('plot_scale', 'value'),
+        Input('xs_type', 'value'),
     ],
     [
         State(app_id_dict['cif_upload_id'], 'filename'),
@@ -218,7 +256,7 @@ layout = html.Div(
         State(app_id_dict['band_step_id'], 'value'),
         State(app_id_dict['output_id'], 'style'),
     ])
-def plot(n_submit, cif_uploads, x_type, y_type, plot_scale,
+def plot(n_submit, cif_uploads, x_type, y_type, plot_scale, xs_type,
          cif_names, cif_last_modified_time,
          temperature_K, band_min, band_max, band_step,
          output_style):
@@ -226,7 +264,6 @@ def plot(n_submit, cif_uploads, x_type, y_type, plot_scale,
     data_fb = []
     xs_dict = {}
     wavelengths_A = np.arange(band_min, band_max, band_step)
-    # xs_dict['Wavelength'] = wavelengths_A
     if cif_uploads is not None:
         for each_index, each_content in enumerate(cif_uploads):
             _cif_struc, data_error_div = parse_cif_upload(content=each_content,
@@ -236,11 +273,20 @@ def plot(n_submit, cif_uploads, x_type, y_type, plot_scale,
                 _name_only = cif_names[each_index].split('.')[0]
                 print("'{}' loaded. Calculating...".format(cif_names[each_index]))
                 xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
-                xs_dict[_name_only] = xscalculator.xs(wavelengths_A)
+                if 'total' in xs_type:
+                    xs_dict[_name_only + '_total'] = xscalculator.xs(wavelengths_A)
+                if 'el' in xs_type:
+                    xs_dict[_name_only + '_coh_el'] = xscalculator.xs_coh_el(wavelengths_A)
+                    xs_dict[_name_only + '_inc_el'] = xscalculator.xs_inc_el(wavelengths_A)
+                if 'inel' in xs_type:
+                    xs_dict[_name_only + '_coh_inel'] = xscalculator.xs_coh_inel(wavelengths_A)
+                    xs_dict[_name_only + '_inc_inel'] = xscalculator.xs_inc_inel(wavelengths_A)
                 data_fb.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names[each_index])]))
             else:
                 data_fb.append(data_error_div)
                 error_div_list.append(data_error_div)
+
+
     # Plot
     if len(error_div_list) == 0:
         df_plot = pd.DataFrame.from_dict(xs_dict)
@@ -255,9 +301,11 @@ def plot(n_submit, cif_uploads, x_type, y_type, plot_scale,
         df_plot = df_plot.set_index(x_type_name)
         x_label = x_type_to_x_label(x_type)
         y_label = y_type_to_y_label(y_type)
+        jsonized_df = df_plot.to_json(orient='split', date_format='iso')
+
+        # Plot
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
-        # Plot
         try:
             ax1 = df_plot.plot(legend=False, ax=ax1)
             output_style['display'] = 'block'
@@ -295,7 +343,7 @@ def plot(n_submit, cif_uploads, x_type, y_type, plot_scale,
             plotly_fig['layout']['xaxis']['type'] = 'linear'
             plotly_fig['layout']['yaxis']['type'] = 'linear'
         return html.Div([dcc.Graph(figure=plotly_fig,
-                                   id=app_id_dict['plot_fig_id'])]), output_style, data_fb
+                                   id=app_id_dict['plot_fig_id'])]), output_style, data_fb, None
     else:
         output_style['display'] = 'none'
-        return plot_loading, output_style, data_fb
+        return plot_loading, output_style, data_fb, None

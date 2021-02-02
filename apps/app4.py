@@ -11,6 +11,7 @@ app_name = 'app4'
 app_id_dict = init_app_ids(app_name=app_name)
 
 # Create app layout
+
 layout = html.Div(
     [
         init_app_links(current_app=app_name, app_dict_all=app_dict),
@@ -151,6 +152,7 @@ layout = html.Div(
         # Output div
         html.Div(
             [
+                # Plot options
                 html.H3('Plot:'),
                 html.Div(
                     [
@@ -199,17 +201,18 @@ layout = html.Div(
                         ),
                     ], className='row'
                 ),
-                # Transmission at CG-1D and stack info
-                html.Div(id=app_id_dict['result_id']),
+
                 # Plot
                 html.Div(id=app_id_dict['plot_div_id'], children=plot_loading, className='container'),
+
+                # # Transmission at CG-1D and stack info
+                # html.Div(id=app_id_dict['result_id']),
             ],
             id=app_id_dict['output_id'],
             style={'display': 'none'},
         ),
     ]
 )
-
 
 @app.callback(
     [

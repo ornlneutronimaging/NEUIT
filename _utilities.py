@@ -13,9 +13,6 @@ from scipy.interpolate import interp1d
 import numpy as np
 import json
 from cerberus import Validator
-from bem.matter import Atom, Lattice, Structure
-from bem import xscalc
-from bem.matter import loadCif
 
 if sys.version_info[0] < 3:
     from diffpy.Structure.Parsers import getParser
@@ -1232,8 +1229,7 @@ def init_app_ids(app_name: str):
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
         id_dict['plot_options_div_id'] = app_name + '_plot_options'
-        id_dict['export_plot_data_button_id'] = app_name + '_plot_data_export'
-        id_dict['export_plot_data_notice_id'] = app_name + '_export_notice'
+        id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
         id_dict['prev_x_type_id'] = app_name + '_prev_x_type'
 
     elif app_name == 'app3':  # id names for app3 only
@@ -1259,8 +1255,12 @@ def init_app_ids(app_name: str):
         id_dict['band_unit_id'] = app_name + '_band_unit'
         id_dict['cif_upload_id'] = app_name + '_cif'
         id_dict['cif_upload_fb_id'] = app_name + '_cif_fb'
+        id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
+        id_dict['hidden_df_tb_div'] = app_name + '_hidden_df_tb_div'
+        id_dict['hidden_df_tb'] = app_name + '_hidden_df_tb'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
+        id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
 
     return id_dict
 

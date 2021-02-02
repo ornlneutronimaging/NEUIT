@@ -181,18 +181,17 @@ layout = html.Div(
                 # Export plot data button
                 html.Div(
                     [
-                        html.Button(
-                            'Display data table',
-                            id=app_id_dict['export_plot_data_button_id'],
-                            style={'display': 'inline-block'},
-                            n_clicks_timestamp=0
-                        ),
-                        html.Div(
-                            id=app_id_dict['export_plot_data_notice_id'],
-                            style={'display': 'inline-block'},
+                        dcc.Checklist(
+                            id=app_id_dict['display_plot_data_id'],
+                            options=[
+                                {'label': 'Display plotted data', 'value': 'display'},
+                            ],
+                            value=[],
+                            labelStyle={'display': 'inline-block'}
                         ),
                     ], className='row'
                 ),
+
                 # Data table for the plotted data
                 html.Div(id=app_id_dict['hidden_df_tb_div']),
 
@@ -713,11 +712,10 @@ def output_transmission_and_stack(n_submit, test_passed, database,
 @app.callback(
     [
         Output(app_id_dict['hidden_df_tb_div'], 'children'),
-        Output(app_id_dict['export_plot_data_notice_id'], 'children'),
     ],
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks_timestamp'),
-        Input(app_id_dict['export_plot_data_button_id'], 'n_clicks_timestamp'),
+        Input(app_id_dict['display_plot_data_id'], 'value'),
     ],
     [
         State('x_type', 'value'),
@@ -726,44 +724,41 @@ def output_transmission_and_stack(n_submit, test_passed, database,
         State(app_id_dict['error_id'], 'children'),
         State(app_id_dict['hidden_df_json_id'], 'children'),
     ])
-def export_plot_data(n_submit, n_export, x_type, y_type, show_opt, test_passed, jsonified_data):
-    if n_export != 0:
-        if n_export > n_submit:
-            if test_passed is True:
-                # Load and shape the data
-                df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
-                                                                                     y_type=y_type,
-                                                                                     show_opt=show_opt,
-                                                                                     jsonified_data=jsonified_data,
-                                                                                     prev_show_opt=None,
-                                                                                     to_csv=True)
-                df_to_export = df_y[to_export_list]
-                x_tag = x_type_to_x_tag(x_type)
-                df_to_export.insert(loc=0, column=x_tag, value=df_x[x_tag])
-                # df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
-                # df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
-                # df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
+def export_plot_data(n_submit, display_plot_data_tb, x_type, y_type, show_opt, test_passed, jsonified_data):
+    if display_plot_data_tb == ['display']:
+        if test_passed is True:
+            # Load and shape the data
+            df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
+                                                                                 y_type=y_type,
+                                                                                 show_opt=show_opt,
+                                                                                 jsonified_data=jsonified_data,
+                                                                                 prev_show_opt=None,
+                                                                                 to_csv=True)
+            df_to_export = df_y[to_export_list]
+            x_tag = x_type_to_x_tag(x_type)
+            df_to_export.insert(loc=0, column=x_tag, value=df_x[x_tag])
+            # df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
+            # df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
+            # df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
 
-                # df_to_export.to_clipboard(index=False, excel=True)  # Does not work on the Heroku server
-                df_tb_div_list = [
-                    html.Hr(),
-                    dt.DataTable(
-                        id=app_id_dict['hidden_df_tb'],
-                        data=df_to_export.to_dict('records'),
-                        columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
-                        export_format='csv',
-                        style_data_conditional=[striped_rows],
-                        fixed_rows={'headers': True, 'data': 0},
-                        style_table={
-                            'maxHeight': '300',
-                            'overflowY': 'scroll',
-                        },
-                    )
-                ]
-                return df_tb_div_list, '\u2705'
-            else:
-                return None, None
+            # df_to_export.to_clipboard(index=False, excel=True)  # Does not work on the Heroku server
+            df_tb_div_list = [
+                html.Hr(),
+                dt.DataTable(
+                    id=app_id_dict['hidden_df_tb'],
+                    data=df_to_export.to_dict('records'),
+                    columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
+                    export_format='csv',
+                    style_data_conditional=[striped_rows],
+                    fixed_rows={'headers': True, 'data': 0},
+                    style_table={
+                        'maxHeight': '300',
+                        'overflowY': 'scroll',
+                    },
+                )
+            ]
+            return [df_tb_div_list]
         else:
-            return None, None
+            return [None]
     else:
-        return None, None
+        return [None]
