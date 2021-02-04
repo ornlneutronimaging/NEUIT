@@ -1,6 +1,5 @@
 from dash.dependencies import Input, Output, State
 from _app import app
-import plotly.tools as tls
 import matplotlib.pyplot as plt
 from _utilities import *
 
@@ -29,6 +28,7 @@ plot_data_filename = "plot_data.csv"
 layout = html.Div(
     [
         init_app_links(current_app=app_name, app_dict_all=app_dict),
+        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
         # Global parameters
         html.Div(
             [
@@ -163,8 +163,11 @@ layout = html.Div(
         # Error message div
         html.Div(id=app_id_dict['error_id'], children=None),
 
-        # Hidden div to store json
+        # Hidden div to store df_all json
         html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),
+
+        # Hidden div to store df_export json
+        html.Div(id=app_id_dict['hidden_df_export_json_id'], style={'display': 'none'}),
 
         # Hidden div to store x_type
         html.Div(id=app_id_dict['prev_x_type_id'], children='energy', style={'display': 'none'}),
@@ -181,20 +184,19 @@ layout = html.Div(
                 # Export plot data button
                 html.Div(
                     [
-                        html.Button(
-                            'Display data table',
-                            id=app_id_dict['export_plot_data_button_id'],
-                            style={'display': 'inline-block'},
-                            n_clicks_timestamp=0
-                        ),
-                        html.Div(
-                            id=app_id_dict['export_plot_data_notice_id'],
-                            style={'display': 'inline-block'},
+                        dcc.Checklist(
+                            id=app_id_dict['display_plot_data_id'],
+                            options=[
+                                {'label': 'Display plotted data', 'value': 'display'},
+                            ],
+                            value=[],
+                            labelStyle={'display': 'inline-block'}
                         ),
                     ], className='row'
                 ),
+
                 # Data table for the plotted data
-                html.Div(id=app_id_dict['hidden_df_tb_div']),
+                html.Div(id=app_id_dict['df_export_tb_div']),
 
                 # Transmission at CG-1D and sample stack
                 html.Div(id=app_id_dict['result_id']),
@@ -204,6 +206,22 @@ layout = html.Div(
         ),
     ]
 )
+
+
+@app.callback(
+    Output(app_id_dict['app_info_id'], 'style'),
+    [
+        Input(app_id_dict['more_about_app_id'], 'value'),
+    ],
+    [
+        State(app_id_dict['app_info_id'], 'style'),
+    ])
+def show_hide_band_input(more_info, style):
+    if more_info != ['more']:
+        style['display'] = 'none'
+    else:
+        style['display'] = 'block'
+    return style
 
 
 @app.callback(
@@ -475,8 +493,8 @@ def store_x_type(x_type):
     Output(app_id_dict['hidden_df_json_id'], 'children'),
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
-        Input(app_id_dict['error_id'], 'children'),
         Input('y_type', 'value'),
+        Input(app_id_dict['error_id'], 'children'),
     ],
     [
         State(app_id_dict['range_table_id'], 'data'),
@@ -488,8 +506,8 @@ def store_x_type(x_type):
         State(app_id_dict['database_id'], 'value'),
     ])
 def store_reso_df_in_json(n_submit,
-                          test_passed,
                           y_type,
+                          test_passed,
                           range_tb_rows, e_step, distance_m,
                           sample_tb_rows, iso_tb_rows,
                           iso_changed, database):
@@ -536,20 +554,22 @@ def store_reso_df_in_json(n_submit,
 
 
 @app.callback(
-    Output(app_id_dict['plot_div_id'], 'children'),
     [
-        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Output(app_id_dict['plot_div_id'], 'children'),
+        Output(app_id_dict['hidden_df_export_json_id'], 'children'),
+    ],
+    [
         Input(app_id_dict['error_id'], 'children'),
         Input('show_opt', 'value'),
         Input(app_id_dict['hidden_df_json_id'], 'children'),
         Input('y_type', 'value'),
+        Input('x_type', 'value'),
+        Input('plot_scale', 'value'),
     ],
     [
-        State('x_type', 'value'),
         State('show_opt', 'value'),
-        State('plot_scale', 'value'),
     ])
-def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_show_opt, plot_scale):
+def plot(test_passed, show_opt, jsonified_data, y_type, x_type, plot_scale, prev_show_opt):
     if test_passed is True:
         # Load and shape the data
         df_x, df_y, to_plot_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
@@ -560,106 +580,109 @@ def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_s
                                                                            to_csv=False)
         df_to_plot = df_y[to_plot_list]
         df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
+        jsonized_plot_df = df_to_plot.to_json(orient='split', date_format='iso')
 
+        # Plot in matplotlib
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
-
-        # Plot
         try:
             ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
         except TypeError:
             pass
         ax1.set_ylabel(y_label)
 
-        plotly_fig = tls.mpl_to_plotly(fig)
+        # Convert to plotly and format layout
+        plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
 
-        # Layout
-        plotly_fig.layout.showlegend = True
-        plotly_fig.layout.autosize = True
-        plotly_fig.layout.height = 600
-        plotly_fig.layout.width = 900
-        plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
-        plotly_fig.layout.xaxis1.tickfont.size = 15
-        plotly_fig.layout.xaxis1.titlefont.size = 18
-        plotly_fig.layout.yaxis1.tickfont.size = 15
-        plotly_fig.layout.yaxis1.titlefont.size = 18
-        plotly_fig.layout.xaxis.autorange = True
-        if y_type in ['attenuation', 'transmission']:
-            plotly_fig['layout']['yaxis']['autorange'] = False
-            if plot_scale in ['logy', 'loglog']:
-                plot_scale = 'linear'
-        else:
-            plotly_fig['layout']['yaxis']['autorange'] = True
-
-        if plot_scale == 'logx':
-            plotly_fig['layout']['xaxis']['type'] = 'log'
-            plotly_fig['layout']['yaxis']['type'] = 'linear'
-            plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
-        elif plot_scale == 'logy':
-            if y_type not in ['attenuation', 'transmission']:
-                plotly_fig['layout']['xaxis']['type'] = 'linear'
-                plotly_fig['layout']['yaxis']['type'] = 'log'
-        elif plot_scale == 'loglog':
-            if y_type not in ['attenuation', 'transmission']:
-                plotly_fig['layout']['xaxis']['type'] = 'log'
-                plotly_fig['layout']['yaxis']['type'] = 'log'
-        else:
-            plotly_fig['layout']['xaxis']['type'] = 'linear'
-            plotly_fig['layout']['yaxis']['type'] = 'linear'
-            plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
-
-        return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])])
+        return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
     else:
-        return plot_loading
+        return plot_loading, [None]
 
+
+# @app.callback(
+#     Output(app_id_dict['plot_fig_id'], 'figure'),
+#     [
+#         Input('plot_scale', 'value'),
+#         Input('x_type', 'value'),
+#     ],
+#     [
+#         State('y_type', 'value'),
+#         State(app_id_dict['prev_x_type_id'], 'children'),
+#         State(app_id_dict['plot_fig_id'], 'figure'),
+#         State(app_id_dict['hidden_df_json_id'], 'children'),
+#     ])
+# def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly_fig, jsonified_data):
+#     # Change plot x type
+#     if x_type != prev_x_type:
+#         df_dict = load_dfs(jsonified_data=jsonified_data)
+#         x_tag = x_type_to_x_tag(x_type=x_type)
+#         for each_trace in plotly_fig['data']:
+#             each_trace['x'] = df_dict['x'][x_tag]
+#         plotly_fig['layout']['xaxis']['title']['text'] = x_tag
+#
+#     if y_type in ['attenuation', 'transmission']:
+#         plotly_fig['layout']['yaxis']['autorange'] = False
+#         if plot_scale in ['logy', 'loglog']:
+#             plot_scale = 'linear'
+#     else:
+#         plotly_fig['layout']['yaxis']['autorange'] = True
+#
+#     # Change plot scale between log and linear
+#     if plot_scale == 'logx':
+#         plotly_fig['layout']['xaxis']['type'] = 'log'
+#         plotly_fig['layout']['yaxis']['type'] = 'linear'
+#         plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
+#     elif plot_scale == 'logy':
+#         if y_type not in ['attenuation', 'transmission']:
+#             plotly_fig['layout']['xaxis']['type'] = 'linear'
+#             plotly_fig['layout']['yaxis']['type'] = 'log'
+#     elif plot_scale == 'loglog':
+#         if y_type not in ['attenuation', 'transmission']:
+#             plotly_fig['layout']['xaxis']['type'] = 'log'
+#             plotly_fig['layout']['yaxis']['type'] = 'log'
+#     else:
+#         plotly_fig['layout']['xaxis']['type'] = 'linear'
+#         plotly_fig['layout']['yaxis']['type'] = 'linear'
+#         plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
+#
+#     return plotly_fig
 
 @app.callback(
-    Output(app_id_dict['plot_fig_id'], 'figure'),
     [
-        Input('plot_scale', 'value'),
-        Input('x_type', 'value'),
+        Output(app_id_dict['df_export_tb_div'], 'children'),
     ],
     [
-        State('y_type', 'value'),
-        State(app_id_dict['prev_x_type_id'], 'children'),
-        State(app_id_dict['plot_fig_id'], 'figure'),
-        State(app_id_dict['hidden_df_json_id'], 'children'),
+        Input(app_id_dict['display_plot_data_id'], 'value'),
+        Input(app_id_dict['hidden_df_export_json_id'], 'children'),
+    ],
+    [
+        State(app_id_dict['error_id'], 'children'),
     ])
-def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly_fig, jsonified_data):
-    # Change plot x type
-    if x_type != prev_x_type:
-        df_dict = load_dfs(jsonified_data=jsonified_data)
-        x_tag = x_type_to_x_tag(x_type=x_type)
-        for each_trace in plotly_fig['data']:
-            each_trace['x'] = df_dict['x'][x_tag]
-        plotly_fig['layout']['xaxis']['title']['text'] = x_tag
-
-    if y_type in ['attenuation', 'transmission']:
-        plotly_fig['layout']['yaxis']['autorange'] = False
-        if plot_scale in ['logy', 'loglog']:
-            plot_scale = 'linear'
+def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
+    if display_check == ['display']:
+        if test_passed is True:
+            dataset = json.loads(jsonized_df_export[0])
+            df_to_export = pd.read_json(dataset, orient='split')
+            df_tb_div_list = [
+                html.Hr(),
+                dt.DataTable(
+                    id=app_id_dict['df_export_tb'],
+                    data=df_to_export.to_dict('records'),
+                    columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
+                    export_format='csv',
+                    style_data_conditional=[striped_rows],
+                    fixed_rows={'headers': True, 'data': 0},
+                    style_table={
+                        'maxHeight': '300',
+                        'overflowY': 'scroll',
+                    },
+                )
+            ]
+            return [df_tb_div_list]
+        else:
+            return [None]
     else:
-        plotly_fig['layout']['yaxis']['autorange'] = True
-
-    # Change plot scale between log and linear
-    if plot_scale == 'logx':
-        plotly_fig['layout']['xaxis']['type'] = 'log'
-        plotly_fig['layout']['yaxis']['type'] = 'linear'
-        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
-    elif plot_scale == 'logy':
-        if y_type not in ['attenuation', 'transmission']:
-            plotly_fig['layout']['xaxis']['type'] = 'linear'
-            plotly_fig['layout']['yaxis']['type'] = 'log'
-    elif plot_scale == 'loglog':
-        if y_type not in ['attenuation', 'transmission']:
-            plotly_fig['layout']['xaxis']['type'] = 'log'
-            plotly_fig['layout']['yaxis']['type'] = 'log'
-    else:
-        plotly_fig['layout']['xaxis']['type'] = 'linear'
-        plotly_fig['layout']['yaxis']['type'] = 'linear'
-        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
-
-    return plotly_fig
+        return [None]
 
 
 @app.callback(
@@ -708,62 +731,3 @@ def output_transmission_and_stack(n_submit, test_passed, database,
         return output_div_list
     else:
         return None
-
-
-@app.callback(
-    [
-        Output(app_id_dict['hidden_df_tb_div'], 'children'),
-        Output(app_id_dict['export_plot_data_notice_id'], 'children'),
-    ],
-    [
-        Input(app_id_dict['submit_button_id'], 'n_clicks_timestamp'),
-        Input(app_id_dict['export_plot_data_button_id'], 'n_clicks_timestamp'),
-    ],
-    [
-        State('x_type', 'value'),
-        State('y_type', 'value'),
-        State('show_opt', 'value'),
-        State(app_id_dict['error_id'], 'children'),
-        State(app_id_dict['hidden_df_json_id'], 'children'),
-    ])
-def export_plot_data(n_submit, n_export, x_type, y_type, show_opt, test_passed, jsonified_data):
-    if n_export != 0:
-        if n_export > n_submit:
-            if test_passed is True:
-                # Load and shape the data
-                df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
-                                                                                     y_type=y_type,
-                                                                                     show_opt=show_opt,
-                                                                                     jsonified_data=jsonified_data,
-                                                                                     prev_show_opt=None,
-                                                                                     to_csv=True)
-                df_to_export = df_y[to_export_list]
-                x_tag = x_type_to_x_tag(x_type)
-                df_to_export.insert(loc=0, column=x_tag, value=df_x[x_tag])
-                # df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
-                # df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
-                # df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
-
-                # df_to_export.to_clipboard(index=False, excel=True)  # Does not work on the Heroku server
-                df_tb_div_list = [
-                    html.Hr(),
-                    dt.DataTable(
-                        id=app_id_dict['hidden_df_tb'],
-                        data=df_to_export.to_dict('records'),
-                        columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
-                        export_format='csv',
-                        style_data_conditional=[striped_rows],
-                        fixed_rows={'headers': True, 'data': 0},
-                        style_table={
-                            'maxHeight': '300',
-                            'overflowY': 'scroll',
-                        },
-                    )
-                ]
-                return df_tb_div_list, '\u2705'
-            else:
-                return None, None
-        else:
-            return None, None
-    else:
-        return None, None

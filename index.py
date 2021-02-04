@@ -29,19 +29,25 @@ index_page = html.Div(
             ], className="row"
         ),
         dcc.Markdown('''**NEU**tron **I**maging **T**oolbox'''),
-        html.H6('Tools available are:'),
+        html.H6('Available tools:'),
         app_links_div,
         dcc.Markdown('''
 #### Introduction
 
-Tools available here are build upon *[ImagingReso](https://imagingreso.readthedocs.io/en/latest/)*
+Here we present a toolbox to provide interactive and user-friendly applications
+that can be used for Neutron Imaging related calculations.
+
+Tools available here are build upon open source libraries, such as 
+*[ImagingReso](https://imagingreso.readthedocs.io/en/latest/)*,
+*[periodictable](https://periodictable.readthedocs.io/en/latest/)*,
+*[braggedgemodeling](https://ornlneutronimaging.github.io/braggedgemodeling/)*, etc.,
 using *[Dash](https://dash.plot.ly/)* framework. 
 
-*ImagingReso* is an open-source Python library that simulates the neutron
-resonance signal for neutron imaging measurements. By defining the sample
-information such as density, thickness in the neutron path, and isotopic
-ratios of the elemental composition of the material, this package plots
-the expected resonance peaks for a selected neutron energy range.
+Detailed functionality description is available inside each application.
+
+'''),
+dcc.Markdown('''
+#### Disclaimer
 
 The energy dependent cross-section data used are from
 [National Nuclear Data Center](http://www.nndc.bnl.gov/), a published
@@ -50,8 +56,12 @@ online database. [Evaluated Nuclear Data File](http://www.nndc.bnl.gov/exfor/end
 [ENDF/B-VII.1](https://www.sciencedirect.com/science/article/pii/S009037521100113X)
 are currently supported. More evaluated database will be added in the future.
 
-*[PeriodicTable](https://periodictable.readthedocs.io/en/latest/)* provides various 
-elements/isotopes related properties in the calculations.
+Please note that the energy dependent cross-section of hydrogen in ENDF/B database
+is for a free H atom. When interacting with slow neutrons in the cold range, the
+cross-section of a bonded H could be underestimated when using this tool. 
+In a recent update to support *[ImagingReso (v1.7.3)](https://github.com/ornlneutronimaging/ImagingReso/releases/tag/v1.7.3)*,
+some experimentally measured cross-sections ([ref.](https://journals.aps.org/pr/abstract/10.1103/PhysRev.76.1750)) 
+of a bonded H are now available.
 '''),
 
         dcc.Markdown('''
@@ -97,8 +107,8 @@ def display_page(pathname):
         return app3.layout
     elif pathname == app_dict['app4']['url']:
         return app4.layout
-    # elif pathname == app_dict['app5']['url']:
-    #     return app5.layout
+    elif pathname == app_dict['app5']['url']:
+        return app5.layout
     elif pathname == '/':
         return index_page
     else:

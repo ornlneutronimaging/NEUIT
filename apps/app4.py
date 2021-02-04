@@ -11,52 +11,58 @@ app_name = 'app4'
 app_id_dict = init_app_ids(app_name=app_name)
 
 # Create app layout
+
 layout = html.Div(
     [
         init_app_links(current_app=app_name, app_dict_all=app_dict),
-
+        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
         # Experiment input
         html.Div(
             [
                 html.H3('Instrument Parameters:'),
                 html.Div(
                     [
-                        html.H6('Source-to-detector distance:'),
-                        html.Div(
-                            [
-                                dcc.Input(id=app_id_dict['distance_id'], type='number', value=distance_default,
-                                          min=0,
-                                          inputMode='numeric',
-                                          step=0.01,
-                                          className='nine columns'),
-                                html.P('(m)', className='one column',
-                                       style={'marginBottom': 10, 'marginTop': 5},
-                                       # style={'verticalAlign': 'middle'},
-                                       ),
-                            ], className='row', style={'verticalAlign': 'middle'},
-                        ),
-                    ], className=col_width_5,
-                ),
+                        # html.Div(
+                        #     [
+                        #         html.H6('Temperature (K):'),
+                        #         dcc.Input(id=app_id_dict['temperature_id'],
+                        #                   type='number',
+                        #                   value=temperature_default,
+                        #                   min=0,
+                        #                   inputMode='numeric',
+                        #                   step=0.1,
+                        #                   ),
+                        #     ], className=col_width_3,
+                        # ),
 
-                html.Div(
-                    [
-                        html.H6('Delay:'),
                         html.Div(
                             [
-                                dcc.Input(id=app_id_dict['delay_id'], type='number', value=delay_default,
+                                html.H6('Source-to-detector (m):'),
+                                dcc.Input(id=app_id_dict['distance_id'],
+                                          type='number',
+                                          value=distance_default,
                                           min=0,
                                           inputMode='numeric',
                                           step=0.01,
-                                          className='nine columns'),
-                                html.P('(us)', className='one column',
-                                       style={'marginBottom': 10, 'marginTop': 5},
-                                       # style={'verticalAlign': 'middle'},
-                                       ),
-                            ], className='row', style={'verticalAlign': 'middle'},
+                                          ),
+                            ], className=col_width_3,
                         ),
-                    ], className=col_width_5, style={'verticalAlign': 'middle'},
+
+                        html.Div(
+                            [
+                                html.H6('Delay (\u03BCs):'),
+                                dcc.Input(id=app_id_dict['delay_id'],
+                                          type='number',
+                                          value=delay_default,
+                                          min=0,
+                                          inputMode='numeric',
+                                          step=0.01,
+                                          ),
+                            ], className=col_width_3,
+                        ),
+                    ], className='row', style={'verticalAlign': 'middle'},
                 ),
-            ], className='row',
+            ], className='row', style={'verticalAlign': 'middle'},
         ),
 
         html.H3('Upload files:'),
@@ -146,6 +152,7 @@ layout = html.Div(
         # Output div
         html.Div(
             [
+                # Plot options
                 html.H3('Plot:'),
                 html.Div(
                     [
@@ -194,16 +201,34 @@ layout = html.Div(
                         ),
                     ], className='row'
                 ),
-                # Transmission at CG-1D and stack info
-                html.Div(id=app_id_dict['result_id']),
+
                 # Plot
                 html.Div(id=app_id_dict['plot_div_id'], children=plot_loading, className='container'),
+
+                # # Transmission at CG-1D and stack info
+                # html.Div(id=app_id_dict['result_id']),
             ],
             id=app_id_dict['output_id'],
             style={'display': 'none'},
         ),
     ]
 )
+
+
+@app.callback(
+    Output(app_id_dict['app_info_id'], 'style'),
+    [
+        Input(app_id_dict['more_about_app_id'], 'value'),
+    ],
+    [
+        State(app_id_dict['app_info_id'], 'style'),
+    ])
+def show_hide_band_input(more_info, style):
+    if more_info != ['more']:
+        style['display'] = 'none'
+    else:
+        style['display'] = 'block'
+    return style
 
 
 @app.callback(

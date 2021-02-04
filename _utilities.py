@@ -1,4 +1,5 @@
 import os
+import sys
 
 import ImagingReso._utilities as ir_util
 import dash_core_components as dcc
@@ -12,6 +13,12 @@ from scipy.interpolate import interp1d
 import numpy as np
 import json
 from cerberus import Validator
+import plotly.tools as tls
+
+if sys.version_info[0] < 3:
+    from diffpy.Structure.Parsers import getParser
+else:
+    from diffpy.structure.parsers import getParser
 
 app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/transmission'},
@@ -21,8 +28,8 @@ app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/converter'},
             'app4': {'name': 'Time-of-flight plotter (under testing)',
                      'url': '/apps/tof_plotter'},
-            # 'app5': {'name': 'Bragg-edge (under testing)',
-            #          'url': '/apps/bragg'},
+            'app5': {'name': 'Bragg-edge simulator (under testing)',
+                     'url': '/apps/bragg'},
             }
 
 energy_name = 'Energy (eV)'
@@ -116,6 +123,7 @@ empty_div = html.Div()
 
 distance_default = 16.45  # in meter
 delay_default = 0  # in us
+temperature_default = 293  # in Kelvin
 plot_loading = html.H2('Plot loading...')
 
 
@@ -1153,24 +1161,19 @@ def parse_content(content, name, header):
     else:
         df = None
         error_div = html.Div(
-            ["\u274C Uploaded file: '{}' is not supported, only '.csv' and '.xls' are ""supported.".format(name)])
+            ["\u274C Type error: '{}' is not supported, only '.csv' and '.xls' are ""supported.".format(name)])
     return df, error_div
 
 
-def parse_cif_content(content, name, header):
+def parse_cif_upload(content):
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
-    error_div = None
-    if 'cif' in name:
-        # Assume that the user uploaded a CSV file
-        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False, header=header)
-        # Assume that the user uploaded an excel file
-        # df = pd.read_excel(io.BytesIO(decoded), na_filter=False, header=header)
-    else:
-        df = None
-        error_div = html.Div(
-            ["\u274C Uploaded file: '{}' is not supported, only '.cif' is ""supported.".format(name)])
-    return df, error_div
+
+    cif_s = decoded.decode('utf-8')
+    p = getParser('cif')
+    struc = p.parse(cif_s)
+    struc.sg = p.spacegroup
+    return struc
 
 
 def init_app_links(current_app, app_dict_all):
@@ -1183,8 +1186,65 @@ def init_app_links(current_app, app_dict_all):
     return html.Div(links_div_list)
 
 
+def init_app_about(current_app, app_id_dict):
+    more_info_check = dcc.Checklist(
+        id=app_id_dict['more_about_app_id'],
+        options=[
+            {'label': 'More about this app \U0001F4AC', 'value': 'more'},
+        ],
+        value=[],
+        labelStyle={'display': 'inline-block'}
+    )
+
+    more_info_div = html.Div(
+        [
+            app_info_markdown_dict[current_app],
+        ],
+        id=app_id_dict['app_info_id'],
+        style={'display': 'none'},
+    )
+
+    return html.Div([more_info_check, more_info_div])
+
+
+app_info_markdown_dict = {
+    'app1': dcc.Markdown("""
+    This tool estimates the neutron transmission/attenuation signals and contrast,
+    by defining the sample information such as density, thickness in the neutron beam path.
+    Multiple samples or complex compounds can be added as layers in such calculation. 
+    Estimating the contrast by changing isotopic ratios is also supported.
+    An example is shown by default to demonstrate its usage.
+            """),
+    'app2': dcc.Markdown("""
+    This tool estimates the energy dependent neutron imaging signals and contrasts,
+    specifically for *resonances* in the *epithermal* range.
+    Similar to the transmission tool, sample/samples can be entered as layers in such calculation. 
+    Estimating the contrast by changing isotopic ratios is also supported.
+    An example is shown by default to demonstrate its usage.
+            """),
+    'app3': dcc.Markdown("""
+    This tool helps the conversion between wt.% and at.%. And it populates
+    an equivalent chemical formula to represent a complex mixture. Such formula
+    can be used as '{}' in other tools available in NEUIT.
+    An example is shown by default to demonstrate its usage.
+            """.format(chem_name)),
+    'app4': dcc.Markdown("""
+    This tool helps plotting data acquired from Timepix2 MCP detector. By dragging and dropping
+    spectra files and data files, one can quickly verify if expected resonances or Bragg-edges
+    have been captured or not. Optional background file can also be added if normalization is needed.  
+            """),
+    'app5': dcc.Markdown("""
+    This tool estimates the energy dependent neutron imaging signals and contrasts,
+    specifically for *Bragg-edges* in the *cold* or *thermal* range. Currently, it only supports
+    dragging and dropping '.cif' files.
+            """),
+}
+
+
 def init_app_ids(app_name: str):
     id_dict = {}
+    id_dict['more_about_app_id'] = app_name + '_more_about_app'
+    id_dict['app_info_id'] = app_name + '_app_info'
     id_dict['sample_upload_id'] = app_name + '_sample_upload'
     id_dict['error_upload_id'] = app_name + '_error_upload'
     id_dict['hidden_upload_time_id'] = app_name + '_time_upload'
@@ -1215,14 +1275,14 @@ def init_app_ids(app_name: str):
         id_dict['distance_id'] = app_name + '_distance'
         id_dict['hidden_prev_distance_id'] = app_name + '_hidden_prev_distance'
         id_dict['hidden_range_input_coord_id'] = app_name + '_hidden_range_input_coord'
+        id_dict['hidden_df_export_json_id'] = app_name + '_hidden_df_export_json'
         id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
-        id_dict['hidden_df_tb_div'] = app_name + '_hidden_df_tb_div'
-        id_dict['hidden_df_tb'] = app_name + '_hidden_df_tb'
+        id_dict['df_export_tb_div'] = app_name + '_df_export_tb_div'
+        id_dict['df_export_tb'] = app_name + '_df_export_tb'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
         id_dict['plot_options_div_id'] = app_name + '_plot_options'
-        id_dict['export_plot_data_button_id'] = app_name + '_plot_data_export'
-        id_dict['export_plot_data_notice_id'] = app_name + '_export_notice'
+        id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
         id_dict['prev_x_type_id'] = app_name + '_prev_x_type'
 
     elif app_name == 'app3':  # id names for app3 only
@@ -1240,13 +1300,21 @@ def init_app_ids(app_name: str):
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
     else:  # id names for app5 only
+        id_dict['temperature_id'] = app_name + '_temperature'
+        id_dict['distance_id'] = app_name + '_distance'
         id_dict['band_min_id'] = app_name + '_band_min'
         id_dict['band_max_id'] = app_name + '_band_max'
+        id_dict['band_step_id'] = app_name + '_band_step'
         id_dict['band_unit_id'] = app_name + '_band_unit'
         id_dict['cif_upload_id'] = app_name + '_cif'
         id_dict['cif_upload_fb_id'] = app_name + '_cif_fb'
+        id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
+        id_dict['hidden_df_export_json_id'] = app_name + '_hidden_df_export_json'
+        id_dict['df_export_tb_div'] = app_name + '_df_export_tb_div'
+        id_dict['df_export_tb'] = app_name + '_df_export_tb'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
+        id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
 
     return id_dict
 
@@ -1520,3 +1588,42 @@ plot_option_div = html.Div(
         ),
     ]
 ),
+
+
+def shape_matplot_to_plotly(fig, y_type, plot_scale):
+    plotly_fig = tls.mpl_to_plotly(fig)
+    # Layout
+    plotly_fig.layout.showlegend = True
+    plotly_fig.layout.autosize = True
+    plotly_fig.layout.height = 600
+    plotly_fig.layout.width = 900
+    plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
+    plotly_fig.layout.xaxis1.tickfont.size = 15
+    plotly_fig.layout.xaxis1.titlefont.size = 18
+    plotly_fig.layout.yaxis1.tickfont.size = 15
+    plotly_fig.layout.yaxis1.titlefont.size = 18
+    plotly_fig.layout.xaxis.autorange = True
+    if y_type in ['attenuation', 'transmission']:
+        plotly_fig['layout']['yaxis']['autorange'] = False
+        if plot_scale in ['logy', 'loglog']:
+            plot_scale = 'linear'
+    else:
+        plotly_fig['layout']['yaxis']['autorange'] = True
+
+    if plot_scale == 'logx':
+        plotly_fig['layout']['xaxis']['type'] = 'log'
+        plotly_fig['layout']['yaxis']['type'] = 'linear'
+        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
+    elif plot_scale == 'logy':
+        if y_type not in ['attenuation', 'transmission']:
+            plotly_fig['layout']['xaxis']['type'] = 'linear'
+            plotly_fig['layout']['yaxis']['type'] = 'log'
+    elif plot_scale == 'loglog':
+        if y_type not in ['attenuation', 'transmission']:
+            plotly_fig['layout']['xaxis']['type'] = 'log'
+            plotly_fig['layout']['yaxis']['type'] = 'log'
+    else:
+        plotly_fig['layout']['xaxis']['type'] = 'linear'
+        plotly_fig['layout']['yaxis']['type'] = 'linear'
+        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
+    return plotly_fig
