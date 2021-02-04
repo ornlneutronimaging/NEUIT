@@ -164,8 +164,11 @@ layout = html.Div(
         # Error message div
         html.Div(id=app_id_dict['error_id'], children=None),
 
-        # Hidden div to store json
+        # Hidden div to store df_all json
         html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),
+
+        # Hidden div to store df_export json
+        html.Div(id=app_id_dict['hidden_df_export_json_id'], style={'display': 'none'}),
 
         # Hidden div to store x_type
         html.Div(id=app_id_dict['prev_x_type_id'], children='energy', style={'display': 'none'}),
@@ -576,52 +579,17 @@ def plot(test_passed, show_opt, jsonified_data, y_type, x_type, plot_scale, prev
         df_to_plot = df_y[to_plot_list]
         df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
 
+        # Plot in matplotlib
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
-
-        # Plot
         try:
             ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
         except TypeError:
             pass
         ax1.set_ylabel(y_label)
 
-        plotly_fig = tls.mpl_to_plotly(fig)
-
-        # Layout
-        plotly_fig.layout.showlegend = True
-        plotly_fig.layout.autosize = True
-        plotly_fig.layout.height = 600
-        plotly_fig.layout.width = 900
-        plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
-        plotly_fig.layout.xaxis1.tickfont.size = 15
-        plotly_fig.layout.xaxis1.titlefont.size = 18
-        plotly_fig.layout.yaxis1.tickfont.size = 15
-        plotly_fig.layout.yaxis1.titlefont.size = 18
-        plotly_fig.layout.xaxis.autorange = True
-        if y_type in ['attenuation', 'transmission']:
-            plotly_fig['layout']['yaxis']['autorange'] = False
-            if plot_scale in ['logy', 'loglog']:
-                plot_scale = 'linear'
-        else:
-            plotly_fig['layout']['yaxis']['autorange'] = True
-
-        if plot_scale == 'logx':
-            plotly_fig['layout']['xaxis']['type'] = 'log'
-            plotly_fig['layout']['yaxis']['type'] = 'linear'
-            plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
-        elif plot_scale == 'logy':
-            if y_type not in ['attenuation', 'transmission']:
-                plotly_fig['layout']['xaxis']['type'] = 'linear'
-                plotly_fig['layout']['yaxis']['type'] = 'log'
-        elif plot_scale == 'loglog':
-            if y_type not in ['attenuation', 'transmission']:
-                plotly_fig['layout']['xaxis']['type'] = 'log'
-                plotly_fig['layout']['yaxis']['type'] = 'log'
-        else:
-            plotly_fig['layout']['xaxis']['type'] = 'linear'
-            plotly_fig['layout']['yaxis']['type'] = 'linear'
-            plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
+        # Convert to plotly and format layout
+        plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
 
         return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])])
     else:
@@ -678,54 +646,6 @@ def plot(test_passed, show_opt, jsonified_data, y_type, x_type, plot_scale, prev
 
 
 @app.callback(
-    Output(app_id_dict['result_id'], 'children'),
-    [
-        Input(app_id_dict['submit_button_id'], 'n_clicks'),
-        Input(app_id_dict['error_id'], 'children'),
-    ],
-    [
-        State(app_id_dict['database_id'], 'value'),
-        State(app_id_dict['sample_table_id'], 'data'),
-        State(app_id_dict['iso_table_id'], 'data'),
-        State(app_id_dict['iso_check_id'], 'value'),
-        State(app_id_dict['range_table_id'], 'data'),
-    ])
-def output_transmission_and_stack(n_submit, test_passed, database,
-                                  sample_tb_rows, iso_tb_rows, iso_changed, range_table_rows):
-    if test_passed is True:
-        if range_table_rows[0][energy_name] < range_table_rows[1][energy_name]:
-            e_min = range_table_rows[0][energy_name]
-            e_max = range_table_rows[1][energy_name]
-        else:
-            e_min = range_table_rows[1][energy_name]
-            e_max = range_table_rows[0][energy_name]
-        output_div_list, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
-                                                                iso_tb_rows=iso_tb_rows,
-                                                                iso_changed=iso_changed,
-                                                                beamline='snap',
-                                                                band_min=e_min,
-                                                                band_max=e_max,
-                                                                band_type='energy',
-                                                                database=database)
-        # trans_div_list_tof, o_stack_cg1d = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
-        #                                                                 iso_tb_rows=iso_tb_rows,
-        #                                                                 iso_changed=iso_changed,
-        #                                                                 beamline='imaging',
-        #                                                                 band_min=None,
-        #                                                                 band_max=None,
-        #                                                                 band_type=None,
-        #                                                                 database=database)
-        # output_div_list.extend(trans_div_list_tof)
-
-        # Sample stack table div
-        sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack)
-        output_div_list.extend(sample_stack_div_list)
-        return output_div_list
-    else:
-        return None
-
-
-@app.callback(
     [
         Output(app_id_dict['hidden_df_tb_div'], 'children'),
     ],
@@ -778,3 +698,51 @@ def export_plot_data(n_submit, display_plot_data_tb, x_type, y_type, show_opt, t
             return [None]
     else:
         return [None]
+
+
+@app.callback(
+    Output(app_id_dict['result_id'], 'children'),
+    [
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Input(app_id_dict['error_id'], 'children'),
+    ],
+    [
+        State(app_id_dict['database_id'], 'value'),
+        State(app_id_dict['sample_table_id'], 'data'),
+        State(app_id_dict['iso_table_id'], 'data'),
+        State(app_id_dict['iso_check_id'], 'value'),
+        State(app_id_dict['range_table_id'], 'data'),
+    ])
+def output_transmission_and_stack(n_submit, test_passed, database,
+                                  sample_tb_rows, iso_tb_rows, iso_changed, range_table_rows):
+    if test_passed is True:
+        if range_table_rows[0][energy_name] < range_table_rows[1][energy_name]:
+            e_min = range_table_rows[0][energy_name]
+            e_max = range_table_rows[1][energy_name]
+        else:
+            e_min = range_table_rows[1][energy_name]
+            e_max = range_table_rows[0][energy_name]
+        output_div_list, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
+                                                                iso_tb_rows=iso_tb_rows,
+                                                                iso_changed=iso_changed,
+                                                                beamline='snap',
+                                                                band_min=e_min,
+                                                                band_max=e_max,
+                                                                band_type='energy',
+                                                                database=database)
+        # trans_div_list_tof, o_stack_cg1d = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
+        #                                                                 iso_tb_rows=iso_tb_rows,
+        #                                                                 iso_changed=iso_changed,
+        #                                                                 beamline='imaging',
+        #                                                                 band_min=None,
+        #                                                                 band_max=None,
+        #                                                                 band_type=None,
+        #                                                                 database=database)
+        # output_div_list.extend(trans_div_list_tof)
+
+        # Sample stack table div
+        sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack)
+        output_div_list.extend(sample_stack_div_list)
+        return output_div_list
+    else:
+        return None

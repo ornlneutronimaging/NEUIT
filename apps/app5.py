@@ -131,8 +131,11 @@ layout = html.Div(
         # Error message div
         html.Div(id=app_id_dict['error_id'], children=None),
 
-        # Hidden div to store json
+        # Hidden div to store df_all json
         html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),
+
+        # Hidden div to store df_export json
+        html.Div(id=app_id_dict['hidden_df_export_json_id'], style={'display': 'none'}),
 
         # Output div
         html.Div(
@@ -267,7 +270,11 @@ def upload_feedback(cif_names):
                 error_div = html.Div(
                     ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(each_fname)])
                 error_div_list.append(error_div)
-        return data_fb_list, error_div_list
+        if len(error_div_list) == 0:
+            test_passed = True
+        else:
+            test_passed = error_div_list
+        return data_fb_list, test_passed
     else:
         return [None], [None]
 
@@ -304,11 +311,11 @@ def show_output_div(n_submit, test_passed):
         State(app_id_dict['band_max_id'], 'value'),
         State(app_id_dict['band_step_id'], 'value'),
     ])
-def store_bragg_df_in_json(n_submit, error_div_list,
+def store_bragg_df_in_json(n_submit, test_passed,
                            cif_uploads, cif_names,
                            temperature_K, band_min, band_max, band_step,
                            ):
-    if len(error_div_list) == 0:
+    if test_passed:
         xs_dict = {}
         wavelengths_A = np.arange(band_min, band_max, band_step)
         if cif_uploads is not None:
@@ -317,11 +324,12 @@ def store_bragg_df_in_json(n_submit, error_div_list,
                 _name_only = cif_names[each_index].split('.')[0]
                 print("'{}', calculating cross-sections...".format(cif_names[each_index]))
                 xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
-                xs_dict[_name_only + '_total'] = xscalculator.xs(wavelengths_A)
-                xs_dict[_name_only + '_coh_el'] = xscalculator.xs_coh_el(wavelengths_A)
-                xs_dict[_name_only + '_inc_el'] = xscalculator.xs_inc_el(wavelengths_A)
-                xs_dict[_name_only + '_coh_inel'] = xscalculator.xs_coh_inel(wavelengths_A)
-                xs_dict[_name_only + '_inc_inel'] = xscalculator.xs_inc_inel(wavelengths_A)
+                xs_dict[_name_only + ' (total)'] = xscalculator.xs(wavelengths_A)
+                xs_dict[_name_only + ' (coh el)'] = xscalculator.xs_coh_el(wavelengths_A)
+                xs_dict[_name_only + ' (inc el)'] = xscalculator.xs_inc_el(wavelengths_A)
+                xs_dict[_name_only + ' (coh inel)'] = xscalculator.xs_coh_inel(wavelengths_A)
+                xs_dict[_name_only + ' (inc inel)'] = xscalculator.xs_inc_inel(wavelengths_A)
+                print("'{}', calculation done...".format(cif_names[each_index]))
             df_y = pd.DataFrame.from_dict(xs_dict)
             df_x = pd.DataFrame()
             df_x[wave_name] = wavelengths_A
@@ -330,12 +338,15 @@ def store_bragg_df_in_json(n_submit, error_div_list,
                 'x': df_x.to_json(orient='split', date_format='iso'),
                 'y': df_y.to_json(orient='split', date_format='iso'),
             }
-            return json.dumps(datasets)
+            return [json.dumps(datasets)]
+        else:
+            return [None]
 
 
 @app.callback(
     [
         Output(app_id_dict['plot_div_id'], 'children'),
+        Output(app_id_dict['hidden_df_export_json_id'], 'children'),
     ],
     [
         Input(app_id_dict['hidden_df_json_id'], 'children'),
@@ -344,68 +355,52 @@ def store_bragg_df_in_json(n_submit, error_div_list,
         Input('y_type', 'value'),
         Input('plot_scale', 'value'),
         Input('xs_type', 'value'),
-    ]
-)
-def plot(jsonified_data, error_div_list, x_type, y_type, plot_scale, xs_type):
-    if len(error_div_list) == 0 and jsonified_data is not None:
+    ],
+    [
+        State(app_id_dict['cif_upload_id'], 'filename'),
+    ])
+def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fnames):
+    if test_passed and jsonified_data is not None:
         df_dict = load_dfs(jsonified_data=jsonified_data)
-        print(df_dict['x'])
-        print(df_dict['y'])
+        df_x = df_dict['x']
+        df_y = df_dict['y']
 
-    #     if y_type == 'attenuation':
-    #         df_plot = 1 - df_plot
-    #     if x_type == 'energy':
-    #         x_type_name = energy_name
-    #         df_plot[x_type_name] = ir_util.angstroms_to_ev(wavelengths_A)
-    #     else:
-    #         x_type_name = wave_name
-    #         df_plot[x_type_name] = wavelengths_A
-    #     df_plot = df_plot.set_index(x_type_name)
-    #     x_label = x_type_to_x_label(x_type)
-    #     y_label = y_type_to_y_label(y_type)
-    #     jsonized_df = df_plot.to_json(orient='split', date_format='iso')
-    #
-    #     # Plot
-    #     fig = plt.figure()
-    #     ax1 = fig.add_subplot(111)
-    #     try:
-    #         ax1 = df_plot.plot(legend=False, ax=ax1)
-    #         output_style['display'] = 'block'
-    #     except TypeError:
-    #         pass
-    #     ax1.set_ylabel(y_label)
-    #     ax1.set_xlabel(x_label)
-    #     plotly_fig = tls.mpl_to_plotly(fig)
-    #
-    #     # Layout
-    #     plotly_fig.layout.showlegend = True
-    #     plotly_fig.layout.autosize = True
-    #     plotly_fig.layout.height = 600
-    #     plotly_fig.layout.width = 900
-    #     plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
-    #     plotly_fig.layout.xaxis1.tickfont.size = 15
-    #     plotly_fig.layout.xaxis1.titlefont.size = 18
-    #     plotly_fig.layout.yaxis1.tickfont.size = 15
-    #     plotly_fig.layout.yaxis1.titlefont.size = 18
-    #     plotly_fig.layout.xaxis.autorange = True
-    #     plotly_fig['layout']['yaxis']['autorange'] = True
-    #
-    #     if plot_scale == 'logx':
-    #         plotly_fig['layout']['xaxis']['type'] = 'log'
-    #         plotly_fig['layout']['yaxis']['type'] = 'linear'
-    #     elif plot_scale == 'logy':
-    #         if y_type not in ['attenuation', 'transmission']:
-    #             plotly_fig['layout']['xaxis']['type'] = 'linear'
-    #             plotly_fig['layout']['yaxis']['type'] = 'log'
-    #     elif plot_scale == 'loglog':
-    #         if y_type not in ['attenuation', 'transmission']:
-    #             plotly_fig['layout']['xaxis']['type'] = 'log'
-    #             plotly_fig['layout']['yaxis']['type'] = 'log'
-    #     else:
-    #         plotly_fig['layout']['xaxis']['type'] = 'linear'
-    #         plotly_fig['layout']['yaxis']['type'] = 'linear'
-    #     return html.Div([dcc.Graph(figure=plotly_fig,
-    #                                id=app_id_dict['plot_fig_id'])]), output_style, data_fb, None
-    # else:
-    #     output_style['display'] = 'none'
-    #     return plot_loading, output_style, data_fb, None
+        # Form selected Y df
+        to_plot_list = []
+        for each_fname in fnames:
+            _name_only = each_fname.split('.')[0]
+            if 'total' in xs_type:
+                to_plot_list.append(_name_only + ' (total)')
+            if 'el' in xs_type:
+                to_plot_list.append(_name_only + ' (coh el)')
+                to_plot_list.append(_name_only + ' (inc el)')
+            if 'inel' in xs_type:
+                to_plot_list.append(_name_only + ' (coh inel)')
+                to_plot_list.append(_name_only + ' (inc inel)')
+        df_to_plot = df_y[to_plot_list]
+        if y_type == 'attenuation':
+            df_to_plot = 1 - df_y
+
+        # Add X column
+        x_tag = x_type_to_x_tag(x_type)
+        df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
+        y_label = y_type_to_y_label(y_type)
+
+        jsonized_plot_df = df_to_plot.to_json(orient='split', date_format='iso')
+
+        # Plot in matplotlib
+        fig = plt.figure()
+        ax1 = fig.add_subplot(111)
+        try:
+            ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
+        except TypeError:
+            pass
+        ax1.set_ylabel(y_label)
+
+        # Convert to plotly and format layout
+        plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
+
+        return html.Div([dcc.Graph(figure=plotly_fig,
+                                   id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
+    else:
+        return plot_loading, [None]

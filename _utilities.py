@@ -13,6 +13,8 @@ from scipy.interpolate import interp1d
 import numpy as np
 import json
 from cerberus import Validator
+import plotly.tools as tls
+import matplotlib.pyplot as plt
 
 if sys.version_info[0] < 3:
     from diffpy.Structure.Parsers import getParser
@@ -1279,6 +1281,7 @@ def init_app_ids(app_name: str):
         id_dict['distance_id'] = app_name + '_distance'
         id_dict['hidden_prev_distance_id'] = app_name + '_hidden_prev_distance'
         id_dict['hidden_range_input_coord_id'] = app_name + '_hidden_range_input_coord'
+        id_dict['hidden_df_export_json_id'] = app_name + '_hidden_df_export_json'
         id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
         id_dict['hidden_df_tb_div'] = app_name + '_hidden_df_tb_div'
         id_dict['hidden_df_tb'] = app_name + '_hidden_df_tb'
@@ -1312,6 +1315,7 @@ def init_app_ids(app_name: str):
         id_dict['cif_upload_id'] = app_name + '_cif'
         id_dict['cif_upload_fb_id'] = app_name + '_cif_fb'
         id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
+        id_dict['hidden_df_export_json_id'] = app_name + '_hidden_df_export_json'
         id_dict['hidden_df_tb_div'] = app_name + '_hidden_df_tb_div'
         id_dict['hidden_df_tb'] = app_name + '_hidden_df_tb'
         id_dict['plot_div_id'] = app_name + '_plot'
@@ -1590,3 +1594,42 @@ plot_option_div = html.Div(
         ),
     ]
 ),
+
+
+def shape_matplot_to_plotly(fig, y_type, plot_scale):
+    plotly_fig = tls.mpl_to_plotly(fig)
+    # Layout
+    plotly_fig.layout.showlegend = True
+    plotly_fig.layout.autosize = True
+    plotly_fig.layout.height = 600
+    plotly_fig.layout.width = 900
+    plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
+    plotly_fig.layout.xaxis1.tickfont.size = 15
+    plotly_fig.layout.xaxis1.titlefont.size = 18
+    plotly_fig.layout.yaxis1.tickfont.size = 15
+    plotly_fig.layout.yaxis1.titlefont.size = 18
+    plotly_fig.layout.xaxis.autorange = True
+    if y_type in ['attenuation', 'transmission']:
+        plotly_fig['layout']['yaxis']['autorange'] = False
+        if plot_scale in ['logy', 'loglog']:
+            plot_scale = 'linear'
+    else:
+        plotly_fig['layout']['yaxis']['autorange'] = True
+
+    if plot_scale == 'logx':
+        plotly_fig['layout']['xaxis']['type'] = 'log'
+        plotly_fig['layout']['yaxis']['type'] = 'linear'
+        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
+    elif plot_scale == 'logy':
+        if y_type not in ['attenuation', 'transmission']:
+            plotly_fig['layout']['xaxis']['type'] = 'linear'
+            plotly_fig['layout']['yaxis']['type'] = 'log'
+    elif plot_scale == 'loglog':
+        if y_type not in ['attenuation', 'transmission']:
+            plotly_fig['layout']['xaxis']['type'] = 'log'
+            plotly_fig['layout']['yaxis']['type'] = 'log'
+    else:
+        plotly_fig['layout']['xaxis']['type'] = 'linear'
+        plotly_fig['layout']['yaxis']['type'] = 'linear'
+        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
+    return plotly_fig
