@@ -1124,15 +1124,18 @@ def parse_contents_to_rows(contents, filename, rows):
     decoded = base64.b64decode(content_string)
     div = None
 
-    if 'csv' in filename:
+    if '.csv' in filename:
         # Assume that the user uploaded a CSV file
         df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False)
-    elif 'xls' in filename:
+    elif '.xls' in filename:
         # Assume that the user uploaded an excel file
         df = pd.read_excel(io.BytesIO(decoded), na_filter=False)
+    elif '.txt' in filename:
+        # Assume that the user uploaded an txt file
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep='\t', na_filter=False)
     else:
         df = None
-        div = html.Div(["ERROR: '{}', only '.csv' and '.xls' are supported.".format(filename)])
+        div = html.Div(["ERROR: '{}', only '.csv', '.xls' and '.txt' are currently supported.".format(filename)])
 
     if df is not None:
         if len(df) == 0:
@@ -1152,16 +1155,21 @@ def parse_content(content, name, header):
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
     error_div = None
-    if 'csv' in name:
+    if '.csv' in name:
         # Assume that the user uploaded a CSV file
         df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False, header=header)
-    elif 'xls' in name:
+    elif '.xls' in name:
         # Assume that the user uploaded an excel file
         df = pd.read_excel(io.BytesIO(decoded), na_filter=False, header=header)
+    elif '.txt' in name:
+        # Assume that the user uploaded an txt file
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep='\t', na_filter=False, header=header)
     else:
         df = None
         error_div = html.Div(
-            ["\u274C Type error: '{}' is not supported, only '.csv' and '.xls' are ""supported.".format(name)])
+            ["\u274C Type error: '{}' is not supported, only '.csv', '.xls' and '.txt' are currently supported.".format(
+                name)])
+    print(df)
     return df, error_div
 
 
