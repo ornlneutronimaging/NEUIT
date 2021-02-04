@@ -191,8 +191,9 @@ layout = html.Div(
                                 dcc.Checklist(id='xs_type',
                                               options=[
                                                   {'label': 'Total', 'value': 'total'},
-                                                  {'label': 'Elastic', 'value': 'el'},
-                                                  {'label': 'Inelastic', 'value': 'inel'},
+                                                  {'label': 'Absorption', 'value': 'abs'},
+                                                  {'label': 'Elastic scattering', 'value': 'el'},
+                                                  {'label': 'Inelastic scattering', 'value': 'inel'},
                                                   # {'label': 'Coherent', 'value': 'coh'},
                                                   # {'label': 'Incoherent', 'value': 'inc'},
                                               ],
@@ -324,6 +325,7 @@ def store_bragg_df_in_json(n_submit, test_passed,
                 print("'{}', calculating cross-sections...".format(cif_names[each_index]))
                 xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
                 xs_dict[_name_only + ' (total)'] = xscalculator.xs(wavelengths_A)
+                xs_dict[_name_only + ' (abs)'] = xscalculator.xs_abs(wavelengths_A)
                 xs_dict[_name_only + ' (coh el)'] = xscalculator.xs_coh_el(wavelengths_A)
                 xs_dict[_name_only + ' (inc el)'] = xscalculator.xs_inc_el(wavelengths_A)
                 xs_dict[_name_only + ' (coh inel)'] = xscalculator.xs_coh_inel(wavelengths_A)
@@ -370,6 +372,8 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fname
             _name_only = each_fname.split('.')[0]
             if 'total' in xs_type:
                 to_plot_list.append(_name_only + ' (total)')
+            if 'abs' in xs_type:
+                to_plot_list.append(_name_only + ' (abs)')
             if 'el' in xs_type:
                 to_plot_list.append(_name_only + ' (coh el)')
                 to_plot_list.append(_name_only + ' (inc el)')
