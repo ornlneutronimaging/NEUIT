@@ -122,7 +122,7 @@ empty_div = html.Div()
 
 distance_default = 16.45  # in meter
 delay_default = 0  # in us
-temperature_default = 300 # in Kelvin
+temperature_default = 300  # in Kelvin
 plot_loading = html.H2('Plot loading...')
 
 
@@ -1160,25 +1160,19 @@ def parse_content(content, name, header):
     else:
         df = None
         error_div = html.Div(
-            ["\u274C Uploaded file: '{}' is not supported, only '.csv' and '.xls' are ""supported.".format(name)])
+            ["\u274C Type error: '{}' is not supported, only '.csv' and '.xls' are ""supported.".format(name)])
     return df, error_div
 
 
-def parse_cif_upload(content, fname):
+def parse_cif_upload(content):
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
-    error_div = None
-    if 'cif' in fname:
-        # User uploaded a CIF file
-        cif_s = decoded.decode('utf-8')
-        p = getParser('cif')
-        struc = p.parse(cif_s)
-        struc.sg = p.spacegroup
-    else:
-        struc = None
-        error_div = html.Div(
-            ["\u274C Uploaded file: '{}' is not supported, only '.cif' is ""supported.".format(fname)])
-    return struc, error_div
+
+    cif_s = decoded.decode('utf-8')
+    p = getParser('cif')
+    struc = p.parse(cif_s)
+    struc.sg = p.spacegroup
+    return struc
 
 
 def init_app_links(current_app, app_dict_all):
@@ -1191,8 +1185,70 @@ def init_app_links(current_app, app_dict_all):
     return html.Div(links_div_list)
 
 
+def init_app_about(current_app, app_id_dict):
+    more_info_check = dcc.Checklist(
+        id=app_id_dict['more_about_app_id'],
+        options=[
+            {'label': 'More about this app \U0001F4AC', 'value': 'more'},
+        ],
+        value=[],
+        labelStyle={'display': 'inline-block'}
+    )
+
+    more_info_div = html.Div(
+        [
+            app_info_markdown_dict[current_app],
+        ],
+        id=app_id_dict['app_info_id'],
+        style={'display': 'none'},
+    )
+
+    return html.Div([more_info_check, more_info_div])
+
+
+app_info_markdown_dict = {
+    'app1': dcc.Markdown("""
+    *ImagingReso* is an open-source Python library that simulates the neutron
+    resonance signal for neutron imaging measurements. By defining the sample
+    information such as density, thickness in the neutron path, and isotopic
+    ratios of the elemental composition of the material, this package plots
+    the expected resonance peaks for a selected neutron energy range.
+            """),
+    'app2': dcc.Markdown("""
+    *ImagingReso* is an open-source Python library that simulates the neutron
+    resonance signal for neutron imaging measurements. By defining the sample
+    information such as density, thickness in the neutron path, and isotopic
+    ratios of the elemental composition of the material, this package plots
+    the expected resonance peaks for a selected neutron energy range.
+            """),
+    'app3': dcc.Markdown("""
+    *ImagingReso* is an open-source Python library that simulates the neutron
+    resonance signal for neutron imaging measurements. By defining the sample
+    information such as density, thickness in the neutron path, and isotopic
+    ratios of the elemental composition of the material, this package plots
+    the expected resonance peaks for a selected neutron energy range.
+            """),
+    'app4': dcc.Markdown("""
+    *ImagingReso* is an open-source Python library that simulates the neutron
+    resonance signal for neutron imaging measurements. By defining the sample
+    information such as density, thickness in the neutron path, and isotopic
+    ratios of the elemental composition of the material, this package plots
+    the expected resonance peaks for a selected neutron energy range.
+            """),
+    'app5': dcc.Markdown("""
+    *ImagingReso* is an open-source Python library that simulates the neutron
+    resonance signal for neutron imaging measurements. By defining the sample
+    information such as density, thickness in the neutron path, and isotopic
+    ratios of the elemental composition of the material, this package plots
+    the expected resonance peaks for a selected neutron energy range.
+            """),
+}
+
+
 def init_app_ids(app_name: str):
     id_dict = {}
+    id_dict['more_about_app_id'] = app_name + '_more_about_app'
+    id_dict['app_info_id'] = app_name + '_app_info'
     id_dict['sample_upload_id'] = app_name + '_sample_upload'
     id_dict['error_upload_id'] = app_name + '_error_upload'
     id_dict['hidden_upload_time_id'] = app_name + '_time_upload'

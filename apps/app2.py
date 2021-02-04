@@ -29,6 +29,7 @@ plot_data_filename = "plot_data.csv"
 layout = html.Div(
     [
         init_app_links(current_app=app_name, app_dict_all=app_dict),
+        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
         # Global parameters
         html.Div(
             [
@@ -203,6 +204,22 @@ layout = html.Div(
         ),
     ]
 )
+
+
+@app.callback(
+    Output(app_id_dict['app_info_id'], 'style'),
+    [
+        Input(app_id_dict['more_about_app_id'], 'value'),
+    ],
+    [
+        State(app_id_dict['app_info_id'], 'style'),
+    ])
+def show_hide_band_input(more_info, style):
+    if more_info != ['more']:
+        style['display'] = 'none'
+    else:
+        style['display'] = 'block'
+    return style
 
 
 @app.callback(
@@ -537,18 +554,17 @@ def store_reso_df_in_json(n_submit,
 @app.callback(
     Output(app_id_dict['plot_div_id'], 'children'),
     [
-        Input(app_id_dict['submit_button_id'], 'n_clicks'),
         Input(app_id_dict['error_id'], 'children'),
         Input('show_opt', 'value'),
         Input(app_id_dict['hidden_df_json_id'], 'children'),
         Input('y_type', 'value'),
+        Input('x_type', 'value'),
+        Input('plot_scale', 'value'),
     ],
     [
-        State('x_type', 'value'),
         State('show_opt', 'value'),
-        State('plot_scale', 'value'),
     ])
-def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_show_opt, plot_scale):
+def plot(test_passed, show_opt, jsonified_data, y_type, x_type, plot_scale, prev_show_opt):
     if test_passed is True:
         # Load and shape the data
         df_x, df_y, to_plot_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
@@ -612,53 +628,53 @@ def plot(n_submit, test_passed, show_opt, jsonified_data, y_type, x_type, prev_s
         return plot_loading
 
 
-@app.callback(
-    Output(app_id_dict['plot_fig_id'], 'figure'),
-    [
-        Input('plot_scale', 'value'),
-        Input('x_type', 'value'),
-    ],
-    [
-        State('y_type', 'value'),
-        State(app_id_dict['prev_x_type_id'], 'children'),
-        State(app_id_dict['plot_fig_id'], 'figure'),
-        State(app_id_dict['hidden_df_json_id'], 'children'),
-    ])
-def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly_fig, jsonified_data):
-    # Change plot x type
-    if x_type != prev_x_type:
-        df_dict = load_dfs(jsonified_data=jsonified_data)
-        x_tag = x_type_to_x_tag(x_type=x_type)
-        for each_trace in plotly_fig['data']:
-            each_trace['x'] = df_dict['x'][x_tag]
-        plotly_fig['layout']['xaxis']['title']['text'] = x_tag
-
-    if y_type in ['attenuation', 'transmission']:
-        plotly_fig['layout']['yaxis']['autorange'] = False
-        if plot_scale in ['logy', 'loglog']:
-            plot_scale = 'linear'
-    else:
-        plotly_fig['layout']['yaxis']['autorange'] = True
-
-    # Change plot scale between log and linear
-    if plot_scale == 'logx':
-        plotly_fig['layout']['xaxis']['type'] = 'log'
-        plotly_fig['layout']['yaxis']['type'] = 'linear'
-        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
-    elif plot_scale == 'logy':
-        if y_type not in ['attenuation', 'transmission']:
-            plotly_fig['layout']['xaxis']['type'] = 'linear'
-            plotly_fig['layout']['yaxis']['type'] = 'log'
-    elif plot_scale == 'loglog':
-        if y_type not in ['attenuation', 'transmission']:
-            plotly_fig['layout']['xaxis']['type'] = 'log'
-            plotly_fig['layout']['yaxis']['type'] = 'log'
-    else:
-        plotly_fig['layout']['xaxis']['type'] = 'linear'
-        plotly_fig['layout']['yaxis']['type'] = 'linear'
-        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
-
-    return plotly_fig
+# @app.callback(
+#     Output(app_id_dict['plot_fig_id'], 'figure'),
+#     [
+#         Input('plot_scale', 'value'),
+#         Input('x_type', 'value'),
+#     ],
+#     [
+#         State('y_type', 'value'),
+#         State(app_id_dict['prev_x_type_id'], 'children'),
+#         State(app_id_dict['plot_fig_id'], 'figure'),
+#         State(app_id_dict['hidden_df_json_id'], 'children'),
+#     ])
+# def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly_fig, jsonified_data):
+#     # Change plot x type
+#     if x_type != prev_x_type:
+#         df_dict = load_dfs(jsonified_data=jsonified_data)
+#         x_tag = x_type_to_x_tag(x_type=x_type)
+#         for each_trace in plotly_fig['data']:
+#             each_trace['x'] = df_dict['x'][x_tag]
+#         plotly_fig['layout']['xaxis']['title']['text'] = x_tag
+#
+#     if y_type in ['attenuation', 'transmission']:
+#         plotly_fig['layout']['yaxis']['autorange'] = False
+#         if plot_scale in ['logy', 'loglog']:
+#             plot_scale = 'linear'
+#     else:
+#         plotly_fig['layout']['yaxis']['autorange'] = True
+#
+#     # Change plot scale between log and linear
+#     if plot_scale == 'logx':
+#         plotly_fig['layout']['xaxis']['type'] = 'log'
+#         plotly_fig['layout']['yaxis']['type'] = 'linear'
+#         plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
+#     elif plot_scale == 'logy':
+#         if y_type not in ['attenuation', 'transmission']:
+#             plotly_fig['layout']['xaxis']['type'] = 'linear'
+#             plotly_fig['layout']['yaxis']['type'] = 'log'
+#     elif plot_scale == 'loglog':
+#         if y_type not in ['attenuation', 'transmission']:
+#             plotly_fig['layout']['xaxis']['type'] = 'log'
+#             plotly_fig['layout']['yaxis']['type'] = 'log'
+#     else:
+#         plotly_fig['layout']['xaxis']['type'] = 'linear'
+#         plotly_fig['layout']['yaxis']['type'] = 'linear'
+#         plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
+#
+#     return plotly_fig
 
 
 @app.callback(

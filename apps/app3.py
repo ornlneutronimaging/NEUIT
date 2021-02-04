@@ -17,6 +17,7 @@ app_id_dict = init_app_ids(app_name=app_name)
 layout = html.Div(
     [
         init_app_links(current_app=app_name, app_dict_all=app_dict),
+        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
         # Sample input
         html.Div(
             [
@@ -81,6 +82,22 @@ layout = html.Div(
         ),
     ]
 )
+
+
+@app.callback(
+    Output(app_id_dict['app_info_id'], 'style'),
+    [
+        Input(app_id_dict['more_about_app_id'], 'value'),
+    ],
+    [
+        State(app_id_dict['app_info_id'], 'style'),
+    ])
+def show_hide_band_input(more_info, style):
+    if more_info != ['more']:
+        style['display'] = 'none'
+    else:
+        style['display'] = 'block'
+    return style
 
 
 @app.callback(

@@ -15,7 +15,7 @@ app_id_dict = init_app_ids(app_name=app_name)
 layout = html.Div(
     [
         init_app_links(current_app=app_name, app_dict_all=app_dict),
-
+        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
         # Experiment input
         html.Div(
             [
@@ -233,117 +233,179 @@ layout = html.Div(
 
 
 @app.callback(
+    Output(app_id_dict['app_info_id'], 'style'),
     [
-        Output(app_id_dict['plot_div_id'], 'children'),
-        Output(app_id_dict['output_id'], 'style'),
+        Input(app_id_dict['more_about_app_id'], 'value'),
+    ],
+    [
+        State(app_id_dict['app_info_id'], 'style'),
+    ])
+def show_hide_band_input(more_info, style):
+    if more_info != ['more']:
+        style['display'] = 'none'
+    else:
+        style['display'] = 'block'
+    return style
+
+
+@app.callback(
+    [
         Output(app_id_dict['cif_upload_fb_id'], 'children'),
+        Output(app_id_dict['error_id'], 'children'),
+    ],
+    [
+        Input(app_id_dict['cif_upload_id'], 'filename'),
+    ])
+def upload_feedback(cif_names):
+    data_fb_list = []
+    error_div_list = []
+    if cif_names is not None:
+        for each_fname in cif_names:
+            if '.cif' in each_fname:
+                data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(each_fname)]))
+            else:
+                error_div = html.Div(
+                    ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(each_fname)])
+                error_div_list.append(error_div)
+        return data_fb_list, error_div_list
+    else:
+        return [None], [None]
+
+
+@app.callback(
+    Output(app_id_dict['output_id'], 'style'),
+    [
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Input(app_id_dict['error_id'], 'children'),
+    ])
+def show_output_div(n_submit, test_passed):
+    if n_submit is not None:
+        if test_passed is True:
+            return {'display': 'block'}
+        else:
+            return {'display': 'none'}
+    else:
+        return {'display': 'none'}
+
+
+@app.callback(
+    [
         Output(app_id_dict['hidden_df_json_id'], 'children'),
     ],
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
-        Input(app_id_dict['cif_upload_id'], 'contents'),
-        Input('x_type', 'value'),
-        Input('y_type', 'value'),
-        Input('plot_scale', 'value'),
-        Input('xs_type', 'value'),
+        Input(app_id_dict['error_id'], 'children'),
     ],
     [
+        State(app_id_dict['cif_upload_id'], 'contents'),
         State(app_id_dict['cif_upload_id'], 'filename'),
-        State(app_id_dict['cif_upload_id'], 'last_modified'),
         State(app_id_dict['temperature_id'], 'value'),
         State(app_id_dict['band_min_id'], 'value'),
         State(app_id_dict['band_max_id'], 'value'),
         State(app_id_dict['band_step_id'], 'value'),
-        State(app_id_dict['output_id'], 'style'),
     ])
-def plot(n_submit, cif_uploads, x_type, y_type, plot_scale, xs_type,
-         cif_names, cif_last_modified_time,
-         temperature_K, band_min, band_max, band_step,
-         output_style):
-    error_div_list = []
-    data_fb = []
-    xs_dict = {}
-    wavelengths_A = np.arange(band_min, band_max, band_step)
-    if cif_uploads is not None:
-        for each_index, each_content in enumerate(cif_uploads):
-            _cif_struc, data_error_div = parse_cif_upload(content=each_content,
-                                                          fname=cif_names[each_index],
-                                                          )
-            if data_error_div is None:
-                _name_only = cif_names[each_index].split('.')[0]
-                print("'{}' loaded. Calculating...".format(cif_names[each_index]))
-                xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
-                if 'total' in xs_type:
-                    xs_dict[_name_only + '_total'] = xscalculator.xs(wavelengths_A)
-                if 'el' in xs_type:
-                    xs_dict[_name_only + '_coh_el'] = xscalculator.xs_coh_el(wavelengths_A)
-                    xs_dict[_name_only + '_inc_el'] = xscalculator.xs_inc_el(wavelengths_A)
-                if 'inel' in xs_type:
-                    xs_dict[_name_only + '_coh_inel'] = xscalculator.xs_coh_inel(wavelengths_A)
-                    xs_dict[_name_only + '_inc_inel'] = xscalculator.xs_inc_inel(wavelengths_A)
-                data_fb.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names[each_index])]))
-            else:
-                data_fb.append(data_error_div)
-                error_div_list.append(data_error_div)
-
-
-    # Plot
+def store_bragg_df_in_json(n_submit, error_div_list,
+                           cif_uploads, cif_names,
+                           temperature_K, band_min, band_max, band_step,
+                           ):
     if len(error_div_list) == 0:
-        df_plot = pd.DataFrame.from_dict(xs_dict)
-        if y_type == 'attenuation':
-            df_plot = 1 - df_plot
-        if x_type == 'energy':
-            x_type_name = energy_name
-            df_plot[x_type_name] = ir_util.angstroms_to_ev(wavelengths_A)
-        else:
-            x_type_name = wave_name
-            df_plot[x_type_name] = wavelengths_A
-        df_plot = df_plot.set_index(x_type_name)
-        x_label = x_type_to_x_label(x_type)
-        y_label = y_type_to_y_label(y_type)
-        jsonized_df = df_plot.to_json(orient='split', date_format='iso')
+        xs_dict = {}
+        wavelengths_A = np.arange(band_min, band_max, band_step)
+        if cif_uploads is not None:
+            for each_index, each_content in enumerate(cif_uploads):
+                _cif_struc = parse_cif_upload(content=each_content)
+                _name_only = cif_names[each_index].split('.')[0]
+                print("'{}', calculating cross-sections...".format(cif_names[each_index]))
+                xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
+                xs_dict[_name_only + '_total'] = xscalculator.xs(wavelengths_A)
+                xs_dict[_name_only + '_coh_el'] = xscalculator.xs_coh_el(wavelengths_A)
+                xs_dict[_name_only + '_inc_el'] = xscalculator.xs_inc_el(wavelengths_A)
+                xs_dict[_name_only + '_coh_inel'] = xscalculator.xs_coh_inel(wavelengths_A)
+                xs_dict[_name_only + '_inc_inel'] = xscalculator.xs_inc_inel(wavelengths_A)
+            df_y = pd.DataFrame.from_dict(xs_dict)
+            df_x = pd.DataFrame()
+            df_x[wave_name] = wavelengths_A
+            df_x[energy_name] = ir_util.angstroms_to_ev(wavelengths_A)
+            datasets = {
+                'x': df_x.to_json(orient='split', date_format='iso'),
+                'y': df_y.to_json(orient='split', date_format='iso'),
+            }
+            return json.dumps(datasets)
 
-        # Plot
-        fig = plt.figure()
-        ax1 = fig.add_subplot(111)
-        try:
-            ax1 = df_plot.plot(legend=False, ax=ax1)
-            output_style['display'] = 'block'
-        except TypeError:
-            pass
-        ax1.set_ylabel(y_label)
-        ax1.set_xlabel(x_label)
-        plotly_fig = tls.mpl_to_plotly(fig)
 
-        # Layout
-        plotly_fig.layout.showlegend = True
-        plotly_fig.layout.autosize = True
-        plotly_fig.layout.height = 600
-        plotly_fig.layout.width = 900
-        plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
-        plotly_fig.layout.xaxis1.tickfont.size = 15
-        plotly_fig.layout.xaxis1.titlefont.size = 18
-        plotly_fig.layout.yaxis1.tickfont.size = 15
-        plotly_fig.layout.yaxis1.titlefont.size = 18
-        plotly_fig.layout.xaxis.autorange = True
-        plotly_fig['layout']['yaxis']['autorange'] = True
+@app.callback(
+    [
+        Output(app_id_dict['plot_div_id'], 'children'),
+    ],
+    [
+        Input(app_id_dict['hidden_df_json_id'], 'children'),
+        Input(app_id_dict['error_id'], 'children'),
+        Input('x_type', 'value'),
+        Input('y_type', 'value'),
+        Input('plot_scale', 'value'),
+        Input('xs_type', 'value'),
+    ]
+)
+def plot(jsonified_data, error_div_list, x_type, y_type, plot_scale, xs_type):
+    if len(error_div_list) == 0 and jsonified_data is not None:
+        df_dict = load_dfs(jsonified_data=jsonified_data)
+        print(df_dict['x'])
+        print(df_dict['y'])
 
-        if plot_scale == 'logx':
-            plotly_fig['layout']['xaxis']['type'] = 'log'
-            plotly_fig['layout']['yaxis']['type'] = 'linear'
-        elif plot_scale == 'logy':
-            if y_type not in ['attenuation', 'transmission']:
-                plotly_fig['layout']['xaxis']['type'] = 'linear'
-                plotly_fig['layout']['yaxis']['type'] = 'log'
-        elif plot_scale == 'loglog':
-            if y_type not in ['attenuation', 'transmission']:
-                plotly_fig['layout']['xaxis']['type'] = 'log'
-                plotly_fig['layout']['yaxis']['type'] = 'log'
-        else:
-            plotly_fig['layout']['xaxis']['type'] = 'linear'
-            plotly_fig['layout']['yaxis']['type'] = 'linear'
-        return html.Div([dcc.Graph(figure=plotly_fig,
-                                   id=app_id_dict['plot_fig_id'])]), output_style, data_fb, None
-    else:
-        output_style['display'] = 'none'
-        return plot_loading, output_style, data_fb, None
+    #     if y_type == 'attenuation':
+    #         df_plot = 1 - df_plot
+    #     if x_type == 'energy':
+    #         x_type_name = energy_name
+    #         df_plot[x_type_name] = ir_util.angstroms_to_ev(wavelengths_A)
+    #     else:
+    #         x_type_name = wave_name
+    #         df_plot[x_type_name] = wavelengths_A
+    #     df_plot = df_plot.set_index(x_type_name)
+    #     x_label = x_type_to_x_label(x_type)
+    #     y_label = y_type_to_y_label(y_type)
+    #     jsonized_df = df_plot.to_json(orient='split', date_format='iso')
+    #
+    #     # Plot
+    #     fig = plt.figure()
+    #     ax1 = fig.add_subplot(111)
+    #     try:
+    #         ax1 = df_plot.plot(legend=False, ax=ax1)
+    #         output_style['display'] = 'block'
+    #     except TypeError:
+    #         pass
+    #     ax1.set_ylabel(y_label)
+    #     ax1.set_xlabel(x_label)
+    #     plotly_fig = tls.mpl_to_plotly(fig)
+    #
+    #     # Layout
+    #     plotly_fig.layout.showlegend = True
+    #     plotly_fig.layout.autosize = True
+    #     plotly_fig.layout.height = 600
+    #     plotly_fig.layout.width = 900
+    #     plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
+    #     plotly_fig.layout.xaxis1.tickfont.size = 15
+    #     plotly_fig.layout.xaxis1.titlefont.size = 18
+    #     plotly_fig.layout.yaxis1.tickfont.size = 15
+    #     plotly_fig.layout.yaxis1.titlefont.size = 18
+    #     plotly_fig.layout.xaxis.autorange = True
+    #     plotly_fig['layout']['yaxis']['autorange'] = True
+    #
+    #     if plot_scale == 'logx':
+    #         plotly_fig['layout']['xaxis']['type'] = 'log'
+    #         plotly_fig['layout']['yaxis']['type'] = 'linear'
+    #     elif plot_scale == 'logy':
+    #         if y_type not in ['attenuation', 'transmission']:
+    #             plotly_fig['layout']['xaxis']['type'] = 'linear'
+    #             plotly_fig['layout']['yaxis']['type'] = 'log'
+    #     elif plot_scale == 'loglog':
+    #         if y_type not in ['attenuation', 'transmission']:
+    #             plotly_fig['layout']['xaxis']['type'] = 'log'
+    #             plotly_fig['layout']['yaxis']['type'] = 'log'
+    #     else:
+    #         plotly_fig['layout']['xaxis']['type'] = 'linear'
+    #         plotly_fig['layout']['yaxis']['type'] = 'linear'
+    #     return html.Div([dcc.Graph(figure=plotly_fig,
+    #                                id=app_id_dict['plot_fig_id'])]), output_style, data_fb, None
+    # else:
+    #     output_style['display'] = 'none'
+    #     return plot_loading, output_style, data_fb, None
