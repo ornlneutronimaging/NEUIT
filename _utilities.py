@@ -14,7 +14,6 @@ import numpy as np
 import json
 from cerberus import Validator
 import plotly.tools as tls
-import matplotlib.pyplot as plt
 
 if sys.version_info[0] < 3:
     from diffpy.Structure.Parsers import getParser
@@ -1210,39 +1209,34 @@ def init_app_about(current_app, app_id_dict):
 
 app_info_markdown_dict = {
     'app1': dcc.Markdown("""
-    *ImagingReso* is an open-source Python library that simulates the neutron
-    resonance signal for neutron imaging measurements. By defining the sample
-    information such as density, thickness in the neutron path, and isotopic
-    ratios of the elemental composition of the material, this package plots
-    the expected resonance peaks for a selected neutron energy range.
+    This tool estimates the neutron transmission/attenuation signals and contrast,
+    by defining the sample information such as density, thickness in the neutron beam path.
+    Multiple samples or complex compounds can be added as layers in such calculation. 
+    Estimating the contrast by changing isotopic ratios is also supported.
+    An example is shown by default to demonstrate its usage.
             """),
     'app2': dcc.Markdown("""
-    *ImagingReso* is an open-source Python library that simulates the neutron
-    resonance signal for neutron imaging measurements. By defining the sample
-    information such as density, thickness in the neutron path, and isotopic
-    ratios of the elemental composition of the material, this package plots
-    the expected resonance peaks for a selected neutron energy range.
+    This tool estimates the energy dependent neutron imaging signals and contrasts,
+    specifically for *resonances* in the *epithermal* range.
+    Similar to the transmission tool, sample/samples can be entered as layers in such calculation. 
+    Estimating the contrast by changing isotopic ratios is also supported.
+    An example is shown by default to demonstrate its usage.
             """),
     'app3': dcc.Markdown("""
-    *ImagingReso* is an open-source Python library that simulates the neutron
-    resonance signal for neutron imaging measurements. By defining the sample
-    information such as density, thickness in the neutron path, and isotopic
-    ratios of the elemental composition of the material, this package plots
-    the expected resonance peaks for a selected neutron energy range.
-            """),
+    This tool helps the conversion between wt.% and at.%. And it populates
+    an equivalent chemical formula to represent a complex mixture. Such formula
+    can be used as '{}' in other tools available in NEUIT.
+    An example is shown by default to demonstrate its usage.
+            """.format(chem_name)),
     'app4': dcc.Markdown("""
-    *ImagingReso* is an open-source Python library that simulates the neutron
-    resonance signal for neutron imaging measurements. By defining the sample
-    information such as density, thickness in the neutron path, and isotopic
-    ratios of the elemental composition of the material, this package plots
-    the expected resonance peaks for a selected neutron energy range.
+    This tool helps plotting data acquired from Timepix2 MCP detector. By dragging and dropping
+    spectra files and data files, one can quickly verify if expected resonances or Bragg-edges
+    have been captured or not. Optional background file can also be added if normalization is needed.  
             """),
     'app5': dcc.Markdown("""
-    *ImagingReso* is an open-source Python library that simulates the neutron
-    resonance signal for neutron imaging measurements. By defining the sample
-    information such as density, thickness in the neutron path, and isotopic
-    ratios of the elemental composition of the material, this package plots
-    the expected resonance peaks for a selected neutron energy range.
+    This tool estimates the energy dependent neutron imaging signals and contrasts,
+    specifically for *Bragg-edges* in the *cold* or *thermal* range. Currently, it only supports
+    dragging and dropping '.cif' files.
             """),
 }
 
@@ -1283,8 +1277,8 @@ def init_app_ids(app_name: str):
         id_dict['hidden_range_input_coord_id'] = app_name + '_hidden_range_input_coord'
         id_dict['hidden_df_export_json_id'] = app_name + '_hidden_df_export_json'
         id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
-        id_dict['hidden_df_tb_div'] = app_name + '_hidden_df_tb_div'
-        id_dict['hidden_df_tb'] = app_name + '_hidden_df_tb'
+        id_dict['df_export_tb_div'] = app_name + '_df_export_tb_div'
+        id_dict['df_export_tb'] = app_name + '_df_export_tb'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
         id_dict['plot_options_div_id'] = app_name + '_plot_options'
@@ -1316,8 +1310,8 @@ def init_app_ids(app_name: str):
         id_dict['cif_upload_fb_id'] = app_name + '_cif_fb'
         id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
         id_dict['hidden_df_export_json_id'] = app_name + '_hidden_df_export_json'
-        id_dict['hidden_df_tb_div'] = app_name + '_hidden_df_tb_div'
-        id_dict['hidden_df_tb'] = app_name + '_hidden_df_tb'
+        id_dict['df_export_tb_div'] = app_name + '_df_export_tb_div'
+        id_dict['df_export_tb'] = app_name + '_df_export_tb'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
         id_dict['display_plot_data_id'] = app_name + '_display_plot_data'

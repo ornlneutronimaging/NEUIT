@@ -1,6 +1,5 @@
 from dash.dependencies import Input, Output, State
 from _app import app
-import plotly.tools as tls
 import matplotlib.pyplot as plt
 from _utilities import *
 
@@ -197,7 +196,7 @@ layout = html.Div(
                 ),
 
                 # Data table for the plotted data
-                html.Div(id=app_id_dict['hidden_df_tb_div']),
+                html.Div(id=app_id_dict['df_export_tb_div']),
 
                 # Transmission at CG-1D and sample stack
                 html.Div(id=app_id_dict['result_id']),
@@ -555,7 +554,10 @@ def store_reso_df_in_json(n_submit,
 
 
 @app.callback(
-    Output(app_id_dict['plot_div_id'], 'children'),
+    [
+        Output(app_id_dict['plot_div_id'], 'children'),
+        Output(app_id_dict['hidden_df_export_json_id'], 'children'),
+    ],
     [
         Input(app_id_dict['error_id'], 'children'),
         Input('show_opt', 'value'),
@@ -578,6 +580,7 @@ def plot(test_passed, show_opt, jsonified_data, y_type, x_type, plot_scale, prev
                                                                            to_csv=False)
         df_to_plot = df_y[to_plot_list]
         df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
+        jsonized_plot_df = df_to_plot.to_json(orient='split', date_format='iso')
 
         # Plot in matplotlib
         fig = plt.figure()
@@ -591,9 +594,9 @@ def plot(test_passed, show_opt, jsonified_data, y_type, x_type, plot_scale, prev
         # Convert to plotly and format layout
         plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
 
-        return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])])
+        return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
     else:
-        return plot_loading
+        return plot_loading, [None]
 
 
 # @app.callback(
@@ -644,44 +647,26 @@ def plot(test_passed, show_opt, jsonified_data, y_type, x_type, plot_scale, prev
 #
 #     return plotly_fig
 
-
 @app.callback(
     [
-        Output(app_id_dict['hidden_df_tb_div'], 'children'),
+        Output(app_id_dict['df_export_tb_div'], 'children'),
     ],
     [
-        Input(app_id_dict['submit_button_id'], 'n_clicks_timestamp'),
         Input(app_id_dict['display_plot_data_id'], 'value'),
+        Input(app_id_dict['hidden_df_export_json_id'], 'children'),
     ],
     [
-        State('x_type', 'value'),
-        State('y_type', 'value'),
-        State('show_opt', 'value'),
         State(app_id_dict['error_id'], 'children'),
-        State(app_id_dict['hidden_df_json_id'], 'children'),
     ])
-def export_plot_data(n_submit, display_plot_data_tb, x_type, y_type, show_opt, test_passed, jsonified_data):
-    if display_plot_data_tb == ['display']:
+def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
+    if display_check == ['display']:
         if test_passed is True:
-            # Load and shape the data
-            df_x, df_y, to_export_list, x_tag, y_label = shape_reso_df_to_output(x_type=x_type,
-                                                                                 y_type=y_type,
-                                                                                 show_opt=show_opt,
-                                                                                 jsonified_data=jsonified_data,
-                                                                                 prev_show_opt=None,
-                                                                                 to_csv=True)
-            df_to_export = df_y[to_export_list]
-            x_tag = x_type_to_x_tag(x_type)
-            df_to_export.insert(loc=0, column=x_tag, value=df_x[x_tag])
-            # df_to_export.insert(loc=0, column=tof_name, value=df_x[tof_name])
-            # df_to_export.insert(loc=0, column=wave_name, value=df_x[wave_name])
-            # df_to_export.insert(loc=0, column=energy_name, value=df_x[energy_name])
-
-            # df_to_export.to_clipboard(index=False, excel=True)  # Does not work on the Heroku server
+            dataset = json.loads(jsonized_df_export[0])
+            df_to_export = pd.read_json(dataset, orient='split')
             df_tb_div_list = [
                 html.Hr(),
                 dt.DataTable(
-                    id=app_id_dict['hidden_df_tb'],
+                    id=app_id_dict['df_export_tb'],
                     data=df_to_export.to_dict('records'),
                     columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
                     export_format='csv',

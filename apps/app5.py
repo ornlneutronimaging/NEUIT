@@ -2,7 +2,6 @@ from dash.dependencies import Input, Output, State
 
 from _app import app
 from _utilities import *
-import plotly.tools as tls
 import matplotlib.pyplot as plt
 from bem import xscalc
 
@@ -223,7 +222,7 @@ layout = html.Div(
                 ),
 
                 # Data table for the plotted data
-                html.Div(id=app_id_dict['hidden_df_tb_div']),
+                html.Div(id=app_id_dict['df_export_tb_div']),
 
                 # Transmission at CG-1D and stack info
                 html.Div(id=app_id_dict['result_id']),
@@ -404,3 +403,41 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fname
                                    id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
     else:
         return plot_loading, [None]
+
+
+@app.callback(
+    [
+        Output(app_id_dict['df_export_tb_div'], 'children'),
+    ],
+    [
+        Input(app_id_dict['display_plot_data_id'], 'value'),
+        Input(app_id_dict['hidden_df_export_json_id'], 'children'),
+    ],
+    [
+        State(app_id_dict['error_id'], 'children'),
+    ])
+def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
+    if display_check == ['display']:
+        if test_passed is True:
+            dataset = json.loads(jsonized_df_export[0])
+            df_to_export = pd.read_json(dataset, orient='split')
+            df_tb_div_list = [
+                html.Hr(),
+                dt.DataTable(
+                    id=app_id_dict['df_export_tb'],
+                    data=df_to_export.to_dict('records'),
+                    columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
+                    export_format='csv',
+                    style_data_conditional=[striped_rows],
+                    fixed_rows={'headers': True, 'data': 0},
+                    style_table={
+                        'maxHeight': '300',
+                        'overflowY': 'scroll',
+                    },
+                )
+            ]
+            return [df_tb_div_list]
+        else:
+            return [None]
+    else:
+        return [None]
