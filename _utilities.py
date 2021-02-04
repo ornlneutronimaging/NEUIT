@@ -123,7 +123,7 @@ empty_div = html.Div()
 
 distance_default = 16.45  # in meter
 delay_default = 0  # in us
-temperature_default = 300  # in Kelvin
+temperature_default = 293  # in Kelvin
 plot_loading = html.H2('Plot loading...')
 
 

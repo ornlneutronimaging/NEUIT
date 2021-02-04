@@ -493,8 +493,8 @@ def store_x_type(x_type):
     Output(app_id_dict['hidden_df_json_id'], 'children'),
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
-        Input(app_id_dict['error_id'], 'children'),
         Input('y_type', 'value'),
+        Input(app_id_dict['error_id'], 'children'),
     ],
     [
         State(app_id_dict['range_table_id'], 'data'),
@@ -506,8 +506,8 @@ def store_x_type(x_type):
         State(app_id_dict['database_id'], 'value'),
     ])
 def store_reso_df_in_json(n_submit,
-                          test_passed,
                           y_type,
+                          test_passed,
                           range_tb_rows, e_step, distance_m,
                           sample_tb_rows, iso_tb_rows,
                           iso_changed, database):

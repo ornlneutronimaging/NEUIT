@@ -300,9 +300,9 @@ def show_output_div(n_submit, test_passed):
     ],
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
-        Input(app_id_dict['error_id'], 'children'),
     ],
     [
+        State(app_id_dict['error_id'], 'children'),
         State(app_id_dict['cif_upload_id'], 'contents'),
         State(app_id_dict['cif_upload_id'], 'filename'),
         State(app_id_dict['temperature_id'], 'value'),
@@ -328,7 +328,7 @@ def store_bragg_df_in_json(n_submit, test_passed,
                 xs_dict[_name_only + ' (inc el)'] = xscalculator.xs_inc_el(wavelengths_A)
                 xs_dict[_name_only + ' (coh inel)'] = xscalculator.xs_coh_inel(wavelengths_A)
                 xs_dict[_name_only + ' (inc inel)'] = xscalculator.xs_inc_inel(wavelengths_A)
-                print("'{}', calculation done...".format(cif_names[each_index]))
+                print("Calculation done.")
             df_y = pd.DataFrame.from_dict(xs_dict)
             df_x = pd.DataFrame()
             df_x[wave_name] = wavelengths_A
