@@ -192,10 +192,10 @@ layout = html.Div(
                                               options=[
                                                   {'label': 'Total', 'value': 'total'},
                                                   {'label': 'Absorption', 'value': 'abs'},
-                                                  {'label': 'Elastic scattering', 'value': 'el'},
-                                                  {'label': 'Inelastic scattering', 'value': 'inel'},
-                                                  # {'label': 'Coherent', 'value': 'coh'},
-                                                  # {'label': 'Incoherent', 'value': 'inc'},
+                                                  {'label': 'Coherent elastic scattering', 'value': 'coh_el'},
+                                                  {'label': 'Coherent inelastic scattering', 'value': 'coh_inel'},
+                                                  {'label': 'Incoherent elastic scattering', 'value': 'inc_el'},
+                                                  {'label': 'Incoherent inelastic scattering', 'value': 'inc_inel'},
                                               ],
                                               value=['total'],
                                               # n_clicks_timestamp=0,
@@ -374,11 +374,13 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fname
                 to_plot_list.append(_name_only + ' (total)')
             if 'abs' in xs_type:
                 to_plot_list.append(_name_only + ' (abs)')
-            if 'el' in xs_type:
+            if 'coh_el' in xs_type:
                 to_plot_list.append(_name_only + ' (coh el)')
-                to_plot_list.append(_name_only + ' (inc el)')
-            if 'inel' in xs_type:
+            if 'coh_inel' in xs_type:
                 to_plot_list.append(_name_only + ' (coh inel)')
+            if 'inc_el' in xs_type:
+                to_plot_list.append(_name_only + ' (inc el)')
+            if 'inc_inel' in xs_type:
                 to_plot_list.append(_name_only + ' (inc inel)')
         df_to_plot = df_y[to_plot_list]
         if y_type == 'attenuation':

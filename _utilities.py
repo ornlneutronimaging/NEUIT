@@ -1169,7 +1169,6 @@ def parse_content(content, name, header):
         error_div = html.Div(
             ["\u274C Type error: '{}' is not supported, only '.csv', '.xls' and '.txt' are currently supported.".format(
                 name)])
-    print(df)
     return df, error_div
 
 
