@@ -339,7 +339,7 @@ def store_bragg_df_in_json(n_submit, test_passed,
                     xs_dict[_name_only + ' (inc inel)'] = xscalculator.xs_inc_inel(wavelengths_A)
                     print("Calculation done.")
                 except ValueError as error_msg:
-                    error = "ERROR: '{}', Debye temperature for 'O' is unknown to BEM.".format(cif_names[each_index])
+                    error = "ERROR: '{}', ".format(cif_names[each_index]) + str(error_msg).split('.')[0] + '.'
                     error_div_list.append(error)
             if len(error_div_list) == 0:
                 df_y = pd.DataFrame.from_dict(xs_dict)
