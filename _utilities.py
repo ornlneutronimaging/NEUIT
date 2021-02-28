@@ -1307,6 +1307,7 @@ def init_app_ids(app_name: str):
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
     else:  # id names for app5 only
+        id_dict['error_id2'] = app_name + '_error2'
         id_dict['temperature_id'] = app_name + '_temperature'
         id_dict['distance_id'] = app_name + '_distance'
         id_dict['band_min_id'] = app_name + '_band_min'

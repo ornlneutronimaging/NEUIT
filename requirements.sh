@@ -2,7 +2,7 @@
 pip install dash==1.18.1  # The core dash backend
 pip install dash-table==4.11.1
 pip install plotly>=4.14.1
-pip install ImagingReso>=1.7.3
+pip install ImagingReso>=1.7.4
 conda install braggedgemodeling
 pip install matplotlib==3.1.3
 pip install pandas>=1.1.3

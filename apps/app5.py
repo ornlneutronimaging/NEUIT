@@ -127,8 +127,11 @@ layout = html.Div(
             ]
         ),
 
-        # Error message div
+        # Error message div1
         html.Div(id=app_id_dict['error_id'], children=None),
+
+        # Error message div2
+        html.Div(id=app_id_dict['error_id2'], children=True),
 
         # Hidden div to store df_all json
         html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),
@@ -284,10 +287,11 @@ def upload_feedback(cif_names):
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
         Input(app_id_dict['error_id'], 'children'),
+        Input(app_id_dict['error_id2'], 'children'),
     ])
-def show_output_div(n_submit, test_passed):
+def show_output_div(n_submit, test_passed, error_in_bem):
     if n_submit is not None:
-        if test_passed is True:
+        if test_passed and error_in_bem is True:
             return {'display': 'block'}
         else:
             return {'display': 'none'}
@@ -298,6 +302,7 @@ def show_output_div(n_submit, test_passed):
 @app.callback(
     [
         Output(app_id_dict['hidden_df_json_id'], 'children'),
+        Output(app_id_dict['error_id2'], 'children'),
     ],
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
@@ -316,6 +321,7 @@ def store_bragg_df_in_json(n_submit, test_passed,
                            temperature_K, band_min, band_max, band_step,
                            ):
     if test_passed:
+        error_div_list = []
         xs_dict = {}
         wavelengths_A = np.arange(band_min, band_max, band_step)
         if cif_uploads is not None:
@@ -323,26 +329,34 @@ def store_bragg_df_in_json(n_submit, test_passed,
                 _cif_struc = parse_cif_upload(content=each_content)
                 _name_only = cif_names[each_index].split('.')[0]
                 print("'{}', calculating cross-sections...".format(cif_names[each_index]))
-                xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
-                xs_dict[_name_only + ' (total)'] = xscalculator.xs(wavelengths_A)
-                xs_dict[_name_only + ' (abs)'] = xscalculator.xs_abs(wavelengths_A)
-                xs_dict[_name_only + ' (coh el)'] = xscalculator.xs_coh_el(wavelengths_A)
-                xs_dict[_name_only + ' (inc el)'] = xscalculator.xs_inc_el(wavelengths_A)
-                xs_dict[_name_only + ' (coh inel)'] = xscalculator.xs_coh_inel(wavelengths_A)
-                xs_dict[_name_only + ' (inc inel)'] = xscalculator.xs_inc_inel(wavelengths_A)
-                print("Calculation done.")
-            df_y = pd.DataFrame.from_dict(xs_dict)
-            df_x = pd.DataFrame()
-            df_x[wave_name] = wavelengths_A
-            df_x[energy_name] = ir_util.angstroms_to_ev(wavelengths_A)
-            datasets = {
-                'x': df_x.to_json(orient='split', date_format='iso'),
-                'y': df_y.to_json(orient='split', date_format='iso'),
-            }
-            return [json.dumps(datasets)]
+                try:
+                    xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
+                    xs_dict[_name_only + ' (total)'] = xscalculator.xs(wavelengths_A)
+                    xs_dict[_name_only + ' (abs)'] = xscalculator.xs_abs(wavelengths_A)
+                    xs_dict[_name_only + ' (coh el)'] = xscalculator.xs_coh_el(wavelengths_A)
+                    xs_dict[_name_only + ' (inc el)'] = xscalculator.xs_inc_el(wavelengths_A)
+                    xs_dict[_name_only + ' (coh inel)'] = xscalculator.xs_coh_inel(wavelengths_A)
+                    xs_dict[_name_only + ' (inc inel)'] = xscalculator.xs_inc_inel(wavelengths_A)
+                    print("Calculation done.")
+                except ValueError as error_msg:
+                    error = "ERROR: '{}', Debye temperature for 'O' is unknown to BEM.".format(cif_names[each_index])
+                    error_div_list.append(error)
+            if len(error_div_list) == 0:
+                df_y = pd.DataFrame.from_dict(xs_dict)
+                df_x = pd.DataFrame()
+                df_x[wave_name] = wavelengths_A
+                df_x[energy_name] = ir_util.angstroms_to_ev(wavelengths_A)
+                datasets = {
+                    'x': df_x.to_json(orient='split', date_format='iso'),
+                    'y': df_y.to_json(orient='split', date_format='iso'),
+                }
+                return json.dumps(datasets), True
+            else:
+                return None, error_div_list
         else:
-            return [None]
-
+            return None, False
+    else:
+        return None, False
 
 @app.callback(
     [
@@ -361,52 +375,55 @@ def store_bragg_df_in_json(n_submit, test_passed,
         State(app_id_dict['cif_upload_id'], 'filename'),
     ])
 def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fnames):
-    if test_passed and jsonified_data is not None:
-        df_dict = load_dfs(jsonified_data=jsonified_data)
-        df_x = df_dict['x']
-        df_y = df_dict['y']
+    if test_passed:
+        if jsonified_data is not None:
+            df_dict = load_dfs(jsonified_data=jsonified_data)
+            df_x = df_dict['x']
+            df_y = df_dict['y']
 
-        # Form selected Y df
-        to_plot_list = []
-        for each_fname in fnames:
-            _name_only = each_fname.split('.')[0]
-            if 'total' in xs_type:
-                to_plot_list.append(_name_only + ' (total)')
-            if 'abs' in xs_type:
-                to_plot_list.append(_name_only + ' (abs)')
-            if 'coh_el' in xs_type:
-                to_plot_list.append(_name_only + ' (coh el)')
-            if 'coh_inel' in xs_type:
-                to_plot_list.append(_name_only + ' (coh inel)')
-            if 'inc_el' in xs_type:
-                to_plot_list.append(_name_only + ' (inc el)')
-            if 'inc_inel' in xs_type:
-                to_plot_list.append(_name_only + ' (inc inel)')
-        df_to_plot = df_y[to_plot_list]
-        if y_type == 'attenuation':
-            df_to_plot = 1 - df_y
+            # Form selected Y df
+            to_plot_list = []
+            for each_fname in fnames:
+                _name_only = each_fname.split('.')[0]
+                if 'total' in xs_type:
+                    to_plot_list.append(_name_only + ' (total)')
+                if 'abs' in xs_type:
+                    to_plot_list.append(_name_only + ' (abs)')
+                if 'coh_el' in xs_type:
+                    to_plot_list.append(_name_only + ' (coh el)')
+                if 'coh_inel' in xs_type:
+                    to_plot_list.append(_name_only + ' (coh inel)')
+                if 'inc_el' in xs_type:
+                    to_plot_list.append(_name_only + ' (inc el)')
+                if 'inc_inel' in xs_type:
+                    to_plot_list.append(_name_only + ' (inc inel)')
+            df_to_plot = df_y[to_plot_list]
+            if y_type == 'attenuation':
+                df_to_plot = 1 - df_y
 
-        # Add X column
-        x_tag = x_type_to_x_tag(x_type)
-        df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
-        y_label = y_type_to_y_label(y_type)
+            # Add X column
+            x_tag = x_type_to_x_tag(x_type)
+            df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
+            y_label = y_type_to_y_label(y_type)
 
-        jsonized_plot_df = df_to_plot.to_json(orient='split', date_format='iso')
+            jsonized_plot_df = df_to_plot.to_json(orient='split', date_format='iso')
 
-        # Plot in matplotlib
-        fig = plt.figure()
-        ax1 = fig.add_subplot(111)
-        try:
-            ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
-        except TypeError:
-            pass
-        ax1.set_ylabel(y_label)
+            # Plot in matplotlib
+            fig = plt.figure()
+            ax1 = fig.add_subplot(111)
+            try:
+                ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
+            except TypeError:
+                pass
+            ax1.set_ylabel(y_label)
 
-        # Convert to plotly and format layout
-        plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
+            # Convert to plotly and format layout
+            plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
 
-        return html.Div([dcc.Graph(figure=plotly_fig,
-                                   id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
+            return html.Div([dcc.Graph(figure=plotly_fig,
+                                       id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
+        else:
+            return plot_loading, [None]
     else:
         return plot_loading, [None]
 
