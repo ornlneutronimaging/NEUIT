@@ -28,7 +28,7 @@ index_page = html.Div(
                 html.H1('NEUIT'),
             ], className="row"
         ),
-        dcc.Markdown('''**NEU**tron **I**maging **T**oolbox'''),
+        dcc.Markdown('''**NEU**tron **I**maging **T**oolbox (v0.0.22)'''),
         html.H6('Available tools:'),
         app_links_div,
         dcc.Markdown('''
@@ -46,7 +46,8 @@ using *[Dash](https://dash.plot.ly/)* framework.
 Detailed functionality description is available inside each application.
 
 '''),
-dcc.Markdown('''
+
+        dcc.Markdown('''
 #### Disclaimer
 
 The energy dependent cross-section data used are from
@@ -59,21 +60,12 @@ are currently supported. More evaluated database will be added in the future.
 Please note that the energy dependent cross-section of hydrogen in ENDF/B database
 is for a free H atom. When interacting with slow neutrons in the cold range, the
 cross-section of a bonded H could be underestimated when using this tool. 
-In a recent update to support *[ImagingReso (v1.7.3)](https://github.com/ornlneutronimaging/ImagingReso/releases/tag/v1.7.3)*,
-some experimentally measured cross-sections ([ref.](https://journals.aps.org/pr/abstract/10.1103/PhysRev.76.1750)) 
-of a bonded H are now available.
-'''),
-
-        dcc.Markdown('''
-#### Acknowledgments
-
-This work is based upon research sponsored by the Laboratory Directed Research and
-Development Program of Oak Ridge National Laboratory, managed by UT-Battelle LLC for
-the US Department of Energy. This research used resources at the Spallation Neutron Source,
-a DOE Office of Science User Facility operated by Oak Ridge National Laboratory.
+In a recent update to support *[ImagingReso (v1.7.4)](https://github.com/ornlneutronimaging/ImagingReso/releases/tag/v1.7.4)*,
+some experimentally measured cross-sections ([ref1](https://journals.aps.org/pr/abstract/10.1103/PhysRev.76.1750) and
+[ref2](https://t2.lanl.gov/nis/data/endf/endfvii-thermal.html)) of a bonded H are now available.
 '''),
         dcc.Markdown('''
-#### Cite our work
+#### Cite this work
 
 1.Yuxuan Zhang, Jean Bilheux, Hassina Bilheux and Jiao Lin, (2019) "[An interactive web-based tool 
 to guide the preparation of neutron imaging experiments at oak ridge national laboratory](https://iopscience.iop.org/article/10.1088/2399-6528/ab4ee6)", 
@@ -90,6 +82,16 @@ Yuxuan Zhang -- zhangy6@ornl.gov
 
 Jean Bilheux -- bilheuxjm@ornl.gov
 '''),
+
+        dcc.Markdown('''
+#### Acknowledgments
+
+This work is based upon research sponsored by the Laboratory Directed Research and
+Development Program of Oak Ridge National Laboratory, managed by UT-Battelle LLC for
+the US Department of Energy. This research used resources at the Spallation Neutron Source,
+a DOE Office of Science User Facility operated by Oak Ridge National Laboratory.
+'''),
+
     ]
 )
 
