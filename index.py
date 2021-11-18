@@ -7,7 +7,7 @@ mpl.use('agg')  # this is to fix the matplotlib backend
 
 from _utilities import app_links_div, app_dict
 from _app import app
-from apps import app1, app2, app3, app4, app5
+from apps import app1, app2, app3, app4, app5, app6
 
 server = app.server
 
@@ -111,6 +111,8 @@ def display_page(pathname):
         return app4.layout
     elif pathname == app_dict['app5']['url']:
         return app5.layout
+    elif pathname == app_dict['app6']['url']:
+        return app6.layout
     elif pathname == '/':
         return index_page
     else:

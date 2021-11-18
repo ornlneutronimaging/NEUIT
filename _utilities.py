@@ -30,6 +30,8 @@ app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/tof_plotter'},
             'app5': {'name': 'Bragg-edge simulator (under testing)',
                      'url': '/apps/bragg'},
+            'app6': {'name': 'Golden Angles',
+                     'url': '/apps/golden_angles'}
             }
 
 energy_name = 'Energy (eV)'
@@ -1245,6 +1247,9 @@ app_info_markdown_dict = {
     specifically for *Bragg-edges* in the *cold* or *thermal* range. Currently, it only supports
     dragging and dropping '.cif' files.
             """),
+    'app6': dcc.Markdown("""
+    This tool displays the value and plot of the golden angles and provides the way to export them as an ASCII file.
+        """),
 }
 
 
@@ -1306,7 +1311,7 @@ def init_app_ids(app_name: str):
         id_dict['background_upload_fb_id'] = app_name + '_background_fb'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
-    else:  # id names for app5 only
+    elif app_name == 'app5':  # id names for app5 only
         id_dict['error_id2'] = app_name + '_error2'
         id_dict['temperature_id'] = app_name + '_temperature'
         id_dict['distance_id'] = app_name + '_distance'
@@ -1323,6 +1328,10 @@ def init_app_ids(app_name: str):
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
         id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
+    # elif app_name == 'app6':
+    #     pass
+    # else:
+    #     pass
 
     return id_dict
 
