@@ -6,6 +6,7 @@ from dash.dependencies import Output, Input
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import dash_table as dt
 
 from _app import app
 from apps.utilities.file import make_ascii_file
@@ -93,7 +94,12 @@ def update_golden_angles(max_angle_value, total_number_of_angles):
     fig.layout.xaxis.title = "Iteration number"
     fig.layout.paper_bgcolor = '#E5ECF6'
 
-    table = dbc.Table.from_dataframe(data)
+    table = dt.DataTable(columns=([{"id": "data", 'name': "data"}]),
+                         data=[{data: 1}, {data: 2}, {data: 3}],
+                         export_format='csv',
+    )
+
+    #table = dbc.Table.from_dataframe(data)
 
     return fig, table
 

@@ -18,6 +18,7 @@ app.layout = html.Div(
     ], className='ten columns offset-by-one'
 )
 
+
 app_name = 'home'
 
 index_page = html.Div(
