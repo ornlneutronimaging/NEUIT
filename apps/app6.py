@@ -56,14 +56,6 @@ layout = html.Div([
 
                     ], label='Plot')
                 ]),
-                html.Br(),
-                dbc.Button("Download ASCII File",
-                           id="download",
-                           # href="",
-                           # download="",
-                           style={"width": "100%"},
-                           external_link=True,
-                           color="primary")
             ])
 ])
 
@@ -94,12 +86,19 @@ def update_golden_angles(max_angle_value, total_number_of_angles):
     fig.layout.xaxis.title = "Iteration number"
     fig.layout.paper_bgcolor = '#E5ECF6'
 
-    table = dt.DataTable(columns=([{"id": "data", 'name': "data"}]),
-                         data=[{data: 1}, {data: 2}, {data: 3}],
-                         export_format='csv',
-    )
+    # list_angles = [str(_value) for _value in list_angles]
+    # data = pd.DataFrame(list_angles, columns=['angles'])
 
-    #table = dbc.Table.from_dataframe(data)
+    table = dt.DataTable(columns=([{'id': 'angles', 'name': 'Angles (degrees)', 'type': 'numeric', 'editable':
+        False}]),
+                         data=data.to_dict('records'),
+                         export_format='csv',
+                         style_header={'backgroundColor': 'rgb(30, 30, 30)',
+                                       'color':'white'},
+                         style_cell={'textAlign': 'left'},
+                         style_table={'maxWidth': '30%'},
+                         css=[{'rule': 'table-layout: fixed'}])
+    # table = dbc.Table.from_dataframe(data)
 
     return fig, table
 
