@@ -1,14 +1,11 @@
 import os
 import sys
-
-import ImagingReso._utilities as ir_util
-import dash_core_components as dcc
-import dash_html_components as html
-import dash_table as dt
+from dash import html
+from dash import dcc
+from dash import dash_table as dt
 import pandas as pd
 import io
 import base64
-from ImagingReso.resonance import Resonance
 from scipy.interpolate import interp1d
 import numpy as np
 import json
@@ -19,6 +16,10 @@ if sys.version_info[0] < 3:
     from diffpy.Structure.Parsers import getParser
 else:
     from diffpy.structure.parsers import getParser
+
+import ImagingReso._utilities as ir_util
+from ImagingReso.resonance import Resonance
+
 
 app_dict = {'app1': {'name': 'Neutron transmission',
                      'url': '/apps/transmission'},

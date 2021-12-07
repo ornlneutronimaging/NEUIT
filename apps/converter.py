@@ -1,7 +1,8 @@
 from dash.dependencies import Input, Output, State
-
-from _app import app
+import dash_bootstrap_components as dbc
+from app import app
 from _utilities import *
+
 
 # Composition converter tool
 
@@ -16,8 +17,14 @@ app_id_dict = init_app_ids(app_name=app_name)
 # Create app layout
 layout = html.Div(
     [
-        init_app_links(current_app=app_name, app_dict_all=app_dict),
-        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
+        dbc.Row([html.H2("Composition Converter",
+                         style=({'color': 'blue'}),
+                         ),
+                 ],
+                class_name='title_tools',
+                ),
+        html.Hr(style={'borderTop': '3px solid blue'}),
+
         # Sample input
         html.Div(
             [
@@ -80,7 +87,8 @@ layout = html.Div(
             id=app_id_dict['output_id'],
             style={'display': 'none'},
         ),
-    ]
+    ],
+    style={'margin': '25px'}
 )
 
 

@@ -1,6 +1,7 @@
 from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
 
-from _app import app
+from app import app
 from _utilities import *
 import plotly.tools as tls
 import matplotlib.pyplot as plt
@@ -14,8 +15,14 @@ app_id_dict = init_app_ids(app_name=app_name)
 
 layout = html.Div(
     [
-        init_app_links(current_app=app_name, app_dict_all=app_dict),
-        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
+        dbc.Row([html.H2("TOF plotter",
+                         style=({'color': 'blue'}),
+                         ),
+                 ],
+                class_name='title_tools',
+                ),
+        html.Hr(style={'borderTop': '3px solid blue'}),
+
         # Experiment input
         html.Div(
             [
@@ -211,7 +218,8 @@ layout = html.Div(
             id=app_id_dict['output_id'],
             style={'display': 'none'},
         ),
-    ]
+    ],
+    style={'margin': '25px'}
 )
 
 

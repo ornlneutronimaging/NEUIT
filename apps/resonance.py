@@ -1,7 +1,8 @@
 from dash.dependencies import Input, Output, State
-from _app import app
+from app import app
 import matplotlib.pyplot as plt
 from _utilities import *
+import dash_bootstrap_components as dbc
 
 # Neutron resonance tool
 
@@ -27,8 +28,15 @@ plot_data_filename = "plot_data.csv"
 # Create app2 layout
 layout = html.Div(
     [
-        init_app_links(current_app=app_name, app_dict_all=app_dict),
-        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
+
+        dbc.Row([html.H2("Neutron Resonance",
+                         style=({'color': 'blue'}),
+                         ),
+                 ],
+                class_name='title_tools',
+                ),
+        html.Hr(style={'borderTop': '3px solid blue'}),
+
         # Global parameters
         html.Div(
             [
@@ -204,7 +212,8 @@ layout = html.Div(
             id=app_id_dict['output_id'],
             style={'display': 'none'},
         ),
-    ]
+    ],
+    style={'margin': '25px'}
 )
 
 

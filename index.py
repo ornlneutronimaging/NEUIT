@@ -1,121 +1,94 @@
-import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Input, Output
-import matplotlib as mpl
+import dash
+from dash import html
+import dash_bootstrap_components as dbc
+from dash import dcc
+from dash.dependencies import Output, Input, State
 
-mpl.use('agg')  # this is to fix the matplotlib backend
+from apps import resonance, transmission, converter, tof_plotter, bragg, golden_angles, home_page
+from config import app_dict
+from app import app
 
-from _utilities import app_links_div, app_dict
-from _app import app
-from apps import app1, app2, app3, app4, app5
+image_logo = 'team_logo.png'
 
-server = app.server
 
-app.layout = html.Div(
-    [
-        dcc.Location(id='url', refresh=False),
-        html.Div(id='page-content'),
-    ], className='ten columns offset-by-one'
-)
-
-app_name = 'home'
-
-index_page = html.Div(
-    [
-        # Heading section
-        html.Div(
-            [
-                html.H1('NEUIT'),
-            ], className="row"
+header = html.Div([
+    dbc.Navbar([
+                dbc.Row([
+                    dbc.Col([
+                        html.A(
+                        html.Img(src=app.get_asset_url(image_logo),
+                                 height="60px",
+                                 ),
+                        href="/",
+                        )],
+                    ),
+                    dbc.Col(html.Pre(""),
+                            class_name="header_pre_padding"),
+                    dbc.Col(html.H5("i"),
+                            width="auto",
+                            class_name="header_i"),
+                    dbc.Col(html.H1("NEU"),
+                            width="auto",
+                            class_name="header_col_right_padding"),
+                    dbc.Col(html.H5("tron"),
+                            width="auto",
+                            class_name="header_tron"),
+                    dbc.Col(html.Pre(""),
+                            class_name="header_pre_padding"),
+                    dbc.Col(html.H1("I"),
+                            class_name="header_col_right_padding"),
+                    dbc.Col(html.H5("maging"),
+                            class_name="header_col_left_padding_special_case_for_i"),
+                    dbc.Col(html.Pre(""),
+                            class_name="header_pre_padding"),
+                    dbc.Col(html.H1("T"),
+                            class_name="header_col_right_padding"),
+                    dbc.Col(html.H5("oolbox"),
+                            class_name="header_col_left_padding"),
+                    dbc.Col(html.Pre(""),
+                            class_name="header_dropdown_separator"),
+                    ],
+                    align="center"),
+                dbc.DropdownMenu(
+                        label="Select a Tool",
+                        id="list_of_tools_dropdown",
+                        children=[
+                            dbc.DropdownMenuItem("Neutron Transmission", href="/transmission"),
+                            dbc.DropdownMenuItem("Neutron Resonance", href="/resonance"),
+                            dbc.DropdownMenuItem("Composition Converter", href="/converter"),
+                            dbc.DropdownMenuItem("Time of flight plotter", href='/tof_plotter'),
+                            dbc.DropdownMenuItem("Bragg edge simulator", href='/bragg'),
+                            dbc.DropdownMenuItem("Golden angles", href='/golden_angles'),
+                        ],
+                        color="primary",
+                        size="lg",
+                ),
+            ],
+            class_name="header_format",
+            color="white",
         ),
-        dcc.Markdown('''**NEU**tron **I**maging **T**oolbox (v0.0.22)'''),
-        html.H6('Available tools:'),
-        app_links_div,
-        dcc.Markdown('''
-#### Introduction
-
-Here we present a toolbox to provide interactive and user-friendly applications
-that can be used for Neutron Imaging related calculations.
-
-Tools available here are build upon open source libraries, such as 
-*[ImagingReso](https://imagingreso.readthedocs.io/en/latest/)*,
-*[periodictable](https://periodictable.readthedocs.io/en/latest/)*,
-*[braggedgemodeling](https://ornlneutronimaging.github.io/braggedgemodeling/)*, etc.,
-using *[Dash](https://dash.plot.ly/)* framework. 
-
-Detailed functionality description is available inside each application.
-
-'''),
-
-        dcc.Markdown('''
-#### Disclaimer
-
-The energy dependent cross-section data used are from
-[National Nuclear Data Center](http://www.nndc.bnl.gov/), a published
-online database. [Evaluated Nuclear Data File](http://www.nndc.bnl.gov/exfor/endf00.jsp),
-[ENDF/B-VIII.0](https://www.sciencedirect.com/science/article/pii/S0090375218300206) and 
-[ENDF/B-VII.1](https://www.sciencedirect.com/science/article/pii/S009037521100113X)
-are currently supported. More evaluated database will be added in the future.
-
-Please note that the energy dependent cross-section of hydrogen in ENDF/B database
-is for a free H atom. When interacting with slow neutrons in the cold range, the
-cross-section of a bonded H could be underestimated when using this tool. 
-In a recent update to support *[ImagingReso (v1.7.4)](https://github.com/ornlneutronimaging/ImagingReso/releases/tag/v1.7.4)*,
-some experimentally measured cross-sections ([ref1](https://journals.aps.org/pr/abstract/10.1103/PhysRev.76.1750) and
-[ref2](https://t2.lanl.gov/nis/data/endf/endfvii-thermal.html)) of a bonded H are now available.
-'''),
-        dcc.Markdown('''
-#### Cite this work
-
-1.Yuxuan Zhang, Jean Bilheux, Hassina Bilheux and Jiao Lin, (2019) "[An interactive web-based tool 
-to guide the preparation of neutron imaging experiments at oak ridge national laboratory](https://iopscience.iop.org/article/10.1088/2399-6528/ab4ee6)", 
-*Journal of Physics Communications*, 3(10), 103003.
-
-2.Yuxuan Zhang and Jean Bilheux, (2017), "[ImagingReso: A Tool for Neutron Resonance Imaging](http://joss.theoj.org/papers/997d09281a9d76e95f4ec4d3279eeb8c)",
-*Journal of Open Source Software*, 2(19), 407.
-
-'''),
-        dcc.Markdown('''
-#### Contact us
-
-Yuxuan Zhang -- zhangy6@ornl.gov
-
-Jean Bilheux -- bilheuxjm@ornl.gov
-'''),
-
-        dcc.Markdown('''
-#### Acknowledgments
-
-This work is based upon research sponsored by the Laboratory Directed Research and
-Development Program of Oak Ridge National Laboratory, managed by UT-Battelle LLC for
-the US Department of Energy. This research used resources at the Spallation Neutron Source,
-a DOE Office of Science User Facility operated by Oak Ridge National Laboratory.
-'''),
-
-    ]
-)
+    dcc.Location(id='location'),
+    html.Hr(style={'borderTop': '3px solid blue'}),
+    html.Div(id='tool_selected_page'),
+    html.Div(id='main_content')
+])
+app.layout = header
 
 
-@app.callback(Output('page-content', 'children'),
-              [Input('url', 'pathname')])
-def display_page(pathname):
+@app.callback(Output('main_content', 'children'),
+              Input('location', 'pathname'))
+def fill_main_content(pathname):
     if pathname is None:
-        return 'loading...'
-    elif pathname == app_dict['app1']['url']:
-        return app1.layout
-    elif pathname == app_dict['app2']['url']:
-        return app2.layout
-    elif pathname == app_dict['app3']['url']:
-        return app3.layout
-    elif pathname == app_dict['app4']['url']:
-        return app4.layout
-    elif pathname == app_dict['app5']['url']:
-        return app5.layout
-    elif pathname == '/':
-        return index_page
+        return "Loading ..."
+
+    for _key in app_dict.keys():
+        if app_dict[_key]['url'] == pathname:
+            return eval(f"{_key}.layout")
+    if pathname == '/':
+        return home_page.layout
     else:
-        return '404: URL not found'
+        return '404: URL not founds!'
 
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)
