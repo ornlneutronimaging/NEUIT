@@ -2,7 +2,7 @@ import dash_bootstrap_components as dbc
 
 from callbacks.utilities._utilities import *
 
-app_name = 'app6'
+app_name = 'golden_angles'
 app_id_dict = init_app_ids(app_name=app_name)
 
 

@@ -5,7 +5,7 @@ from callbacks.tof_plotter import *
 
 # Time-of-flight plotter
 
-app_name = 'app4'
+app_name = 'tof_plotter'
 app_id_dict = init_app_ids(app_name=app_name)
 
 # Create app layout

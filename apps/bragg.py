@@ -4,7 +4,7 @@ from callbacks.bragg import *
 
 # Bragg-edge tool
 
-app_name = 'app5'
+app_name = 'bragg'
 app_id_dict = init_app_ids(app_name=app_name)
 
 # Create app layout

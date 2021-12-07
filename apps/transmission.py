@@ -7,7 +7,7 @@ sample_df_default = pd.DataFrame({
     density_name: [1],
 })
 
-app_name = 'app1'
+app_name = 'transmission'
 app_id_dict = init_app_ids(app_name=app_name)
 
 layout = html.Div(

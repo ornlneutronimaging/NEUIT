@@ -3,7 +3,7 @@ from app import app
 from callbacks.utilities._utilities import *
 
 
-app_name = 'app3'
+app_name = 'converter'
 app_id_dict = init_app_ids(app_name=app_name)
 
 

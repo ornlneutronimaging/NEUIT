@@ -9,7 +9,7 @@ compos_df_default = pd.DataFrame({
     compos_2nd_col_id: ['50', '50'],
 })
 
-app_name = 'app3'
+app_name = 'converter'
 app_id_dict = init_app_ids(app_name=app_name)
 
 # Create app layout

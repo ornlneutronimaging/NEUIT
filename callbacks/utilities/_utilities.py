@@ -20,18 +20,19 @@ else:
 import ImagingReso._utilities as ir_util
 from ImagingReso.resonance import Resonance
 
+from config import app_dict
 
-app_dict = {'app1': {'name': 'Neutron transmission',
-                     'url': '/apps/transmission'},
-            'app2': {'name': 'Neutron resonance',
-                     'url': '/apps/resonance'},
-            'app3': {'name': 'Composition converter',
-                     'url': '/apps/converter'},
-            'app4': {'name': 'Time-of-flight plotter (under testing)',
-                     'url': '/apps/tof_plotter'},
-            'app5': {'name': 'Bragg-edge simulator (under testing)',
-                     'url': '/apps/bragg'},
-            }
+# app_dict = {'app1': {'name': 'Neutron transmission',
+#                      'url': '/apps/transmission'},
+#             'app2': {'name': 'Neutron resonance',
+#                      'url': '/apps/resonance'},
+#             'app3': {'name': 'Composition converter',
+#                      'url': '/apps/converter'},
+#             'app4': {'name': 'Time-of-flight plotter (under testing)',
+#                      'url': '/apps/tof_plotter'},
+#             'app5': {'name': 'Bragg-edge simulator (under testing)',
+#                      'url': '/apps/bragg'},
+#             }
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
@@ -1216,32 +1217,32 @@ def init_app_about(current_app, app_id_dict):
 
 
 app_info_markdown_dict = {
-    'app1': dcc.Markdown("""
+    'transmission': dcc.Markdown("""
     This tool estimates the neutron transmission/attenuation signals and contrast,
     by defining the sample information such as density, thickness in the neutron beam path.
     Multiple samples or complex compounds can be added as layers in such calculation. 
     Estimating the contrast by changing isotopic ratios is also supported.
     An example is shown by default to demonstrate its usage.
             """),
-    'app2': dcc.Markdown("""
+    'resonance': dcc.Markdown("""
     This tool estimates the energy dependent neutron imaging signals and contrasts,
     specifically for *resonances* in the *epithermal* range.
     Similar to the transmission tool, sample/samples can be entered as layers in such calculation. 
     Estimating the contrast by changing isotopic ratios is also supported.
     An example is shown by default to demonstrate its usage.
             """),
-    'app3': dcc.Markdown("""
+    'converter': dcc.Markdown("""
     This tool helps the conversion between wt.% and at.%. And it populates
     an equivalent chemical formula to represent a complex mixture. Such formula
     can be used as '{}' in other tools available in NEUIT.
     An example is shown by default to demonstrate its usage.
             """.format(chem_name)),
-    'app4': dcc.Markdown("""
+    'tof_plotter': dcc.Markdown("""
     This tool helps plotting data acquired from Timepix2 MCP detector. By dragging and dropping
     spectra files and data files, one can quickly verify if expected resonances or Bragg-edges
     have been captured or not. Optional background file can also be added if normalization is needed.  
             """),
-    'app5': dcc.Markdown("""
+    'bragg': dcc.Markdown("""
     This tool estimates the energy dependent neutron imaging signals and contrasts,
     specifically for *Bragg-edges* in the *cold* or *thermal* range. Currently, it only supports
     dragging and dropping '.cif' files.
@@ -1268,7 +1269,7 @@ def init_app_ids(app_name: str):
     id_dict['error_id'] = app_name + '_error'
     id_dict['output_id'] = app_name + '_output'
 
-    if app_name == 'app1':  # id names for app1 only
+    if app_name == 'transmission':  # id names for neutron transmission only
         id_dict['beamline_id'] = app_name + '_beamline'
         id_dict['band_div_id'] = app_name + '_band_div'
         id_dict['band_min_id'] = app_name + '_band_min'
@@ -1276,7 +1277,7 @@ def init_app_ids(app_name: str):
         id_dict['band_type_id'] = app_name + '_band_type'
         id_dict['band_unit_id'] = app_name + '_band_unit'
 
-    elif app_name == 'app2':  # id names for app2 only
+    elif app_name == 'resonance':  # id names for neutron resonance only
         id_dict['slider_id'] = app_name + '_e_range_slider'
         id_dict['range_table_id'] = app_name + '_range_table'
         id_dict['e_step_id'] = app_name + '_e_step'
@@ -1293,9 +1294,10 @@ def init_app_ids(app_name: str):
         id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
         id_dict['prev_x_type_id'] = app_name + '_prev_x_type'
 
-    elif app_name == 'app3':  # id names for app3 only
+    elif app_name == 'converter':  # id names for composition converter only
         id_dict['compos_type_id'] = app_name + '_compos_input_type'
-    elif app_name == 'app4':  # id names for app4 only
+
+    elif app_name == 'tof_plotter':  # id names for TOF plotter only
         id_dict['distance_id'] = app_name + '_distance'
         id_dict['delay_id'] = app_name + '_delay'
         id_dict['spectra_upload_id'] = app_name + '_spectra'
@@ -1307,7 +1309,8 @@ def init_app_ids(app_name: str):
         id_dict['background_upload_fb_id'] = app_name + '_background_fb'
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
-    else:  # id names for app5 only
+
+    elif app_name == 'bragg':  # id names for bragg edge simulator only
         id_dict['error_id2'] = app_name + '_error2'
         id_dict['temperature_id'] = app_name + '_temperature'
         id_dict['distance_id'] = app_name + '_distance'

@@ -5,7 +5,7 @@ from callbacks.utilities._utilities import *
 import matplotlib.pyplot as plt
 from bem import xscalc
 
-app_name = 'app5'
+app_name = 'bragg'
 app_id_dict = init_app_ids(app_name=app_name)
 
 

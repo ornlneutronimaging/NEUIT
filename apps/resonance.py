@@ -17,7 +17,7 @@ sample_df_default = pd.DataFrame({
     density_name: [''],
 })
 
-app_name = 'app2'
+app_name = 'resonance'
 app_id_dict = init_app_ids(app_name=app_name)
 
 plot_data_filename = "plot_data.csv"
