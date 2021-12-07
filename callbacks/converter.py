@@ -2,6 +2,7 @@ from dash.dependencies import Input, Output, State
 from app import app
 from callbacks.utilities._utilities import *
 from callbacks.utilities.initialization import init_app_ids
+import callbacks.utilities.constants as constants
 
 app_name = 'converter'
 app_id_dict = init_app_ids(app_name=app_name)
@@ -32,10 +33,10 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['sample_table_id'], 'columns'),
     ])
 def update_input_columns(compos_type, columns):
-    if compos_type == weight_name:
-        columns[1]['name'] = weight_name
+    if compos_type == constants.weight_name:
+        columns[1]['name'] = constants.weight_name
     else:
-        columns[1]['name'] = atomic_name
+        columns[1]['name'] = constants.atomic_name
     return columns
 
 
@@ -226,11 +227,11 @@ def output(n_submit, test_passed, database, compos_tb_rows, iso_tb_rows, iso_cha
                          sort_action='none',
                          row_deletable=False,
                          style_cell_conditional=[
-                             {'if': {'column_id': chem_name},
+                             {'if': {'column_id': constants.chem_name},
                               'width': '33%'},
-                             {'if': {'column_id': weight_name_p},
+                             {'if': {'column_id': constants.weight_name_p},
                               'width': '33%'},
-                             {'if': {'column_id': atomic_name_p},
+                             {'if': {'column_id': constants.atomic_name_p},
                               'width': '33%'},
                          ],
                          ),

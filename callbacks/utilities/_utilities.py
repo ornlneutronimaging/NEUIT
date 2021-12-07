@@ -9,7 +9,6 @@ import base64
 from scipy.interpolate import interp1d
 import numpy as np
 import json
-from cerberus import Validator
 import plotly.tools as tls
 
 if sys.version_info[0] < 3:
@@ -22,87 +21,101 @@ from ImagingReso.resonance import Resonance
 
 from config import app_dict
 from callbacks.utilities.validator import MyValidator, is_number, validate_input
-
-energy_name = 'Energy (eV)'
-wave_name = 'Wavelength (\u212B)'
-speed_name = 'Speed (m/s)'
-tof_name = 'Time-of-flight (\u03BCs)'
-number_name = 'Image index (#)'
-class_name = 'Neutron classification'
-chem_name = 'Chemical formula'
-thick_name = 'Thickness (mm)'
-density_name = 'Density (g/cm\u00B3)'
-ratio_name = 'Stoichiometric ratio'
-molar_name = 'Molar mass (g/mol)'
-number_density_name = 'Atoms (#/cm\u00B3)'
-mu_per_cm_name = 'Attenu. co. (/cm)'
-layer_name = 'Layer'
-ele_name = 'Element'
-iso_name = 'Isotope'
-iso_ratio_name = 'Isotopic ratio'
-weight_name = 'Weight (g)'
-weight_name_p = 'Weight %'
-atomic_name = 'Atoms (mol)'
-atomic_name_p = 'Atomic %'
-compos_2nd_col_id = '2nd_input_column'
+# from callbacks.utilities import constants
+import callbacks.utilities.constants as constants
 
 
 energy_range_header_df = pd.DataFrame({
-    'name': [energy_name, wave_name, speed_name, tof_name, class_name],
-    'id': [energy_name, wave_name, speed_name, tof_name, class_name],
+    'name': [constants.energy_name,
+             constants.wave_name,
+             constants.speed_name,
+             constants.tof_name,
+             constants.class_name],
+    'id': [constants.energy_name,
+           constants.wave_name, constants.speed_name,
+           constants.tof_name,
+           constants.class_name],
     'deletable': [False, False, False, False, False],
     'editable': [True, True, False, False, False],
     'type': ['numeric', 'numeric', 'any', 'any', 'any']
 })
 
 sample_header_df = pd.DataFrame({
-    'name': [chem_name, thick_name, density_name],
-    'id': [chem_name, thick_name, density_name],
+    'name': [constants.chem_name,
+             constants.thick_name,
+             constants.density_name],
+    'id': [constants.chem_name,
+           constants.thick_name,
+           constants.density_name],
     # 'deletable': [False, False, False],
     # 'editable': [True, True, True],
     'type': ['text', 'numeric', 'any']
 })
 
 compos_header_df = pd.DataFrame({
-    'name': [chem_name, weight_name],
-    'id': [chem_name, compos_2nd_col_id],
+    'name': [constants.chem_name,
+             constants.weight_name],
+    'id': [constants.chem_name,
+           constants.compos_2nd_col_id],
     # 'deletable': [False, False, False],
     # 'editable': [True, True, True],
     'type': ['text', 'numeric']
 })
 
 compos_header_percent_df = pd.DataFrame({
-    'name': [chem_name, weight_name_p, atomic_name_p],
-    'id': [chem_name, weight_name_p, atomic_name_p],
+    'name': [constants.chem_name,
+             constants.weight_name_p,
+             constants.atomic_name_p],
+    'id': [constants.chem_name,
+           constants.weight_name_p,
+           constants.atomic_name_p],
     # 'deletable': [False, False, False],
     'editable': [False, False, False],
 })
 
 iso_tb_header_df = pd.DataFrame({
-    'name': [layer_name, ele_name, iso_name, iso_ratio_name],
-    'id': [layer_name, ele_name, iso_name, iso_ratio_name],
+    'name': [constants.layer_name,
+             constants.ele_name,
+             constants.iso_name,
+             constants.iso_ratio_name],
+    'id': [constants.layer_name,
+           constants.ele_name,
+           constants.iso_name,
+           constants.iso_ratio_name],
     'deletable': [False, False, False, False],
     'editable': [False, False, False, True],
     'type': ['any', 'any', 'any', 'numeric']
 })
 
 iso_tb_df_default = pd.DataFrame({
-    layer_name: [None],
-    ele_name: [None],
-    iso_name: [None],
-    iso_ratio_name: [None],
+    constants.layer_name: [None],
+    constants.ele_name: [None],
+    constants.iso_name: [None],
+    constants.iso_ratio_name: [None],
 })
 
 output_stack_header_df = pd.DataFrame({
-    'name': [thick_name, density_name, ratio_name, molar_name, number_density_name, mu_per_cm_name],
-    'id': [thick_name, density_name, ratio_name, molar_name, number_density_name, mu_per_cm_name],
+    'name': [constants.thick_name,
+             constants.density_name,
+             constants.ratio_name,
+             constants.molar_name,
+             constants.number_density_name,
+             constants.mu_per_cm_name],
+    'id': [constants.thick_name,
+           constants.density_name,
+           constants.ratio_name,
+           constants.molar_name,
+           constants.number_density_name,
+           constants.mu_per_cm_name],
     'deletable': [False, False, False, False, False, False],
     'editable': [False, False, False, False, False, False],
 })
 
 output_stack_header_short_df = pd.DataFrame({
-    'name': [ratio_name, molar_name],
-    'id': [ratio_name, molar_name],
+    'name': [constants.ratio_name,
+             constants.molar_name],
+    'id': [constants.ratio_name,
+           constants.molar_name],
     'deletable': [False, False],
     'editable': [False, False],
 })
@@ -121,23 +134,23 @@ plot_loading = html.H2('Plot loading...')
 
 compos_dict_schema = {
     # chem_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
-    chem_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
-    compos_2nd_col_id: {'type': 'number', 'greater_than_zero': True},
+    constants.chem_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
+    constants.compos_2nd_col_id: {'type': 'number', 'greater_than_zero': True},
 }
 
 iso_dict_schema = {
     # layer_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
-    layer_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
-    ele_name: {'type': 'string', 'empty': False, 'required': True, },
-    iso_name: {'type': 'string', 'empty': False, 'required': True, },
-    iso_ratio_name: {'type': 'number', 'min': 0, 'max': 1, 'required': True, 'between_zero_and_one': True, },
+    constants.layer_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
+    constants.ele_name: {'type': 'string', 'empty': False, 'required': True, },
+    constants.iso_name: {'type': 'string', 'empty': False, 'required': True, },
+    constants.iso_ratio_name: {'type': 'number', 'min': 0, 'max': 1, 'required': True, 'between_zero_and_one': True, },
 }
 
 sample_dict_schema = {
     # chem_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
-    chem_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
-    thick_name: {'type': 'number', 'min': 0, 'required': True, },
-    density_name: {'anyof_type': ['string', 'number'], 'min': 0, 'empty_str': True, },
+    constants.chem_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
+    constants.thick_name: {'type': 'number', 'min': 0, 'required': True, },
+    constants.density_name: {'anyof_type': ['string', 'number'], 'min': 0, 'empty_str': True, },
 }
 
 
@@ -166,11 +179,11 @@ def fill_range_table_by_e(e_ev, distance_m):
     _v = round(3956. / np.sqrt(81.787 / (_e * 1000.)), 2)
     _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _class = classify_neutron(_e)
-    return {energy_name: _e,
-            wave_name: _lambda,
-            speed_name: _v,
-            tof_name: _tof,
-            class_name: _class}
+    return {constants.energy_name: _e,
+            constants.wave_name: _lambda,
+            constants.speed_name: _v,
+            constants.tof_name: _tof,
+            constants.class_name: _class}
 
 
 def fill_range_table_by_wave(wave_angstroms, distance_m):
@@ -179,19 +192,19 @@ def fill_range_table_by_wave(wave_angstroms, distance_m):
     _v = round(3956. / np.sqrt(81.787 / (_e * 1000.)), 2)
     _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _class = classify_neutron(_e)
-    return {energy_name: _e,
-            wave_name: _lambda,
-            speed_name: _v,
-            tof_name: _tof,
-            class_name: _class}
+    return {constants.energy_name: _e,
+            constants.wave_name: _lambda,
+            constants.speed_name: _v,
+            constants.tof_name: _tof,
+            constants.class_name: _class}
 
 
 def creat_sample_df_from_compos_df(compos_tb_df):
     _compos_tb_df = compos_tb_df[:]
     sample_df = pd.DataFrame()
-    sample_df[chem_name] = _compos_tb_df[chem_name]
-    sample_df[thick_name] = 1
-    sample_df[density_name] = ''
+    sample_df[constants.chem_name] = _compos_tb_df[constants.chem_name]
+    sample_df[constants.thick_name] = 1
+    sample_df[constants.density_name] = ''
     return sample_df
 
 
@@ -215,14 +228,14 @@ def force_dict_to_numeric(input_dict_list: list):
 def update_database_key_in_schema(schema, database):
     _new_key = database
     try:
-        _old_key = list(schema[chem_name].keys())[3]
+        _old_key = list(schema[constants.chem_name].keys())[3]
         if _new_key is not _old_key:
-            schema[chem_name][_new_key] = schema[chem_name].pop(_old_key)
+            schema[constants.chem_name][_new_key] = schema[constants.chem_name].pop(_old_key)
         return schema
     except KeyError:
-        _old_key = list(schema[layer_name].keys())[3]
+        _old_key = list(schema[constants.layer_name].keys())[3]
         if _new_key is not _old_key:
-            schema[layer_name][_new_key] = schema[layer_name].pop(_old_key)
+            schema[constants.layer_name][_new_key] = schema[constants.layer_name].pop(_old_key)
         return schema
 
 
@@ -243,11 +256,11 @@ def validate_sample_input(sample_df: pd.DataFrame, sample_schema: dict, database
 def validate_no_duplicated_layer_name(sample_df: pd.DataFrame):
     """ Returns True when no duplicated layer name. """
     try:
-        layer_list = sample_df[chem_name].tolist()
+        layer_list = sample_df[constants.chem_name].tolist()
         if len(layer_list) == len(set(layer_list)):
             return [True], [None]
         else:
-            return [False], [html.P("INPUT ERROR: same '{}' has been entered more than once.".format(chem_name))]
+            return [False], [html.P("INPUT ERROR: same '{}' has been entered more than once.".format(constants.chem_name))]
     except KeyError as error_massage:
         return [False], [error_massage.__str__()]
 
@@ -270,8 +283,8 @@ def validate_iso_input(iso_df: pd.DataFrame, iso_schema: dict, database: str,
 
 def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
     try:
-        df = iso_df.groupby([layer_name, ele_name]).sum()
-        df_boo = df[iso_ratio_name] - 1.0
+        df = iso_df.groupby([constants.layer_name, constants.ele_name]).sum()
+        df_boo = df[constants.iso_ratio_name] - 1.0
         boo = df_boo.abs() >= 0.005
         failed_list = list(boo)
         passed_list = []
@@ -280,7 +293,7 @@ def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
             _list = df.index[boo].tolist()
             for _index, each_fail_layer in enumerate(_list):
                 div = html.P("INPUT ERROR: '{}': [sum of isotopic ratios is '{}' not '1']".format(
-                    str(each_fail_layer), float(df[boo][iso_ratio_name][_index])))
+                    str(each_fail_layer), float(df[boo][constants.iso_ratio_name][_index])))
                 passed_list.append(False)
                 div_list.append(div)
         else:
@@ -293,14 +306,14 @@ def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
 
 def validate_density_input(sample_tb_df: pd.DataFrame, test_passed_list: list, output_div_list: list):
     # Test density input required or not
-    for _index, _each_formula in enumerate(sample_tb_df[chem_name]):
+    for _index, _each_formula in enumerate(sample_tb_df[constants.chem_name]):
         try:
             _parsed_dict = ir_util.formula_to_dictionary(_each_formula)
             _num_of_ele_in_formula = len(_parsed_dict[_each_formula]['elements'])
-            if _num_of_ele_in_formula > 1 and sample_tb_df[density_name][_index] == '':
+            if _num_of_ele_in_formula > 1 and sample_tb_df[constants.density_name][_index] == '':
                 test_passed_list.append(False)
                 output_div_list.append(
-                    html.P("INPUT ERROR: '{}': ['Density input is required for compound '{}'.']".format(density_name,
+                    html.P("INPUT ERROR: '{}': ['Density input is required for compound '{}'.']".format(constants.density_name,
                                                                                                         _each_formula)))
             else:
                 test_passed_list.append(True)
@@ -314,19 +327,19 @@ def validate_density_input(sample_tb_df: pd.DataFrame, test_passed_list: list, o
 
 def validate_energy_input(range_tb_df: pd.DataFrame, test_passed_list: list, output_div_list: list):
     # Test range table
-    if range_tb_df[energy_name][0] == range_tb_df[energy_name][1]:
+    if range_tb_df[constants.energy_name][0] == range_tb_df[constants.energy_name][1]:
         test_passed_list.append(False)
         output_div_list.append(
-            html.P("INPUT ERROR: {}: ['Energy min. can not equal energy max.']".format(str(energy_name))))
+            html.P("INPUT ERROR: {}: ['Energy min. can not equal energy max.']".format(str(constants.energy_name))))
     else:
         test_passed_list.append(True)
         output_div_list.append(None)
 
-    for each in range_tb_df[energy_name]:
+    for each in range_tb_df[constants.energy_name]:
         if each < 1e-5 or each > 1e8:
             test_passed_list.append(False)
             output_div_list.append(
-                html.P("INPUT ERROR: '{}': ['1x10^-5 <= 'Energy' <= 1x10^8']".format(str(energy_name))))
+                html.P("INPUT ERROR: '{}': ['1x10^-5 <= 'Energy' <= 1x10^8']".format(str(constants.energy_name))))
         else:
             test_passed_list.append(True)
             output_div_list.append(None)
@@ -444,8 +457,8 @@ def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
 
 
 def init_reso_from_tb(range_tb_df, e_step, database):
-    v_1 = range_tb_df[energy_name][0]
-    v_2 = range_tb_df[energy_name][1]
+    v_1 = range_tb_df[constants.energy_name][0]
+    v_2 = range_tb_df[constants.energy_name][1]
     if v_1 < v_2:
         o_reso = Resonance(energy_min=v_1, energy_max=v_2, energy_step=e_step, database=database)
     else:
@@ -469,32 +482,32 @@ def load_beam_shape(relative_path_to_beam_shape):
 
 
 def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
-    num_layer = len(sample_tb_df[chem_name])
+    num_layer = len(sample_tb_df[constants.chem_name])
     for layer_index in range(num_layer):
-        if density_name not in sample_tb_df.columns:  # sample density name is NOT in the tb
-            if thick_name not in sample_tb_df.columns:  # for compos_df, only have column "compos_2nd_col_id"
+        if constants.density_name not in sample_tb_df.columns:  # sample density name is NOT in the tb
+            if constants.thick_name not in sample_tb_df.columns:  # for compos_df, only have column "compos_2nd_col_id"
                 try:
-                    o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
+                    o_reso.add_layer(formula=sample_tb_df[constants.chem_name][layer_index],
                                      thickness=1)  # dummy layer to generate the stack
                 except ValueError:
                     pass
             else:  # sample thickness is in the tb
                 try:
-                    o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
-                                     thickness=float(sample_tb_df[thick_name][layer_index]))
+                    o_reso.add_layer(formula=sample_tb_df[constants.chem_name][layer_index],
+                                     thickness=float(sample_tb_df[constants.thick_name][layer_index]))
                 except ValueError:
                     pass
-        elif sample_tb_df[density_name][layer_index] == '':  # sample density name is in the tb
+        elif sample_tb_df[constants.density_name][layer_index] == '':  # sample density name is in the tb
             try:  # sample density is NOT in the tb
-                o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
-                                 thickness=float(sample_tb_df[thick_name][layer_index]))
+                o_reso.add_layer(formula=sample_tb_df[constants.chem_name][layer_index],
+                                 thickness=float(sample_tb_df[constants.thick_name][layer_index]))
             except ValueError:
                 pass
         else:  # sample density is in the tb
             try:
-                o_reso.add_layer(formula=sample_tb_df[chem_name][layer_index],
-                                 thickness=float(sample_tb_df[thick_name][layer_index]),
-                                 density=float(sample_tb_df[density_name][layer_index]))
+                o_reso.add_layer(formula=sample_tb_df[constants.chem_name][layer_index],
+                                 thickness=float(sample_tb_df[constants.thick_name][layer_index]),
+                                 density=float(sample_tb_df[constants.density_name][layer_index]))
             except ValueError:
                 pass
     return o_reso
@@ -510,8 +523,8 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
             for each_ele in element_list:
                 _ele_ratio_list = []
                 for iso_i in range(len(iso_tb_df)):
-                    if each_layer == iso_tb_df[layer_name][iso_i] and each_ele == iso_tb_df[ele_name][iso_i]:
-                        _ele_ratio_list.append(float(iso_tb_df[iso_ratio_name][iso_i]))
+                    if each_layer == iso_tb_df[constants.layer_name][iso_i] and each_ele == iso_tb_df[constants.ele_name][iso_i]:
+                        _ele_ratio_list.append(float(iso_tb_df[constants.iso_ratio_name][iso_i]))
                 o_reso.set_isotopic_ratio(compound=each_layer, element=each_ele, list_ratio=_ele_ratio_list)
         return o_reso
 
@@ -648,13 +661,13 @@ def form_sample_stack_table_div(o_stack, full_stack=True):
         current_layer_list = [
             html.H5("Layer {}: {}".format(l_str, layer)),
         ]
-        layer_dict[thick_name] = o_stack[layer]['thickness']['value']
-        layer_dict[density_name] = round(o_stack[layer]['density']['value'], 3)
+        layer_dict[constants.thick_name] = o_stack[layer]['thickness']['value']
+        layer_dict[constants.density_name] = round(o_stack[layer]['density']['value'], 3)
         _ratio_str_list = [str(_p) for _p in o_stack[layer]['stoichiometric_ratio']]
-        layer_dict[ratio_name] = ":".join(_ratio_str_list)
-        layer_dict[molar_name] = round(o_stack[layer]['molar_mass']['value'], 4)
-        layer_dict[number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
-        layer_dict[mu_per_cm_name] = '{:0.3e}'.format(o_stack[layer]['mu_per_cm'])
+        layer_dict[constants.ratio_name] = ":".join(_ratio_str_list)
+        layer_dict[constants.molar_name] = round(o_stack[layer]['molar_mass']['value'], 4)
+        layer_dict[constants.number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
+        layer_dict[constants.mu_per_cm_name] = '{:0.3e}'.format(o_stack[layer]['mu_per_cm'])
 
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
@@ -687,7 +700,7 @@ def form_sample_stack_table_div(o_stack, full_stack=True):
                 iso_dict[current_id] = round(_iso_ratios[_index], 4)
 
             _i = len(id_list)
-            name_list.append(molar_name)
+            name_list.append(constants.molar_name)
             molar_name_id = 'column_' + str(_i + 1)
             id_list.append(molar_name_id)
             deletable_list.append(False)
@@ -696,12 +709,12 @@ def form_sample_stack_table_div(o_stack, full_stack=True):
 
             # For short sample stack output
             if full_stack:
-                name_list.append(number_density_name)
+                name_list.append(constants.number_density_name)
                 number_density_name_id = 'column_' + str(_i + 2)
                 id_list.append(number_density_name_id)
                 deletable_list.append(False)
                 editable_list.append(False)
-                name_list.append(mu_per_cm_name)
+                name_list.append(constants.mu_per_cm_name)
                 mu_per_cm_name_id = 'column_' + str(_i + 3)
                 id_list.append(mu_per_cm_name_id)
                 deletable_list.append(False)
@@ -743,25 +756,25 @@ def form_sample_stack_table_div(o_stack, full_stack=True):
 
 
 def convert_input_to_composition(compos_df, compos_type, o_stack):
-    if compos_type == weight_name:
-        fill_name = atomic_name_p
-        update_name = weight_name_p
+    if compos_type == constants.weight_name:
+        fill_name = constants.atomic_name_p
+        update_name = constants.weight_name_p
     else:
-        fill_name = weight_name_p
-        update_name = atomic_name_p
+        fill_name = constants.weight_name_p
+        update_name = constants.atomic_name_p
     result_list = []
     _ele_list = []
     _mol_list = []
     _input_converted_p_list = []
-    _input_sum = compos_df[compos_2nd_col_id].sum()
-    for _n, each_chem in enumerate(compos_df[chem_name]):
+    _input_sum = compos_df[constants.compos_2nd_col_id].sum()
+    for _n, each_chem in enumerate(compos_df[constants.chem_name]):
         _molar_mass = o_stack[each_chem]['molar_mass']['value']
-        input_num = compos_df[compos_2nd_col_id][_n]
+        input_num = compos_df[constants.compos_2nd_col_id][_n]
         _current_ele_list = o_stack[each_chem]['elements']
         _current_ratio_list = o_stack[each_chem]['stoichiometric_ratio']
         _input_percentage = input_num * 100 / _input_sum
         _ele_list += _current_ele_list
-        if compos_type == weight_name:  # wt. input (g)
+        if compos_type == constants.weight_name:  # wt. input (g)
             _result = input_num / _molar_mass
             _mol_list += list(np.array(_current_ratio_list) * _result)
         else:  # at. input (mol)
@@ -815,17 +828,17 @@ def form_iso_table(sample_df: pd.DataFrame, database: str):
                 iso_ratio_list.append(round(current_iso_ratio_list[i], 4))
 
     _df = pd.DataFrame({
-        layer_name: lay_list,
-        ele_name: ele_list,
-        iso_name: iso_list,
-        iso_ratio_name: iso_ratio_list,
+        constants.layer_name: lay_list,
+        constants.ele_name: ele_list,
+        constants.iso_name: iso_list,
+        constants.iso_ratio_name: iso_ratio_list,
     })
     return _df
 
 
 def update_new_iso_table(prev_iso_df: pd.DataFrame, new_iso_df: pd.DataFrame):
-    prev_iso_layer_list = list(prev_iso_df[layer_name])  # previous list of layers
-    new_iso_layer_list = list(new_iso_df[layer_name])  # new list of layers
+    prev_iso_layer_list = list(prev_iso_df[constants.layer_name])  # previous list of layers
+    new_iso_layer_list = list(new_iso_df[constants.layer_name])  # new list of layers
 
     prev_index = []  # index of the new layers that exists in prev layers
     new_index = []  # index of the prev layers that needs to be passed along
@@ -847,22 +860,22 @@ def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
     row = modified_coord[0]
     col = modified_coord[1]
     if col == 0:
-        input_value = range_table_rows[row][energy_name]
+        input_value = range_table_rows[row][constants.energy_name]
         if is_number(input_value) and float(input_value) > 0:
             things_to_fill = fill_range_table_by_e(e_ev=float(input_value), distance_m=distance)
             for each_col in range_table_rows[row].keys():
                 range_table_rows[row][each_col] = things_to_fill[each_col]
         else:
-            for each_col in [wave_name, speed_name, tof_name, class_name]:
+            for each_col in [constants.wave_name, constants.speed_name, constants.tof_name, constants.class_name]:
                 range_table_rows[row][each_col] = 'N/A'
     elif col == 1:  # Changed back to 1 from 4 after updating to pandas>=0.25.0
-        input_value = range_table_rows[row][wave_name]
+        input_value = range_table_rows[row][constants.wave_name]
         if is_number(input_value) and float(input_value) > 0:
             things_to_fill = fill_range_table_by_wave(wave_angstroms=float(input_value), distance_m=distance)
             for each_col in range_table_rows[row].keys():
                 range_table_rows[row][each_col] = things_to_fill[each_col]
         else:
-            for each_col in [energy_name, speed_name, tof_name, class_name]:
+            for each_col in [constants.energy_name, constants.speed_name, constants.tof_name, constants.class_name]:
                 range_table_rows[row][each_col] = 'N/A'
 
     return range_table_rows
@@ -890,11 +903,11 @@ def load_dfs(jsonified_data):
 def x_type_to_x_tag(x_type):
     # Determine X names to plot
     if x_type == 'energy':
-        x_tag = energy_name
+        x_tag = constants.energy_name
     elif x_type == 'lambda':
-        x_tag = wave_name
+        x_tag = constants.wave_name
     else:
-        x_tag = tof_name
+        x_tag = constants.tof_name
     return x_tag
 
 
@@ -916,13 +929,13 @@ def y_type_to_y_label(y_type):
 
 def x_type_to_x_label(x_type):
     if x_type == 'energy':
-        x_label = energy_name
+        x_label = constants.energy_name
     elif x_type == 'lambda':
-        x_label = wave_name
+        x_label = constants.wave_name
     elif x_type == 'time':
-        x_label = tof_name
+        x_label = constants.tof_name
     else:  # x_type == 'number':
-        x_label = number_name
+        x_label = constants.number_name
     return x_label
 
 
@@ -977,11 +990,11 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
 
 
 def fill_df_x_types(df: pd.DataFrame, distance_m):
-    df.insert(loc=1, column=tof_name, value=ir_util.ev_to_s(array=df[energy_name],
+    df.insert(loc=1, column=constants.tof_name, value=ir_util.ev_to_s(array=df[constants.energy_name],
                                                             source_to_detector_m=distance_m,
                                                             offset_us=0))
-    df.insert(loc=1, column=wave_name, value=ir_util.ev_to_angstroms(df[energy_name]))
-    df[tof_name] = df[tof_name] * 1e6
+    df.insert(loc=1, column=constants.wave_name, value=ir_util.ev_to_angstroms(df[constants.energy_name]))
+    df[constants.tof_name] = df[constants.tof_name] * 1e6
     return df
 
 
@@ -1057,7 +1070,7 @@ def parse_contents_to_rows(contents, filename, rows):
             div = html.Div(
                 ["ERROR: '{}', contains invalid column name. '{}' required.".format(filename, list(rows[0].keys()))])
         else:
-            df = df[df[chem_name] != '']
+            df = df[df[constants.chem_name] != '']
             rows = df.to_dict('records')
 
     return rows, div
@@ -1146,7 +1159,7 @@ app_info_markdown_dict = {
     an equivalent chemical formula to represent a complex mixture. Such formula
     can be used as '{}' in other tools available in NEUIT.
     An example is shown by default to demonstrate its usage.
-            """.format(chem_name)),
+            """.format(constants.chem_name)),
     'tof_plotter': dcc.Markdown("""
     This tool helps plotting data acquired from Timepix2 MCP detector. By dragging and dropping
     spectra files and data files, one can quickly verify if expected resonances or Bragg-edges
@@ -1249,10 +1262,10 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
                 html.H6('Composition input type:'),
                 dcc.RadioItems(id=app_id + '_compos_input_type',
                                options=[
-                                   {'label': weight_name, 'value': weight_name},
-                                   {'label': atomic_name, 'value': atomic_name},
+                                   {'label': constants.weight_name, 'value': constants.weight_name},
+                                   {'label': constants.atomic_name, 'value': constants.atomic_name},
                                ],
-                               value=weight_name,
+                               value=constants.weight_name,
                                # labelStyle={'display': 'inline-block'},
                                ),
             ], className='row',
@@ -1348,69 +1361,69 @@ for i, each_app in enumerate(app_dict.keys()):
 app_links_div = html.Div(app_links_list)
 
 sample_tb_even_3_col = [
-    {'if': {'column_id': chem_name},
+    {'if': {'column_id': constants.chem_name},
      'width': '33%'},
-    {'if': {'column_id': thick_name},
+    {'if': {'column_id': constants.thick_name},
      'width': '33%'},
-    {'if': {'column_id': density_name},
+    {'if': {'column_id': constants.density_name},
      'width': '33%'},
 ]
 
 iso_tb_even_4_col = [
-    {'if': {'column_id': layer_name},
+    {'if': {'column_id': constants.layer_name},
      'width': '25%'},
-    {'if': {'column_id': ele_name},
+    {'if': {'column_id': constants.ele_name},
      'width': '25%'},
-    {'if': {'column_id': iso_name},
+    {'if': {'column_id': constants.iso_name},
      'width': '25%'},
-    {'if': {'column_id': iso_ratio_name},
+    {'if': {'column_id': constants.iso_ratio_name},
      'width': '25%'},
 ]
 
 range_tb_even_5_col = [
-    {'if': {'column_id': energy_name},
+    {'if': {'column_id': constants.energy_name},
      'width': '20%'},
-    {'if': {'column_id': wave_name},
+    {'if': {'column_id': constants.wave_name},
      'width': '20%'},
-    {'if': {'column_id': speed_name},
+    {'if': {'column_id': constants.speed_name},
      'width': '20%'},
-    {'if': {'column_id': tof_name},
+    {'if': {'column_id': constants.tof_name},
      'width': '20%'},
-    {'if': {'column_id': class_name},
+    {'if': {'column_id': constants.class_name},
      'width': '20%'},
 ]
 
 output_tb_uneven_6_col = [
-    {'if': {'column_id': thick_name},
+    {'if': {'column_id': constants.thick_name},
      'width': '22%'},
-    {'if': {'column_id': density_name},
+    {'if': {'column_id': constants.density_name},
      'width': '22%'},
-    {'if': {'column_id': ratio_name},
+    {'if': {'column_id': constants.ratio_name},
      'width': '22%'},
-    {'if': {'column_id': molar_name},
+    {'if': {'column_id': constants.molar_name},
      'width': '11%'},
-    {'if': {'column_id': number_density_name},
+    {'if': {'column_id': constants.number_density_name},
      'width': '11%'},
-    {'if': {'column_id': mu_per_cm_name},
+    {'if': {'column_id': constants.mu_per_cm_name},
      'width': '11%'},
 ]
 
 color = 'rgb(240, 240, 240)'
 range_tb_gray_cols = [
-    {'if': {'column_id': speed_name},
+    {'if': {'column_id': constants.speed_name},
      'backgroundColor': color},
-    {'if': {'column_id': tof_name},
+    {'if': {'column_id': constants.tof_name},
      'backgroundColor': color},
-    {'if': {'column_id': class_name},
+    {'if': {'column_id': constants.class_name},
      'backgroundColor': color},
 ]
 
 iso_tb_gray_cols = [
-    {'if': {'column_id': layer_name},
+    {'if': {'column_id': constants.layer_name},
      'backgroundColor': color},
-    {'if': {'column_id': ele_name},
+    {'if': {'column_id': constants.ele_name},
      'backgroundColor': color},
-    {'if': {'column_id': iso_name},
+    {'if': {'column_id': constants.iso_name},
      'backgroundColor': color},
     # striped_rows,
 ]

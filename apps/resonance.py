@@ -1,21 +1,22 @@
 import dash_bootstrap_components as dbc
 from callbacks.resonance import *
 from callbacks.utilities.initialization import init_app_ids
+import callbacks.utilities.constants as constants
 
 # Neutron resonance tool
 
 energy_range_df_default = pd.DataFrame({
-    energy_name: [1, 100],
-    wave_name: [0.28598, 0.0286],
-    speed_name: [13832.93, 138329.29],
-    tof_name: [1189.1914, 118.9191],
-    class_name: ['Epithermal', 'Epithermal'],
+    constants.energy_name: [1, 100],
+    constants.wave_name: [0.28598, 0.0286],
+    constants.speed_name: [13832.93, 138329.29],
+    constants.tof_name: [1189.1914, 118.9191],
+    constants.class_name: ['Epithermal', 'Epithermal'],
 })
 
 sample_df_default = pd.DataFrame({
-    chem_name: ['Ag'],
-    thick_name: ['1'],
-    density_name: [''],
+    constants.chem_name: ['Ag'],
+    constants.thick_name: ['1'],
+    constants.density_name: [''],
 })
 
 app_name = 'resonance'

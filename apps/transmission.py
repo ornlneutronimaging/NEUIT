@@ -1,11 +1,13 @@
 import dash_bootstrap_components as dbc
 from callbacks.transmission import *
 # from callbacks.utilities.initialization import init_app_ids
+import callbacks.utilities.constants as constants
+
 
 sample_df_default = pd.DataFrame({
-    chem_name: ['H2O'],
-    thick_name: [2],
-    density_name: [1],
+    constants.chem_name: ['H2O'],
+    constants.thick_name: [2],
+    constants.density_name: [1],
 })
 
 app_name = 'transmission'

@@ -4,8 +4,8 @@ from bem import xscalc
 
 from app import app
 from callbacks.utilities._utilities import *
-
 from callbacks.utilities.initialization import init_app_ids
+import callbacks.utilities.constants as constants
 
 app_name = 'bragg'
 app_id_dict = init_app_ids(app_name=app_name)
@@ -117,8 +117,8 @@ def store_bragg_df_in_json(n_submit, test_passed,
             if len(error_div_list) == 0:
                 df_y = pd.DataFrame.from_dict(xs_dict)
                 df_x = pd.DataFrame()
-                df_x[wave_name] = wavelengths_A
-                df_x[energy_name] = ir_util.angstroms_to_ev(wavelengths_A)
+                df_x[constants.wave_name] = wavelengths_A
+                df_x[constants.energy_name] = ir_util.angstroms_to_ev(wavelengths_A)
                 datasets = {
                     'x': df_x.to_json(orient='split', date_format='iso'),
                     'y': df_y.to_json(orient='split', date_format='iso'),

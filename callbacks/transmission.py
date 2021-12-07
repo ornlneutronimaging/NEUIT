@@ -3,6 +3,8 @@ from dash.dependencies import Input, Output, State
 from app import app
 from callbacks.utilities._utilities import *
 from callbacks.utilities.initialization import init_app_ids
+import callbacks.utilities.constants as constants
+
 
 app_name = 'transmission'
 app_id_dict = init_app_ids(app_name=app_name)
@@ -184,7 +186,7 @@ def error(n_submit, database, sample_tb_rows, iso_tb_rows, iso_changed, beamline
 
         # Test energy range for bonded H cross-sections
         if all(test_passed_list):
-            for each_chem in sample_tb_dict[chem_name]:
+            for each_chem in sample_tb_dict[constants.chem_name]:
                 if each_chem in ir_util.h_bond_list:
                     if beamline == 'imaging':
                         test_passed_list.append(False)

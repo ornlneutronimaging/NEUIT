@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from app import app
 from callbacks.utilities._utilities import *
 from callbacks.utilities.initialization import init_app_ids
-
+import callbacks.utilities.constants as constants
 
 app_name = 'resonance'
 app_id_dict = init_app_ids(app_name=app_name)
@@ -70,10 +70,10 @@ def form_range_table(timestamp, modified_coord, distance, prev_distance, range_t
                                                          distance=distance,
                                                          modified_coord=modified_coord)
     else:
-        range_table_rows[0][tof_name] = fill_range_table_by_e(e_ev=range_table_rows[0][energy_name],
-                                                              distance_m=distance)[tof_name]
-        range_table_rows[1][tof_name] = fill_range_table_by_e(e_ev=range_table_rows[1][energy_name],
-                                                              distance_m=distance)[tof_name]
+        range_table_rows[0][constants.tof_name] = fill_range_table_by_e(e_ev=range_table_rows[0][constants.energy_name],
+                                                              distance_m=distance)[constants.tof_name]
+        range_table_rows[1][constants.tof_name] = fill_range_table_by_e(e_ev=range_table_rows[1][constants.energy_name],
+                                                              distance_m=distance)[constants.tof_name]
     return range_table_rows, distance
 
 
@@ -258,20 +258,20 @@ def error(n_submit, database, sample_tb_rows, iso_tb_rows, range_tb_rows, iso_ch
 
         # Test energy range for bonded H cross-sections
         if all(test_passed_list):
-            for each_chem in sample_tb_dict[chem_name]:
+            for each_chem in sample_tb_dict[constants.chem_name]:
                 if each_chem in ir_util.h_bond_list:
                     for each_row in range_tb_rows:
-                        if each_row[wave_name] > 5.35:
+                        if each_row[constants.wave_name] > 5.35:
                             energy_min = ir_util.angstroms_to_ev(5.35)
                             test_passed_list.append(False)
                             output_div_list.append(
                                 html.P(
                                     u"INPUT ERROR: {}: ['Only wavelengths <= 5.35 \u212B are currently supported supported for bonded H cross-sections']".format(
-                                        str(wave_name))))
+                                        str(constants.wave_name))))
                             output_div_list.append(
                                 html.P(
                                     u"INPUT ERROR: {}: ['Only wavelengths >= {} \u212B are currently supported supported for bonded H cross-sections']".format(
-                                        str(energy_name), energy_min)))
+                                        str(constants.energy_name), energy_min)))
 
         # Return result
         if all(test_passed_list):
@@ -341,7 +341,7 @@ def store_reso_df_in_json(n_submit,
                              output_type='df')
 
         df_x = pd.DataFrame()
-        df_x[energy_name] = df_y[energy_name][:]
+        df_x[constants.energy_name] = df_y[constants.energy_name][:]
         df_x = fill_df_x_types(df=df_x, distance_m=distance_m)
 
         df_y.drop(columns=[df_y.columns[0]], inplace=True)  # Drop x-axis row
@@ -503,12 +503,12 @@ def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
 def output_transmission_and_stack(n_submit, test_passed, database,
                                   sample_tb_rows, iso_tb_rows, iso_changed, range_table_rows):
     if test_passed is True:
-        if range_table_rows[0][energy_name] < range_table_rows[1][energy_name]:
-            e_min = range_table_rows[0][energy_name]
-            e_max = range_table_rows[1][energy_name]
+        if range_table_rows[0][constants.energy_name] < range_table_rows[1][constants.energy_name]:
+            e_min = range_table_rows[0][constants.energy_name]
+            e_max = range_table_rows[1][constants.energy_name]
         else:
-            e_min = range_table_rows[1][energy_name]
-            e_max = range_table_rows[0][energy_name]
+            e_min = range_table_rows[1][constants.energy_name]
+            e_max = range_table_rows[0][constants.energy_name]
         output_div_list, o_stack = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
                                                                 iso_tb_rows=iso_tb_rows,
                                                                 iso_changed=iso_changed,
