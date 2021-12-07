@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 
 from app import app
 from callbacks.utilities._utilities import *
+from callbacks.utilities.initialization import init_app_ids
 
 
 app_name = 'resonance'

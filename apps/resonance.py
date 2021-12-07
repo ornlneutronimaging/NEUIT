@@ -1,5 +1,6 @@
 import dash_bootstrap_components as dbc
 from callbacks.resonance import *
+from callbacks.utilities.initialization import init_app_ids
 
 # Neutron resonance tool
 

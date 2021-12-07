@@ -3,6 +3,8 @@ import plotly.graph_objects as go
 from app import app
 
 from callbacks.utilities._utilities import *
+from callbacks.utilities.initialization import init_app_ids
+
 
 app_name = 'golden_angles'
 app_id_dict = init_app_ids(app_name=app_name)

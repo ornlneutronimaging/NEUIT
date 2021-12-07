@@ -1,6 +1,7 @@
 import dash_bootstrap_components as dbc
 
 from callbacks.tof_plotter import *
+from callbacks.utilities.initialization import init_app_ids
 
 
 # Time-of-flight plotter

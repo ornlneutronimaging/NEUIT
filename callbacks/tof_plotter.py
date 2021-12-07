@@ -4,6 +4,7 @@ from app import app
 from callbacks.utilities._utilities import *
 import plotly.tools as tls
 import matplotlib.pyplot as plt
+from callbacks.utilities.initialization import init_app_ids
 
 app_name = 'tof_plotter'
 app_id_dict = init_app_ids(app_name=app_name)

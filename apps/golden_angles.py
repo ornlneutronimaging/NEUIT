@@ -1,6 +1,7 @@
 import dash_bootstrap_components as dbc
 
-from callbacks.utilities._utilities import *
+# from callbacks.utilities.initialization import init_app_ids
+from callbacks.golden_angles import *
 
 app_name = 'golden_angles'
 app_id_dict = init_app_ids(app_name=app_name)

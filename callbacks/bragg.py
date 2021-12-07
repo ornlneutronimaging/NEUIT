@@ -1,9 +1,11 @@
 from dash.dependencies import Input, Output, State
+import matplotlib.pyplot as plt
+from bem import xscalc
 
 from app import app
 from callbacks.utilities._utilities import *
-import matplotlib.pyplot as plt
-from bem import xscalc
+
+from callbacks.utilities.initialization import init_app_ids
 
 app_name = 'bragg'
 app_id_dict = init_app_ids(app_name=app_name)

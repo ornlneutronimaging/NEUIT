@@ -1,6 +1,6 @@
 import dash_bootstrap_components as dbc
 from callbacks.converter import *
-
+from callbacks.utilities.initialization import init_app_ids
 
 # Composition converter tool
 
