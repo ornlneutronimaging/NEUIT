@@ -1,6 +1,6 @@
 from dash.dependencies import Input, Output, State
 from app import app
-from _utilities import *
+from callbacks.utilities._utilities import *
 
 
 app_name = 'app3'

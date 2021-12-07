@@ -1,7 +1,7 @@
 from dash.dependencies import Input, Output, State
 
 from app import app
-from _utilities import *
+from callbacks.utilities._utilities import *
 
 app_name = 'app1'
 app_id_dict = init_app_ids(app_name=app_name)

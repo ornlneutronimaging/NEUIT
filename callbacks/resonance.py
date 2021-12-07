@@ -2,7 +2,7 @@ from dash.dependencies import Input, Output, State
 import matplotlib.pyplot as plt
 
 from app import app
-from _utilities import *
+from callbacks.utilities._utilities import *
 
 
 app_name = 'app2'

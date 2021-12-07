@@ -2,7 +2,7 @@ from dash.dependencies import Output, Input
 import plotly.graph_objects as go
 from app import app
 
-from _utilities import *
+from callbacks.utilities._utilities import *
 
 app_name = 'app6'
 app_id_dict = init_app_ids(app_name=app_name)

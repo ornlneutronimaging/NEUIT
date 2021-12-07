@@ -1,7 +1,7 @@
 import unittest
 
-from _utilities import *
-from _utilities import _validate_chem_name
+from callbacks.utilities._utilities import *
+from callbacks.utilities._utilities import _validate_chem_name
 
 
 class TestUtilities(unittest.TestCase):

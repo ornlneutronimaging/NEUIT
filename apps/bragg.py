@@ -1,6 +1,5 @@
 import dash_bootstrap_components as dbc
 
-from _utilities import *
 from callbacks.bragg import *
 
 # Bragg-edge tool
