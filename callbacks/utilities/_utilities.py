@@ -21,18 +21,7 @@ import ImagingReso._utilities as ir_util
 from ImagingReso.resonance import Resonance
 
 from config import app_dict
-
-# app_dict = {'app1': {'name': 'Neutron transmission',
-#                      'url': '/apps/transmission'},
-#             'app2': {'name': 'Neutron resonance',
-#                      'url': '/apps/resonance'},
-#             'app3': {'name': 'Composition converter',
-#                      'url': '/apps/converter'},
-#             'app4': {'name': 'Time-of-flight plotter (under testing)',
-#                      'url': '/apps/tof_plotter'},
-#             'app5': {'name': 'Bragg-edge simulator (under testing)',
-#                      'url': '/apps/bragg'},
-#             }
+from callbacks.utilities.validator import MyValidator, is_number, validate_input
 
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
@@ -56,6 +45,7 @@ weight_name_p = 'Weight %'
 atomic_name = 'Atoms (mol)'
 atomic_name_p = 'Atomic %'
 compos_2nd_col_id = '2nd_input_column'
+
 
 energy_range_header_df = pd.DataFrame({
     'name': [energy_name, wave_name, speed_name, tof_name, class_name],
@@ -127,86 +117,6 @@ distance_default = 16.45  # in meter
 delay_default = 0  # in us
 temperature_default = 293  # in Kelvin
 plot_loading = html.H2('Plot loading...')
-
-
-class MyValidator(Validator):
-    def _validate_greater_than_zero(self, greater_than_zero, field, value):
-        """ Test if a value is greater but not equals to zero.
-
-        The rule's arguments are validated against this schema:
-        {'type': 'boolean'}
-        """
-        _boo = bool(value > 0)
-        if greater_than_zero and not _boo:
-            self._error(field, "'{}' must be greater than '0'".format(value))
-
-    def _validate_between_zero_and_one(self, between_zero_and_one, field, value):
-        """ Test if a value is "0 <= value <= 1"'.
-
-        The rule's arguments are validated against this schema:
-        {'type': 'boolean'}
-        """
-        _boo = bool(0 <= value <= 1)
-        if between_zero_and_one and not _boo:
-            self._error(field, "'{}' must be a number between '0' and '1'".format(value))
-
-    def _validate_empty_str(self, empty_str, field, value):
-        """ Test when input type is str, the value must be an empty str.
-
-        The rule's arguments are validated against this schema:
-        {'type': 'boolean'}
-        """
-        if type(value) is str:
-            _boo = bool(value == '')
-            if empty_str and not _boo:
-                self._error(field,
-                            "'{}' must be a number >= '0' or leave as 'blank' to use natural density".format(value))
-
-    def _validate_ENDF_VIII(self, ENDF_VIII, field, value):
-        """ Test if the value is a valid chemical formula.
-
-        The rule's arguments are validated against this schema:
-        {'type': 'boolean'}
-        """
-        if not is_number(value):
-            __validated_result = _validate_chem_name(value, database='ENDF_VIII')
-            _boo = __validated_result[0]
-            if ENDF_VIII and not _boo:
-                self._error(field, __validated_result[1])
-        else:
-            self._error(field, "must be a valid 'chemical formula', input is case sensitive")
-
-    def _validate_ENDF_VII(self, ENDF_VII, field, value):
-        """ Test if the value is a valid chemical formula.
-
-        The rule's arguments are validated against this schema:
-        {'type': 'boolean'}
-        """
-        if not is_number(value):
-            __validated_result = _validate_chem_name(value, database='ENDF_VII')
-            _boo = __validated_result[0]
-            if ENDF_VII and not _boo:
-                self._error(field, __validated_result[1])
-        else:
-            self._error(field, "must be a valid 'chemical formula', input is case sensitive")
-
-
-def _validate_chem_name(input_name: str, database: str):
-    """ Returns True if string is a number. """
-    try:
-        ir_util.formula_to_dictionary(formula=input_name, database=database)
-        return [True, None]
-    except ValueError as error_massage:
-        return [False, error_massage.__str__()]
-
-
-def is_number(s):
-    """ Returns True if string is a number. """
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
 
 
 compos_dict_schema = {
@@ -503,19 +413,19 @@ def validate_input_tb_rows(schema: dict, input_df: pd.DataFrame):
     passed_list = []
     div_list = []
     for each_input_dict in input_dict_list:
-        passed, div = _validate_input(v=v, input_dict=each_input_dict)
+        passed, div = validate_input(v=v, input_dict=each_input_dict)
         div_list.append(div)
         passed_list.append(passed)
     return passed_list, div_list
 
 
-def _validate_input(v: Validator, input_dict: dict):
-    passed = v.validate(input_dict)
-    if passed:
-        return passed, None
-    else:
-        error_message_str = v.errors
-    return passed, html.P('INPUT ERROR: {}'.format(error_message_str))
+# def _validate_input(v: Validator, input_dict: dict):
+#     passed = v.validate(input_dict)
+#     if passed:
+#         return passed, None
+#     else:
+#         error_message_str = v.errors
+#     return passed, html.P('INPUT ERROR: {}'.format(error_message_str))
 
 
 def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
@@ -1333,7 +1243,7 @@ def init_app_ids(app_name: str):
 
 def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id: str, del_row_id: str,
                       database_id: str, app_id: str):
-    if app_id == 'app3':
+    if app_id == 'converter':
         _compos_type_div = html.Div(
             [
                 html.H6('Composition input type:'),
