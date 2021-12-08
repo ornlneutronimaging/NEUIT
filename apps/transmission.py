@@ -2,7 +2,7 @@ import dash_bootstrap_components as dbc
 from callbacks.transmission import *
 from callbacks.utilities.initialization import init_app_ids
 import callbacks.utilities.constants as constants
-from callbacks.utilities.initialization import init_upload_field, init_iso_table
+from callbacks.utilities.initialization import (init_upload_field, init_iso_table, sample_tb_even_3_col)
 
 
 sample_df_default = pd.DataFrame({

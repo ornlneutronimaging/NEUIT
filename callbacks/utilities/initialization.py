@@ -5,6 +5,7 @@ import pandas as pd
 
 from config import app_dict, app_info_markdown_dict
 import callbacks.utilities.constants as constants
+from ImagingReso.resonance import Resonance
 
 
 col_width_1 = 'one column'
@@ -35,6 +36,30 @@ iso_tb_df_default = pd.DataFrame({
     constants.iso_name: [None],
     constants.iso_ratio_name: [None],
 })
+
+
+range_tb_even_5_col = [
+    {'if': {'column_id': constants.energy_name},
+     'width': '20%'},
+    {'if': {'column_id': constants.wave_name},
+     'width': '20%'},
+    {'if': {'column_id': constants.speed_name},
+     'width': '20%'},
+    {'if': {'column_id': constants.tof_name},
+     'width': '20%'},
+    {'if': {'column_id': constants.class_name},
+     'width': '20%'},
+]
+
+
+sample_tb_even_3_col = [
+    {'if': {'column_id': constants.chem_name},
+     'width': '33%'},
+    {'if': {'column_id': constants.thick_name},
+     'width': '33%'},
+    {'if': {'column_id': constants.density_name},
+     'width': '33%'},
+]
 
 
 iso_tb_even_4_col = [
@@ -277,3 +302,13 @@ def init_iso_table(id_str: str):
         id=id_str
     )
     return iso_table
+
+
+def init_reso_from_tb(range_tb_df, e_step, database):
+    v_1 = range_tb_df[constants.energy_name][0]
+    v_2 = range_tb_df[constants.energy_name][1]
+    if v_1 < v_2:
+        o_reso = Resonance(energy_min=v_1, energy_max=v_2, energy_step=e_step, database=database)
+    else:
+        o_reso = Resonance(energy_min=v_2, energy_max=v_1, energy_step=e_step, database=database)
+    return o_reso

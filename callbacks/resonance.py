@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 
 from app import app
 from callbacks.utilities._utilities import *
-from callbacks.utilities.initialization import init_app_ids
+from callbacks.utilities.initialization import init_app_ids, init_reso_from_tb
 import callbacks.utilities.constants as constants
-from callbacks.utilities.validator import validate_sample_input, validate_density_input, validate_iso_input, validate_energy_input
+from callbacks.utilities.validator import (validate_sample_input, validate_density_input, validate_iso_input,
+                                           validate_energy_input)
 
 app_name = 'resonance'
 app_id_dict = init_app_ids(app_name=app_name)
