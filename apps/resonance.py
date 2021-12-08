@@ -5,6 +5,7 @@ from callbacks.utilities.initialization import (init_app_ids, range_tb_gray_cols
 import callbacks.utilities.constants as constants
 from callbacks.utilities.resonance import energy_range_header_df
 from callbacks.utilities.all_apps import sample_header_df
+from callbacks.utilities.plot import plot_option_div
 
 
 # Neutron resonance tool

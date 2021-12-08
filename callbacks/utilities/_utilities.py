@@ -97,21 +97,6 @@ def force_dict_to_numeric(input_dict_list: list):
     return output_dict
 
 
-# def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
-#     compos_tb_df = pd.DataFrame(sample_tb_rows)
-#     prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
-#     try:
-#         sample_df = creat_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
-#         new_iso_df = form_iso_table(sample_df=sample_df, database=database)
-#         new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
-#         try:
-#             return new_iso_df.to_dict('records')
-#         except AttributeError:
-#             return iso_tb_df_default.to_dict('records')
-#     except KeyError:
-#         return iso_tb_df_default.to_dict('records')
-
-
 def load_beam_shape(relative_path_to_beam_shape):
     # Load beam shape from static
     df = pd.read_csv(relative_path_to_beam_shape, sep='\t', skiprows=0)
@@ -125,38 +110,6 @@ def load_beam_shape(relative_path_to_beam_shape):
     df.insert(1, 'energy_eV', round(energy_array, 6))
     # df.insert(1, 'energy_eV', energy_array)
     return df
-
-
-# def unpack_sample_tb_df_and_add_layer(o_reso, sample_tb_df):
-#     num_layer = len(sample_tb_df[constants.chem_name])
-#     for layer_index in range(num_layer):
-#         if constants.density_name not in sample_tb_df.columns:  # sample density name is NOT in the tb
-#             if constants.thick_name not in sample_tb_df.columns:  # for compos_df, only have column "compos_2nd_col_id"
-#                 try:
-#                     o_reso.add_layer(formula=sample_tb_df[constants.chem_name][layer_index],
-#                                      thickness=1)  # dummy layer to generate the stack
-#                 except ValueError:
-#                     pass
-#             else:  # sample thickness is in the tb
-#                 try:
-#                     o_reso.add_layer(formula=sample_tb_df[constants.chem_name][layer_index],
-#                                      thickness=float(sample_tb_df[constants.thick_name][layer_index]))
-#                 except ValueError:
-#                     pass
-#         elif sample_tb_df[constants.density_name][layer_index] == '':  # sample density name is in the tb
-#             try:  # sample density is NOT in the tb
-#                 o_reso.add_layer(formula=sample_tb_df[constants.chem_name][layer_index],
-#                                  thickness=float(sample_tb_df[constants.thick_name][layer_index]))
-#             except ValueError:
-#                 pass
-#         else:  # sample density is in the tb
-#             try:
-#                 o_reso.add_layer(formula=sample_tb_df[constants.chem_name][layer_index],
-#                                  thickness=float(sample_tb_df[constants.thick_name][layer_index]),
-#                                  density=float(sample_tb_df[constants.density_name][layer_index]))
-#             except ValueError:
-#                 pass
-#     return o_reso
 
 
 def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
@@ -482,79 +435,6 @@ def convert_to_effective_formula(ele_list, mol_list):
     return effective_str
 
 
-# def form_iso_table(sample_df: pd.DataFrame, database: str):
-#     o_reso = Resonance(energy_min=1, energy_max=2, energy_step=1, database=database)
-#     o_reso = unpack_sample_tb_df_and_add_layer(o_reso=o_reso, sample_tb_df=sample_df)
-#     layer_list = list(o_reso.stack.keys())
-#     lay_list = []
-#     ele_list = []
-#     iso_list = []
-#     iso_ratio_list = []
-#     for each_layer in layer_list:
-#         current_ele_list = o_reso.stack[each_layer]['elements']
-#         for each_ele in current_ele_list:
-#             current_iso_list = o_reso.stack[each_layer][each_ele]['isotopes']['list']
-#             current_iso_ratio_list = o_reso.stack[each_layer][each_ele]['isotopes']['isotopic_ratio']
-#             for i, each_iso in enumerate(current_iso_list):
-#                 lay_list.append(each_layer)
-#                 ele_list.append(each_ele)
-#                 iso_list.append(each_iso)
-#                 iso_ratio_list.append(round(current_iso_ratio_list[i], 4))
-#
-#     _df = pd.DataFrame({
-#         constants.layer_name: lay_list,
-#         constants.ele_name: ele_list,
-#         constants.iso_name: iso_list,
-#         constants.iso_ratio_name: iso_ratio_list,
-#     })
-#     return _df
-
-
-# def update_new_iso_table(prev_iso_df: pd.DataFrame, new_iso_df: pd.DataFrame):
-#     prev_iso_layer_list = list(prev_iso_df[constants.layer_name])  # previous list of layers
-#     new_iso_layer_list = list(new_iso_df[constants.layer_name])  # new list of layers
-#
-#     prev_index = []  # index of the new layers that exists in prev layers
-#     new_index = []  # index of the prev layers that needs to be passed along
-#     for line_idx, each_new_layer in enumerate(new_iso_layer_list):
-#         if each_new_layer in prev_iso_layer_list:
-#             new_index.append(line_idx)
-#     for line_idx, each_prev_layer in enumerate(prev_iso_layer_list):
-#         if each_prev_layer in new_iso_layer_list:
-#             prev_index.append(line_idx)
-#
-#     if len(prev_index) != 0:
-#         for idx, each in enumerate(new_index):
-#             new_iso_df.iloc[each] = prev_iso_df.loc[prev_index[idx]]
-#
-#     return new_iso_df
-
-
-# def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
-#     row = modified_coord[0]
-#     col = modified_coord[1]
-#     if col == 0:
-#         input_value = range_table_rows[row][constants.energy_name]
-#         if is_number(input_value) and float(input_value) > 0:
-#             things_to_fill = fill_range_table_by_e(e_ev=float(input_value), distance_m=distance)
-#             for each_col in range_table_rows[row].keys():
-#                 range_table_rows[row][each_col] = things_to_fill[each_col]
-#         else:
-#             for each_col in [constants.wave_name, constants.speed_name, constants.tof_name, constants.class_name]:
-#                 range_table_rows[row][each_col] = 'N/A'
-#     elif col == 1:  # Changed back to 1 from 4 after updating to pandas>=0.25.0
-#         input_value = range_table_rows[row][constants.wave_name]
-#         if is_number(input_value) and float(input_value) > 0:
-#             things_to_fill = fill_range_table_by_wave(wave_angstroms=float(input_value), distance_m=distance)
-#             for each_col in range_table_rows[row].keys():
-#                 range_table_rows[row][each_col] = things_to_fill[each_col]
-#         else:
-#             for each_col in [constants.energy_name, constants.speed_name, constants.tof_name, constants.class_name]:
-#                 range_table_rows[row][each_col] = 'N/A'
-#
-#     return range_table_rows
-
-
 def _load_jsonified_data(jsonified_data):
     datasets = json.loads(jsonified_data)
     return datasets
@@ -832,114 +712,75 @@ markdown_iso = dcc.Markdown('''
 NOTE: Uncheck the box will **NOT RESET** this table if you have edited it, but the input will not be used in the
 calculations.''')
 
-# Plot control buttons
-plot_option_div = html.Div(
-    [
-        html.Hr(),
-        html.H3('Result'),
-        html.H5('Plot:'),
-        html.Div(
-            [
-                html.Div(
-                    [
-                        html.P('X options: '),
-                        dcc.RadioItems(id='x_type',
-                                       options=[
-                                           {'label': 'Energy (eV)', 'value': 'energy'},
-                                           {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
-                                           {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
-                                       ],
-                                       value='energy',
-                                       # n_clicks_timestamp=0,
-                                       )
-                    ], className=col_width_3
-                ),
-                html.Div(
-                    [
-                        html.P('Y options: '),
-                        dcc.RadioItems(id='y_type',
-                                       options=[
-                                           {'label': 'Transmission', 'value': 'transmission'},
-                                           {'label': 'Attenuation', 'value': 'attenuation'},
-                                           {'label': 'Attenuation coefficient', 'value': 'mu_per_cm'},
-                                           {'label': "Cross-section (weighted)", 'value': 'sigma'},
-                                           {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
-                                       ],
-                                       value='transmission',
-                                       # n_clicks_timestamp=0,
-                                       )
-                    ], className=col_width_3
-                ),
-                html.Div(
-                    [
-                        html.P('Scale options: '),
-                        dcc.RadioItems(id='plot_scale',
-                                       options=[
-                                           {'label': 'Linear', 'value': 'linear'},
-                                           {'label': 'Log x', 'value': 'logx'},
-                                           {'label': 'Log y', 'value': 'logy'},
-                                           {'label': 'Loglog', 'value': 'loglog'},
-                                       ],
-                                       value='linear',
-                                       # n_clicks_timestamp=0,
-                                       )
-                    ], className=col_width_3
-                ),
-                html.Div(
-                    [
-                        html.P('Show options: '),
-                        dcc.Checklist(id='show_opt',
-                                      options=[
-                                          {'label': 'Total', 'value': 'total'},
-                                          {'label': 'Layer', 'value': 'layer'},
-                                          {'label': 'Element', 'value': 'ele'},
-                                          {'label': 'Isotope', 'value': 'iso'},
-                                      ],
-                                      value=['layer'],
-                                      # n_clicks_timestamp=0,
-                                      ),
-                    ], className=col_width_3
-                ),
-            ], className='row'
-        ),
-    ]
-),
-
-
-def shape_matplot_to_plotly(fig, y_type, plot_scale):
-    plotly_fig = tls.mpl_to_plotly(fig)
-    # Layout
-    plotly_fig.layout.showlegend = True
-    plotly_fig.layout.autosize = True
-    plotly_fig.layout.height = 600
-    plotly_fig.layout.width = 900
-    plotly_fig.layout.margin = {'b': 52, 'l': 80, 'pad': 0, 'r': 15, 't': 15}
-    plotly_fig.layout.xaxis1.tickfont.size = 15
-    plotly_fig.layout.xaxis1.titlefont.size = 18
-    plotly_fig.layout.yaxis1.tickfont.size = 15
-    plotly_fig.layout.yaxis1.titlefont.size = 18
-    plotly_fig.layout.xaxis.autorange = True
-    if y_type in ['attenuation', 'transmission']:
-        plotly_fig['layout']['yaxis']['autorange'] = False
-        if plot_scale in ['logy', 'loglog']:
-            plot_scale = 'linear'
-    else:
-        plotly_fig['layout']['yaxis']['autorange'] = True
-
-    if plot_scale == 'logx':
-        plotly_fig['layout']['xaxis']['type'] = 'log'
-        plotly_fig['layout']['yaxis']['type'] = 'linear'
-        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
-    elif plot_scale == 'logy':
-        if y_type not in ['attenuation', 'transmission']:
-            plotly_fig['layout']['xaxis']['type'] = 'linear'
-            plotly_fig['layout']['yaxis']['type'] = 'log'
-    elif plot_scale == 'loglog':
-        if y_type not in ['attenuation', 'transmission']:
-            plotly_fig['layout']['xaxis']['type'] = 'log'
-            plotly_fig['layout']['yaxis']['type'] = 'log'
-    else:
-        plotly_fig['layout']['xaxis']['type'] = 'linear'
-        plotly_fig['layout']['yaxis']['type'] = 'linear'
-        plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
-    return plotly_fig
+# # Plot control buttons
+# plot_option_div = html.Div(
+#     [
+#         html.Hr(),
+#         html.H3('Result'),
+#         html.H5('Plot:'),
+#         html.Div(
+#             [
+#                 html.Div(
+#                     [
+#                         html.P('X options: '),
+#                         dcc.RadioItems(id='x_type',
+#                                        options=[
+#                                            {'label': 'Energy (eV)', 'value': 'energy'},
+#                                            {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
+#                                            {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
+#                                        ],
+#                                        value='energy',
+#                                        # n_clicks_timestamp=0,
+#                                        )
+#                     ], className=col_width_3
+#                 ),
+#                 html.Div(
+#                     [
+#                         html.P('Y options: '),
+#                         dcc.RadioItems(id='y_type',
+#                                        options=[
+#                                            {'label': 'Transmission', 'value': 'transmission'},
+#                                            {'label': 'Attenuation', 'value': 'attenuation'},
+#                                            {'label': 'Attenuation coefficient', 'value': 'mu_per_cm'},
+#                                            {'label': "Cross-section (weighted)", 'value': 'sigma'},
+#                                            {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
+#                                        ],
+#                                        value='transmission',
+#                                        # n_clicks_timestamp=0,
+#                                        )
+#                     ], className=col_width_3
+#                 ),
+#                 html.Div(
+#                     [
+#                         html.P('Scale options: '),
+#                         dcc.RadioItems(id='plot_scale',
+#                                        options=[
+#                                            {'label': 'Linear', 'value': 'linear'},
+#                                            {'label': 'Log x', 'value': 'logx'},
+#                                            {'label': 'Log y', 'value': 'logy'},
+#                                            {'label': 'Loglog', 'value': 'loglog'},
+#                                        ],
+#                                        value='linear',
+#                                        # n_clicks_timestamp=0,
+#                                        )
+#                     ], className=col_width_3
+#                 ),
+#                 html.Div(
+#                     [
+#                         html.P('Show options: '),
+#                         dcc.Checklist(id='show_opt',
+#                                       options=[
+#                                           {'label': 'Total', 'value': 'total'},
+#                                           {'label': 'Layer', 'value': 'layer'},
+#                                           {'label': 'Element', 'value': 'ele'},
+#                                           {'label': 'Isotope', 'value': 'iso'},
+#                                       ],
+#                                       value=['layer'],
+#                                       # n_clicks_timestamp=0,
+#                                       ),
+#                     ], className=col_width_3
+#                 ),
+#             ], className='row'
+#         ),
+#     ]
+# ),

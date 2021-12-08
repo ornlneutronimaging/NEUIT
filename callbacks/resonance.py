@@ -9,6 +9,7 @@ from callbacks.utilities.validator import (validate_sample_input, validate_densi
                                            validate_energy_input)
 from callbacks.utilities.resonance import fill_range_table_by_e, update_range_tb_by_coordinate
 from callbacks.utilities.all_apps import (form_iso_table, unpack_sample_tb_df_and_add_layer, update_iso_table_callback)
+from callbacks.utilities.plot import shape_matplot_to_plotly
 
 
 app_name = 'resonance'
