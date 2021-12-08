@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 from callbacks.converter import *
 from callbacks.utilities.initialization import init_app_ids, init_iso_table, init_upload_field
-import callbacks.utilities.constants as constants
+from callbacks.utilities.constants import *
 from callbacks.utilities.converter import compos_header_df, compos_header_percent_df
 
 
@@ -9,7 +9,7 @@ from callbacks.utilities.converter import compos_header_df, compos_header_percen
 
 compos_df_default = pd.DataFrame({
     constants.chem_name: ['B4C', 'SiC'],
-    constants.compos_2nd_col_id: ['50', '50'],
+    compos_2nd_col_id: ['50', '50'],
 })
 
 app_name = 'converter'
@@ -48,9 +48,9 @@ layout = html.Div(
                     row_deletable=True,
                     export_format='csv',
                     style_cell_conditional=[
-                        {'if': {'column_id': constants.chem_name},
+                        {'if': {'column_id': chem_name},
                          'width': '50%'},
-                        {'if': {'column_id': constants.compos_2nd_col_id},
+                        {'if': {'column_id': compos_2nd_col_id},
                          'width': '50%'},
                     ],
                     style_data_conditional=[striped_rows],

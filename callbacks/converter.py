@@ -4,6 +4,9 @@ from callbacks.utilities._utilities import *
 from callbacks.utilities.initialization import init_app_ids
 import callbacks.utilities.constants as constants
 from callbacks.utilities.validator import validate_sample_input, validate_iso_input
+from callbacks.utilities.all_apps import (update_iso_table_callback, force_dict_to_numeric, form_iso_table,
+                                          form_transmission_result_div, create_sample_df_from_compos_df)
+from callbacks.utilities.converter import compos_header_percent_df
 
 app_name = 'converter'
 app_id_dict = init_app_ids(app_name=app_name)
@@ -194,7 +197,7 @@ def output(n_submit, test_passed, database, compos_tb_rows, iso_tb_rows, iso_cha
         _compos_df = compos_tb_df[:]
         _compos_df = _compos_df[_compos_df[_compos_df.columns[0]] != '']
 
-        _sample_df = creat_sample_df_from_compos_df(compos_tb_df=_compos_df)
+        _sample_df = create_sample_df_from_compos_df(compos_tb_df=_compos_df)
         _iso_tb_df = iso_tb_df[:]
 
         # Calculation starts

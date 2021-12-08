@@ -1,4 +1,5 @@
 from dash import html
+from dash import dcc
 
 
 energy_name = 'Energy (eV)'
@@ -30,3 +31,27 @@ col_width_3 = 'three columns'
 col_width_5 = 'five columns'
 col_width_6 = 'six columns'
 empty_div = html.Div()
+
+
+markdown_sample = dcc.Markdown('''
+NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**. Density input can **ONLY**
+be **omitted (leave as blank)** if the input formula is a single element.''')
+
+markdown_disclaimer_sns = dcc.Markdown('''
+**Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections 
+from **ENDF/B** database and the **simulated** beam spectrum at this beamline.''')
+
+markdown_disclaimer_hfir = dcc.Markdown('''
+**Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections 
+from **ENDF/B** database and the **measured** beam spectrum at this beamline.''')
+
+label_sample = html.Label(['When omitted, natural densities will be used. List of densities can be found ',
+                           html.A("here.", href='http://periodictable.com/Properties/A/Density.al.html',
+                                  target="_blank")])
+
+markdown_compos = dcc.Markdown('''
+NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**.''')
+
+markdown_iso = dcc.Markdown('''
+NOTE: Uncheck the box will **NOT RESET** this table if you have edited it, but the input will not be used in the
+calculations.''')
