@@ -1,5 +1,7 @@
 import dash_bootstrap_components as dbc
-from callbacks.resonance import *
+import pandas as pd
+from dash import dash_table as dt
+
 from callbacks.utilities.initialization import (init_app_ids, range_tb_gray_cols, init_iso_table, init_upload_field,
                                                 sample_tb_even_3_col, range_tb_even_5_col, striped_rows,
                                                 distance_default, plot_loading)

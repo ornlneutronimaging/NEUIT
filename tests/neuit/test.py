@@ -3,7 +3,7 @@ import unittest
 from callbacks.utilities._utilities import *
 from callbacks.utilities.validator import (_validate_chem_name, validate_input_tb_rows, validate_sum_of_iso_ratio)
 from callbacks.utilities.constants import *
-
+from callbacks.utilities.all_apps import iso_dict_schema, sample_dict_schema
 
 class TestUtilities(unittest.TestCase):
     database = '_data_for_unittest'

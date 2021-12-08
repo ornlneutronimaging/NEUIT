@@ -1,8 +1,10 @@
 import dash_bootstrap_components as dbc
+from dash import html
+from dash import dcc
 
 from callbacks.bragg import *
 from callbacks.utilities.initialization import (init_app_ids, temperature_default,
-                                                plot_loading)
+                                                plot_loading, col_width_3)
 
 # Bragg-edge tool
 

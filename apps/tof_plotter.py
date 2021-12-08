@@ -1,8 +1,10 @@
 import dash_bootstrap_components as dbc
+from dash import dcc
+from dash import html
 
 from callbacks.tof_plotter import *
 from callbacks.utilities.initialization import (init_app_ids, distance_default,
-                                                delay_default, plot_loading)
+                                                delay_default, plot_loading, col_width_3)
 
 
 # Time-of-flight plotter

@@ -1,5 +1,6 @@
 import dash_bootstrap_components as dbc
-from callbacks.transmission import *
+import pandas as pd
+
 from callbacks.utilities.initialization import init_app_ids
 from callbacks.utilities.constants import *
 from callbacks.utilities.initialization import (init_upload_field, init_iso_table,

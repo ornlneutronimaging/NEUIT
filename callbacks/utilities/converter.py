@@ -15,6 +15,13 @@ compos_header_df = pd.DataFrame({
 })
 
 
+compos_dict_schema = {
+    # chem_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
+    constants.chem_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
+    constants.compos_2nd_col_id: {'type': 'number', 'greater_than_zero': True},
+}
+
+
 compos_header_percent_df = pd.DataFrame({
     'name': [constants.chem_name,
              constants.weight_name_p,

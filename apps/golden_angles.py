@@ -1,4 +1,6 @@
 import dash_bootstrap_components as dbc
+from dash import html
+from dash import dcc
 
 # from callbacks.utilities.initialization import init_app_ids
 from callbacks.golden_angles import *

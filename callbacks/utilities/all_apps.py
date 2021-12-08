@@ -30,6 +30,23 @@ sample_header_df = pd.DataFrame({
 })
 
 
+iso_dict_schema = {
+    # layer_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
+    layer_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
+    ele_name: {'type': 'string', 'empty': False, 'required': True, },
+    iso_name: {'type': 'string', 'empty': False, 'required': True, },
+    iso_ratio_name: {'type': 'number', 'min': 0, 'max': 1, 'required': True, 'between_zero_and_one': True, },
+}
+
+
+sample_dict_schema = {
+    # chem_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
+    chem_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
+    thick_name: {'type': 'number', 'min': 0, 'required': True, },
+    density_name: {'anyof_type': ['string', 'number'], 'min': 0, 'empty_str': True, },
+}
+
+
 def y_type_to_y_label(y_type):
     if y_type == 'transmission':
         y_label = 'Transmission'
