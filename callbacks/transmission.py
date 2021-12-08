@@ -7,7 +7,7 @@ import callbacks.utilities.constants as constants
 from callbacks.utilities.validator import validate_sample_input, validate_density_input, validate_iso_input, validate_band_width_input
 from callbacks.utilities.all_apps import (update_iso_table_callback, force_dict_to_numeric,
                                           form_transmission_result_div, form_iso_table,
-                                          form_sample_stack_table_div)
+                                          form_sample_stack_table_div, update_rows_util)
 
 app_name = 'transmission'
 app_id_dict = init_app_ids(app_name=app_name)

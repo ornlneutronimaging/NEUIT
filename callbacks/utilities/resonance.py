@@ -5,6 +5,7 @@ import ImagingReso._utilities as ir_util
 
 import callbacks.utilities.constants as constants
 from callbacks.utilities.validator import is_number
+from callbacks.utilities.all_apps import (load_dfs, y_type_to_y_label, x_type_to_x_tag)
 
 
 energy_range_header_df = pd.DataFrame({
@@ -91,3 +92,53 @@ def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
                 range_table_rows[row][each_col] = 'N/A'
 
     return range_table_rows
+
+
+def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_opt, to_csv):
+    df_dict = load_dfs(jsonified_data=jsonified_data)
+    # Determine Y df and y_label to plot
+
+    y_label = y_type_to_y_label(y_type)
+
+    df_x = df_dict['x']
+    df_y = df_dict['y']
+
+    # Determine X names to plot
+    x_tag = x_type_to_x_tag(x_type)
+
+    # Locate items based on plot level provided
+    total_col_name_list = []
+    layer_col_name_list = []
+    ele_col_name_list = []
+    iso_col_name_list = []
+    atoms_per_cm3_col_name_list = []
+    for col_name in df_y.columns:
+        if col_name.count('Total') == 0:
+            _num_of_slash = col_name.count('/')
+            if _num_of_slash == 0:
+                layer_col_name_list.append(col_name)
+            elif _num_of_slash == 1:
+                ele_col_name_list.append(col_name)
+            elif _num_of_slash == 2:
+                if col_name.count('atoms_per_cm3') != 0:
+                    atoms_per_cm3_col_name_list.append(col_name)
+                else:
+                    iso_col_name_list.append(col_name)
+        else:
+            total_col_name_list.append(col_name)
+
+    _to_export_list = []
+    if len(show_opt) == 0:
+        _to_export_list.append(prev_show_opt)
+    if 'total' in show_opt:
+        _to_export_list.extend(total_col_name_list)
+    if 'layer' in show_opt:
+        _to_export_list.extend(layer_col_name_list)
+    if 'ele' in show_opt:
+        _to_export_list.extend(ele_col_name_list)
+    if to_csv:
+        _to_export_list.extend(atoms_per_cm3_col_name_list)
+    if 'iso' in show_opt:
+        _to_export_list.extend(iso_col_name_list)
+
+    return df_x, df_y, _to_export_list, x_tag, y_label

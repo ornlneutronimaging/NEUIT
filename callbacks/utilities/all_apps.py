@@ -3,6 +3,9 @@ import os
 from scipy.interpolate import interp1d
 import numpy as np
 from dash import dash_table as dt
+import io
+import json
+import base64
 
 import ImagingReso._utilities as ir_util
 from ImagingReso.resonance import Resonance
@@ -25,6 +28,33 @@ sample_header_df = pd.DataFrame({
     # 'editable': [True, True, True],
     'type': ['text', 'numeric', 'any']
 })
+
+
+def y_type_to_y_label(y_type):
+    if y_type == 'transmission':
+        y_label = 'Transmission'
+    elif y_type == 'attenuation':
+        y_label = 'Attenuation'
+    elif y_type == 'counts':
+        y_label = 'Counts'
+    elif y_type == 'sigma':
+        y_label = 'Cross-sections (barn)'
+    elif y_type == 'sigma_raw':
+        y_label = 'Cross-sections (barn)'
+    else:  # y_type == 'mu_per_cm':
+        y_label = 'Attenuation coefficient \u03BC (cm\u207B\u00B9)'
+    return y_label
+
+
+def x_type_to_x_tag(x_type):
+    # Determine X names to plot
+    if x_type == 'energy':
+        x_tag = energy_name
+    elif x_type == 'lambda':
+        x_tag = wave_name
+    else:
+        x_tag = tof_name
+    return x_tag
 
 
 def create_sample_df_from_compos_df(compos_tb_df):
@@ -96,24 +126,6 @@ def form_iso_table(sample_df: pd.DataFrame, database: str):
     return _df
 
 
-def update_new_iso_table(prev_iso_df: pd.DataFrame, new_iso_df: pd.DataFrame):
-    prev_iso_layer_list = list(prev_iso_df[layer_name])  # previous list of layers
-    new_iso_layer_list = list(new_iso_df[layer_name])  # new list of layers
-
-    prev_index = []  # index of the new layers that exists in prev layers
-    new_index = []  # index of the prev layers that needs to be passed along
-    for line_idx, each_new_layer in enumerate(new_iso_layer_list):
-        if each_new_layer in prev_iso_layer_list:
-            new_index.append(line_idx)
-    for line_idx, each_prev_layer in enumerate(prev_iso_layer_list):
-        if each_prev_layer in new_iso_layer_list:
-            prev_index.append(line_idx)
-
-    if len(prev_index) != 0:
-        for idx, each in enumerate(new_index):
-            new_iso_df.iloc[each] = prev_iso_df.loc[prev_index[idx]]
-
-    return new_iso_df
 
 
 def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
@@ -122,7 +134,7 @@ def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
     try:
         sample_df = create_sample_df_from_compos_df(compos_tb_df=compos_tb_df)
         new_iso_df = form_iso_table(sample_df=sample_df, database=database)
-        new_iso_df = update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
+        new_iso_df = _update_new_iso_table(prev_iso_df=prev_iso_tb_df, new_iso_df=new_iso_df)
         try:
             return new_iso_df.to_dict('records')
         except AttributeError:
@@ -190,19 +202,7 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, datab
     return output_div_list, o_stack
 
 
-def load_beam_shape(relative_path_to_beam_shape):
-    # Load beam shape from static
-    df = pd.read_csv(relative_path_to_beam_shape, sep='\t', skiprows=0)
-    df.columns = ['wavelength_A', 'flux']
-    # Get rid of crazy data
-    df.drop(df[df.wavelength_A < 0].index, inplace=True)
-    df.drop(df[df.flux <= 0].index, inplace=True)
-    df.reset_index(drop=True, inplace=True)
-    # Convert wavelength to energy
-    energy_array = ir_util.angstroms_to_ev(df['wavelength_A'])
-    df.insert(1, 'energy_eV', round(energy_array, 6))
-    # df.insert(1, 'energy_eV', energy_array)
-    return df
+
 
 
 def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_min, band_max, band_type, database):
@@ -212,7 +212,7 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
                            'snap': 'static/instrument_file/beam_flux_snap.txt',
                            # 'venus': 'static/instrument_file/beam_flux_venus.txt',
                            }
-    df_flux_raw = load_beam_shape(_path_to_beam_shape[beamline])
+    df_flux_raw = _load_beam_shape(_path_to_beam_shape[beamline])
     if beamline in ['imaging', 'imaging_crop']:
         e_min = df_flux_raw['energy_eV'].min()
         e_max = df_flux_raw['energy_eV'].max()
@@ -280,18 +280,6 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
         return o_reso
 
 
-def _calculate_transmission(flux_df: pd.DataFrame, trans_array: np.array):
-    # calculated transmitted flux
-    trans_flux = trans_array * flux_df['flux']
-    integr_total = np.trapz(y=flux_df['flux'] / flux_df['energy_eV'], x=flux_df['energy_eV'], dx=1e-6).round(3)
-    integr_trans = np.trapz(y=trans_flux / flux_df['energy_eV'], x=flux_df['energy_eV'], dx=1e-6).round(3)
-    _trans = integr_trans / integr_total * 100
-    return _trans
-
-
-def _transmission_to_mu_per_cm(transmission, thickness):
-    mu_per_cm = -np.log(transmission / 100) / (thickness / 10)
-    return mu_per_cm
 
 
 def form_sample_stack_table_div(o_stack, full_stack=True):
@@ -403,3 +391,130 @@ def form_sample_stack_table_div(o_stack, full_stack=True):
         sample_stack_div_list.append(html.Div(current_layer_list))
         sample_stack_div_list.append(html.Br())
     return sample_stack_div_list
+
+
+def update_rows_util(n_add, n_del, list_of_contents, upload_time, prev_upload_time, list_of_names, rows, columns):
+    error_message = None
+    if upload_time != prev_upload_time:
+        if list_of_contents is not None:
+            _rows = []
+            for c, n in zip(list_of_contents, list_of_names):
+                current_rows, error_message = _parse_contents_to_rows(c, n, rows)
+                _rows.extend(current_rows)
+            rows = _rows
+    else:
+        rows = _add_del_rows(n_add=n_add, n_del=n_del, rows=rows, columns=columns)
+    return rows, error_message, upload_time
+
+
+
+
+def _add_del_rows(n_add, n_del, rows, columns):
+    if n_add > n_del:
+        rows.append({c['id']: '' for c in columns})
+    elif n_add < n_del:
+        if len(rows) > 1:
+            rows = rows[:-1]
+    else:
+        rows = rows[:]
+    return rows
+
+
+def _parse_contents_to_rows(contents, filename, rows):
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+    div = None
+
+    if '.csv' in filename:
+        # Assume that the user uploaded a CSV file
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False)
+    elif '.xls' in filename:
+        # Assume that the user uploaded an excel file
+        df = pd.read_excel(io.BytesIO(decoded), na_filter=False)
+    elif '.txt' in filename:
+        # Assume that the user uploaded an txt file
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep='\t', na_filter=False)
+    else:
+        df = None
+        div = html.Div(["ERROR: '{}', only '.csv', '.xls' and '.txt' are currently supported.".format(filename)])
+
+    if df is not None:
+        if len(df) == 0:
+            div = html.Div(["ERROR: '{}', contains no data.".format(filename)])
+        # if df.columns != list(rows[0].keys()):
+        elif list(df.columns) != list(rows[0].keys()):
+            div = html.Div(
+                ["ERROR: '{}', contains invalid column name. '{}' required.".format(filename, list(rows[0].keys()))])
+        else:
+            df = df[df[chem_name] != '']
+            rows = df.to_dict('records')
+
+    return rows, div
+
+
+def _calculate_transmission(flux_df: pd.DataFrame, trans_array: np.array):
+    # calculated transmitted flux
+    trans_flux = trans_array * flux_df['flux']
+    integr_total = np.trapz(y=flux_df['flux'] / flux_df['energy_eV'], x=flux_df['energy_eV'], dx=1e-6).round(3)
+    integr_trans = np.trapz(y=trans_flux / flux_df['energy_eV'], x=flux_df['energy_eV'], dx=1e-6).round(3)
+    _trans = integr_trans / integr_total * 100
+    return _trans
+
+
+def _transmission_to_mu_per_cm(transmission, thickness):
+    mu_per_cm = -np.log(transmission / 100) / (thickness / 10)
+    return mu_per_cm
+
+
+def _load_beam_shape(relative_path_to_beam_shape):
+    # Load beam shape from static
+    df = pd.read_csv(relative_path_to_beam_shape, sep='\t', skiprows=0)
+    df.columns = ['wavelength_A', 'flux']
+    # Get rid of crazy data
+    df.drop(df[df.wavelength_A < 0].index, inplace=True)
+    df.drop(df[df.flux <= 0].index, inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    # Convert wavelength to energy
+    energy_array = ir_util.angstroms_to_ev(df['wavelength_A'])
+    df.insert(1, 'energy_eV', round(energy_array, 6))
+    # df.insert(1, 'energy_eV', energy_array)
+    return df
+
+
+def _update_new_iso_table(prev_iso_df: pd.DataFrame, new_iso_df: pd.DataFrame):
+    prev_iso_layer_list = list(prev_iso_df[layer_name])  # previous list of layers
+    new_iso_layer_list = list(new_iso_df[layer_name])  # new list of layers
+
+    prev_index = []  # index of the new layers that exists in prev layers
+    new_index = []  # index of the prev layers that needs to be passed along
+    for line_idx, each_new_layer in enumerate(new_iso_layer_list):
+        if each_new_layer in prev_iso_layer_list:
+            new_index.append(line_idx)
+    for line_idx, each_prev_layer in enumerate(prev_iso_layer_list):
+        if each_prev_layer in new_iso_layer_list:
+            prev_index.append(line_idx)
+
+    if len(prev_index) != 0:
+        for idx, each in enumerate(new_index):
+            new_iso_df.iloc[each] = prev_iso_df.loc[prev_index[idx]]
+
+    return new_iso_df
+
+
+def load_dfs(jsonified_data):
+    datasets = _load_jsonified_data(jsonified_data=jsonified_data)
+    df_dict = _extract_df(datasets=datasets)
+    return df_dict
+
+
+def _load_jsonified_data(jsonified_data):
+    datasets = json.loads(jsonified_data)
+    return datasets
+
+
+def _extract_df(datasets):
+    df_name_list = ['x', 'y']
+    df_dict = {}
+    for each_name in df_name_list:
+        df_dict[each_name] = pd.read_json(datasets[each_name], orient='split')
+    return df_dict
