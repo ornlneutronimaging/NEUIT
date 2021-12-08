@@ -1,8 +1,7 @@
-import dash
 from dash import html
 import dash_bootstrap_components as dbc
 from dash import dcc
-from dash.dependencies import Output, Input, State
+from dash.dependencies import Output, Input
 
 from apps import resonance, transmission, converter, tof_plotter, bragg, golden_angles, home_page
 from config import app_dict

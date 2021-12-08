@@ -1,6 +1,4 @@
 import dash_bootstrap_components as dbc
-from dash import dcc
-from dash import html
 
 from callbacks.tof_plotter import *
 from callbacks.utilities.initialization import (init_app_ids, distance_default,

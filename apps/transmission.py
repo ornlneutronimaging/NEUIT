@@ -1,11 +1,11 @@
 import dash_bootstrap_components as dbc
-import pandas as pd
+from dash import dash_table as dt
 
-from callbacks.utilities.initialization import init_app_ids
 from callbacks.utilities.constants import *
 from callbacks.utilities.initialization import (init_upload_field, init_iso_table,
                                                 sample_tb_even_3_col, striped_rows)
 from callbacks.utilities.all_apps import sample_header_df
+from callbacks.transmission import *
 
 
 sample_df_default = pd.DataFrame({

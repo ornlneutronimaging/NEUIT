@@ -1,8 +1,10 @@
 from dash.dependencies import Output, Input
 import plotly.graph_objects as go
 from app import app
+import pandas as pd
+from dash import dash_table as dt
+import numpy as np
 
-from callbacks.utilities._utilities import *
 from callbacks.utilities.initialization import init_app_ids
 
 

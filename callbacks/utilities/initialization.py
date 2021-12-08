@@ -1,9 +1,7 @@
-from dash import html
-from dash import dcc
 from dash import dash_table as dt
 import pandas as pd
 
-from config import app_dict, app_info_markdown_dict
+from config import app_info_markdown_dict
 from callbacks.utilities.constants import *
 from ImagingReso.resonance import Resonance
 

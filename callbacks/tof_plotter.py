@@ -1,7 +1,9 @@
 from dash.dependencies import Input, Output, State
+from dash import html
+from dash import dcc
+import pandas as pd
 
 from app import app
-from callbacks.utilities._utilities import *
 import plotly.tools as tls
 import matplotlib.pyplot as plt
 from callbacks.utilities.initialization import init_app_ids, plot_loading
