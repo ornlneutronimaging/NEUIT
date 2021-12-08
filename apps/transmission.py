@@ -2,7 +2,8 @@ import dash_bootstrap_components as dbc
 from callbacks.transmission import *
 from callbacks.utilities.initialization import init_app_ids
 from callbacks.utilities.constants import *
-from callbacks.utilities.initialization import (init_upload_field, init_iso_table, sample_tb_even_3_col)
+from callbacks.utilities.initialization import (init_upload_field, init_iso_table,
+                                                sample_tb_even_3_col, striped_rows)
 from callbacks.utilities.all_apps import sample_header_df
 
 

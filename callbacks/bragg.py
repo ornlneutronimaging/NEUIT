@@ -4,10 +4,11 @@ from bem import xscalc
 
 from app import app
 from callbacks.utilities._utilities import *
-from callbacks.utilities.initialization import init_app_ids
+from callbacks.utilities.initialization import init_app_ids, striped_rows
 import callbacks.utilities.constants as constants
 from callbacks.utilities.plot import shape_matplot_to_plotly
 from callbacks.utilities.all_apps import y_type_to_y_label, x_type_to_x_tag, load_dfs
+from callbacks.utilities.bragg import parse_cif_upload
 
 
 app_name = 'bragg'

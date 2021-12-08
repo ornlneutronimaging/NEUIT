@@ -3,14 +3,17 @@ import matplotlib.pyplot as plt
 
 from app import app
 from callbacks.utilities._utilities import *
-from callbacks.utilities.initialization import init_app_ids, init_reso_from_tb
+from callbacks.utilities.initialization import init_app_ids, init_reso_from_tb, striped_rows
 import callbacks.utilities.constants as constants
 from callbacks.utilities.validator import (validate_sample_input, validate_density_input, validate_iso_input,
                                            validate_energy_input)
-from callbacks.utilities.resonance import fill_range_table_by_e, update_range_tb_by_coordinate, shape_reso_df_to_output
-from callbacks.utilities.all_apps import (form_iso_table, unpack_sample_tb_df_and_add_layer, update_iso_table_callback,
+from callbacks.utilities.resonance import (fill_range_table_by_e, update_range_tb_by_coordinate,
+                                           shape_reso_df_to_output, fill_df_x_types)
+from callbacks.utilities.all_apps import (form_iso_table, unpack_sample_tb_df_and_add_layer,
+                                          update_iso_table_callback,
                                           force_dict_to_numeric, unpack_iso_tb_df_and_update,
-                                          form_transmission_result_div, form_sample_stack_table_div, update_rows_util)
+                                          form_transmission_result_div, form_sample_stack_table_div,
+                                          update_rows_util)
 from callbacks.utilities.plot import shape_matplot_to_plotly
 
 

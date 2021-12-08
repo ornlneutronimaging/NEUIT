@@ -129,6 +129,16 @@ iso_tb_gray_cols = [
 ]
 
 
+# Layout
+striped_rows = {'if': {'row_index': 'odd'},
+                'backgroundColor': 'rgb(248, 248, 248)'}
+
+
+editable_white = {'if': {'column_editable': False},
+                  'backgroundColor': 'rgb(30, 30, 30)',
+                  'color': 'white'}
+
+
 range_tb_gray_cols = [
     {'if': {'column_id': speed_name},
      'backgroundColor': color},

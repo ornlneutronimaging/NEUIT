@@ -3,21 +3,22 @@ import numpy as np
 
 import ImagingReso._utilities as ir_util
 
-import callbacks.utilities.constants as constants
+from callbacks.utilities.constants import *
 from callbacks.utilities.validator import is_number
 from callbacks.utilities.all_apps import (load_dfs, y_type_to_y_label, x_type_to_x_tag)
 
 
 energy_range_header_df = pd.DataFrame({
-    'name': [constants.energy_name,
-             constants.wave_name,
-             constants.speed_name,
-             constants.tof_name,
-             constants.class_name],
-    'id': [constants.energy_name,
-           constants.wave_name, constants.speed_name,
-           constants.tof_name,
-           constants.class_name],
+    'name': [energy_name,
+             wave_name,
+             speed_name,
+             tof_name,
+             class_name],
+    'id': [energy_name,
+           wave_name,
+           speed_name,
+           tof_name,
+           class_name],
     'deletable': [False, False, False, False, False],
     'editable': [True, True, False, False, False],
     'type': ['numeric', 'numeric', 'any', 'any', 'any']
@@ -49,11 +50,11 @@ def fill_range_table_by_e(e_ev, distance_m):
     _v = round(3956. / np.sqrt(81.787 / (_e * 1000.)), 2)
     _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _class = classify_neutron(_e)
-    return {constants.energy_name: _e,
-            constants.wave_name: _lambda,
-            constants.speed_name: _v,
-            constants.tof_name: _tof,
-            constants.class_name: _class}
+    return {energy_name: _e,
+            wave_name: _lambda,
+            speed_name: _v,
+            tof_name: _tof,
+            class_name: _class}
 
 
 def fill_range_table_by_wave(wave_angstroms, distance_m):
@@ -62,33 +63,33 @@ def fill_range_table_by_wave(wave_angstroms, distance_m):
     _v = round(3956. / np.sqrt(81.787 / (_e * 1000.)), 2)
     _tof = round(ir_util.ev_to_s(array=_e, source_to_detector_m=distance_m, offset_us=0) * 1e6, 4)
     _class = classify_neutron(_e)
-    return {constants.energy_name: _e,
-            constants.wave_name: _lambda,
-            constants.speed_name: _v,
-            constants.tof_name: _tof,
-            constants.class_name: _class}
+    return {energy_name: _e,
+            wave_name: _lambda,
+            speed_name: _v,
+            tof_name: _tof,
+            class_name: _class}
 
 
 def update_range_tb_by_coordinate(range_table_rows, distance, modified_coord):
     row = modified_coord[0]
     col = modified_coord[1]
     if col == 0:
-        input_value = range_table_rows[row][constants.energy_name]
+        input_value = range_table_rows[row][energy_name]
         if is_number(input_value) and float(input_value) > 0:
             things_to_fill = fill_range_table_by_e(e_ev=float(input_value), distance_m=distance)
             for each_col in range_table_rows[row].keys():
                 range_table_rows[row][each_col] = things_to_fill[each_col]
         else:
-            for each_col in [constants.wave_name, constants.speed_name, constants.tof_name, constants.class_name]:
+            for each_col in [wave_name, speed_name, tof_name, class_name]:
                 range_table_rows[row][each_col] = 'N/A'
     elif col == 1:  # Changed back to 1 from 4 after updating to pandas>=0.25.0
-        input_value = range_table_rows[row][constants.wave_name]
+        input_value = range_table_rows[row][wave_name]
         if is_number(input_value) and float(input_value) > 0:
             things_to_fill = fill_range_table_by_wave(wave_angstroms=float(input_value), distance_m=distance)
             for each_col in range_table_rows[row].keys():
                 range_table_rows[row][each_col] = things_to_fill[each_col]
         else:
-            for each_col in [constants.energy_name, constants.speed_name, constants.tof_name, constants.class_name]:
+            for each_col in [energy_name, speed_name, tof_name, class_name]:
                 range_table_rows[row][each_col] = 'N/A'
 
     return range_table_rows
@@ -142,3 +143,12 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
         _to_export_list.extend(iso_col_name_list)
 
     return df_x, df_y, _to_export_list, x_tag, y_label
+
+
+def fill_df_x_types(df: pd.DataFrame, distance_m):
+    df.insert(loc=1, column=tof_name, value=ir_util.ev_to_s(array=df[energy_name],
+                                                            source_to_detector_m=distance_m,
+                                                            offset_us=0))
+    df.insert(loc=1, column=wave_name, value=ir_util.ev_to_angstroms(df[energy_name]))
+    df[tof_name] = df[tof_name] * 1e6
+    return df

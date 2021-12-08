@@ -111,77 +111,77 @@ sample_dict_schema = {
 #     return df_x, df_y, _to_export_list, x_tag, y_label
 
 
-def fill_df_x_types(df: pd.DataFrame, distance_m):
-    df.insert(loc=1, column=constants.tof_name, value=ir_util.ev_to_s(array=df[constants.energy_name],
-                                                            source_to_detector_m=distance_m,
-                                                            offset_us=0))
-    df.insert(loc=1, column=constants.wave_name, value=ir_util.ev_to_angstroms(df[constants.energy_name]))
-    df[constants.tof_name] = df[constants.tof_name] * 1e6
-    return df
+# def fill_df_x_types(df: pd.DataFrame, distance_m):
+#     df.insert(loc=1, column=constants.tof_name, value=ir_util.ev_to_s(array=df[constants.energy_name],
+#                                                             source_to_detector_m=distance_m,
+#                                                             offset_us=0))
+#     df.insert(loc=1, column=constants.wave_name, value=ir_util.ev_to_angstroms(df[constants.energy_name]))
+#     df[constants.tof_name] = df[constants.tof_name] * 1e6
+#     return df
 
 
-def shape_df_to_plot(df, x_type, distance, delay):
-    if x_type == 'lambda':
-        df['X'] = ir_util.s_to_angstroms(array=df['X'], source_to_detector_m=distance, offset_us=delay)
-    if x_type == 'energy':
-        df['X'] = ir_util.s_to_ev(array=df['X'], source_to_detector_m=distance, offset_us=delay)
-    if x_type == 'number':
-        df['X'] = range(1, len(df['X']) + 1)
-    if x_type == 'time':
-        df['X'] = df['X'] * 1e6 + delay
-    return df
+# def shape_df_to_plot(df, x_type, distance, delay):
+#     if x_type == 'lambda':
+#         df['X'] = ir_util.s_to_angstroms(array=df['X'], source_to_detector_m=distance, offset_us=delay)
+#     if x_type == 'energy':
+#         df['X'] = ir_util.s_to_ev(array=df['X'], source_to_detector_m=distance, offset_us=delay)
+#     if x_type == 'number':
+#         df['X'] = range(1, len(df['X']) + 1)
+#     if x_type == 'time':
+#         df['X'] = df['X'] * 1e6 + delay
+#     return df
 
 
-# Layout
-striped_rows = {'if': {'row_index': 'odd'},
-                'backgroundColor': 'rgb(248, 248, 248)'}
-
-editable_white = {'if': {'column_editable': False},
-                  'backgroundColor': 'rgb(30, 30, 30)',
-                  'color': 'white'}
-
-
-def parse_content(content, name, header):
-    content_type, content_string = content.split(',')
-    decoded = base64.b64decode(content_string)
-    error_div = None
-    if '.csv' in name:
-        # Assume that the user uploaded a CSV file
-        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False, header=header)
-    elif '.xls' in name:
-        # Assume that the user uploaded an excel file
-        df = pd.read_excel(io.BytesIO(decoded), na_filter=False, header=header)
-    elif '.txt' in name:
-        # Assume that the user uploaded an txt file
-        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep='\t', na_filter=False, header=header)
-    else:
-        df = None
-        error_div = html.Div(
-            ["\u274C Type error: '{}' is not supported, only '.csv', '.xls' and '.txt' are currently supported.".format(
-                name)])
-    return df, error_div
+# # Layout
+# striped_rows = {'if': {'row_index': 'odd'},
+#                 'backgroundColor': 'rgb(248, 248, 248)'}
+#
+# editable_white = {'if': {'column_editable': False},
+#                   'backgroundColor': 'rgb(30, 30, 30)',
+#                   'color': 'white'}
 
 
-def parse_cif_upload(content):
-    content_type, content_string = content.split(',')
-    decoded = base64.b64decode(content_string)
+# def parse_content(content, name, header):
+#     content_type, content_string = content.split(',')
+#     decoded = base64.b64decode(content_string)
+#     error_div = None
+#     if '.csv' in name:
+#         # Assume that the user uploaded a CSV file
+#         df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), na_filter=False, header=header)
+#     elif '.xls' in name:
+#         # Assume that the user uploaded an excel file
+#         df = pd.read_excel(io.BytesIO(decoded), na_filter=False, header=header)
+#     elif '.txt' in name:
+#         # Assume that the user uploaded an txt file
+#         df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep='\t', na_filter=False, header=header)
+#     else:
+#         df = None
+#         error_div = html.Div(
+#             ["\u274C Type error: '{}' is not supported, only '.csv', '.xls' and '.txt' are currently supported.".format(
+#                 name)])
+#     return df, error_div
 
-    cif_s = decoded.decode('utf-8')
-    p = getParser('cif')
-    struc = p.parse(cif_s)
-    struc.sg = p.spacegroup
-    return struc
+
+# def parse_cif_upload(content):
+#     content_type, content_string = content.split(',')
+#     decoded = base64.b64decode(content_string)
+#
+#     cif_s = decoded.decode('utf-8')
+#     p = getParser('cif')
+#     struc = p.parse(cif_s)
+#     struc.sg = p.spacegroup
+#     return struc
 
 
-app_links_list = []
-for i, each_app in enumerate(app_dict.keys()):
-    current_number_str = str(i + 1) + '. '
-    current_app_name = app_dict[each_app]['name']
-    current_url = app_dict[each_app]['url']
-    app_links_list.append(current_number_str)
-    app_links_list.append(dcc.Link(current_app_name, href=current_url))
-    app_links_list.append(html.Br())
-app_links_div = html.Div(app_links_list)
+# app_links_list = []
+# for i, each_app in enumerate(app_dict.keys()):
+#     current_number_str = str(i + 1) + '. '
+#     current_app_name = app_dict[each_app]['name']
+#     current_url = app_dict[each_app]['url']
+#     app_links_list.append(current_number_str)
+#     app_links_list.append(dcc.Link(current_app_name, href=current_url))
+#     app_links_list.append(html.Br())
+# app_links_div = html.Div(app_links_list)
 
 
 # output_tb_uneven_6_col = [

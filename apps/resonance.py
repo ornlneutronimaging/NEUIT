@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 from callbacks.resonance import *
 from callbacks.utilities.initialization import (init_app_ids, range_tb_gray_cols, init_iso_table, init_upload_field,
-                                                sample_tb_even_3_col, range_tb_even_5_col)
+                                                sample_tb_even_3_col, range_tb_even_5_col, striped_rows)
 from callbacks.utilities.constants import *
 from callbacks.utilities.resonance import energy_range_header_df
 from callbacks.utilities.all_apps import sample_header_df
