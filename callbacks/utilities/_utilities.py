@@ -26,42 +26,15 @@ import callbacks.utilities.constants as constants
 from callbacks.utilities.initialization import iso_tb_df_default
 
 
-energy_range_header_df = pd.DataFrame({
-    'name': [constants.energy_name,
-             constants.wave_name,
-             constants.speed_name,
-             constants.tof_name,
-             constants.class_name],
-    'id': [constants.energy_name,
-           constants.wave_name, constants.speed_name,
-           constants.tof_name,
-           constants.class_name],
-    'deletable': [False, False, False, False, False],
-    'editable': [True, True, False, False, False],
-    'type': ['numeric', 'numeric', 'any', 'any', 'any']
-})
-
-sample_header_df = pd.DataFrame({
-    'name': [constants.chem_name,
-             constants.thick_name,
-             constants.density_name],
-    'id': [constants.chem_name,
-           constants.thick_name,
-           constants.density_name],
-    # 'deletable': [False, False, False],
-    # 'editable': [True, True, True],
-    'type': ['text', 'numeric', 'any']
-})
-
-compos_header_df = pd.DataFrame({
-    'name': [constants.chem_name,
-             constants.weight_name],
-    'id': [constants.chem_name,
-           constants.compos_2nd_col_id],
-    # 'deletable': [False, False, False],
-    # 'editable': [True, True, True],
-    'type': ['text', 'numeric']
-})
+# compos_header_df = pd.DataFrame({
+#     'name': [constants.chem_name,
+#              constants.weight_name],
+#     'id': [constants.chem_name,
+#            constants.compos_2nd_col_id],
+#     # 'deletable': [False, False, False],
+#     # 'editable': [True, True, True],
+#     'type': ['text', 'numeric']
+# })
 
 compos_header_percent_df = pd.DataFrame({
     'name': [constants.chem_name,
@@ -219,16 +192,6 @@ def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
             return iso_tb_df_default.to_dict('records')
     except KeyError:
         return iso_tb_df_default.to_dict('records')
-
-
-# def init_reso_from_tb(range_tb_df, e_step, database):
-#     v_1 = range_tb_df[constants.energy_name][0]
-#     v_2 = range_tb_df[constants.energy_name][1]
-#     if v_1 < v_2:
-#         o_reso = Resonance(energy_min=v_1, energy_max=v_2, energy_step=e_step, database=database)
-#     else:
-#         o_reso = Resonance(energy_min=v_2, energy_max=v_1, energy_step=e_step, database=database)
-#     return o_reso
 
 
 def load_beam_shape(relative_path_to_beam_shape):

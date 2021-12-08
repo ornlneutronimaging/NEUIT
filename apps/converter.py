@@ -2,6 +2,7 @@ import dash_bootstrap_components as dbc
 from callbacks.converter import *
 from callbacks.utilities.initialization import init_app_ids, init_iso_table, init_upload_field
 import callbacks.utilities.constants as constants
+from callbacks.utilities.converter import compos_header_df
 
 
 # Composition converter tool
