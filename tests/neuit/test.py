@@ -1,7 +1,8 @@
 import unittest
 
 from callbacks.utilities._utilities import *
-from callbacks.utilities._utilities import _validate_chem_name
+from callbacks.utilities.validator import (_validate_chem_name, validate_input_tb_rows, validate_sum_of_iso_ratio)
+from callbacks.utilities.constants import *
 
 
 class TestUtilities(unittest.TestCase):

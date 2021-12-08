@@ -12,3 +12,15 @@ compos_header_df = pd.DataFrame({
     # 'editable': [True, True, True],
     'type': ['text', 'numeric']
 })
+
+
+compos_header_percent_df = pd.DataFrame({
+    'name': [constants.chem_name,
+             constants.weight_name_p,
+             constants.atomic_name_p],
+    'id': [constants.chem_name,
+           constants.weight_name_p,
+           constants.atomic_name_p],
+    # 'deletable': [False, False, False],
+    'editable': [False, False, False],
+})
