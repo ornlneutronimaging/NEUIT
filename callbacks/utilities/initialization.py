@@ -8,6 +8,12 @@ from callbacks.utilities.constants import *
 from ImagingReso.resonance import Resonance
 
 
+distance_default = 16.45  # in meter
+delay_default = 0  # in us
+temperature_default = 293  # in Kelvin
+plot_loading = html.H2('Plot loading...')
+
+
 col_width_1 = 'one column'
 col_width_3 = 'three columns'
 col_width_5 = 'five columns'

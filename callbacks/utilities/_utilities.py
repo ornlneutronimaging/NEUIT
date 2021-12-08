@@ -33,10 +33,10 @@ col_width_5 = 'five columns'
 col_width_6 = 'six columns'
 empty_div = html.Div()
 
-distance_default = 16.45  # in meter
-delay_default = 0  # in us
-temperature_default = 293  # in Kelvin
-plot_loading = html.H2('Plot loading...')
+# distance_default = 16.45  # in meter
+# delay_default = 0  # in us
+# temperature_default = 293  # in Kelvin
+# plot_loading = html.H2('Plot loading...')
 
 
 compos_dict_schema = {

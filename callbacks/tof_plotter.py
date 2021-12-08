@@ -4,7 +4,7 @@ from app import app
 from callbacks.utilities._utilities import *
 import plotly.tools as tls
 import matplotlib.pyplot as plt
-from callbacks.utilities.initialization import init_app_ids
+from callbacks.utilities.initialization import init_app_ids, plot_loading
 from callbacks.utilities.tof_plotter import (x_type_to_x_label, shape_df_to_plot, parse_content)
 from callbacks.utilities.all_apps import y_type_to_y_label
 

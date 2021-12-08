@@ -3,9 +3,11 @@ import matplotlib.pyplot as plt
 
 from app import app
 from callbacks.utilities._utilities import *
-from callbacks.utilities.initialization import init_app_ids, init_reso_from_tb, striped_rows
+from callbacks.utilities.initialization import (init_app_ids, init_reso_from_tb,
+                                                striped_rows, plot_loading)
 import callbacks.utilities.constants as constants
-from callbacks.utilities.validator import (validate_sample_input, validate_density_input, validate_iso_input,
+from callbacks.utilities.validator import (validate_sample_input, validate_density_input,
+                                           validate_iso_input,
                                            validate_energy_input)
 from callbacks.utilities.resonance import (fill_range_table_by_e, update_range_tb_by_coordinate,
                                            shape_reso_df_to_output, fill_df_x_types)
@@ -411,54 +413,6 @@ def plot(test_passed, show_opt, jsonified_data, y_type, x_type, plot_scale, prev
     else:
         return plot_loading, [None]
 
-
-# @app.callback(
-#     Output(app_id_dict['plot_fig_id'], 'figure'),
-#     [
-#         Input('plot_scale', 'value'),
-#         Input('x_type', 'value'),
-#     ],
-#     [
-#         State('y_type', 'value'),
-#         State(app_id_dict['prev_x_type_id'], 'children'),
-#         State(app_id_dict['plot_fig_id'], 'figure'),
-#         State(app_id_dict['hidden_df_json_id'], 'children'),
-#     ])
-# def set_plot_scale_log_or_linear(plot_scale, x_type, y_type, prev_x_type, plotly_fig, jsonified_data):
-#     # Change plot x type
-#     if x_type != prev_x_type:
-#         df_dict = load_dfs(jsonified_data=jsonified_data)
-#         x_tag = x_type_to_x_tag(x_type=x_type)
-#         for each_trace in plotly_fig['data']:
-#             each_trace['x'] = df_dict['x'][x_tag]
-#         plotly_fig['layout']['xaxis']['title']['text'] = x_tag
-#
-#     if y_type in ['attenuation', 'transmission']:
-#         plotly_fig['layout']['yaxis']['autorange'] = False
-#         if plot_scale in ['logy', 'loglog']:
-#             plot_scale = 'linear'
-#     else:
-#         plotly_fig['layout']['yaxis']['autorange'] = True
-#
-#     # Change plot scale between log and linear
-#     if plot_scale == 'logx':
-#         plotly_fig['layout']['xaxis']['type'] = 'log'
-#         plotly_fig['layout']['yaxis']['type'] = 'linear'
-#         plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
-#     elif plot_scale == 'logy':
-#         if y_type not in ['attenuation', 'transmission']:
-#             plotly_fig['layout']['xaxis']['type'] = 'linear'
-#             plotly_fig['layout']['yaxis']['type'] = 'log'
-#     elif plot_scale == 'loglog':
-#         if y_type not in ['attenuation', 'transmission']:
-#             plotly_fig['layout']['xaxis']['type'] = 'log'
-#             plotly_fig['layout']['yaxis']['type'] = 'log'
-#     else:
-#         plotly_fig['layout']['xaxis']['type'] = 'linear'
-#         plotly_fig['layout']['yaxis']['type'] = 'linear'
-#         plotly_fig['layout']['yaxis']['range'] = [-0.05, 1.05]
-#
-#     return plotly_fig
 
 @app.callback(
     [
