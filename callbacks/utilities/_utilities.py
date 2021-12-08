@@ -23,6 +23,7 @@ from config import app_dict
 from callbacks.utilities.validator import MyValidator, is_number, validate_input
 # from callbacks.utilities import constants
 import callbacks.utilities.constants as constants
+from callbacks.utilities.initialization import iso_tb_df_default
 
 
 energy_range_header_df = pd.DataFrame({
@@ -73,26 +74,26 @@ compos_header_percent_df = pd.DataFrame({
     'editable': [False, False, False],
 })
 
-iso_tb_header_df = pd.DataFrame({
-    'name': [constants.layer_name,
-             constants.ele_name,
-             constants.iso_name,
-             constants.iso_ratio_name],
-    'id': [constants.layer_name,
-           constants.ele_name,
-           constants.iso_name,
-           constants.iso_ratio_name],
-    'deletable': [False, False, False, False],
-    'editable': [False, False, False, True],
-    'type': ['any', 'any', 'any', 'numeric']
-})
-
-iso_tb_df_default = pd.DataFrame({
-    constants.layer_name: [None],
-    constants.ele_name: [None],
-    constants.iso_name: [None],
-    constants.iso_ratio_name: [None],
-})
+# iso_tb_header_df = pd.DataFrame({
+#     'name': [constants.layer_name,
+#              constants.ele_name,
+#              constants.iso_name,
+#              constants.iso_ratio_name],
+#     'id': [constants.layer_name,
+#            constants.ele_name,
+#            constants.iso_name,
+#            constants.iso_ratio_name],
+#     'deletable': [False, False, False, False],
+#     'editable': [False, False, False, True],
+#     'type': ['any', 'any', 'any', 'numeric']
+# })
+#
+# iso_tb_df_default = pd.DataFrame({
+#     constants.layer_name: [None],
+#     constants.ele_name: [None],
+#     constants.iso_name: [None],
+#     constants.iso_ratio_name: [None],
+# })
 
 output_stack_header_df = pd.DataFrame({
     'name': [constants.thick_name,
@@ -223,222 +224,6 @@ def force_dict_to_numeric(input_dict_list: list):
                 _current_output_list.append(each_item)
         output_dict[each_key] = _current_output_list
     return output_dict
-
-
-# def update_database_key_in_schema(schema, database):
-#     _new_key = database
-#     try:
-#         _old_key = list(schema[constants.chem_name].keys())[3]
-#         if _new_key is not _old_key:
-#             schema[constants.chem_name][_new_key] = schema[constants.chem_name].pop(_old_key)
-#         return schema
-#     except KeyError:
-#         _old_key = list(schema[constants.layer_name].keys())[3]
-#         if _new_key is not _old_key:
-#             schema[constants.layer_name][_new_key] = schema[constants.layer_name].pop(_old_key)
-#         return schema
-
-
-# def validate_sample_input(sample_df: pd.DataFrame, sample_schema: dict, database: str):
-#     # Test sample input format
-#     sample_schema = update_database_key_in_schema(schema=sample_schema, database=database)
-#     test_passed_list, output_div_list = validate_input_tb_rows(schema=sample_schema, input_df=sample_df)
-#
-#     # Test no duplicate layer name
-#     if all(test_passed_list):
-#         duplicate_test_passed, duplicate_test_output_div = validate_no_duplicated_layer_name(sample_df=sample_df)
-#         test_passed_list += duplicate_test_passed
-#         output_div_list += duplicate_test_output_div
-#
-#     return test_passed_list, output_div_list
-
-
-# def validate_no_duplicated_layer_name(sample_df: pd.DataFrame):
-#     """ Returns True when no duplicated layer name. """
-#     try:
-#         layer_list = sample_df[constants.chem_name].tolist()
-#         if len(layer_list) == len(set(layer_list)):
-#             return [True], [None]
-#         else:
-#             return [False], [html.P("INPUT ERROR: same '{}' has been entered more than once.".format(constants.chem_name))]
-#     except KeyError as error_massage:
-#         return [False], [error_massage.__str__()]
-
-
-# def validate_iso_input(iso_df: pd.DataFrame, iso_schema: dict, database: str,
-#                        test_passed_list: list, output_div_list: list):
-#     # Test iso input format
-#     iso_schema = update_database_key_in_schema(schema=iso_schema, database=database)
-#     iso_test_passed_list, iso_output_div_list = validate_input_tb_rows(schema=iso_schema, input_df=iso_df)
-#     test_passed_list += iso_test_passed_list
-#     output_div_list += iso_output_div_list
-#     # Test the sum of iso ratio == 1
-#     if all(test_passed_list):
-#         sum_test_passed, sum_test_output_div = validate_sum_of_iso_ratio(iso_df=iso_df)
-#         test_passed_list += sum_test_passed
-#         output_div_list += sum_test_output_div
-#
-#     return test_passed_list, output_div_list
-
-
-# def validate_sum_of_iso_ratio(iso_df: pd.DataFrame):
-#     try:
-#         df = iso_df.groupby([constants.layer_name, constants.ele_name]).sum()
-#         df_boo = df[constants.iso_ratio_name] - 1.0
-#         boo = df_boo.abs() >= 0.005
-#         failed_list = list(boo)
-#         passed_list = []
-#         div_list = []
-#         if any(failed_list):
-#             _list = df.index[boo].tolist()
-#             for _index, each_fail_layer in enumerate(_list):
-#                 div = html.P("INPUT ERROR: '{}': [sum of isotopic ratios is '{}' not '1']".format(
-#                     str(each_fail_layer), float(df[boo][constants.iso_ratio_name][_index])))
-#                 passed_list.append(False)
-#                 div_list.append(div)
-#         else:
-#             passed_list.append(True)
-#             div_list.append(None)
-#         return passed_list, div_list
-#     except KeyError:
-#         return [False], [None]
-#
-#
-# def validate_density_input(sample_tb_df: pd.DataFrame, test_passed_list: list, output_div_list: list):
-#     # Test density input required or not
-#     for _index, _each_formula in enumerate(sample_tb_df[constants.chem_name]):
-#         try:
-#             _parsed_dict = ir_util.formula_to_dictionary(_each_formula)
-#             _num_of_ele_in_formula = len(_parsed_dict[_each_formula]['elements'])
-#             if _num_of_ele_in_formula > 1 and sample_tb_df[constants.density_name][_index] == '':
-#                 test_passed_list.append(False)
-#                 output_div_list.append(
-#                     html.P("INPUT ERROR: '{}': ['Density input is required for compound '{}'.']".format(constants.density_name,
-#                                                                                                         _each_formula)))
-#             else:
-#                 test_passed_list.append(True)
-#                 output_div_list.append(None)
-#         except ValueError:
-#             test_passed_list = test_passed_list
-#             output_div_list = output_div_list
-#
-#     return test_passed_list, output_div_list
-#
-#
-# def validate_energy_input(range_tb_df: pd.DataFrame, test_passed_list: list, output_div_list: list):
-#     # Test range table
-#     if range_tb_df[constants.energy_name][0] == range_tb_df[constants.energy_name][1]:
-#         test_passed_list.append(False)
-#         output_div_list.append(
-#             html.P("INPUT ERROR: {}: ['Energy min. can not equal energy max.']".format(str(constants.energy_name))))
-#     else:
-#         test_passed_list.append(True)
-#         output_div_list.append(None)
-#
-#     for each in range_tb_df[constants.energy_name]:
-#         if each < 1e-5 or each > 1e8:
-#             test_passed_list.append(False)
-#             output_div_list.append(
-#                 html.P("INPUT ERROR: '{}': ['1x10^-5 <= 'Energy' <= 1x10^8']".format(str(constants.energy_name))))
-#         else:
-#             test_passed_list.append(True)
-#             output_div_list.append(None)
-#     return test_passed_list, output_div_list
-#
-#
-# def validate_band_width_input(beamline, band_width, band_type, test_passed_list: list, output_div_list: list):
-#     if beamline in ['imaging', 'imaging_crop']:
-#         test_passed_list.append(True)
-#         output_div_list.append(None)
-#     else:
-#         if band_width[0] is None:
-#             test_passed_list.append(False)
-#             output_div_list.append(
-#                 html.P("INPUT ERROR: '{}': ['Min.' is required!]".format('Band width')))
-#         if band_width[1] is None:
-#             test_passed_list.append(False)
-#             output_div_list.append(
-#                 html.P("INPUT ERROR: '{}': ['Max.' is required!]".format('Band width')))
-#         if all(test_passed_list):
-#             # if band_width[0] =  min=2.86E-04, max=9.04E+01,
-#             if band_width[0] == band_width[1]:
-#                 test_passed_list.append(False)
-#                 output_div_list.append(
-#                     html.P("INPUT ERROR: '{}': ['Min.' and 'Max.' can not be equal!]".format('Band width')))
-#             elif band_width[0] > band_width[1]:
-#                 test_passed_list.append(False)
-#                 output_div_list.append(
-#                     html.P("INPUT ERROR: '{}': ['Min.' < 'Max.' is required!]".format('Band width')))
-#             else:
-#                 if band_type == 'lambda':
-#                     if band_width[0] < 2.86E-04 or band_width[0] > 9.04E+01:
-#                         test_passed_list.append(False)
-#                         output_div_list.append(
-#                             html.P(
-#                                 "INPUT ERROR: '{}': ['2.86E-04 \u2264 'Min.' \u2264 9.04E+01' is required!]".format(
-#                                     'Band width')))
-#                     if band_width[1] < 2.86E-04 or band_width[1] > 9.04E+01:
-#                         test_passed_list.append(False)
-#                         output_div_list.append(
-#                             html.P(
-#                                 "INPUT ERROR: '{}': ['2.86E-04 \u2264 'Max.' \u2264 9.04E+01' is required!]".format(
-#                                     'Band width')))
-#                     _diff = round(band_width[1] - band_width[0], 5)
-#                     if _diff < 1e-3:
-#                         test_passed_list.append(False)
-#                         output_div_list.append(
-#                             html.P(
-#                                 "INPUT ERROR: '{} - {} = {}': ['Max.' minus 'Min.' >= {} required]".format(
-#                                     band_width[1],
-#                                     band_width[0],
-#                                     _diff,
-#                                     1e-3)))
-#                 else:
-#                     if band_width[0] < 1e-5 or band_width[0] > 1e8:
-#                         test_passed_list.append(False)
-#                         output_div_list.append(
-#                             html.P(
-#                                 "INPUT ERROR: '{}': ['1e-5 \u2264 'Min.' \u2264 1e8' is required!]".format(
-#                                     'Band width')))
-#                     if band_width[1] < 1e-5 or band_width[1] > 1e8:
-#                         test_passed_list.append(False)
-#                         output_div_list.append(
-#                             html.P(
-#                                 "INPUT ERROR: '{}': ['1e-5 \u2264 'Max.' \u2264 1e8' is required!]".format(
-#                                     'Band width')))
-#                     _diff = round(band_width[1] - band_width[0], 7)
-#                     if _diff < 1e-6:
-#                         test_passed_list.append(False)
-#                         output_div_list.append(
-#                             html.P(
-#                                 "INPUT ERROR: '{} - {} = {}': ['Max.' minus 'Min.' >= {} required]".format(
-#                                     band_width[1],
-#                                     band_width[0],
-#                                     _diff,
-#                                     1e-6)))
-#     return test_passed_list, output_div_list
-#
-
-# def validate_input_tb_rows(schema: dict, input_df: pd.DataFrame):
-#     input_dict_list = input_df.to_dict('records')
-#     v = MyValidator(schema)
-#     # v = Validator(schema)
-#     passed_list = []
-#     div_list = []
-#     for each_input_dict in input_dict_list:
-#         passed, div = validate_input(v=v, input_dict=each_input_dict)
-#         div_list.append(div)
-#         passed_list.append(passed)
-#     return passed_list, div_list
-#
-
-# def _validate_input(v: Validator, input_dict: dict):
-#     passed = v.validate(input_dict)
-#     if passed:
-#         return passed, None
-#     else:
-#         error_message_str = v.errors
-#     return passed, html.P('INPUT ERROR: {}'.format(error_message_str))
 
 
 def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
@@ -1108,246 +893,165 @@ def parse_cif_upload(content):
     return struc
 
 
-def init_app_links(current_app, app_dict_all):
-    links_div_list = [html.A('Home', href='/', target="_blank")]
-    for _each_app in app_dict_all.keys():
-        if current_app != _each_app:
-            links_div_list.append(html.Br())
-            links_div_list.append(html.A(app_dict[_each_app]['name'], href=app_dict[_each_app]['url'], target="_blank"))
-    links_div_list.append(html.H1(app_dict[current_app]['name']))
-    return html.Div(links_div_list)
-
-
-def init_app_about(current_app, app_id_dict):
-    more_info_check = dcc.Checklist(
-        id=app_id_dict['more_about_app_id'],
-        options=[
-            {'label': 'More about this app \U0001F4AC', 'value': 'more'},
-        ],
-        value=[],
-        labelStyle={'display': 'inline-block'}
-    )
-
-    more_info_div = html.Div(
-        [
-            app_info_markdown_dict[current_app],
-        ],
-        id=app_id_dict['app_info_id'],
-        style={'display': 'none'},
-    )
-
-    return html.Div([more_info_check, more_info_div])
-
-
-app_info_markdown_dict = {
-    'transmission': dcc.Markdown("""
-    This tool estimates the neutron transmission/attenuation signals and contrast,
-    by defining the sample information such as density, thickness in the neutron beam path.
-    Multiple samples or complex compounds can be added as layers in such calculation. 
-    Estimating the contrast by changing isotopic ratios is also supported.
-    An example is shown by default to demonstrate its usage.
-            """),
-    'resonance': dcc.Markdown("""
-    This tool estimates the energy dependent neutron imaging signals and contrasts,
-    specifically for *resonances* in the *epithermal* range.
-    Similar to the transmission tool, sample/samples can be entered as layers in such calculation. 
-    Estimating the contrast by changing isotopic ratios is also supported.
-    An example is shown by default to demonstrate its usage.
-            """),
-    'converter': dcc.Markdown("""
-    This tool helps the conversion between wt.% and at.%. And it populates
-    an equivalent chemical formula to represent a complex mixture. Such formula
-    can be used as '{}' in other tools available in NEUIT.
-    An example is shown by default to demonstrate its usage.
-            """.format(constants.chem_name)),
-    'tof_plotter': dcc.Markdown("""
-    This tool helps plotting data acquired from Timepix2 MCP detector. By dragging and dropping
-    spectra files and data files, one can quickly verify if expected resonances or Bragg-edges
-    have been captured or not. Optional background file can also be added if normalization is needed.  
-            """),
-    'bragg': dcc.Markdown("""
-    This tool estimates the energy dependent neutron imaging signals and contrasts,
-    specifically for *Bragg-edges* in the *cold* or *thermal* range. Currently, it only supports
-    dragging and dropping '.cif' files.
-            """),
-}
-
-
-# def init_app_ids(app_name: str):
-#     id_dict = {}
-#     id_dict['more_about_app_id'] = app_name + '_more_about_app'
-#     id_dict['app_info_id'] = app_name + '_app_info'
-#     id_dict['sample_upload_id'] = app_name + '_sample_upload'
-#     id_dict['error_upload_id'] = app_name + '_error_upload'
-#     id_dict['hidden_upload_time_id'] = app_name + '_time_upload'
-#     id_dict['add_row_id'] = app_name + '_add_row'
-#     id_dict['del_row_id'] = app_name + '_del_row'
-#     id_dict['database_id'] = app_name + '_database'
-#     id_dict['sample_table_id'] = app_name + '_sample_table'
-#     id_dict['iso_check_id'] = app_name + '_iso_check'
-#     id_dict['iso_div_id'] = app_name + '_iso_input'
-#     id_dict['iso_table_id'] = app_name + '_iso_table'
-#     id_dict['submit_button_id'] = app_name + '_submit'
-#     id_dict['result_id'] = app_name + '_result'
-#     id_dict['error_id'] = app_name + '_error'
-#     id_dict['output_id'] = app_name + '_output'
+# def init_app_links(current_app, app_dict_all):
+#     links_div_list = [html.A('Home', href='/', target="_blank")]
+#     for _each_app in app_dict_all.keys():
+#         if current_app != _each_app:
+#             links_div_list.append(html.Br())
+#             links_div_list.append(html.A(app_dict[_each_app]['name'], href=app_dict[_each_app]['url'], target="_blank"))
+#     links_div_list.append(html.H1(app_dict[current_app]['name']))
+#     return html.Div(links_div_list)
 #
-#     if app_name == 'transmission':  # id names for neutron transmission only
-#         id_dict['beamline_id'] = app_name + '_beamline'
-#         id_dict['band_div_id'] = app_name + '_band_div'
-#         id_dict['band_min_id'] = app_name + '_band_min'
-#         id_dict['band_max_id'] = app_name + '_band_max'
-#         id_dict['band_type_id'] = app_name + '_band_type'
-#         id_dict['band_unit_id'] = app_name + '_band_unit'
+
+# def init_app_about(current_app, app_id_dict):
+#     more_info_check = dcc.Checklist(
+#         id=app_id_dict['more_about_app_id'],
+#         options=[
+#             {'label': 'More about this app \U0001F4AC', 'value': 'more'},
+#         ],
+#         value=[],
+#         labelStyle={'display': 'inline-block'}
+#     )
 #
-#     elif app_name == 'resonance':  # id names for neutron resonance only
-#         id_dict['slider_id'] = app_name + '_e_range_slider'
-#         id_dict['range_table_id'] = app_name + '_range_table'
-#         id_dict['e_step_id'] = app_name + '_e_step'
-#         id_dict['distance_id'] = app_name + '_distance'
-#         id_dict['hidden_prev_distance_id'] = app_name + '_hidden_prev_distance'
-#         id_dict['hidden_range_input_coord_id'] = app_name + '_hidden_range_input_coord'
-#         id_dict['hidden_df_export_json_id'] = app_name + '_hidden_df_export_json'
-#         id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
-#         id_dict['df_export_tb_div'] = app_name + '_df_export_tb_div'
-#         id_dict['df_export_tb'] = app_name + '_df_export_tb'
-#         id_dict['plot_div_id'] = app_name + '_plot'
-#         id_dict['plot_fig_id'] = app_name + '_plot_fig'
-#         id_dict['plot_options_div_id'] = app_name + '_plot_options'
-#         id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
-#         id_dict['prev_x_type_id'] = app_name + '_prev_x_type'
+#     more_info_div = html.Div(
+#         [
+#             app_info_markdown_dict[current_app],
+#         ],
+#         id=app_id_dict['app_info_id'],
+#         style={'display': 'none'},
+#     )
 #
-#     elif app_name == 'converter':  # id names for composition converter only
-#         id_dict['compos_type_id'] = app_name + '_compos_input_type'
-#
-#     elif app_name == 'tof_plotter':  # id names for TOF plotter only
-#         id_dict['distance_id'] = app_name + '_distance'
-#         id_dict['delay_id'] = app_name + '_delay'
-#         id_dict['spectra_upload_id'] = app_name + '_spectra'
-#         id_dict['spectra_upload_fb_id'] = app_name + '_spectra_fb'
-#         id_dict['data_upload_id'] = app_name + '_data'
-#         id_dict['data_upload_fb_id'] = app_name + '_data_fb'
-#         id_dict['background_upload_id'] = app_name + '_background'
-#         id_dict['background_check_id'] = app_name + '_background_ck'
-#         id_dict['background_upload_fb_id'] = app_name + '_background_fb'
-#         id_dict['plot_div_id'] = app_name + '_plot'
-#         id_dict['plot_fig_id'] = app_name + '_plot_fig'
-#
-#     elif app_name == 'bragg':  # id names for bragg edge simulator only
-#         id_dict['error_id2'] = app_name + '_error2'
-#         id_dict['temperature_id'] = app_name + '_temperature'
-#         id_dict['distance_id'] = app_name + '_distance'
-#         id_dict['band_min_id'] = app_name + '_band_min'
-#         id_dict['band_max_id'] = app_name + '_band_max'
-#         id_dict['band_step_id'] = app_name + '_band_step'
-#         id_dict['band_unit_id'] = app_name + '_band_unit'
-#         id_dict['cif_upload_id'] = app_name + '_cif'
-#         id_dict['cif_upload_fb_id'] = app_name + '_cif_fb'
-#         id_dict['hidden_df_json_id'] = app_name + '_hidden_df_json'
-#         id_dict['hidden_df_export_json_id'] = app_name + '_hidden_df_export_json'
-#         id_dict['df_export_tb_div'] = app_name + '_df_export_tb_div'
-#         id_dict['df_export_tb'] = app_name + '_df_export_tb'
-#         id_dict['plot_div_id'] = app_name + '_plot'
-#         id_dict['plot_fig_id'] = app_name + '_plot_fig'
-#         id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
-#
-#     return id_dict
+#     return html.Div([more_info_check, more_info_div])
 
 
-def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id: str, del_row_id: str,
-                      database_id: str, app_id: str):
-    if app_id == 'converter':
-        _compos_type_div = html.Div(
-            [
-                html.H6('Composition input type:'),
-                dcc.RadioItems(id=app_id + '_compos_input_type',
-                               options=[
-                                   {'label': constants.weight_name, 'value': constants.weight_name},
-                                   {'label': constants.atomic_name, 'value': constants.atomic_name},
-                               ],
-                               value=constants.weight_name,
-                               # labelStyle={'display': 'inline-block'},
-                               ),
-            ], className='row',
-        )
-        _nuclear_database_div_style = {'display': 'none'}
-    else:
-        _compos_type_div = None
-        _nuclear_database_div_style = {'display': 'block'}
-
-    # Upload div
-    upload_field = html.Div(
-        [
-            # Database dropdown
-            html.Div(
-                [
-                    html.H6('Nuclear database:',
-                            # className=col_width_3,
-                            ),
-                    dcc.Dropdown(
-                        id=database_id,
-                        options=[
-                            {'label': 'ENDF/B-VII.1', 'value': 'ENDF_VII'},
-                            {'label': 'ENDF/B-VIII.0', 'value': 'ENDF_VIII'},
-                        ],
-                        value='ENDF_VIII',
-                        searchable=False,
-                        clearable=False,
-                        className=col_width_3,
-                    ),
-                ], className='row', style=_nuclear_database_div_style,
-            ),
-            _compos_type_div,
-            # Sample input
-            html.H3('Sample info'),
-            dcc.Upload(id=id_str,
-                       children=html.Div([
-                           'Drag and Drop or ',
-                           html.A('Select Files'),
-                           " (previously exported '###.csv')",
-                       ]),
-                       style={
-                           'width': '100%',
-                           'height': '60px',
-                           'lineHeight': '60px',
-                           'borderWidth': '1px',
-                           'borderStyle': 'dashed',
-                           'borderRadius': '5px',
-                           'textAlign': 'center',
-                           'margin': '10px'
-                       },
-                       # Allow multiple files to be uploaded
-                       multiple=True,
-                       last_modified=0,
-                       ),
-            html.Div(id=div_str),
-            html.Div(id=hidden_div_str, style={'display': 'none'}, children=0),
-            html.Button('+', id=add_row_id, n_clicks_timestamp=0),
-            html.Button('-', id=del_row_id, n_clicks_timestamp=0),
-        ])
-    return upload_field
+# app_info_markdown_dict = {
+#     'transmission': dcc.Markdown("""
+#     This tool estimates the neutron transmission/attenuation signals and contrast,
+#     by defining the sample information such as density, thickness in the neutron beam path.
+#     Multiple samples or complex compounds can be added as layers in such calculation.
+#     Estimating the contrast by changing isotopic ratios is also supported.
+#     An example is shown by default to demonstrate its usage.
+#             """),
+#     'resonance': dcc.Markdown("""
+#     This tool estimates the energy dependent neutron imaging signals and contrasts,
+#     specifically for *resonances* in the *epithermal* range.
+#     Similar to the transmission tool, sample/samples can be entered as layers in such calculation.
+#     Estimating the contrast by changing isotopic ratios is also supported.
+#     An example is shown by default to demonstrate its usage.
+#             """),
+#     'converter': dcc.Markdown("""
+#     This tool helps the conversion between wt.% and at.%. And it populates
+#     an equivalent chemical formula to represent a complex mixture. Such formula
+#     can be used as '{}' in other tools available in NEUIT.
+#     An example is shown by default to demonstrate its usage.
+#             """.format(constants.chem_name)),
+#     'tof_plotter': dcc.Markdown("""
+#     This tool helps plotting data acquired from Timepix2 MCP detector. By dragging and dropping
+#     spectra files and data files, one can quickly verify if expected resonances or Bragg-edges
+#     have been captured or not. Optional background file can also be added if normalization is needed.
+#             """),
+#     'bragg': dcc.Markdown("""
+#     This tool estimates the energy dependent neutron imaging signals and contrasts,
+#     specifically for *Bragg-edges* in the *cold* or *thermal* range. Currently, it only supports
+#     dragging and dropping '.cif' files.
+#             """),
+# }
 
 
-def init_iso_table(id_str: str):
-    iso_table = dt.DataTable(
-        data=iso_tb_df_default.to_dict('records'),
-        columns=iso_tb_header_df.to_dict('records'),
-        # editable=True,
-        row_selectable=False,
-        filter_action='none',
-        sort_action='none',
-        row_deletable=False,
-        # export_format='csv',
-        style_cell_conditional=iso_tb_even_4_col,
-        style_data_conditional=iso_tb_gray_cols,
-        fixed_rows={'headers': True, 'data': 0},
-        style_table={
-            'maxHeight': '300',
-            'overflowY': 'scroll'
-        },
-        id=id_str
-    )
-    return iso_table
+# def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id: str, del_row_id: str,
+#                       database_id: str, app_id: str):
+#     if app_id == 'converter':
+#         _compos_type_div = html.Div(
+#             [
+#                 html.H6('Composition input type:'),
+#                 dcc.RadioItems(id=app_id + '_compos_input_type',
+#                                options=[
+#                                    {'label': constants.weight_name, 'value': constants.weight_name},
+#                                    {'label': constants.atomic_name, 'value': constants.atomic_name},
+#                                ],
+#                                value=constants.weight_name,
+#                                # labelStyle={'display': 'inline-block'},
+#                                ),
+#             ], className='row',
+#         )
+#         _nuclear_database_div_style = {'display': 'none'}
+#     else:
+#         _compos_type_div = None
+#         _nuclear_database_div_style = {'display': 'block'}
+#
+#     # Upload div
+#     upload_field = html.Div(
+#         [
+#             # Database dropdown
+#             html.Div(
+#                 [
+#                     html.H6('Nuclear database:',
+#                             # className=col_width_3,
+#                             ),
+#                     dcc.Dropdown(
+#                         id=database_id,
+#                         options=[
+#                             {'label': 'ENDF/B-VII.1', 'value': 'ENDF_VII'},
+#                             {'label': 'ENDF/B-VIII.0', 'value': 'ENDF_VIII'},
+#                         ],
+#                         value='ENDF_VIII',
+#                         searchable=False,
+#                         clearable=False,
+#                         className=col_width_3,
+#                     ),
+#                 ], className='row', style=_nuclear_database_div_style,
+#             ),
+#             _compos_type_div,
+#             # Sample input
+#             html.H3('Sample info'),
+#             dcc.Upload(id=id_str,
+#                        children=html.Div([
+#                            'Drag and Drop or ',
+#                            html.A('Select Files'),
+#                            " (previously exported '###.csv')",
+#                        ]),
+#                        style={
+#                            'width': '100%',
+#                            'height': '60px',
+#                            'lineHeight': '60px',
+#                            'borderWidth': '1px',
+#                            'borderStyle': 'dashed',
+#                            'borderRadius': '5px',
+#                            'textAlign': 'center',
+#                            'margin': '10px'
+#                        },
+#                        # Allow multiple files to be uploaded
+#                        multiple=True,
+#                        last_modified=0,
+#                        ),
+#             html.Div(id=div_str),
+#             html.Div(id=hidden_div_str, style={'display': 'none'}, children=0),
+#             html.Button('+', id=add_row_id, n_clicks_timestamp=0),
+#             html.Button('-', id=del_row_id, n_clicks_timestamp=0),
+#         ])
+#     return upload_field
+
+
+# def init_iso_table(id_str: str):
+#     iso_table = dt.DataTable(
+#         data=iso_tb_df_default.to_dict('records'),
+#         columns=iso_tb_header_df.to_dict('records'),
+#         # editable=True,
+#         row_selectable=False,
+#         filter_action='none',
+#         sort_action='none',
+#         row_deletable=False,
+#         # export_format='csv',
+#         style_cell_conditional=iso_tb_even_4_col,
+#         style_data_conditional=iso_tb_gray_cols,
+#         fixed_rows={'headers': True, 'data': 0},
+#         style_table={
+#             'maxHeight': '300',
+#             'overflowY': 'scroll'
+#         },
+#         id=id_str
+#     )
+#     return iso_table
 
 
 app_links_list = []
@@ -1369,16 +1073,16 @@ sample_tb_even_3_col = [
      'width': '33%'},
 ]
 
-iso_tb_even_4_col = [
-    {'if': {'column_id': constants.layer_name},
-     'width': '25%'},
-    {'if': {'column_id': constants.ele_name},
-     'width': '25%'},
-    {'if': {'column_id': constants.iso_name},
-     'width': '25%'},
-    {'if': {'column_id': constants.iso_ratio_name},
-     'width': '25%'},
-]
+# iso_tb_even_4_col = [
+#     {'if': {'column_id': constants.layer_name},
+#      'width': '25%'},
+#     {'if': {'column_id': constants.ele_name},
+#      'width': '25%'},
+#     {'if': {'column_id': constants.iso_name},
+#      'width': '25%'},
+#     {'if': {'column_id': constants.iso_ratio_name},
+#      'width': '25%'},
+# ]
 
 range_tb_even_5_col = [
     {'if': {'column_id': constants.energy_name},
@@ -1408,25 +1112,25 @@ output_tb_uneven_6_col = [
      'width': '11%'},
 ]
 
-color = 'rgb(240, 240, 240)'
-range_tb_gray_cols = [
-    {'if': {'column_id': constants.speed_name},
-     'backgroundColor': color},
-    {'if': {'column_id': constants.tof_name},
-     'backgroundColor': color},
-    {'if': {'column_id': constants.class_name},
-     'backgroundColor': color},
-]
+# color = 'rgb(240, 240, 240)'
+# range_tb_gray_cols = [
+#     {'if': {'column_id': constants.speed_name},
+#      'backgroundColor': color},
+#     {'if': {'column_id': constants.tof_name},
+#      'backgroundColor': color},
+#     {'if': {'column_id': constants.class_name},
+#      'backgroundColor': color},
+# ]
 
-iso_tb_gray_cols = [
-    {'if': {'column_id': constants.layer_name},
-     'backgroundColor': color},
-    {'if': {'column_id': constants.ele_name},
-     'backgroundColor': color},
-    {'if': {'column_id': constants.iso_name},
-     'backgroundColor': color},
-    # striped_rows,
-]
+# iso_tb_gray_cols = [
+#     {'if': {'column_id': constants.layer_name},
+#      'backgroundColor': color},
+#     {'if': {'column_id': constants.ele_name},
+#      'backgroundColor': color},
+#     {'if': {'column_id': constants.iso_name},
+#      'backgroundColor': color},
+#     # striped_rows,
+# ]
 
 markdown_sample = dcc.Markdown('''
 NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**. Density input can **ONLY**
