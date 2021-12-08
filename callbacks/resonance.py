@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from dash import dash_table as dt
+from dash.exceptions import PreventUpdate
 import ImagingReso._utilities as ir_util
 
 from app import app
@@ -57,7 +58,12 @@ def show_hide_band_input(more_info, style):
 def update_range_input_type(timestamp, new_range_tb_rows, old_range_tb_rows):
     old_range_tb_df = pd.DataFrame(old_range_tb_rows)
     new_range_tb_df = pd.DataFrame(new_range_tb_rows)
+
+    if old_range_tb_df.empty:
+        raise PreventUpdate
+
     diff_indices = new_range_tb_df.round(5) == old_range_tb_df.round(5)
+
     _coord = np.where(diff_indices == False)
     if len(_coord[0]) != 1 or len(_coord[1]) != 1:
         print('Old:\n{}'.format(old_range_tb_df))
