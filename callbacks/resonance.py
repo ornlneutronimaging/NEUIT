@@ -10,7 +10,7 @@ from callbacks.utilities.validator import (validate_sample_input, validate_densi
 from callbacks.utilities.resonance import fill_range_table_by_e, update_range_tb_by_coordinate
 from callbacks.utilities.all_apps import (form_iso_table, unpack_sample_tb_df_and_add_layer, update_iso_table_callback,
                                           force_dict_to_numeric, unpack_iso_tb_df_and_update,
-                                          form_transmission_result_div)
+                                          form_transmission_result_div, form_sample_stack_table_div)
 from callbacks.utilities.plot import shape_matplot_to_plotly
 
 

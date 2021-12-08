@@ -4,7 +4,7 @@ from dash import dash_table as dt
 import pandas as pd
 
 from config import app_dict, app_info_markdown_dict
-import callbacks.utilities.constants as constants
+from callbacks.utilities.constants import *
 from ImagingReso.resonance import Resonance
 
 
@@ -15,15 +15,59 @@ col_width_6 = 'six columns'
 empty_div = html.Div()
 
 
+output_tb_uneven_6_col = [
+    {'if': {'column_id': thick_name},
+     'width': '22%'},
+    {'if': {'column_id': density_name},
+     'width': '22%'},
+    {'if': {'column_id': ratio_name},
+     'width': '22%'},
+    {'if': {'column_id': molar_name},
+     'width': '11%'},
+    {'if': {'column_id': number_density_name},
+     'width': '11%'},
+    {'if': {'column_id': mu_per_cm_name},
+     'width': '11%'},
+]
+
+
+output_stack_header_df = pd.DataFrame({
+    'name': [thick_name,
+             density_name,
+             ratio_name,
+             molar_name,
+             number_density_name,
+             mu_per_cm_name],
+    'id': [thick_name,
+           density_name,
+           ratio_name,
+           molar_name,
+           number_density_name,
+           mu_per_cm_name],
+    'deletable': [False, False, False, False, False, False],
+    'editable': [False, False, False, False, False, False],
+})
+
+
+output_stack_header_short_df = pd.DataFrame({
+    'name': [ratio_name,
+             molar_name],
+    'id': [ratio_name,
+           molar_name],
+    'deletable': [False, False],
+    'editable': [False, False],
+})
+
+
 iso_tb_header_df = pd.DataFrame({
-    'name': [constants.layer_name,
-             constants.ele_name,
-             constants.iso_name,
-             constants.iso_ratio_name],
-    'id': [constants.layer_name,
-           constants.ele_name,
-           constants.iso_name,
-           constants.iso_ratio_name],
+    'name': [layer_name,
+             ele_name,
+             iso_name,
+             iso_ratio_name],
+    'id': [layer_name,
+           ele_name,
+           iso_name,
+           iso_ratio_name],
     'deletable': [False, False, False, False],
     'editable': [False, False, False, True],
     'type': ['any', 'any', 'any', 'numeric']
@@ -31,66 +75,66 @@ iso_tb_header_df = pd.DataFrame({
 
 
 iso_tb_df_default = pd.DataFrame({
-    constants.layer_name: [None],
-    constants.ele_name: [None],
-    constants.iso_name: [None],
-    constants.iso_ratio_name: [None],
+    layer_name: [None],
+    ele_name: [None],
+    iso_name: [None],
+    iso_ratio_name: [None],
 })
 
 
 range_tb_even_5_col = [
-    {'if': {'column_id': constants.energy_name},
+    {'if': {'column_id': energy_name},
      'width': '20%'},
-    {'if': {'column_id': constants.wave_name},
+    {'if': {'column_id': wave_name},
      'width': '20%'},
-    {'if': {'column_id': constants.speed_name},
+    {'if': {'column_id': speed_name},
      'width': '20%'},
-    {'if': {'column_id': constants.tof_name},
+    {'if': {'column_id': tof_name},
      'width': '20%'},
-    {'if': {'column_id': constants.class_name},
+    {'if': {'column_id': class_name},
      'width': '20%'},
 ]
 
 
 sample_tb_even_3_col = [
-    {'if': {'column_id': constants.chem_name},
+    {'if': {'column_id': chem_name},
      'width': '33%'},
-    {'if': {'column_id': constants.thick_name},
+    {'if': {'column_id': thick_name},
      'width': '33%'},
-    {'if': {'column_id': constants.density_name},
+    {'if': {'column_id': density_name},
      'width': '33%'},
 ]
 
 
 iso_tb_even_4_col = [
-    {'if': {'column_id': constants.layer_name},
+    {'if': {'column_id': layer_name},
      'width': '25%'},
-    {'if': {'column_id': constants.ele_name},
+    {'if': {'column_id': ele_name},
      'width': '25%'},
-    {'if': {'column_id': constants.iso_name},
+    {'if': {'column_id': iso_name},
      'width': '25%'},
-    {'if': {'column_id': constants.iso_ratio_name},
+    {'if': {'column_id': iso_ratio_name},
      'width': '25%'},
 ]
 
 color = 'rgb(240, 240, 240)'
 iso_tb_gray_cols = [
-    {'if': {'column_id': constants.layer_name},
+    {'if': {'column_id': layer_name},
      'backgroundColor': color},
-    {'if': {'column_id': constants.ele_name},
+    {'if': {'column_id': ele_name},
      'backgroundColor': color},
-    {'if': {'column_id': constants.iso_name},
+    {'if': {'column_id': iso_name},
      'backgroundColor': color},
     # striped_rows,
 ]
 
 
 range_tb_gray_cols = [
-    {'if': {'column_id': constants.speed_name},
+    {'if': {'column_id': speed_name},
      'backgroundColor': color},
-    {'if': {'column_id': constants.tof_name},
+    {'if': {'column_id': tof_name},
      'backgroundColor': color},
-    {'if': {'column_id': constants.class_name},
+    {'if': {'column_id': class_name},
      'backgroundColor': color},
 ]
 
@@ -216,10 +260,10 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
                 html.H6('Composition input type:'),
                 dcc.RadioItems(id=app_id + '_compos_input_type',
                                options=[
-                                   {'label': constants.weight_name, 'value': constants.weight_name},
-                                   {'label': constants.atomic_name, 'value': constants.atomic_name},
+                                   {'label': weight_name, 'value': weight_name},
+                                   {'label': atomic_name, 'value': atomic_name},
                                ],
-                               value=constants.weight_name,
+                               value=weight_name,
                                # labelStyle={'display': 'inline-block'},
                                ),
             ], className='row',
@@ -305,8 +349,8 @@ def init_iso_table(id_str: str):
 
 
 def init_reso_from_tb(range_tb_df, e_step, database):
-    v_1 = range_tb_df[constants.energy_name][0]
-    v_2 = range_tb_df[constants.energy_name][1]
+    v_1 = range_tb_df[energy_name][0]
+    v_2 = range_tb_df[energy_name][1]
     if v_1 < v_2:
         o_reso = Resonance(energy_min=v_1, energy_max=v_2, energy_step=e_step, database=database)
     else:

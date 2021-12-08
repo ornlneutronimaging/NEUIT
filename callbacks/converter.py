@@ -5,7 +5,8 @@ from callbacks.utilities.initialization import init_app_ids
 import callbacks.utilities.constants as constants
 from callbacks.utilities.validator import validate_sample_input, validate_iso_input
 from callbacks.utilities.all_apps import (update_iso_table_callback, force_dict_to_numeric, form_iso_table,
-                                          form_transmission_result_div, create_sample_df_from_compos_df)
+                                          create_sample_df_from_compos_df, form_transmission_result_div,
+                                          form_sample_stack_table_div)
 from callbacks.utilities.converter import compos_header_percent_df
 
 app_name = 'converter'

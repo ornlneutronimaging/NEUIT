@@ -243,143 +243,143 @@ sample_dict_schema = {
 #     return output_div_list, o_stack
 
 
-output_stack_header_df = pd.DataFrame({
-    'name': [constants.thick_name,
-             constants.density_name,
-             constants.ratio_name,
-             constants.molar_name,
-             constants.number_density_name,
-             constants.mu_per_cm_name],
-    'id': [constants.thick_name,
-           constants.density_name,
-           constants.ratio_name,
-           constants.molar_name,
-           constants.number_density_name,
-           constants.mu_per_cm_name],
-    'deletable': [False, False, False, False, False, False],
-    'editable': [False, False, False, False, False, False],
-})
+# output_stack_header_df = pd.DataFrame({
+#     'name': [constants.thick_name,
+#              constants.density_name,
+#              constants.ratio_name,
+#              constants.molar_name,
+#              constants.number_density_name,
+#              constants.mu_per_cm_name],
+#     'id': [constants.thick_name,
+#            constants.density_name,
+#            constants.ratio_name,
+#            constants.molar_name,
+#            constants.number_density_name,
+#            constants.mu_per_cm_name],
+#     'deletable': [False, False, False, False, False, False],
+#     'editable': [False, False, False, False, False, False],
+# })
+#
+#
+# output_stack_header_short_df = pd.DataFrame({
+#     'name': [constants.ratio_name,
+#              constants.molar_name],
+#     'id': [constants.ratio_name,
+#            constants.molar_name],
+#     'deletable': [False, False],
+#     'editable': [False, False],
+# })
 
 
-output_stack_header_short_df = pd.DataFrame({
-    'name': [constants.ratio_name,
-             constants.molar_name],
-    'id': [constants.ratio_name,
-           constants.molar_name],
-    'deletable': [False, False],
-    'editable': [False, False],
-})
-
-
-def form_sample_stack_table_div(o_stack, full_stack=True):
-    sample_stack_div_list = [html.Hr(), html.H4('Sample stack:')]
-    layers = list(o_stack.keys())
-    layer_dict = {}
-
-    # For short sample stack output
-    if full_stack:
-        output_header_df = output_stack_header_df
-    else:
-        output_header_df = output_stack_header_short_df
-
-    for l, layer in enumerate(layers):
-        elements_in_current_layer = o_stack[layer]['elements']
-        l_str = str(l + 1)
-        current_layer_list = [
-            html.H5("Layer {}: {}".format(l_str, layer)),
-        ]
-        layer_dict[constants.thick_name] = o_stack[layer]['thickness']['value']
-        layer_dict[constants.density_name] = round(o_stack[layer]['density']['value'], 3)
-        _ratio_str_list = [str(_p) for _p in o_stack[layer]['stoichiometric_ratio']]
-        layer_dict[constants.ratio_name] = ":".join(_ratio_str_list)
-        layer_dict[constants.molar_name] = round(o_stack[layer]['molar_mass']['value'], 4)
-        layer_dict[constants.number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
-        layer_dict[constants.mu_per_cm_name] = '{:0.3e}'.format(o_stack[layer]['mu_per_cm'])
-
-        _df_layer = pd.DataFrame([layer_dict])
-        current_layer_list.append(
-            dt.DataTable(data=_df_layer.to_dict('records'),
-                         columns=output_header_df.to_dict('records'),
-                         editable=False,
-                         row_selectable=False,
-                         filter_action='none',
-                         sort_action='none',
-                         row_deletable=False,
-                         style_cell_conditional=output_tb_uneven_6_col,
-                         ))
-
-        for e, ele in enumerate(elements_in_current_layer):
-            e_str = str(e + 1)
-            current_layer_list.append(html.P("Element {}: {}".format(e_str, ele)))
-            _iso_list = o_stack[layer][ele]['isotopes']['list']
-            _iso_ratios = o_stack[layer][ele]['isotopes']['isotopic_ratio']
-            iso_dict = {}
-            name_list = []
-            id_list = []
-            deletable_list = []
-            editable_list = []
-            for _index, iso in enumerate(_iso_list):
-                current_id = 'column_' + str(_index + 1)
-                name_list.append(iso)
-                id_list.append(current_id)
-                deletable_list.append(False)
-                editable_list.append(False)
-                iso_dict[current_id] = round(_iso_ratios[_index], 4)
-
-            _i = len(id_list)
-            name_list.append(constants.molar_name)
-            molar_name_id = 'column_' + str(_i + 1)
-            id_list.append(molar_name_id)
-            deletable_list.append(False)
-            editable_list.append(False)
-            iso_dict[molar_name_id] = round(o_stack[layer][ele]['molar_mass']['value'], 4)
-
-            # For short sample stack output
-            if full_stack:
-                name_list.append(constants.number_density_name)
-                number_density_name_id = 'column_' + str(_i + 2)
-                id_list.append(number_density_name_id)
-                deletable_list.append(False)
-                editable_list.append(False)
-                name_list.append(constants.mu_per_cm_name)
-                mu_per_cm_name_id = 'column_' + str(_i + 3)
-                id_list.append(mu_per_cm_name_id)
-                deletable_list.append(False)
-                editable_list.append(False)
-                iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['atoms_per_cm3'])
-                iso_dict[mu_per_cm_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['mu_per_cm'])
-                cell_conditional = [
-                    {'if': {'column_id': molar_name_id},
-                     'width': '11%'},
-                    {'if': {'column_id': number_density_name_id},
-                     'width': '11%'},
-                    {'if': {'column_id': mu_per_cm_name_id},
-                     'width': '11%'},
-                ]
-            else:
-                cell_conditional = []
-
-            _df_iso = pd.DataFrame([iso_dict])
-            iso_output_header_df = pd.DataFrame({
-                'name': name_list,
-                'id': id_list,
-                'deletable': deletable_list,
-                'editable': editable_list,
-            })
-            current_layer_list.append(
-                dt.DataTable(data=_df_iso.to_dict('records'),
-                             columns=iso_output_header_df.to_dict('records'),
-                             editable=False,
-                             row_selectable=False,
-                             filter_action='none',
-                             sort_action='none',
-                             row_deletable=False,
-                             style_cell_conditional=cell_conditional
-                             ))
-        # Append current layer to the main list
-        sample_stack_div_list.append(html.Div(current_layer_list))
-        sample_stack_div_list.append(html.Br())
-    return sample_stack_div_list
+# def form_sample_stack_table_div(o_stack, full_stack=True):
+#     sample_stack_div_list = [html.Hr(), html.H4('Sample stack:')]
+#     layers = list(o_stack.keys())
+#     layer_dict = {}
+#
+#     # For short sample stack output
+#     if full_stack:
+#         output_header_df = output_stack_header_df
+#     else:
+#         output_header_df = output_stack_header_short_df
+#
+#     for l, layer in enumerate(layers):
+#         elements_in_current_layer = o_stack[layer]['elements']
+#         l_str = str(l + 1)
+#         current_layer_list = [
+#             html.H5("Layer {}: {}".format(l_str, layer)),
+#         ]
+#         layer_dict[constants.thick_name] = o_stack[layer]['thickness']['value']
+#         layer_dict[constants.density_name] = round(o_stack[layer]['density']['value'], 3)
+#         _ratio_str_list = [str(_p) for _p in o_stack[layer]['stoichiometric_ratio']]
+#         layer_dict[constants.ratio_name] = ":".join(_ratio_str_list)
+#         layer_dict[constants.molar_name] = round(o_stack[layer]['molar_mass']['value'], 4)
+#         layer_dict[constants.number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
+#         layer_dict[constants.mu_per_cm_name] = '{:0.3e}'.format(o_stack[layer]['mu_per_cm'])
+#
+#         _df_layer = pd.DataFrame([layer_dict])
+#         current_layer_list.append(
+#             dt.DataTable(data=_df_layer.to_dict('records'),
+#                          columns=output_header_df.to_dict('records'),
+#                          editable=False,
+#                          row_selectable=False,
+#                          filter_action='none',
+#                          sort_action='none',
+#                          row_deletable=False,
+#                          style_cell_conditional=output_tb_uneven_6_col,
+#                          ))
+#
+#         for e, ele in enumerate(elements_in_current_layer):
+#             e_str = str(e + 1)
+#             current_layer_list.append(html.P("Element {}: {}".format(e_str, ele)))
+#             _iso_list = o_stack[layer][ele]['isotopes']['list']
+#             _iso_ratios = o_stack[layer][ele]['isotopes']['isotopic_ratio']
+#             iso_dict = {}
+#             name_list = []
+#             id_list = []
+#             deletable_list = []
+#             editable_list = []
+#             for _index, iso in enumerate(_iso_list):
+#                 current_id = 'column_' + str(_index + 1)
+#                 name_list.append(iso)
+#                 id_list.append(current_id)
+#                 deletable_list.append(False)
+#                 editable_list.append(False)
+#                 iso_dict[current_id] = round(_iso_ratios[_index], 4)
+#
+#             _i = len(id_list)
+#             name_list.append(constants.molar_name)
+#             molar_name_id = 'column_' + str(_i + 1)
+#             id_list.append(molar_name_id)
+#             deletable_list.append(False)
+#             editable_list.append(False)
+#             iso_dict[molar_name_id] = round(o_stack[layer][ele]['molar_mass']['value'], 4)
+#
+#             # For short sample stack output
+#             if full_stack:
+#                 name_list.append(constants.number_density_name)
+#                 number_density_name_id = 'column_' + str(_i + 2)
+#                 id_list.append(number_density_name_id)
+#                 deletable_list.append(False)
+#                 editable_list.append(False)
+#                 name_list.append(constants.mu_per_cm_name)
+#                 mu_per_cm_name_id = 'column_' + str(_i + 3)
+#                 id_list.append(mu_per_cm_name_id)
+#                 deletable_list.append(False)
+#                 editable_list.append(False)
+#                 iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['atoms_per_cm3'])
+#                 iso_dict[mu_per_cm_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['mu_per_cm'])
+#                 cell_conditional = [
+#                     {'if': {'column_id': molar_name_id},
+#                      'width': '11%'},
+#                     {'if': {'column_id': number_density_name_id},
+#                      'width': '11%'},
+#                     {'if': {'column_id': mu_per_cm_name_id},
+#                      'width': '11%'},
+#                 ]
+#             else:
+#                 cell_conditional = []
+#
+#             _df_iso = pd.DataFrame([iso_dict])
+#             iso_output_header_df = pd.DataFrame({
+#                 'name': name_list,
+#                 'id': id_list,
+#                 'deletable': deletable_list,
+#                 'editable': editable_list,
+#             })
+#             current_layer_list.append(
+#                 dt.DataTable(data=_df_iso.to_dict('records'),
+#                              columns=iso_output_header_df.to_dict('records'),
+#                              editable=False,
+#                              row_selectable=False,
+#                              filter_action='none',
+#                              sort_action='none',
+#                              row_deletable=False,
+#                              style_cell_conditional=cell_conditional
+#                              ))
+#         # Append current layer to the main list
+#         sample_stack_div_list.append(html.Div(current_layer_list))
+#         sample_stack_div_list.append(html.Br())
+#     return sample_stack_div_list
 
 
 def convert_input_to_composition(compos_df, compos_type, o_stack):
@@ -673,114 +673,17 @@ for i, each_app in enumerate(app_dict.keys()):
 app_links_div = html.Div(app_links_list)
 
 
-output_tb_uneven_6_col = [
-    {'if': {'column_id': constants.thick_name},
-     'width': '22%'},
-    {'if': {'column_id': constants.density_name},
-     'width': '22%'},
-    {'if': {'column_id': constants.ratio_name},
-     'width': '22%'},
-    {'if': {'column_id': constants.molar_name},
-     'width': '11%'},
-    {'if': {'column_id': constants.number_density_name},
-     'width': '11%'},
-    {'if': {'column_id': constants.mu_per_cm_name},
-     'width': '11%'},
-]
-
-
-# markdown_sample = dcc.Markdown('''
-# NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**. Density input can **ONLY**
-# be **omitted (leave as blank)** if the input formula is a single element.''')
-#
-# markdown_disclaimer_sns = dcc.Markdown('''
-# **Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections
-# from **ENDF/B** database and the **simulated** beam spectrum at this beamline.''')
-#
-# markdown_disclaimer_hfir = dcc.Markdown('''
-# **Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections
-# from **ENDF/B** database and the **measured** beam spectrum at this beamline.''')
-#
-# label_sample = html.Label(['When omitted, natural densities will be used. List of densities can be found ',
-#                            html.A("here.", href='http://periodictable.com/Properties/A/Density.al.html',
-#                                   target="_blank")])
-#
-# markdown_compos = dcc.Markdown('''
-# NOTE: *formula* is **CASE SENSITIVE**, *stoichiometric ratio* must be an **INTEGER**.''')
-#
-# markdown_iso = dcc.Markdown('''
-# NOTE: Uncheck the box will **NOT RESET** this table if you have edited it, but the input will not be used in the
-# calculations.''')
-
-# # Plot control buttons
-# plot_option_div = html.Div(
-#     [
-#         html.Hr(),
-#         html.H3('Result'),
-#         html.H5('Plot:'),
-#         html.Div(
-#             [
-#                 html.Div(
-#                     [
-#                         html.P('X options: '),
-#                         dcc.RadioItems(id='x_type',
-#                                        options=[
-#                                            {'label': 'Energy (eV)', 'value': 'energy'},
-#                                            {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
-#                                            {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
-#                                        ],
-#                                        value='energy',
-#                                        # n_clicks_timestamp=0,
-#                                        )
-#                     ], className=col_width_3
-#                 ),
-#                 html.Div(
-#                     [
-#                         html.P('Y options: '),
-#                         dcc.RadioItems(id='y_type',
-#                                        options=[
-#                                            {'label': 'Transmission', 'value': 'transmission'},
-#                                            {'label': 'Attenuation', 'value': 'attenuation'},
-#                                            {'label': 'Attenuation coefficient', 'value': 'mu_per_cm'},
-#                                            {'label': "Cross-section (weighted)", 'value': 'sigma'},
-#                                            {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
-#                                        ],
-#                                        value='transmission',
-#                                        # n_clicks_timestamp=0,
-#                                        )
-#                     ], className=col_width_3
-#                 ),
-#                 html.Div(
-#                     [
-#                         html.P('Scale options: '),
-#                         dcc.RadioItems(id='plot_scale',
-#                                        options=[
-#                                            {'label': 'Linear', 'value': 'linear'},
-#                                            {'label': 'Log x', 'value': 'logx'},
-#                                            {'label': 'Log y', 'value': 'logy'},
-#                                            {'label': 'Loglog', 'value': 'loglog'},
-#                                        ],
-#                                        value='linear',
-#                                        # n_clicks_timestamp=0,
-#                                        )
-#                     ], className=col_width_3
-#                 ),
-#                 html.Div(
-#                     [
-#                         html.P('Show options: '),
-#                         dcc.Checklist(id='show_opt',
-#                                       options=[
-#                                           {'label': 'Total', 'value': 'total'},
-#                                           {'label': 'Layer', 'value': 'layer'},
-#                                           {'label': 'Element', 'value': 'ele'},
-#                                           {'label': 'Isotope', 'value': 'iso'},
-#                                       ],
-#                                       value=['layer'],
-#                                       # n_clicks_timestamp=0,
-#                                       ),
-#                     ], className=col_width_3
-#                 ),
-#             ], className='row'
-#         ),
-#     ]
-# ),
+# output_tb_uneven_6_col = [
+#     {'if': {'column_id': constants.thick_name},
+#      'width': '22%'},
+#     {'if': {'column_id': constants.density_name},
+#      'width': '22%'},
+#     {'if': {'column_id': constants.ratio_name},
+#      'width': '22%'},
+#     {'if': {'column_id': constants.molar_name},
+#      'width': '11%'},
+#     {'if': {'column_id': constants.number_density_name},
+#      'width': '11%'},
+#     {'if': {'column_id': constants.mu_per_cm_name},
+#      'width': '11%'},
+# ]
