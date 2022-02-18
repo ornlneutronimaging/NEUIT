@@ -3,8 +3,6 @@ import dash_bootstrap_components as dbc
 from dash import html
 from dash import dcc
 
-from callbacks.utilities.constants import col_width_3
-
 
 def shape_matplot_to_plotly(fig, y_type, plot_scale):
     plotly_fig = tls.mpl_to_plotly(fig)
