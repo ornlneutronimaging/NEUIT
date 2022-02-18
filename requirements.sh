@@ -6,9 +6,9 @@ pip install ImagingReso>=1.7.4
 conda install braggedgemodeling
 conda install diffpy.structure
 pip install matplotlib==3.1.3
-pip install pandas>=1.1.3
-pip install numpy==1.19.2
-pip install scipy>=1.5.2
-pip install cerberus==1.3.2
-pip install gunicorn==20.0.4
+pip install pandas==1.3.5
+pip install numpy==1.21.5
+pip install scipy==1.7.3
+pip install cerberus==1.3.4
+pip install gunicorn==20.1.0
 pip install dash-bootstrap-components

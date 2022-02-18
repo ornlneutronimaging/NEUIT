@@ -110,7 +110,6 @@ plot_option_div = html.Div(
                                           {'label': 'Isotope', 'value': 'iso'},
                                       ],
                                       value=['layer'],
-                                      style={'display': 'block'},
                                       # n_clicks_timestamp=0,
                                       ),
                     ], width=2
