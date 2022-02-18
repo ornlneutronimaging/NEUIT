@@ -1,4 +1,5 @@
 import plotly.tools as tls
+import dash_bootstrap_components as dbc
 from dash import html
 from dash import dcc
 
@@ -50,9 +51,9 @@ plot_option_div = html.Div(
         html.Hr(),
         html.H3('Result'),
         html.H5('Plot:'),
-        html.Div(
+        dbc.Row(
             [
-                html.Div(
+                dbc.Col(
                     [
                         html.P('X options: '),
                         dcc.RadioItems(id='x_type',
@@ -64,9 +65,9 @@ plot_option_div = html.Div(
                                        value='energy',
                                        # n_clicks_timestamp=0,
                                        )
-                    ], className=col_width_3
+                    ], width=2
                 ),
-                html.Div(
+                dbc.Col(
                     [
                         html.P('Y options: '),
                         dcc.RadioItems(id='y_type',
@@ -78,11 +79,12 @@ plot_option_div = html.Div(
                                            {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
                                        ],
                                        value='transmission',
+                                       # inline=False
                                        # n_clicks_timestamp=0,
                                        )
-                    ], className=col_width_3
+                    ], width=2
                 ),
-                html.Div(
+                dbc.Col(
                     [
                         html.P('Scale options: '),
                         dcc.RadioItems(id='plot_scale',
@@ -95,9 +97,9 @@ plot_option_div = html.Div(
                                        value='linear',
                                        # n_clicks_timestamp=0,
                                        )
-                    ], className=col_width_3
+                    ], width=2
                 ),
-                html.Div(
+                dbc.Col(
                     [
                         html.P('Show options: '),
                         dcc.Checklist(id='show_opt',
@@ -108,11 +110,12 @@ plot_option_div = html.Div(
                                           {'label': 'Isotope', 'value': 'iso'},
                                       ],
                                       value=['layer'],
+                                      style={'display': 'block'},
                                       # n_clicks_timestamp=0,
                                       ),
-                    ], className=col_width_3
+                    ], width=2
                 ),
-            ], className='row'
+            ]
         ),
     ]
 ),

@@ -74,54 +74,68 @@ layout = html.Div(
                 # Step/distance input
                 html.Div(
                     [
-                        html.Div(
+                        dbc.Row(
                             [
-                                html.H6('Energy step:'),
-                                html.Div(
-                                    [
-                                        dcc.Dropdown(
-                                            id=app_id_dict['e_step_id'],
-                                            options=[
-                                                {'label': '0.001 (eV)  (NOT recommended if energy range > 10 eV)',
-                                                 'value': 0.001},
-                                                {'label': '0.01 (eV)', 'value': 0.01},
-                                                {'label': '0.1 (eV)', 'value': 0.1},
-                                                {'label': '1 (eV)', 'value': 1},
-                                                {'label': '10 (eV)', 'value': 10},
-                                                {'label': '100 (eV)', 'value': 100},
-                                            ],
-                                            value=0.1,
-                                            searchable=False,
-                                            clearable=False,
-                                        ),
-                                    ]
+                                dbc.Col(
+                                    html.Div(
+                                        [
+                                            html.H6('Energy step:'),
+                                            html.Div(
+                                                [
+                                                    dcc.Dropdown(
+                                                        id=app_id_dict['e_step_id'],
+                                                        options=[
+                                                            {
+                                                                'label': '0.001 (eV)  (NOT recommended if energy range > 10 eV)',
+                                                                'value': 0.001},
+                                                            {'label': '0.01 (eV)', 'value': 0.01},
+                                                            {'label': '0.1 (eV)', 'value': 0.1},
+                                                            {'label': '1 (eV)', 'value': 1},
+                                                            {'label': '10 (eV)', 'value': 10},
+                                                            {'label': '100 (eV)', 'value': 100},
+                                                        ],
+                                                        value=0.1,
+                                                        searchable=False,
+                                                        clearable=False,
+                                                    ),
+                                                ]
+                                            ),
+                                            dcc.Markdown(
+                                                '''NOTE: Pick a suitable energy step base on the energy range selected.'''),
+                                        ],
+                                    ), width=4
                                 ),
-                                dcc.Markdown(
-                                    '''NOTE: Pick a suitable energy step base on the energy range selected.'''),
-                            ], className='five columns', style={'verticalAlign': 'middle'},
+                                dbc.Col(
+                                    html.Div(
+                                        [
+                                            html.H6('Source-to-detector (optional):'),
+                                            dbc.Row(
+                                                [
+                                                    dbc.Col(
+                                                        dcc.Input(id=app_id_dict['distance_id'], type='number',
+                                                                  value=distance_default,
+                                                                  min=1,
+                                                                  inputMode='numeric',
+                                                                  step=0.01,
+                                                                  ), width=3
+                                                    ),
+                                                    dbc.Col(
+                                                        html.P('(m)',
+                                                               # style={'marginBottom': 10, 'marginTop': 5},
+                                                               style={'verticalAlign': 'middle'},
+                                                               ),
+                                                    ),
+                                                ]
+                                            ),
+                                            dcc.Markdown(
+                                                '''NOTE: Please ignore the above input field if you are **NOT** 
+                                                interested in displaying results in time-of-flight (TOF).'''),
+                                        ],
+                                    ), width=7
+                                )
+                            ]
                         ),
-                        html.Div(
-                            [
-                                html.H6('Source-to-detector (optional):'),
-                                html.Div(
-                                    [
-                                        dcc.Input(id=app_id_dict['distance_id'], type='number', value=distance_default,
-                                                  min=1,
-                                                  inputMode='numeric',
-                                                  step=0.01,
-                                                  className='nine columns'),
-                                        html.P('(m)', className='one column',
-                                               style={'marginBottom': 10, 'marginTop': 5},
-                                               # style={'verticalAlign': 'middle'},
-                                               ),
-                                    ], className='row', style={'verticalAlign': 'middle'},
-                                ),
-                                dcc.Markdown(
-                                    '''NOTE: Please ignore the above input field if you are **NOT** 
-                                    interested in displaying results in time-of-flight (TOF).'''),
-                            ], className=col_width_6,
-                        ),
-                    ], className='row',
+                    ],
                 ),
             ]
         ),

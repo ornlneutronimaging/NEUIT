@@ -1,23 +1,21 @@
 from dash import dash_table as dt
 import pandas as pd
+import dash_bootstrap_components as dbc
 
 from config import app_info_markdown_dict
 from callbacks.utilities.constants import *
 from ImagingReso.resonance import Resonance
-
 
 distance_default = 16.45  # in meter
 delay_default = 0  # in us
 temperature_default = 293  # in Kelvin
 plot_loading = html.H2('Plot loading...')
 
-
 col_width_1 = 'one column'
 col_width_3 = 'three columns'
 col_width_5 = 'five columns'
 col_width_6 = 'six columns'
 empty_div = html.Div()
-
 
 output_tb_uneven_6_col = [
     {'if': {'column_id': thick_name},
@@ -33,7 +31,6 @@ output_tb_uneven_6_col = [
     {'if': {'column_id': mu_per_cm_name},
      'width': '11%'},
 ]
-
 
 output_stack_header_df = pd.DataFrame({
     'name': [thick_name,
@@ -52,7 +49,6 @@ output_stack_header_df = pd.DataFrame({
     'editable': [False, False, False, False, False, False],
 })
 
-
 output_stack_header_short_df = pd.DataFrame({
     'name': [ratio_name,
              molar_name],
@@ -61,7 +57,6 @@ output_stack_header_short_df = pd.DataFrame({
     'deletable': [False, False],
     'editable': [False, False],
 })
-
 
 iso_tb_header_df = pd.DataFrame({
     'name': [layer_name,
@@ -77,14 +72,12 @@ iso_tb_header_df = pd.DataFrame({
     'type': ['any', 'any', 'any', 'numeric']
 })
 
-
 iso_tb_df_default = pd.DataFrame({
     layer_name: [None],
     ele_name: [None],
     iso_name: [None],
     iso_ratio_name: [None],
 })
-
 
 range_tb_even_5_col = [
     {'if': {'column_id': energy_name},
@@ -99,7 +92,6 @@ range_tb_even_5_col = [
      'width': '20%'},
 ]
 
-
 sample_tb_even_3_col = [
     {'if': {'column_id': chem_name},
      'width': '33%'},
@@ -108,7 +100,6 @@ sample_tb_even_3_col = [
     {'if': {'column_id': density_name},
      'width': '33%'},
 ]
-
 
 iso_tb_even_4_col = [
     {'if': {'column_id': layer_name},
@@ -132,16 +123,13 @@ iso_tb_gray_cols = [
     # striped_rows,
 ]
 
-
 # Layout
 striped_rows = {'if': {'row_index': 'odd'},
                 'backgroundColor': 'rgb(248, 248, 248)'}
 
-
 editable_white = {'if': {'column_editable': False},
                   'backgroundColor': 'rgb(30, 30, 30)',
                   'color': 'white'}
-
 
 range_tb_gray_cols = [
     {'if': {'column_id': speed_name},
@@ -293,31 +281,38 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
             # Database dropdown
             html.Div(
                 [
-                    html.H6('Nuclear database:',
-                            # className=col_width_3,
-                            ),
-                    dcc.Dropdown(
-                        id=database_id,
-                        options=[
-                            {'label': 'ENDF/B-VII.1', 'value': 'ENDF_VII'},
-                            {'label': 'ENDF/B-VIII.0', 'value': 'ENDF_VIII'},
-                        ],
-                        value='ENDF_VIII',
-                        searchable=False,
-                        clearable=False,
-                        className=col_width_3,
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    html.H6('Nuclear database:'),
+                                    dcc.Dropdown(
+                                        id=database_id,
+                                        options=[
+                                            {'label': 'ENDF/B-VII.1', 'value': 'ENDF_VII'},
+                                            {'label': 'ENDF/B-VIII.0', 'value': 'ENDF_VIII'},
+                                        ],
+                                        value='ENDF_VIII',
+                                        searchable=False,
+                                        clearable=False,
+                                    ),
+                                ], width=4
+                            )
+                        ]
                     ),
-                ], className='row', style=_nuclear_database_div_style,
+                ], style=_nuclear_database_div_style,
             ),
             _compos_type_div,
             # Sample input
-            html.H3('Sample info'),
+            dbc.Row([html.H3('Sample info')]),
             dcc.Upload(id=id_str,
-                       children=html.Div([
-                           'Drag and Drop or ',
-                           html.A('Select Files'),
-                           " (previously exported '###.csv')",
-                       ]),
+                       children=html.Div(
+                           [
+                               'Drag and Drop or ',
+                               html.A('Select Files'),
+                               " (previously exported '###.csv')",
+                           ],
+                       ),
                        style={
                            'width': '100%',
                            'height': '60px',
