@@ -172,25 +172,25 @@ def show_hide_iso_table(iso_changed, style):
 def disable_show_options(y_type):
     if y_type in ['attenuation', 'transmission']:
         options = [
-            {'label': 'Total', 'value': 'total'},
-            {'label': 'Layer', 'value': 'layer'},
-            {'label': 'Element', 'value': 'ele'},
-            {'label': 'Isotope', 'value': 'iso'},
+            {'label': ' Total', 'value': 'total'},
+            {'label': ' Layer', 'value': 'layer'},
+            {'label': ' Element', 'value': 'ele'},
+            {'label': ' Isotope', 'value': 'iso'},
         ]
     elif y_type == 'mu_per_cm':
         options = [
-            {'label': 'Layer', 'value': 'layer'},
-            {'label': 'Element', 'value': 'ele'},
-            {'label': 'Isotope', 'value': 'iso'},
+            {'label': ' Layer', 'value': 'layer'},
+            {'label': ' Element', 'value': 'ele'},
+            {'label': ' Isotope', 'value': 'iso'},
         ]
     elif y_type[-3:] == 'raw':
         options = [
-            {'label': 'Isotope', 'value': 'iso'},
+            {'label': ' Isotope', 'value': 'iso'},
         ]
     else:
         options = [
-            {'label': 'Element', 'value': 'ele'},
-            {'label': 'Isotope', 'value': 'iso'},
+            {'label': ' Element', 'value': 'ele'},
+            {'label': ' Isotope', 'value': 'iso'},
         ]
     return options
 
@@ -203,15 +203,15 @@ def disable_show_options(y_type):
 def disable_plot_scale_options(y_type):
     if y_type in ['attenuation', 'transmission']:
         options = [
-            {'label': 'Linear', 'value': 'linear'},
-            {'label': 'Log x', 'value': 'logx'},
+            {'label': ' Linear', 'value': 'linear'},
+            {'label': ' Log x', 'value': 'logx'},
         ]
     else:
         options = [
-            {'label': 'Linear', 'value': 'linear'},
-            {'label': 'Log x', 'value': 'logx'},
-            {'label': 'Log y', 'value': 'logy'},
-            {'label': 'Loglog', 'value': 'loglog'},
+            {'label': ' Linear', 'value': 'linear'},
+            {'label': ' Log x', 'value': 'logx'},
+            {'label': ' Log y', 'value': 'logy'},
+            {'label': ' Loglog', 'value': 'loglog'},
         ]
     return options
 

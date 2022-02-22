@@ -53,39 +53,43 @@ plot_option_div = html.Div(
             [
                 dbc.Col(
                     [
-                        html.P('X options: '),
-                        dcc.RadioItems(id='x_type',
-                                       options=[
-                                           {'label': 'Energy (eV)', 'value': 'energy'},
-                                           {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
-                                           {'label': 'Time-of-flight (\u03BCs)', 'value': 'time'},
-                                       ],
-                                       value='energy',
-                                       # n_clicks_timestamp=0,
-                                       )
-                    ], width=2
-                ),
+                        dbc.Col([
+                            html.P('X options: '),
+                            dcc.RadioItems(id='x_type',
+                                           options=[
+                                               {'label': ' Energy (eV)', 'value': 'energy'},
+                                               {'label': ' Wavelength (\u212B)', 'value': 'lambda'},
+                                               {'label': ' Time-of-flight (\u03BCs)', 'value': 'time'},
+                                           ],
+                                           value='energy',
+                                           # n_clicks_timestamp=0,
+                                           )
+                            ], width=6,
+                        ),
+                    ], width=3),
                 dbc.Col(
                     [
-                        html.P('Y options: '),
-                        dcc.RadioItems(id='y_type',
-                                       options=[
-                                           {'label': 'Transmission', 'value': 'transmission'},
-                                           {'label': 'Attenuation', 'value': 'attenuation'},
-                                           {'label': 'Attenuation coefficient', 'value': 'mu_per_cm'},
-                                           {'label': "Cross-section (weighted)", 'value': 'sigma'},
-                                           {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
-                                       ],
-                                       value='transmission',
-                                       # inline=False
-                                       # n_clicks_timestamp=0,
-                                       )
-                    ], width=2
-                ),
+                        dbc.Col([
+                            html.P('Y options: '),
+                            dcc.RadioItems(id='y_type',
+                                           options=[
+                                               {'label': " Transmission", 'value': 'transmission'},
+                                               {'label': ' Attenuation             ', 'value': 'attenuation'},
+                                               {'label': ' Attenuation coefficient ', 'value': 'mu_per_cm'},
+                                               {'label': " Cross-section (weighted)", 'value': 'sigma'},
+                                               {'label': ' Cross-section (raw)     ', 'value': 'sigma_raw'},
+                                           ],
+                                           value='transmission',
+                                           # inline=False
+                                           # n_clicks_timestamp=0,
+                                           )
+                            ], width=8),
+                        ], width=3),
                 dbc.Col(
                     [
                         html.P('Scale options: '),
-                        dcc.RadioItems(id='plot_scale',
+                        dbc.Col([
+                            dcc.RadioItems(id='plot_scale',
                                        options=[
                                            {'label': 'Linear', 'value': 'linear'},
                                            {'label': 'Log x', 'value': 'logx'},
@@ -95,24 +99,29 @@ plot_option_div = html.Div(
                                        value='linear',
                                        # n_clicks_timestamp=0,
                                        )
-                    ], width=2
+                            ], width=2
+                        ),
+                    ],
                 ),
                 dbc.Col(
                     [
                         html.P('Show options: '),
-                        dcc.Checklist(id='show_opt',
-                                      options=[
-                                          {'label': 'Total', 'value': 'total'},
-                                          {'label': 'Layer', 'value': 'layer'},
-                                          {'label': 'Element', 'value': 'ele'},
-                                          {'label': 'Isotope', 'value': 'iso'},
-                                      ],
-                                      value=['layer'],
-                                      # n_clicks_timestamp=0,
-                                      ),
-                    ], width=2
+                        dbc.Col([
+                            dcc.Checklist(id='show_opt',
+                                          options=[
+                                              {'label': ' Total', 'value': 'total'},
+                                              {'label': ' Layer', 'value': 'layer'},
+                                              {'label': ' Element', 'value': 'ele'},
+                                              {'label': ' Isotope', 'value': 'iso'},
+                                          ],
+                                          value=['layer'],
+                                          # n_clicks_timestamp=0,
+                                          ),
+                            ], width=5,
+                        ),
+                    ], width=2,
                 ),
-            ]
+            ],
         ),
-    ]
+    ],
 ),
