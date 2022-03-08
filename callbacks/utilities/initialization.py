@@ -10,6 +10,7 @@ distance_default = 16.45  # in meter
 delay_default = 0  # in us
 temperature_default = 293  # in Kelvin
 plot_loading = html.H2('Plot loading...')
+resubmit = html.H2('Please resubmit...')
 
 col_width_1 = 'one column'
 col_width_3 = 'three columns'
@@ -252,6 +253,22 @@ def init_app_about(current_app, app_id_dict):
     )
 
     return html.Div([more_info_check, more_info_div])
+
+
+def init_display_plot_data_check(app_id_dict):
+    display_check_div = html.Div(
+        [
+            dcc.Checklist(
+                id=app_id_dict['display_plot_data_id'],
+                options=[
+                    {'label': 'Display plotted data', 'value': 'display'},
+                ],
+                value=[],
+                labelStyle={'display': 'inline-block'}
+            ),
+        ], className='row'
+    )
+    return display_check_div
 
 
 def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id: str, del_row_id: str,

@@ -7,10 +7,11 @@ from bem import xscalc
 import pandas as pd
 import numpy as np
 import json
+import time
 
 import ImagingReso._utilities as ir_util
 from app import app
-from callbacks.utilities.initialization import (init_app_ids, striped_rows, plot_loading)
+from callbacks.utilities.initialization import (init_app_ids, striped_rows, plot_loading, resubmit)
 import callbacks.utilities.constants as constants
 from callbacks.utilities.plot import shape_matplot_to_plotly
 from callbacks.utilities.all_apps import y_type_to_y_label, x_type_to_x_tag, load_dfs
@@ -160,6 +161,7 @@ def store_bragg_df_in_json(n_submit, test_passed,
 def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fnames):
     if test_passed:
         if jsonified_data is not None:
+            time.sleep(1)
             df_dict = load_dfs(jsonified_data=jsonified_data)
             df_x = df_dict['x']
             df_y = df_dict['y']
@@ -180,7 +182,10 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fname
                     to_plot_list.append(_name_only + ' (inc el)')
                 if 'inc_inel' in xs_type:
                     to_plot_list.append(_name_only + ' (inc inel)')
-            df_to_plot = df_y[to_plot_list]
+            try:
+                df_to_plot = df_y[to_plot_list]
+            except KeyError:
+                return resubmit, [None]
             if y_type == 'attenuation':
                 df_to_plot = 1 - df_y
 
@@ -203,8 +208,7 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fname
             # Convert to plotly and format layout
             plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
 
-            return html.Div([dcc.Graph(figure=plotly_fig,
-                                       id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
+            return html.Div([dcc.Graph(figure=plotly_fig,id=app_id_dict['plot_fig_id']),]), [json.dumps(jsonized_plot_df)]
         else:
             return plot_loading, [None]
     else:

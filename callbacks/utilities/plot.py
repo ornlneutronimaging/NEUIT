@@ -53,7 +53,7 @@ plot_option_div = html.Div(
             [
                 dbc.Col(
                     [
-                        dbc.Col([
+                        html.Div([
                             html.P('X options: '),
                             dcc.RadioItems(id='x_type',
                                            options=[
@@ -64,12 +64,11 @@ plot_option_div = html.Div(
                                            value='energy',
                                            # n_clicks_timestamp=0,
                                            )
-                            ], width=6,
-                        ),
+                        ]),
                     ], width=3),
                 dbc.Col(
                     [
-                        dbc.Col([
+                        html.Div([
                             html.P('Y options: '),
                             dcc.RadioItems(id='y_type',
                                            options=[
@@ -83,30 +82,28 @@ plot_option_div = html.Div(
                                            # inline=False
                                            # n_clicks_timestamp=0,
                                            )
-                            ], width=8),
-                        ], width=3),
+                        ]),
+                    ], width=3),
                 dbc.Col(
                     [
-                        html.P('Scale options: '),
-                        dbc.Col([
+                        html.Div([
+                            html.P('Scale options: '),
                             dcc.RadioItems(id='plot_scale',
-                                       options=[
-                                           {'label': 'Linear', 'value': 'linear'},
-                                           {'label': 'Log x', 'value': 'logx'},
-                                           {'label': 'Log y', 'value': 'logy'},
-                                           {'label': 'Loglog', 'value': 'loglog'},
-                                       ],
-                                       value='linear',
-                                       # n_clicks_timestamp=0,
-                                       )
-                            ], width=2
-                        ),
-                    ],
-                ),
+                                           options=[
+                                               {'label': 'Linear', 'value': 'linear'},
+                                               {'label': 'Log x', 'value': 'logx'},
+                                               {'label': 'Log y', 'value': 'logy'},
+                                               {'label': 'Loglog', 'value': 'loglog'},
+                                           ],
+                                           value='linear',
+                                           # n_clicks_timestamp=0,
+                                           )
+                        ]),
+                    ], width=3),
                 dbc.Col(
                     [
-                        html.P('Show options: '),
-                        dbc.Col([
+                        html.Div([
+                            html.P('Show options: '),
                             dcc.Checklist(id='show_opt',
                                           options=[
                                               {'label': ' Total', 'value': 'total'},
@@ -117,11 +114,88 @@ plot_option_div = html.Div(
                                           value=['layer'],
                                           # n_clicks_timestamp=0,
                                           ),
-                            ], width=5,
-                        ),
+                        ]),
                     ], width=2,
                 ),
             ],
         ),
     ],
 ),
+
+bragg_plot_option_div = html.Div(
+    [
+        html.Hr(),
+        html.H3('Plot:'),
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        html.Div([
+                            html.P('X options: '),
+                            dcc.RadioItems(id='x_type',
+                                           options=[
+                                               {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
+                                               {'label': 'Energy (eV)', 'value': 'energy'},
+                                           ],
+                                           value='lambda',
+                                           inline=False,
+                                           )
+                        ]),
+                    ], width=3),
+                dbc.Col(
+                    [
+                        html.Div([
+                            html.P('Y options: '),
+                            dcc.RadioItems(id='y_type',
+                                           options=[
+                                               # {'label': 'Transmission', 'value': 'transmission'},
+                                               # {'label': 'Attenuation', 'value': 'attenuation'},
+                                               # {'label': 'Attenuation coefficient', 'value': 'mu_per_cm'},
+                                               # {'label': "Cross-section (weighted)", 'value': 'sigma'},
+                                               {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
+                                           ],
+                                           value='sigma_raw',
+                                           )
+                        ]),
+                    ], width=3
+                ),
+                dbc.Col(
+                    [
+                        html.Div([
+                            html.P('Scale options: '),
+                            dcc.RadioItems(id='plot_scale',
+                                           options=[
+                                               {'label': 'Linear', 'value': 'linear'},
+                                               {'label': 'Log x', 'value': 'logx'},
+                                               {'label': 'Log y', 'value': 'logy'},
+                                               {'label': 'Loglog', 'value': 'loglog'},
+                                           ],
+                                           value='linear',
+                                           # n_clicks_timestamp=0,
+                                           )
+                        ]),
+                    ], width=3
+                ),
+                dbc.Col(
+                    [
+                        html.Div([
+                            html.P('Interactions: '),
+                            dcc.Checklist(id='xs_type',
+                                          options=[
+                                              {'label': 'Total', 'value': 'total'},
+                                              {'label': 'Absorption', 'value': 'abs'},
+                                              {'label': 'Coherent elastic scattering', 'value': 'coh_el'},
+                                              {'label': 'Coherent inelastic scattering', 'value': 'coh_inel'},
+                                              {'label': 'Incoherent elastic scattering', 'value': 'inc_el'},
+                                              {'label': 'Incoherent inelastic scattering', 'value': 'inc_inel'},
+                                          ],
+                                          value=['total'],
+                                          # n_clicks_timestamp=0,
+                                          )
+                        ]),
+                    ], width=2
+                ),
+            ],
+        ),
+    ]
+)

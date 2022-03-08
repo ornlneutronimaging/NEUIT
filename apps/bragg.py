@@ -2,7 +2,8 @@ import dash_bootstrap_components as dbc
 
 from callbacks.bragg import *
 from callbacks.utilities.initialization import (init_app_ids, temperature_default, distance_default,
-                                                plot_loading, col_width_3)
+                                                init_display_plot_data_check)
+from callbacks.utilities.plot import bragg_plot_option_div
 
 # Bragg-edge tool
 
@@ -151,103 +152,24 @@ layout = html.Div(
         html.Div(id=app_id_dict['hidden_df_export_json_id'], style={'display': 'none'}),
 
         # Output div
-        # html.Div(
-        #     [
-        #         dcc.Loading(
-        #             id="loading-2",
-        #             children=[html.Div([html.Div(id="loading-output-2")])],
-        #             type="circle",
-        #         )
-        #     ]
-        # ),
-
         html.Div(
             [
-                # Plot options
-                html.H3('Plot:'),
-                html.Div(
-                    [
-                        html.Div(
-                            [
-                                html.P('X options: '),
-                                dcc.RadioItems(id='x_type',
-                                               options=[
-                                                   {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
-                                                   {'label': 'Energy (eV)', 'value': 'energy'},
-                                               ],
-                                               value='lambda',
-                                               )
-                            ], className=col_width_3
-                        ),
-                        html.Div(
-                            [
-                                html.P('Y options: '),
-                                dcc.RadioItems(id='y_type',
-                                               options=[
-                                                   # {'label': 'Transmission', 'value': 'transmission'},
-                                                   # {'label': 'Attenuation', 'value': 'attenuation'},
-                                                   # {'label': 'Attenuation coefficient', 'value': 'mu_per_cm'},
-                                                   # {'label': "Cross-section (weighted)", 'value': 'sigma'},
-                                                   {'label': 'Cross-section (raw)', 'value': 'sigma_raw'},
-                                               ],
-                                               value='sigma_raw',
-                                               )
-                            ], className=col_width_3
-                        ),
-                        html.Div(
-                            [
-                                html.P('Scale options: '),
-                                dcc.RadioItems(id='plot_scale',
-                                               options=[
-                                                   {'label': 'Linear', 'value': 'linear'},
-                                                   {'label': 'Log x', 'value': 'logx'},
-                                                   {'label': 'Log y', 'value': 'logy'},
-                                                   {'label': 'Loglog', 'value': 'loglog'},
-                                               ],
-                                               value='linear',
-                                               # n_clicks_timestamp=0,
-                                               )
-                            ], className=col_width_3
-                        ),
-                        html.Div(
-                            [
-                                html.P('Interactions: '),
-                                dcc.Checklist(id='xs_type',
-                                              options=[
-                                                  {'label': 'Total', 'value': 'total'},
-                                                  {'label': 'Absorption', 'value': 'abs'},
-                                                  {'label': 'Coherent elastic scattering', 'value': 'coh_el'},
-                                                  {'label': 'Coherent inelastic scattering', 'value': 'coh_inel'},
-                                                  {'label': 'Incoherent elastic scattering', 'value': 'inc_el'},
-                                                  {'label': 'Incoherent inelastic scattering', 'value': 'inc_inel'},
-                                              ],
-                                              value=['total'],
-                                              # n_clicks_timestamp=0,
-                                              )
-                            ], className=col_width_3
-                        ),
-                    ], className='row'
-                ),
-
                 # Plot
-                html.Div(id=app_id_dict['plot_div_id'], children=plot_loading, className='container'),
-
-                # Export plot data button
                 html.Div(
                     [
-                        dcc.Checklist(
-                            id=app_id_dict['display_plot_data_id'],
-                            options=[
-                                {'label': 'Display plotted data', 'value': 'display'},
+                        bragg_plot_option_div,
+                        dcc.Loading(
+                            id="loading-2",
+                            children=[
+                                html.Div(id=app_id_dict['plot_div_id'], className='container'),
+                                init_display_plot_data_check(app_id_dict),
+                                # Data table for the plotted data
+                                html.Div(id=app_id_dict['df_export_tb_div']),
                             ],
-                            value=[],
-                            labelStyle={'display': 'inline-block'}
-                        ),
-                    ], className='row'
+                            type="circle",
+                        )
+                    ]
                 ),
-
-                # Data table for the plotted data
-                html.Div(id=app_id_dict['df_export_tb_div']),
 
                 # Transmission at CG-1D and stack info
                 html.Div(id=app_id_dict['result_id']),
