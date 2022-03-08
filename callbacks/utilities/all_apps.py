@@ -16,7 +16,6 @@ from callbacks.utilities.initialization import (iso_tb_df_default, output_stack_
                                                 output_tb_uneven_6_col)
 from callbacks.utilities.validator import is_number
 
-
 sample_header_df = pd.DataFrame({
     'name': [chem_name,
              thick_name,
@@ -29,7 +28,6 @@ sample_header_df = pd.DataFrame({
     'type': ['text', 'numeric', 'any']
 })
 
-
 iso_dict_schema = {
     # layer_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
     layer_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },
@@ -37,7 +35,6 @@ iso_dict_schema = {
     iso_name: {'type': 'string', 'empty': False, 'required': True, },
     iso_ratio_name: {'type': 'number', 'min': 0, 'max': 1, 'required': True, 'between_zero_and_one': True, },
 }
-
 
 sample_dict_schema = {
     # chem_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
@@ -143,8 +140,6 @@ def form_iso_table(sample_df: pd.DataFrame, database: str):
     return _df
 
 
-
-
 def update_iso_table_callback(sample_tb_rows, prev_iso_tb_rows, database):
     compos_tb_df = pd.DataFrame(sample_tb_rows)
     prev_iso_tb_df = pd.DataFrame(prev_iso_tb_rows)
@@ -217,9 +212,6 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, datab
         # html.Div(sample_stack_div_list),
     ]
     return output_div_list, o_stack
-
-
-
 
 
 def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_min, band_max, band_type, database):
@@ -295,8 +287,6 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
                         _ele_ratio_list.append(float(iso_tb_df[iso_ratio_name][iso_i]))
                 o_reso.set_isotopic_ratio(compound=each_layer, element=each_ele, list_ratio=_ele_ratio_list)
         return o_reso
-
-
 
 
 def form_sample_stack_table_div(o_stack, full_stack=True):
@@ -422,8 +412,6 @@ def update_rows_util(n_add, n_del, list_of_contents, upload_time, prev_upload_ti
     else:
         rows = _add_del_rows(n_add=n_add, n_del=n_del, rows=rows, columns=columns)
     return rows, error_message, upload_time
-
-
 
 
 def _add_del_rows(n_add, n_del, rows, columns):

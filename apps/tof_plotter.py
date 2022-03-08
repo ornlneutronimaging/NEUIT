@@ -26,7 +26,7 @@ layout = html.Div(
         html.Div(
             [
                 html.H3('Instrument Parameters:'),
-                html.Div(
+                dbc.Row(
                     [
                         # html.Div(
                         #     [
@@ -40,37 +40,40 @@ layout = html.Div(
                         #                   ),
                         #     ], className=col_width_3,
                         # ),
-
-                        html.Div(
-                            [
-                                html.H6('Source-to-detector (m):'),
-                                dcc.Input(id=app_id_dict['distance_id'],
-                                          type='number',
-                                          value=distance_default,
-                                          min=0,
-                                          inputMode='numeric',
-                                          step=0.01,
-                                          ),
-                            ], className=col_width_3,
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    html.H6('Source-to-detector (m):'),
+                                    dcc.Input(id=app_id_dict['distance_id'],
+                                              type='number',
+                                              value=distance_default,
+                                              min=0,
+                                              inputMode='numeric',
+                                              step=0.01,
+                                              ),
+                                ]
+                            ), width=2
                         ),
-
-                        html.Div(
-                            [
-                                html.H6('Delay (\u03BCs):'),
-                                dcc.Input(id=app_id_dict['delay_id'],
-                                          type='number',
-                                          value=delay_default,
-                                          min=0,
-                                          inputMode='numeric',
-                                          step=0.01,
-                                          ),
-                            ], className=col_width_3,
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    html.H6('Delay (\u03BCs):'),
+                                    dcc.Input(id=app_id_dict['delay_id'],
+                                              type='number',
+                                              value=delay_default,
+                                              min=0,
+                                              inputMode='numeric',
+                                              step=0.01,
+                                              ),
+                                ]
+                            ), width=2
                         ),
-                    ], className='row', style={'verticalAlign': 'middle'},
+                    ]
                 ),
-            ], className='row', style={'verticalAlign': 'middle'},
+            ]
         ),
 
+        html.Hr(),
         html.H3('Upload files:'),
 
         html.Div(

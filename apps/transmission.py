@@ -46,73 +46,54 @@ layout = html.Div(
                                         value='imaging',
                                         searchable=False,
                                         clearable=False,
-                                    ),
-                                ],
+                                    )
+                                ]
                             ), width=4
                         ),
-                        dbc.Col(
-                            html.Div(
-                                [
-                                    dbc.Row(
-                                        [
-                                            dbc.Col(
-                                                html.H6('Band width:'), width=2
-                                            ),
-                                            dbc.Col(
-                                                dcc.RadioItems(id=app_id_dict['band_type_id'],
-                                                               options=[
-                                                                   {'label': 'Energy (eV)', 'value': 'energy'},
-                                                                   {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
-                                                               ],
-                                                               value='lambda',
-                                                               # style={'pad':5},
-                                                               # className='four columns',
-                                                               # labelStyle={'display': 'inline-block'},
-                                                               # style={'marginBottom': 0, 'marginTop': 0},
-                                                               ),
-                                            ),
-                                        ], align='center'
-                                    ),
-                                    dbc.Row(
-                                        [
-                                            dbc.Col(
-                                                [
-                                                    dcc.Input(id=app_id_dict['band_min_id'], type='number',
-                                                              inputMode='numeric',
-                                                              placeholder='Min.',
-                                                              step=0.001,
-                                                              # className='four columns',
-                                                              ),
-                                                ], width=3
-                                            ),
-                                            dbc.Col(
-                                                [
-                                                    dcc.Input(id=app_id_dict['band_max_id'], type='number',
-                                                              inputMode='numeric',
-                                                              placeholder='Max.',
-                                                              step=0.001,
-                                                              # className='four columns',
-                                                              ),
-                                                ], width=3
-                                            ),
-                                            dbc.Col(
-                                                [
-                                                    html.P('\u212B',
-                                                           id=app_id_dict['band_unit_id'],
-                                                           # style={'marginBottom': 10, 'marginTop': 5},
-                                                           # className='one column',
-                                                           ),
-                                                ], width=1
-                                            ),
-                                        ]
-                                    ),
-                                ],
-                                style={'display': 'none'},
-                                id=app_id_dict['band_div_id'],
-                            ), width=6
-                        ),
-                    ],
+                    ]
                 ),
+
+                html.Div(
+                    [
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    dcc.Dropdown(id=app_id_dict['band_type_id'],
+                                                 options=[
+                                                     {'label': 'Energy band in eV', 'value': 'energy'},
+                                                     {'label': 'Wavelength band in \u212B',
+                                                      'value': 'lambda'},
+                                                 ],
+                                                 value='lambda',
+                                                 searchable=False,
+                                                 clearable=False,
+                                                 ), width=2
+                                ),
+                                dbc.Col(
+                                    [
+                                        dcc.Input(id=app_id_dict['band_min_id'], type='number',
+                                                  inputMode='numeric',
+                                                  placeholder='Min.',
+                                                  step=0.001,
+                                                  ),
+                                    ], width=2
+                                ),
+                                dbc.Col(
+                                    [
+                                        dcc.Input(id=app_id_dict['band_max_id'], type='number',
+                                                  inputMode='numeric',
+                                                  placeholder='Max.',
+                                                  step=0.001,
+                                                  ),
+                                    ], width=2
+                                ),
+                            ]
+                        )
+                    ],
+                    style={'display': 'none'},
+                    id=app_id_dict['band_div_id'],
+                ),
+
             ]
         ),
         # Sample input

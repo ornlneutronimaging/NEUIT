@@ -139,7 +139,6 @@ layout = html.Div(
                 ),
             ]
         ),
-
         # Sample input
         html.Div(
             [

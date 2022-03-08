@@ -259,16 +259,25 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
     if app_id == 'converter':
         _compos_type_div = html.Div(
             [
-                html.H6('Composition input type:'),
-                dcc.RadioItems(id=app_id + '_compos_input_type',
-                               options=[
-                                   {'label': weight_name, 'value': weight_name},
-                                   {'label': atomic_name, 'value': atomic_name},
-                               ],
-                               value=weight_name,
-                               # labelStyle={'display': 'inline-block'},
-                               ),
-            ], className='row',
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    html.H6('Composition input type:'),
+                                    dcc.RadioItems(id=app_id + '_compos_input_type',
+                                                   options=[
+                                                       {'label': weight_name, 'value': weight_name},
+                                                       {'label': atomic_name, 'value': atomic_name},
+                                                   ],
+                                                   value=weight_name,
+                                                   ),
+                                ]
+                            )
+                        )
+                    ],
+                ),
+            ]
         )
         _nuclear_database_div_style = {'display': 'none'}
     else:
@@ -279,11 +288,11 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
     upload_field = html.Div(
         [
             # Database dropdown
-            html.Div(
+            dbc.Row(
                 [
-                    dbc.Row(
+                    dbc.Col(
                         [
-                            dbc.Col(
+                            html.Div(
                                 [
                                     html.H6('Nuclear database:'),
                                     dcc.Dropdown(
@@ -296,13 +305,16 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
                                         searchable=False,
                                         clearable=False,
                                     ),
-                                ], width=4
-                            )
-                        ]
-                    ),
-                ], style=_nuclear_database_div_style,
+                                ]
+                            ),
+                        ], width=4
+                    )
+                ]
             ),
+
             _compos_type_div,
+            html.Hr(),
+
             # Sample input
             dbc.Row([html.H3('Sample info')]),
             dcc.Upload(id=id_str,

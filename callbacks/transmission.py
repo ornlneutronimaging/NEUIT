@@ -6,7 +6,8 @@ import ImagingReso._utilities as ir_util
 from app import app
 from callbacks.utilities.initialization import init_app_ids
 import callbacks.utilities.constants as constants
-from callbacks.utilities.validator import validate_sample_input, validate_density_input, validate_iso_input, validate_band_width_input
+from callbacks.utilities.validator import validate_sample_input, validate_density_input, validate_iso_input, \
+    validate_band_width_input
 from callbacks.utilities.all_apps import (update_iso_table_callback, force_dict_to_numeric,
                                           form_transmission_result_div, form_iso_table,
                                           form_sample_stack_table_div, update_rows_util,
@@ -48,16 +49,16 @@ def show_hide_band_input(beamline, style):
     return style
 
 
-@app.callback(
-    Output(app_id_dict['band_unit_id'], 'children'),
-    [
-        Input(app_id_dict['band_type_id'], 'value'),
-    ])
-def show_band_units(band_type):
-    if band_type == 'lambda':
-        return '\u212B'
-    else:
-        return 'eV'
+# @app.callback(
+#     Output(app_id_dict['band_unit_id'], 'children'),
+#     [
+#         Input(app_id_dict['band_type_id'], 'value'),
+#     ])
+# def show_band_units(band_type):
+#     if band_type == 'lambda':
+#         return '\u212B'
+#     else:
+#         return 'eV'
 
 
 @app.callback(

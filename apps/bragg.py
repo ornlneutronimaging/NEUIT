@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 
 from callbacks.bragg import *
-from callbacks.utilities.initialization import (init_app_ids, temperature_default,
+from callbacks.utilities.initialization import (init_app_ids, temperature_default, distance_default,
                                                 plot_loading, col_width_3)
 
 # Bragg-edge tool
@@ -12,97 +12,103 @@ app_id_dict = init_app_ids(app_name=app_name)
 # Create app layout
 layout = html.Div(
     [
+        dbc.Row([html.H2("Bragg Edge Simulator",
+                         style=({'color': 'blue'}),
+                         ),
+                 ],
+                class_name='title_tools',
+                ),
+        html.Hr(style={'borderTop': '3px solid blue'}),
+
         # Experiment input
         html.Div(
             [
-                dbc.Row([html.H2("Bragg Edge Simulator",
-                                 style=({'color': 'blue'}),
-                                 ),
-                         ],
-                        class_name='title_tools',
-                        ),
-                html.Hr(style={'borderTop': '3px solid blue'}),
-
                 html.H3('Global parameters:'),
-                html.Div(
+                dbc.Row(
                     [
-
-                        html.Div(
-                            [
-                                html.H6('Temperature (K):'),
-                                dcc.Input(id=app_id_dict['temperature_id'],
-                                          type='number',
-                                          value=temperature_default,
-                                          min=0,
-                                          inputMode='numeric',
-                                          step=0.1,
-                                          ),
-                            ], className=col_width_3,
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    html.H6('Temperature (K):'),
+                                    dcc.Input(id=app_id_dict['temperature_id'],
+                                              type='number',
+                                              value=temperature_default,
+                                              min=0,
+                                              inputMode='numeric',
+                                              step=0.1,
+                                              ),
+                                ]
+                            ), width=2
                         ),
 
-                        # html.Div(
-                        #     [
-                        #         html.H6('Source-to-detector (m):'),
-                        #         dcc.Input(id=app_id_dict['distance_id'],
-                        #                   type='number',
-                        #                   value=distance_default,
-                        #                   min=0,
-                        #                   inputMode='numeric',
-                        #                   step=0.01,
-                        #                   ),
-                        #     ], className=col_width_3,
-                        # ),
-
-                    ], className='row', style={'verticalAlign': 'middle'},
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    html.H6('Source-to-detector (m):'),
+                                    dcc.Input(id=app_id_dict['distance_id'],
+                                              type='number',
+                                              value=distance_default,
+                                              min=0,
+                                              inputMode='numeric',
+                                              step=0.01,
+                                              ),
+                                ]
+                            ), width=2
+                        ),
+                    ]
                 ),
-            ], className='row', style={'verticalAlign': 'middle'},
+            ]
         ),
 
         html.Div(
             [
                 html.H6('Wavelength band:'),
-                html.Div(
+                dbc.Row(
                     [
-                        html.Div(
-                            [
-                                html.P('Min. (\u212B) :'),
-                                dcc.Input(id=app_id_dict['band_min_id'], type='number',
-                                          inputMode='numeric',
-                                          placeholder='Min.',
-                                          step=0.001,
-                                          value=0.05,
-                                          ),
-                            ], className=col_width_3,
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    html.H6('Min. (\u212B) :'),
+                                    dcc.Input(id=app_id_dict['band_min_id'], type='number',
+                                              inputMode='numeric',
+                                              placeholder='Min.',
+                                              step=0.001,
+                                              value=0.05,
+                                              ),
+                                ]
+                            ), width=2
                         ),
-                        html.Div(
-                            [
-                                html.P('Max. (\u212B):'),
-                                dcc.Input(id=app_id_dict['band_max_id'], type='number',
-                                          inputMode='numeric',
-                                          placeholder='Max.',
-                                          step=0.001,
-                                          value=5.5,
-                                          ),
-                            ], className=col_width_3,
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    html.H6('Max. (\u212B):'),
+                                    dcc.Input(id=app_id_dict['band_max_id'], type='number',
+                                              inputMode='numeric',
+                                              placeholder='Max.',
+                                              step=0.001,
+                                              value=5.5,
+                                              ),
+                                ]
+                            ), width=2
                         ),
-                        html.Div(
-                            [
-                                html.P('Step (\u212B):'),
-                                dcc.Input(id=app_id_dict['band_step_id'], type='number',
-                                          inputMode='numeric',
-                                          placeholder='Max.',
-                                          step=0.001,
-                                          value=0.005,
-                                          ),
-                            ], className=col_width_3,
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    html.H6('Step (\u212B):'),
+                                    dcc.Input(id=app_id_dict['band_step_id'], type='number',
+                                              inputMode='numeric',
+                                              placeholder='Max.',
+                                              step=0.001,
+                                              value=0.005,
+                                              ),
+                                ]
+                            ), width=2
                         ),
-                    ], className='row', style={'verticalAlign': 'middle'},
+                    ],
                 ),
             ],
-            className='row',
-            style={'verticalAlign': 'middle'},
         ),
-
+        html.Hr(),
         html.H3('Upload cif file/files:'),
 
         html.Div(
@@ -145,6 +151,16 @@ layout = html.Div(
         html.Div(id=app_id_dict['hidden_df_export_json_id'], style={'display': 'none'}),
 
         # Output div
+        # html.Div(
+        #     [
+        #         dcc.Loading(
+        #             id="loading-2",
+        #             children=[html.Div([html.Div(id="loading-output-2")])],
+        #             type="circle",
+        #         )
+        #     ]
+        # ),
+
         html.Div(
             [
                 # Plot options
