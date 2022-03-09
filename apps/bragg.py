@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 
 from callbacks.bragg import *
-from callbacks.utilities.initialization import (init_app_ids, temperature_default, distance_default,
+from callbacks.utilities.initialization import (init_app_ids, temperature_default, distance_default, init_app_about,
                                                 init_display_plot_data_check)
 from callbacks.utilities.plot import bragg_plot_option_div
 
@@ -20,7 +20,7 @@ layout = html.Div(
                 class_name='title_tools',
                 ),
         html.Hr(style={'borderTop': '3px solid blue'}),
-
+        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
         # Experiment input
         html.Div(
             [

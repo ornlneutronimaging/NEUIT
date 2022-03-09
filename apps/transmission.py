@@ -2,7 +2,7 @@ import dash_bootstrap_components as dbc
 from dash import dash_table as dt
 
 from callbacks.utilities.constants import *
-from callbacks.utilities.initialization import (init_upload_field, init_iso_table,
+from callbacks.utilities.initialization import (init_upload_field, init_iso_table, init_app_about,
                                                 sample_tb_even_3_col, striped_rows)
 from callbacks.utilities.all_apps import sample_header_df
 from callbacks.transmission import *
@@ -25,6 +25,7 @@ layout = html.Div(
                 class_name='title_tools',
                 ),
         html.Hr(style={'borderTop': '3px solid blue'}),
+        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
         # Beamline selection
         html.Div(
             [

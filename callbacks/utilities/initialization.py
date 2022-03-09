@@ -238,7 +238,7 @@ def init_app_about(current_app, app_id_dict):
     more_info_check = dcc.Checklist(
         id=app_id_dict['more_about_app_id'],
         options=[
-            {'label': 'More about this app \U0001F4AC', 'value': 'more'},
+            {'label': 'More about this tool \U0001F4AC', 'value': 'more'},
         ],
         value=[],
         labelStyle={'display': 'inline-block'}

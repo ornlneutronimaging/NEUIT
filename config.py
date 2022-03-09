@@ -3,19 +3,18 @@ import os
 import dash_bootstrap_components as dbc
 from dash import dcc
 
-
-app_dict = {'transmission' : {'name': 'Neutron transmission',
-                              'url' : '/transmission'},
-            'resonance'    : {'name': 'Neutron resonance',
-                              'url' : '/resonance'},
-            'converter'    : {'name': 'Composition converter',
-                              'url' : '/converter'},
-            'tof_plotter'  : {'name': 'Time-of-flight plotter (under testing)',
-                              'url' : '/tof_plotter'},
-            'bragg'        : {'name': 'Bragg-edge simulator (under testing)',
-                              'url' : '/bragg'},
+app_dict = {'transmission': {'name': 'Neutron transmission',
+                             'url': '/transmission'},
+            'resonance': {'name': 'Neutron resonance',
+                          'url': '/resonance'},
+            'converter': {'name': 'Composition converter',
+                          'url': '/converter'},
+            'tof_plotter': {'name': 'Time-of-flight plotter (under testing)',
+                            'url': '/tof_plotter'},
+            'bragg': {'name': 'Bragg-edge simulator (under testing)',
+                      'url': '/bragg'},
             'golden_angles': {'name': 'Golden Angles',
-                              'url' : '/golden_angles'}
+                              'url': '/golden_angles'}
             }
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -58,5 +57,8 @@ app_info_markdown_dict = {
     This tool estimates the energy dependent neutron imaging signals and contrasts,
     specifically for *Bragg-edges* in the *cold* or *thermal* range. Currently, it only supports
     dragging and dropping '.cif' files.
+            """),
+    'golden_angles': dcc.Markdown("""
+    This tool calculates and exports golden angles for CT scans.
             """),
 }

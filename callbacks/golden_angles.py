@@ -1,4 +1,4 @@
-from dash.dependencies import Output, Input
+from dash.dependencies import Output, Input, State
 import plotly.graph_objects as go
 from app import app
 import pandas as pd
@@ -21,6 +21,21 @@ def retrieve_list_of_golden_angles(total_number_of_angles, max_angle=180):
     list_angles = [calculate_golden_ratio(angle_index, max_angle=max_angle) for angle_index in np.arange(
             total_number_of_angles)]
     return list_angles
+
+@app.callback(
+    Output(app_id_dict['app_info_id'], 'style'),
+    [
+        Input(app_id_dict['more_about_app_id'], 'value'),
+    ],
+    [
+        State(app_id_dict['app_info_id'], 'style'),
+    ])
+def show_hide_band_input(more_info, style):
+    if more_info != ['more']:
+        style['display'] = 'none'
+    else:
+        style['display'] = 'block'
+    return style
 
 
 @app.callback(Output('plot', 'figure'),

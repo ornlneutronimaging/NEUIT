@@ -1,10 +1,10 @@
 import dash_bootstrap_components as dbc
 
 from callbacks.converter import *
-from callbacks.utilities.initialization import (init_app_ids, init_iso_table, init_upload_field, striped_rows)
+from callbacks.utilities.initialization import (init_app_ids, init_iso_table, init_upload_field, init_app_about,
+                                                striped_rows)
 from callbacks.utilities.constants import *
 from callbacks.utilities.converter import compos_header_df
-
 
 # Composition converter tool
 
@@ -26,7 +26,7 @@ layout = html.Div(
                 class_name='title_tools',
                 ),
         html.Hr(style={'borderTop': '3px solid blue'}),
-
+        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
         # Sample input
         html.Div(
             [

@@ -1,6 +1,6 @@
 import dash_bootstrap_components as dbc
 
-from callbacks.utilities.initialization import (range_tb_gray_cols, init_iso_table, init_upload_field,
+from callbacks.utilities.initialization import (range_tb_gray_cols, init_iso_table, init_upload_field, init_app_about,
                                                 sample_tb_even_3_col, range_tb_even_5_col,
                                                 distance_default)
 from callbacks.utilities.constants import *
@@ -41,7 +41,7 @@ layout = html.Div(
                 class_name='title_tools',
                 ),
         html.Hr(style={'borderTop': '3px solid blue'}),
-
+        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
         # Global parameters
         html.Div(
             [

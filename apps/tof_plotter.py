@@ -1,9 +1,8 @@
 import dash_bootstrap_components as dbc
 
 from callbacks.tof_plotter import *
-from callbacks.utilities.initialization import (init_app_ids, distance_default,
+from callbacks.utilities.initialization import (init_app_ids, distance_default, init_app_about,
                                                 delay_default, plot_loading, col_width_3)
-
 
 # Time-of-flight plotter
 
@@ -21,7 +20,7 @@ layout = html.Div(
                 class_name='title_tools',
                 ),
         html.Hr(style={'borderTop': '3px solid blue'}),
-
+        init_app_about(current_app=app_name, app_id_dict=app_id_dict),
         # Experiment input
         html.Div(
             [
