@@ -12,7 +12,8 @@ that can be used for Neutron Imaging related calculations.
 Tools available here are build upon open source libraries, such as 
 *[ImagingReso](https://imagingreso.readthedocs.io/en/latest/)*,
 *[periodictable](https://periodictable.readthedocs.io/en/latest/)*,
-*[braggedgemodeling](https://ornlneutronimaging.github.io/braggedgemodeling/)*, etc.,
+*[braggedgemodeling](https://ornlneutronimaging.github.io/braggedgemodeling/)*, 
+*[diffpy.structure](https://www.diffpy.org/diffpy.structure/)*, etc.,
 using *[Dash](https://dash.plot.ly/)* framework. 
 
 Detailed functionality description is available inside each application.
