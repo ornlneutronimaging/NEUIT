@@ -367,7 +367,7 @@ def store_reso_df_in_json(n_submit,
 
         df_x = pd.DataFrame()
         df_x[constants.energy_name] = df_y[constants.energy_name][:]
-        df_x = fill_df_x_types(df=df_x, distance_m=distance_m)
+        df_x = fill_df_x_types(df=df_x, distance_m=distance_m, delay_us=0)
 
         df_y.drop(columns=[df_y.columns[0]], inplace=True)  # Drop x-axis row
 

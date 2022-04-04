@@ -1,8 +1,8 @@
 import dash_bootstrap_components as dbc
 
 from callbacks.bragg import *
-from callbacks.utilities.initialization import (init_app_ids, temperature_default, distance_default, init_app_about,
-                                                init_display_plot_data_check)
+from callbacks.utilities.initialization import (init_app_ids, temperature_default, distance_default, delay_default,
+                                                init_app_about, init_display_plot_data_check)
 from callbacks.utilities.plot import bragg_plot_option_div
 
 # Bragg-edge tool
@@ -49,6 +49,21 @@ layout = html.Div(
                                     dcc.Input(id=app_id_dict['distance_id'],
                                               type='number',
                                               value=distance_default,
+                                              min=0,
+                                              inputMode='numeric',
+                                              step=0.01,
+                                              ),
+                                ]
+                            ), width=2
+                        ),
+
+                        dbc.Col(
+                            html.Div(
+                                [
+                                    html.H6('Delay (\u03BCs):'),
+                                    dcc.Input(id=app_id_dict['delay_id'],
+                                              type='number',
+                                              value=delay_default,
                                               min=0,
                                               inputMode='numeric',
                                               step=0.01,
@@ -155,21 +170,12 @@ layout = html.Div(
         html.Div(
             [
                 # Plot
-                html.Div(
-                    [
-                        bragg_plot_option_div,
-                        dcc.Loading(
-                            id="loading-2",
-                            children=[
-                                html.Div(id=app_id_dict['plot_div_id'], className='container'),
-                                init_display_plot_data_check(app_id_dict),
-                                # Data table for the plotted data
-                                html.Div(id=app_id_dict['df_export_tb_div']),
-                            ],
-                            type="circle",
-                        )
-                    ]
-                ),
+                bragg_plot_option_div,
+                html.Div(id=app_id_dict['plot_div_id'], children=plot_loading, className='container'),
+                init_display_plot_data_check(app_id_dict),
+
+                # Data table for the plotted data
+                html.Div(id=app_id_dict['df_export_tb_div']),
 
                 # Transmission at CG-1D and stack info
                 html.Div(id=app_id_dict['result_id']),

@@ -145,10 +145,10 @@ def shape_reso_df_to_output(y_type, x_type, show_opt, jsonified_data, prev_show_
     return df_x, df_y, _to_export_list, x_tag, y_label
 
 
-def fill_df_x_types(df: pd.DataFrame, distance_m):
+def fill_df_x_types(df: pd.DataFrame, distance_m, delay_us):
     df.insert(loc=1, column=tof_name, value=ir_util.ev_to_s(array=df[energy_name],
                                                             source_to_detector_m=distance_m,
-                                                            offset_us=0))
+                                                            offset_us=delay_us))
     df.insert(loc=1, column=wave_name, value=ir_util.ev_to_angstroms(df[energy_name]))
     df[tof_name] = df[tof_name] * 1e6
     return df

@@ -136,6 +136,7 @@ bragg_plot_option_div = html.Div(
                                            options=[
                                                {'label': 'Wavelength (\u212B)', 'value': 'lambda'},
                                                {'label': 'Energy (eV)', 'value': 'energy'},
+                                               {'label': ' Time-of-flight (\u03BCs)', 'value': 'time'},
                                            ],
                                            value='lambda',
                                            inline=False,

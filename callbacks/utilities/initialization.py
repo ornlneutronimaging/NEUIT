@@ -206,6 +206,7 @@ def init_app_ids(app_name: str):
         id_dict['error_id2'] = app_name + '_error2'
         id_dict['temperature_id'] = app_name + '_temperature'
         id_dict['distance_id'] = app_name + '_distance'
+        id_dict['delay_id'] = app_name + '_delay'
         id_dict['band_min_id'] = app_name + '_band_min'
         id_dict['band_max_id'] = app_name + '_band_max'
         id_dict['band_step_id'] = app_name + '_band_step'

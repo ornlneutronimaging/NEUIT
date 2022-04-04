@@ -16,6 +16,7 @@ import callbacks.utilities.constants as constants
 from callbacks.utilities.plot import shape_matplot_to_plotly
 from callbacks.utilities.all_apps import y_type_to_y_label, x_type_to_x_tag, load_dfs
 from callbacks.utilities.bragg import parse_cif_upload
+from callbacks.utilities.resonance import fill_df_x_types
 
 
 app_name = 'bragg'
@@ -96,13 +97,15 @@ def show_output_div(n_submit, test_passed, error_in_bem):
         State(app_id_dict['cif_upload_id'], 'contents'),
         State(app_id_dict['cif_upload_id'], 'filename'),
         State(app_id_dict['temperature_id'], 'value'),
+        State(app_id_dict['distance_id'], 'value'),
+        State(app_id_dict['delay_id'], 'value'),
         State(app_id_dict['band_min_id'], 'value'),
         State(app_id_dict['band_max_id'], 'value'),
         State(app_id_dict['band_step_id'], 'value'),
     ])
 def store_bragg_df_in_json(n_submit, test_passed,
                            cif_uploads, cif_names,
-                           temperature_K, band_min, band_max, band_step,
+                           temperature_K, distance_m, delay_us,band_min, band_max, band_step,
                            ):
     if test_passed:
         error_div_list = []
@@ -110,10 +113,11 @@ def store_bragg_df_in_json(n_submit, test_passed,
         wavelengths_A = np.arange(band_min, band_max, band_step)
         if cif_uploads is not None:
             for each_index, each_content in enumerate(cif_uploads):
-                _cif_struc = parse_cif_upload(content=each_content)
-                _name_only = cif_names[each_index].split('.')[0]
-                print("'{}', calculating cross-sections...".format(cif_names[each_index]))
                 try:
+                    print("'{}', reading .cif file...".format(cif_names[each_index]))
+                    _cif_struc = parse_cif_upload(content=each_content)
+                    _name_only = cif_names[each_index].split('.')[0]
+                    print("'{}', calculating cross-sections...".format(cif_names[each_index]))
                     xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
                     xs_dict[_name_only + ' (total)'] = xscalculator.xs(wavelengths_A)
                     xs_dict[_name_only + ' (abs)'] = xscalculator.xs_abs(wavelengths_A)
@@ -122,14 +126,19 @@ def store_bragg_df_in_json(n_submit, test_passed,
                     xs_dict[_name_only + ' (coh inel)'] = xscalculator.xs_coh_inel(wavelengths_A)
                     xs_dict[_name_only + ' (inc inel)'] = xscalculator.xs_inc_inel(wavelengths_A)
                     print("Calculation done.")
-                except ValueError as error_msg:
-                    error = "ERROR: '{}', ".format(cif_names[each_index]) + str(error_msg).split('.')[0] + '.'
-                    error_div_list.append(error)
+                except AttributeError as error_msg1:
+                    print(str(error_msg1))
+                    error1 = "ERROR: '{}', ".format(cif_names[each_index]) + str(error_msg1).split('.')[0] + '. Space group not found after parsing.'
+                    error_div_list.append(error1)
+                except ValueError as error_msg2:
+                    error2 = "ERROR: '{}', ".format(cif_names[each_index]) + str(error_msg2).split('.')[0] + '.'
+                    error_div_list.append(error2)
             if len(error_div_list) == 0:
                 df_y = pd.DataFrame.from_dict(xs_dict)
                 df_x = pd.DataFrame()
-                df_x[constants.wave_name] = wavelengths_A
                 df_x[constants.energy_name] = ir_util.angstroms_to_ev(wavelengths_A)
+                df_x = fill_df_x_types(df=df_x, distance_m=distance_m, delay_us=delay_us)
+
                 datasets = {
                     'x': df_x.to_json(orient='split', date_format='iso'),
                     'y': df_y.to_json(orient='split', date_format='iso'),
@@ -161,7 +170,6 @@ def store_bragg_df_in_json(n_submit, test_passed,
 def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fnames):
     if test_passed:
         if jsonified_data is not None:
-            time.sleep(1)
             df_dict = load_dfs(jsonified_data=jsonified_data)
             df_x = df_dict['x']
             df_y = df_dict['y']
@@ -208,7 +216,7 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fname
             # Convert to plotly and format layout
             plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
 
-            return html.Div([dcc.Graph(figure=plotly_fig,id=app_id_dict['plot_fig_id']),]), [json.dumps(jsonized_plot_df)]
+            return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
         else:
             return plot_loading, [None]
     else:
