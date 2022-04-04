@@ -128,7 +128,7 @@ def store_bragg_df_in_json(n_submit, test_passed,
                     print("Calculation done.")
                 except AttributeError as error_msg1:
                     print(str(error_msg1))
-                    error1 = "ERROR: '{}', ".format(cif_names[each_index]) + str(error_msg1).split('.')[0] + '. Space group not found after parsing.'
+                    error1 = "ERROR: '{}', ".format(cif_names[each_index]) + str(error_msg1).split('.')[0] + '. The .cif format is not compatible, please reformat following ICSD database.'
                     error_div_list.append(error1)
                 except ValueError as error_msg2:
                     error2 = "ERROR: '{}', ".format(cif_names[each_index]) + str(error_msg2).split('.')[0] + '.'
