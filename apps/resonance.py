@@ -116,7 +116,7 @@ layout = html.Div(
                                                                   value=distance_default,
                                                                   min=1,
                                                                   inputMode='numeric',
-                                                                  step=0.01,
+                                                                  step=0.001,
                                                                   ), width=3
                                                     ),
                                                     dbc.Col(
