@@ -11,7 +11,9 @@ import ImagingReso._utilities as ir_util
 from ImagingReso.resonance import Resonance
 
 from callbacks.utilities.constants import *
-from callbacks.utilities.initialization import (iso_tb_df_default, output_stack_header_df,
+from callbacks.utilities.initialization import (iso_tb_df_default,
+                                                output_stack_header_df_wave,
+                                                output_stack_header_df,
                                                 output_stack_header_short_df,
                                                 output_tb_uneven_6_col)
 from callbacks.utilities.validator import is_number
@@ -195,22 +197,27 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, datab
         iso_tb_df = form_iso_table(sample_df=sample_tb_df, database=database)
 
     # Calculation starts
-    total_trans, o_stack = calculate_transmission(sample_tb_df=sample_tb_df,
-                                                  iso_tb_df=iso_tb_df,
-                                                  iso_changed=iso_changed,
-                                                  beamline=beamline,
-                                                  band_min=band_min,
-                                                  band_max=band_max,
-                                                  band_type=band_type,
-                                                  database=database)
+    total_trans_at_peak, total_trans, o_stack = calculate_transmission(sample_tb_df=sample_tb_df,
+                                                                       iso_tb_df=iso_tb_df,
+                                                                       iso_changed=iso_changed,
+                                                                       beamline=beamline,
+                                                                       band_min=band_min,
+                                                                       band_max=band_max,
+                                                                       band_type=band_type,
+                                                                       database=database)
     output_div_list = [
         html.Hr(),
         html.H3('Result at ' + beamline_name),
         html.P('Transmission (total): {} %'.format(round(total_trans, 3))),
         html.P('Attenuation (total): {} %'.format(round(100 - total_trans, 3))),
-        disclaimer,
         # html.Div(sample_stack_div_list),
     ]
+    if beamline in ['imaging', 'imaging_crop']:
+        output_div_list.append(
+            html.P(u'Transmission (at {} \u212B): {} %'.format(peak_wave[beamline], round(total_trans_at_peak, 3))))
+        output_div_list.append(html.P(
+            u'Attenuation (at {} \u212B): {} %'.format(peak_wave[beamline], round(100 - total_trans_at_peak, 3))))
+    output_div_list.append(disclaimer)
     return output_div_list, o_stack
 
 
@@ -250,27 +257,52 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
     df_flux = df_flux_interp[:]
     trans_tag = 'transmission'
     mu_tag = 'mu_per_cm'
-    o_signal = o_reso.stack_signal
+    trans_at_peak_tag = trans_tag + '_peak'
+    mu_at_peak_tag = mu_tag + '_peak'
 
+    o_signal = o_reso.stack_signal
     _total_trans = _calculate_transmission(flux_df=df_flux, trans_array=o_reso.total_signal[trans_tag])
+
+    if beamline in ['imaging', 'imaging_crop']:
+        wave = ir_util.ev_to_angstroms(energy).round(2)
+        peak_neutron_idx = np.where(wave == peak_wave[beamline])[0][0]
+        _peak = wave[peak_neutron_idx]
+        _total_trans_at_peak = round(o_reso.total_signal[trans_tag][peak_neutron_idx] * 100, 6)
+    else:
+        _total_trans_at_peak = ''
 
     for each_layer in o_stack.keys():
         _current_layer_thickness = o_stack[each_layer]['thickness']['value']
         if len(o_stack.keys()) == 1:
             _current_layer_trans = _total_trans
+            if beamline in ['imaging', 'imaging_crop']:
+                _current_layer_trans_at_peak = _total_trans_at_peak
         else:
             _current_layer_trans = _calculate_transmission(flux_df=df_flux,
                                                            trans_array=o_signal[each_layer][trans_tag])
+            if beamline in ['imaging', 'imaging_crop']:
+                _current_layer_trans_at_peak = o_signal[each_layer][trans_tag][peak_neutron_idx]
         o_stack[each_layer][trans_tag] = _current_layer_trans
         o_stack[each_layer][mu_tag] = _transmission_to_mu_per_cm(transmission=_current_layer_trans,
                                                                  thickness=_current_layer_thickness)
+        if beamline in ['imaging', 'imaging_crop']:
+            o_stack[each_layer][trans_at_peak_tag] = _current_layer_trans_at_peak
+            o_stack[each_layer][mu_at_peak_tag] = _transmission_to_mu_per_cm(
+                transmission=_current_layer_trans_at_peak,
+                thickness=_current_layer_thickness)
         for each_ele in o_stack[each_layer]['elements']:
             _current_ele_trans = _calculate_transmission(flux_df=df_flux,
                                                          trans_array=o_signal[each_layer][each_ele][trans_tag])
             o_stack[each_layer][each_ele][trans_tag] = _current_ele_trans
             o_stack[each_layer][each_ele][mu_tag] = _transmission_to_mu_per_cm(transmission=_current_ele_trans,
                                                                                thickness=_current_layer_thickness)
-    return _total_trans, o_stack
+            if beamline in ['imaging', 'imaging_crop']:
+                _current_ele_trans_at_peak = round(o_signal[each_layer][each_ele][trans_tag][peak_neutron_idx] * 100, 6)
+                o_stack[each_layer][each_ele][trans_at_peak_tag] = _current_ele_trans_at_peak
+                o_stack[each_layer][each_ele][mu_at_peak_tag] = _transmission_to_mu_per_cm(
+                    transmission=_current_ele_trans_at_peak,
+                    thickness=_current_layer_thickness)
+    return _total_trans_at_peak, _total_trans, o_stack
 
 
 def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
@@ -289,20 +321,23 @@ def unpack_iso_tb_df_and_update(o_reso, iso_tb_df, iso_changed):
         return o_reso
 
 
-def form_sample_stack_table_div(o_stack, full_stack=True):
+def form_sample_stack_table_div(o_stack, beamline, full_stack=True):
     sample_stack_div_list = [html.Hr(), html.H4('Sample stack:')]
     layers = list(o_stack.keys())
     layer_dict = {}
 
     # For short sample stack output
     if full_stack:
-        output_header_df = output_stack_header_df
+        if beamline in ['imaging', 'imaging_crop']:
+            output_header_df = output_stack_header_df_wave
+        else:
+            output_header_df = output_stack_header_df
     else:
         output_header_df = output_stack_header_short_df
 
-    for l, layer in enumerate(layers):
+    for l_num, layer in enumerate(layers):
         elements_in_current_layer = o_stack[layer]['elements']
-        l_str = str(l + 1)
+        l_str = str(l_num + 1)
         current_layer_list = [
             html.H5("Layer {}: {}".format(l_str, layer)),
         ]
@@ -312,7 +347,9 @@ def form_sample_stack_table_div(o_stack, full_stack=True):
         layer_dict[ratio_name] = ":".join(_ratio_str_list)
         layer_dict[molar_name] = round(o_stack[layer]['molar_mass']['value'], 4)
         layer_dict[number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
-        layer_dict[mu_per_cm_name] = '{:0.3e}'.format(o_stack[layer]['mu_per_cm'])
+        layer_dict[mu_per_cm_name] = round(o_stack[layer]['mu_per_cm'], 4)
+        if beamline in ['imaging', 'imaging_crop']:
+            layer_dict[mu_per_cm_at_peak_name] = round(o_stack[layer]['mu_per_cm_peak'], 4)
 
         _df_layer = pd.DataFrame([layer_dict])
         current_layer_list.append(
@@ -359,21 +396,43 @@ def form_sample_stack_table_div(o_stack, full_stack=True):
                 id_list.append(number_density_name_id)
                 deletable_list.append(False)
                 editable_list.append(False)
+                iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['atoms_per_cm3'])
+
                 name_list.append(mu_per_cm_name)
                 mu_per_cm_name_id = 'column_' + str(_i + 3)
                 id_list.append(mu_per_cm_name_id)
                 deletable_list.append(False)
                 editable_list.append(False)
-                iso_dict[number_density_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['atoms_per_cm3'])
-                iso_dict[mu_per_cm_name_id] = '{:0.3e}'.format(o_stack[layer][ele]['mu_per_cm'])
-                cell_conditional = [
-                    {'if': {'column_id': molar_name_id},
-                     'width': '11%'},
-                    {'if': {'column_id': number_density_name_id},
-                     'width': '11%'},
-                    {'if': {'column_id': mu_per_cm_name_id},
-                     'width': '11%'},
-                ]
+                iso_dict[mu_per_cm_name_id] = round(o_stack[layer][ele]['mu_per_cm'], 4)
+
+                if beamline in ['imaging', 'imaging_crop']:
+                    # Add mu_per_cm_at_peak
+                    name_list.append(mu_per_cm_at_peak_name)
+                    mu_per_cm_at_peak_id = 'column_' + str(_i + 4)
+                    id_list.append(mu_per_cm_at_peak_id)
+                    deletable_list.append(False)
+                    editable_list.append(False)
+                    iso_dict[mu_per_cm_at_peak_id] = round(o_stack[layer][ele]['mu_per_cm_peak'], 4)
+
+                    cell_conditional = [
+                        {'if': {'column_id': molar_name_id},
+                         'width': '11%'},
+                        {'if': {'column_id': number_density_name_id},
+                         'width': '11%'},
+                        {'if': {'column_id': mu_per_cm_name_id},
+                         'width': '11%'},
+                        {'if': {'column_id': mu_per_cm_at_peak_id},
+                         'width': '11%'},
+                    ]
+                else:
+                    cell_conditional = [
+                        {'if': {'column_id': molar_name_id},
+                         'width': '11%'},
+                        {'if': {'column_id': number_density_name_id},
+                         'width': '11%'},
+                        {'if': {'column_id': mu_per_cm_name_id},
+                         'width': '11%'},
+                    ]
             else:
                 cell_conditional = []
 

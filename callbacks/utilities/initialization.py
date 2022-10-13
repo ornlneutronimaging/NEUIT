@@ -50,6 +50,27 @@ output_stack_header_df = pd.DataFrame({
     'editable': [False, False, False, False, False, False],
 })
 
+output_stack_header_df_wave = pd.DataFrame({
+    'name': [thick_name,
+             density_name,
+             ratio_name,
+             molar_name,
+             number_density_name,
+             mu_per_cm_name,
+             mu_per_cm_at_peak_name
+             ],
+    'id': [thick_name,
+           density_name,
+           ratio_name,
+           molar_name,
+           number_density_name,
+           mu_per_cm_name,
+           mu_per_cm_at_peak_name
+           ],
+    'deletable': [False, False, False, False, False, False, False],
+    'editable': [False, False, False, False, False, False, False],
+})
+
 output_stack_header_short_df = pd.DataFrame({
     'name': [ratio_name,
              molar_name],

@@ -505,7 +505,7 @@ def output_transmission_and_stack(n_submit, test_passed, database,
         # output_div_list.extend(trans_div_list_tof)
 
         # Sample stack table div
-        sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack)
+        sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack, beamline='snap')
         output_div_list.extend(sample_stack_div_list)
         return output_div_list
     else:

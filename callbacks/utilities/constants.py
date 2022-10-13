@@ -1,7 +1,11 @@
 from dash import html
 from dash import dcc
 
-
+peak_wave = {'imaging': 2.53,  # AA
+             'imaging_crop': 2.52,
+             'snap': 1.8,
+             'venus': 1.8,
+             }
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
 speed_name = 'Speed (m/s)'
@@ -15,6 +19,7 @@ ratio_name = 'Stoichiometric ratio'
 molar_name = 'Molar mass (g/mol)'
 number_density_name = 'Atoms (#/cm\u00B3)'
 mu_per_cm_name = 'Attenu. co. (/cm)'
+mu_per_cm_at_peak_name = u'Attenu. co. at 2.53 \u212B(/cm)'
 layer_name = 'Layer'
 ele_name = 'Element'
 iso_name = 'Isotope'
