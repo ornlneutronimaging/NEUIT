@@ -30,6 +30,32 @@ sample_header_df = pd.DataFrame({
     'type': ['text', 'numeric', 'any']
 })
 
+bragg_sample_header_df = pd.DataFrame({
+    'name': [chem_name,
+             index_number_h,
+             index_number_k,
+             index_number_l,
+             axial_length_a,
+             axial_length_b,
+             axial_length_c,
+             interaxial_angle_alpha,
+             interaxial_angle_beta,
+             interaxial_angle_gamma],
+    'id': [chem_name,
+             index_number_h,
+             index_number_k,
+             index_number_l,
+             axial_length_a,
+             axial_length_b,
+             axial_length_c,
+             interaxial_angle_alpha,
+             interaxial_angle_beta,
+             interaxial_angle_gamma],
+    'type': ['text', 'numeric', 'numeric', 'numeric',
+             'numeric', 'numeric', 'numeric',
+             'numeric', 'numeric', 'numeric'],
+})
+
 iso_dict_schema = {
     # layer_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
     layer_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },

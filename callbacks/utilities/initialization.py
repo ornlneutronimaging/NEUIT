@@ -264,6 +264,7 @@ def init_app_ids(app_name: str):
         id_dict['plot_div_id'] = app_name + '_plot'
         id_dict['plot_fig_id'] = app_name + '_plot_fig'
         id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
+        id_dict['manual_input_of_elements'] = app_name + '_manual_input_of_elements'
 
     return id_dict
 

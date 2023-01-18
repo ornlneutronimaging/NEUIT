@@ -5,14 +5,14 @@ from callbacks.utilities.constants import *
 from callbacks.utilities.initialization import (init_app_ids, temperature_default, distance_default, delay_default,
                                                 init_app_about, init_display_plot_data_check, sample_tb_even_10_col)
 from callbacks.utilities.plot import bragg_plot_option_div
-from callbacks.utilities.all_apps import sample_header_df
+from callbacks.utilities.all_apps import bragg_sample_header_df
 
 # Bragg-edge tool
 
 app_name = 'bragg'
 app_id_dict = init_app_ids(app_name=app_name)
 
-sample_df_default = pd.DataFrame({
+bragg_sample_df_default = pd.DataFrame({
     chem_name: ['Ni'],
     index_number_h: [0.0],
     index_number_k: [0.0],
@@ -171,9 +171,9 @@ layout = html.Div(
                 html.H3('- Manual input of elements:'),
 
                 dt.DataTable(
-                    data=sample_df_default.to_dict('records'),
+                    data=bragg_sample_df_default.to_dict('records'),
                     # optional - sets the order of columns
-                    columns=sample_header_df.to_dict('records'),
+                    columns=bragg_sample_header_df.to_dict('records'),
                     editable=True,
                     row_selectable=False,
                     filter_action='none',
@@ -182,7 +182,7 @@ layout = html.Div(
                     export_format='csv',
                     style_cell_conditional=sample_tb_even_10_col,
                     style_data_conditional=[striped_rows],
-                    id=app_id_dict['sample_table_id']
+                    id=app_id_dict['manual_input_of_elements']
                 ),
 
                 html.Hr(style={'color': 'red'}),
