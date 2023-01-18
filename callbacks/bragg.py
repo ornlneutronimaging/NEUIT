@@ -46,10 +46,49 @@ def show_hide_band_input(more_info, style):
     ],
     [
         Input(app_id_dict['cif_upload_id'], 'filename'),
-    ])
-def upload_feedback(cif_names):
+    ],
+    [
+        State(app_id_dict['cif_upload_id'], 'contents'),
+        State(app_id_dict['manual_input_of_elements'], 'data'),
+        State(app_id_dict['manual_input_of_elements'], 'columns'),
+    ],
+)
+def upload_feedback(cif_names, cif_uploads, content_of_table, names_of_columns):
     data_fb_list = []
     error_div_list = []
+
+    if cif_uploads is not None:
+        for each_index, each_content in enumerate(cif_uploads):
+            _cif_struc = parse_cif_upload(content=each_content)
+            print(_cif_struc)
+            for _row in _cif_struc:
+
+                chem_name = _row.element
+                index_number_h = _row.x
+                index_number_k = _row.y
+                index_number_l = _row.z
+                interaxial_angle_alpha = _row.lattice.alpha
+                interaxial_angle_beta = _row.lattice.beta
+                interaxial_angle_gamma = _row.lattice.gamma
+                axial_length_a = _row.lattice.a
+                axial_length_b = _row.lattice.b
+                axial_length_c = _row.lattice.c
+
+                _new_table_entry = {constants.chem_name: chem_name,
+                                    constants.index_number_h: index_number_h,
+                                    constants.index_number_k: index_number_k,
+                                    constants.index_number_l: index_number_l,
+                                    constants.interaxial_angle_alpha: interaxial_angle_alpha,
+                                    constants.interaxial_angle_beta: interaxial_angle_beta,
+                                    constants.interaxial_angle_gamma: interaxial_angle_gamma,
+                                    constants.axial_length_a: axial_length_a,
+                                    constants.axial_length_b: axial_length_b,
+                                    constants.axial_length_c: axial_length_c}
+
+                content_of_table.append(_new_table_entry)
+
+    print(f"{content_of_table =}")
+
     if cif_names is not None:
         for each_fname in cif_names:
             if '.cif' in each_fname:
@@ -62,7 +101,9 @@ def upload_feedback(cif_names):
             test_passed = True
         else:
             test_passed = error_div_list
+
         return data_fb_list, test_passed
+
     else:
         return [None], [None]
 
