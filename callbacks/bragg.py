@@ -84,6 +84,7 @@ def show_output_div(n_submit, test_passed, error_in_bem):
         return {'display': 'none'}
 
 
+# Submit button has been clicked
 @app.callback(
     [
         Output(app_id_dict['hidden_df_json_id'], 'children'),
@@ -114,11 +115,13 @@ def store_bragg_df_in_json(n_submit, test_passed,
         if cif_uploads is not None:
             for each_index, each_content in enumerate(cif_uploads):
                 try:
-                    print("'{}', reading .cif file...".format(cif_names[each_index]))
+                    print("'{}:', reading .cif file...".format(cif_names[each_index]))
                     _cif_struc = parse_cif_upload(content=each_content)
                     _name_only = cif_names[each_index].split('.')[0]
                     print("'{}', calculating cross-sections...".format(cif_names[each_index]))
+                    return
                     xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
+                    print("Done calculating cross-sections!")
                     xs_dict[_name_only + ' (total)'] = xscalculator.xs(wavelengths_A)
                     xs_dict[_name_only + ' (abs)'] = xscalculator.xs_abs(wavelengths_A)
                     xs_dict[_name_only + ' (coh el)'] = xscalculator.xs_coh_el(wavelengths_A)

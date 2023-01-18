@@ -6,6 +6,15 @@ peak_wave = {'imaging': 2.53,  # AA
              'snap': 1.8,
              'venus': 1.8,
              }
+index_number_h = 'Miller index number h'
+index_number_k = 'Miller index number k'
+index_number_l = 'Miller index number l'
+axial_length_a = 'Axial length a (\u212B)'
+axial_length_b = 'Axial length b (\u212B)'
+axial_length_c = 'Axial length c (\u212B)'
+interaxial_angle_alpha = 'Interaxial angle alpha (\u00b0)'
+interaxial_angle_beta = 'Interaxial angle beta (\u00b0)'
+interaxial_angle_gamma = 'Interaxial angle gamma (\u00b0)'
 energy_name = 'Energy (eV)'
 wave_name = 'Wavelength (\u212B)'
 speed_name = 'Speed (m/s)'

@@ -63,7 +63,7 @@ Development Program of Oak Ridge National Laboratory, managed by UT-Battelle LLC
 the US Department of Energy. This research used resources at the Spallation Neutron Source,
 a DOE Office of Science User Facility operated by Oak Ridge National Laboratory.
 '''),
-        html.Footer("( iNEUIT v0.0.25 )")
+        html.Footer("( iNEUIT v0.1.0 )")
     ],
 )
 

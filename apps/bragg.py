@@ -1,14 +1,29 @@
 import dash_bootstrap_components as dbc
 
 from callbacks.bragg import *
+from callbacks.utilities.constants import *
 from callbacks.utilities.initialization import (init_app_ids, temperature_default, distance_default, delay_default,
-                                                init_app_about, init_display_plot_data_check)
+                                                init_app_about, init_display_plot_data_check, sample_tb_even_10_col)
 from callbacks.utilities.plot import bragg_plot_option_div
+from callbacks.utilities.all_apps import sample_header_df
 
 # Bragg-edge tool
 
 app_name = 'bragg'
 app_id_dict = init_app_ids(app_name=app_name)
+
+sample_df_default = pd.DataFrame({
+    chem_name: ['Ni'],
+    index_number_h: [0.0],
+    index_number_k: [0.0],
+    index_number_l: [0.0],
+    axial_length_a: [3.5238],
+    axial_length_b: [3.5238],
+    axial_length_c: [3.5238],
+    interaxial_angle_alpha: [90],
+    interaxial_angle_beta: [90],
+    interaxial_angle_gamma: [90]
+})
 
 # Create app layout
 layout = html.Div(
@@ -78,7 +93,8 @@ layout = html.Div(
 
         html.Div(
             [
-                html.H6('Wavelength band:'),
+                html.H1(''),
+                html.H3('Wavelength band:'),
                 dbc.Row(
                     [
                         dbc.Col(
@@ -125,10 +141,12 @@ layout = html.Div(
             ],
         ),
         html.Hr(),
-        html.H3('Upload cif file/files:'),
+        html.H2('Input elements'),
+        html.Div(),
 
         html.Div(
             [
+                html.H3('- Upload cif file/files:'),
                 dcc.Upload(id=app_id_dict['cif_upload_id'],
                            children=html.Div([
                                'Drag and Drop or ',
@@ -149,9 +167,32 @@ layout = html.Div(
                            last_modified=0,
                            ),
                 html.Div(id=app_id_dict['cif_upload_fb_id']),
-                html.Button('Submit', id=app_id_dict['submit_button_id'], n_clicks_timestamp=0),
+
+                html.H3('- Manual input of elements:'),
+
+                dt.DataTable(
+                    data=sample_df_default.to_dict('records'),
+                    # optional - sets the order of columns
+                    columns=sample_header_df.to_dict('records'),
+                    editable=True,
+                    row_selectable=False,
+                    filter_action='none',
+                    sort_action='none',
+                    row_deletable=True,
+                    export_format='csv',
+                    style_cell_conditional=sample_tb_even_10_col,
+                    style_data_conditional=[striped_rows],
+                    id=app_id_dict['sample_table_id']
+                ),
+
+                html.Hr(style={'color': 'red'}),
+                html.Button('Submit',
+                            style={
+                                'width': '100%',
+                            },
+                            id=app_id_dict['submit_button_id'], n_clicks_timestamp=0),
                 html.Div(id=app_id_dict['hidden_upload_time_id'], style={'display': 'none'}, children=0),
-            ]
+            ],
         ),
 
         # Error message div1

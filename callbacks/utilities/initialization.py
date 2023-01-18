@@ -123,6 +123,29 @@ sample_tb_even_3_col = [
      'width': '33%'},
 ]
 
+sample_tb_even_10_col = [
+    {'if': {'column_id': chem_name},
+     'width': '10%'},
+    {'if': {'column_id': index_number_h},
+     'width': '10%'},
+    {'if': {'column_id': index_number_k},
+     'width': '10%'},
+    {'if': {'column_id': index_number_l},
+     'width': '10%'},
+    {'if': {'column_id': axial_length_a},
+     'width': '10%'},
+    {'if': {'column_id': axial_length_b},
+     'width': '10%'},
+    {'if': {'column_id': axial_length_c},
+     'width': '10%'},
+    {'if': {'column_id': interaxial_angle_alpha},
+     'width': '10%'},
+    {'if': {'column_id': interaxial_angle_beta},
+     'width': '10%'},
+    {'if': {'column_id': interaxial_angle_gamma},
+     'width': '10%'},
+]
+
 iso_tb_even_4_col = [
     {'if': {'column_id': layer_name},
      'width': '25%'},
@@ -260,7 +283,7 @@ def init_app_about(current_app, app_id_dict):
     more_info_check = dcc.Checklist(
         id=app_id_dict['more_about_app_id'],
         options=[
-            {'label': 'More about this tool \U0001F4AC', 'value': 'more'},
+            {'label': ' More about this tool \U0001F4AC', 'value': 'more'},
         ],
         value=[],
         labelStyle={'display': 'inline-block'}
