@@ -268,18 +268,12 @@ def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
         Output(app_id_dict['manual_input_of_elements'], 'data'),
     [
         Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
-        Input(app_id_dict['del_row_id'], 'n_clicks_timestamp')
     ],
     [
-        State(app_id_dict['manual_input_of_elements'], 'data')
+        State(app_id_dict['manual_input_of_elements'], 'data'),
+        State(app_id_dict['manual_input_of_elements'], 'columns'),
     ]
 )
-def update_rows(n_add, n_del, data):
-    # rows, error_message, upload_t = update_rows_util(n_add=n_add,
-    #                                                  n_del=n_del,
-    #                                                  list_of_contents=list_of_contents,
-    #                                                  upload_time=upload_time)
-    # return rows, error_message, upload_t
-    #
-
+def update_rows(add_time, data, columns):
+    data.append({c['id']: '' for c in columns})
     return data

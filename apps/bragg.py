@@ -171,7 +171,6 @@ layout = html.Div(
                 html.H3('- Manual input of elements:'),
 
                 html.Button('+', id=app_id_dict['add_row_id'], n_clicks_timestamp=0),
-                html.Button('-', id=app_id_dict['del_row_id'], n_clicks_timestamp=0),
 
                 dt.DataTable(
                     data=bragg_sample_df_default.to_dict('records'),
