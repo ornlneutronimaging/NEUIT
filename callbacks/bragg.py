@@ -14,7 +14,7 @@ from app import app
 from callbacks.utilities.initialization import (init_app_ids, striped_rows, plot_loading, resubmit)
 import callbacks.utilities.constants as constants
 from callbacks.utilities.plot import shape_matplot_to_plotly
-from callbacks.utilities.all_apps import y_type_to_y_label, x_type_to_x_tag, load_dfs
+from callbacks.utilities.all_apps import y_type_to_y_label, x_type_to_x_tag, load_dfs, update_rows_util
 from callbacks.utilities.bragg import parse_cif_upload
 from callbacks.utilities.resonance import fill_df_x_types
 
@@ -262,3 +262,24 @@ def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
             return [None]
     else:
         return [None]
+
+
+@app.callback(
+        Output(app_id_dict['manual_input_of_elements'], 'data'),
+    [
+        Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
+        Input(app_id_dict['del_row_id'], 'n_clicks_timestamp')
+    ],
+    [
+        State(app_id_dict['manual_input_of_elements'], 'data')
+    ]
+)
+def update_rows(n_add, n_del, data):
+    # rows, error_message, upload_t = update_rows_util(n_add=n_add,
+    #                                                  n_del=n_del,
+    #                                                  list_of_contents=list_of_contents,
+    #                                                  upload_time=upload_time)
+    # return rows, error_message, upload_t
+    #
+
+    return data

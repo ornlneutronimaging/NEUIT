@@ -398,7 +398,7 @@ def init_upload_field(id_str: str, div_str: str, hidden_div_str: str, add_row_id
                            'textAlign': 'center',
                            'margin': '10px'
                        },
-                       # Allow multiple files to be uploaded
+                       # Allow multiple files to be uploadedd
                        multiple=True,
                        last_modified=0,
                        ),
