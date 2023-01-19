@@ -146,7 +146,7 @@ layout = html.Div(
 
         html.Div(
             [
-                html.H3('- Upload cif file/files:'),
+                html.H4('Upload .cif file(s) and/or edit table:'),
                 dcc.Upload(id=app_id_dict['cif_upload_id'],
                            children=html.Div([
                                'Drag and Drop or ',
@@ -167,10 +167,22 @@ layout = html.Div(
                            last_modified=0,
                            ),
                 html.Div(id=app_id_dict['cif_upload_fb_id']),
+                html.Hr(style={'color': 'red'}),
 
-                html.H3('- Manual input of elements:'),
+                # dropdown
+                dbc.Row(
+                        [
+                            html.Label("List of user defined or .cif file(s) loaded:"),
+                            dcc.Dropdown(['blank'], 'blank',
+                                         id=app_id_dict['cif_dropdown'],
+                                         searchable=False,
+                                         )
+                        ]
+                ),
 
-                html.Button('+', id=app_id_dict['add_row_id'], n_clicks_timestamp=0),
+                html.Div(html.P([html.Br()])),
+
+                html.Button('Add row', id=app_id_dict['add_row_id'], n_clicks_timestamp=0),
 
                 dt.DataTable(
                     data=bragg_sample_df_default.to_dict('records'),
@@ -182,11 +194,12 @@ layout = html.Div(
                     sort_action='none',
                     row_deletable=True,
                     export_format='csv',
+                    css=[{'selector': '.export', 'rule': 'position:absolute; left:0px; bottom:-35px'}],
                     style_cell_conditional=sample_tb_even_10_col,
                     style_data_conditional=[striped_rows],
                     id=app_id_dict['manual_input_of_elements']
                 ),
-
+                html.Div(html.P([html.Br(), html.Br()])),
                 html.Hr(style={'color': 'red'}),
                 html.Button('Submit',
                             style={

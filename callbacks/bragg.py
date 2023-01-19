@@ -149,8 +149,9 @@ def show_output_div(n_submit, test_passed, error_in_bem):
     ],
     [
         State(app_id_dict['error_id'], 'children'),
-        State(app_id_dict['cif_upload_id'], 'contents'),
-        State(app_id_dict['cif_upload_id'], 'filename'),
+        # State(app_id_dict['cif_upload_id'], 'contents'),
+        # State(app_id_dict['cif_upload_id'], 'filename'),
+        State(app_id_dict['manual_input_of_elements'], 'data'),
         State(app_id_dict['temperature_id'], 'value'),
         State(app_id_dict['distance_id'], 'value'),
         State(app_id_dict['delay_id'], 'value'),
@@ -158,59 +159,66 @@ def show_output_div(n_submit, test_passed, error_in_bem):
         State(app_id_dict['band_max_id'], 'value'),
         State(app_id_dict['band_step_id'], 'value'),
     ])
-def store_bragg_df_in_json(n_submit, test_passed,
-                           cif_uploads, cif_names,
+def store_bragg_df_in_json(n_submit,
+                           test_passed, data_table,
                            temperature_K, distance_m, delay_us,band_min, band_max, band_step,
                            ):
-
-    print("in store bragg df in json")
-    return [], True
 
     if test_passed:
         error_div_list = []
         xs_dict = {}
         wavelengths_A = np.arange(band_min, band_max, band_step)
-        if cif_uploads is not None:
-            for each_index, each_content in enumerate(cif_uploads):
-                try:
-                    print("'{}:', reading .cif file...".format(cif_names[each_index]))
-                    _cif_struc = parse_cif_upload(content=each_content)
-                    _name_only = cif_names[each_index].split('.')[0]
-                    print("'{}', calculating cross-sections...".format(cif_names[each_index]))
-                    return
-                    xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
-                    print("Done calculating cross-sections!")
-                    xs_dict[_name_only + ' (total)'] = xscalculator.xs(wavelengths_A)
-                    xs_dict[_name_only + ' (abs)'] = xscalculator.xs_abs(wavelengths_A)
-                    xs_dict[_name_only + ' (coh el)'] = xscalculator.xs_coh_el(wavelengths_A)
-                    xs_dict[_name_only + ' (inc el)'] = xscalculator.xs_inc_el(wavelengths_A)
-                    xs_dict[_name_only + ' (coh inel)'] = xscalculator.xs_coh_inel(wavelengths_A)
-                    xs_dict[_name_only + ' (inc inel)'] = xscalculator.xs_inc_inel(wavelengths_A)
-                    print("Calculation done.")
-                except AttributeError as error_msg1:
-                    print(str(error_msg1))
-                    error1 = "ERROR: '{}', ".format(cif_names[each_index]) + str(error_msg1).split('.')[0] + '. The .cif format is not compatible, please reformat following ICSD database.'
-                    error_div_list.append(error1)
-                except ValueError as error_msg2:
-                    error2 = "ERROR: '{}', ".format(cif_names[each_index]) + str(error_msg2).split('.')[0] + '.'
-                    error_div_list.append(error2)
-            if len(error_div_list) == 0:
-                df_y = pd.DataFrame.from_dict(xs_dict)
-                df_x = pd.DataFrame()
-                df_x[constants.energy_name] = ir_util.angstroms_to_ev(wavelengths_A)
-                df_x = fill_df_x_types(df=df_x, distance_m=distance_m, delay_us=delay_us)
 
-                datasets = {
-                    'x': df_x.to_json(orient='split', date_format='iso'),
-                    'y': df_y.to_json(orient='split', date_format='iso'),
-                }
-                return json.dumps(datasets), True
-            else:
-                return None, error_div_list
-        else:
-            return None, False
-    else:
-        return None, False
+        # looking at the table to create the structure
+        print(f"{data_table =}")
+
+
+    return None, False
+
+
+
+
+    #     if cif_uploads is not None:
+    #         for each_index, each_content in enumerate(cif_uploads):
+    #             try:
+    #                 print("'{}:', reading .cif file...".format(cif_names[each_index]))
+    #                 _cif_struc = parse_cif_upload(content=each_content)
+    #                 _name_only = cif_names[each_index].split('.')[0]
+    #                 print("'{}', calculating cross-sections...".format(cif_names[each_index]))
+    #                 return
+    #                 xscalculator = xscalc.XSCalculator(_cif_struc, temperature_K, max_diffraction_index=4)
+    #                 print("Done calculating cross-sections!")
+    #                 xs_dict[_name_only + ' (total)'] = xscalculator.xs(wavelengths_A)
+    #                 xs_dict[_name_only + ' (abs)'] = xscalculator.xs_abs(wavelengths_A)
+    #                 xs_dict[_name_only + ' (coh el)'] = xscalculator.xs_coh_el(wavelengths_A)
+    #                 xs_dict[_name_only + ' (inc el)'] = xscalculator.xs_inc_el(wavelengths_A)
+    #                 xs_dict[_name_only + ' (coh inel)'] = xscalculator.xs_coh_inel(wavelengths_A)
+    #                 xs_dict[_name_only + ' (inc inel)'] = xscalculator.xs_inc_inel(wavelengths_A)
+    #                 print("Calculation done.")
+    #             except AttributeError as error_msg1:
+    #                 print(str(error_msg1))
+    #                 error1 = "ERROR: '{}', ".format(cif_names[each_index]) + str(error_msg1).split('.')[0] + '. The .cif format is not compatible, please reformat following ICSD database.'
+    #                 error_div_list.append(error1)
+    #             except ValueError as error_msg2:
+    #                 error2 = "ERROR: '{}', ".format(cif_names[each_index]) + str(error_msg2).split('.')[0] + '.'
+    #                 error_div_list.append(error2)
+    #         if len(error_div_list) == 0:
+    #             df_y = pd.DataFrame.from_dict(xs_dict)
+    #             df_x = pd.DataFrame()
+    #             df_x[constants.energy_name] = ir_util.angstroms_to_ev(wavelengths_A)
+    #             df_x = fill_df_x_types(df=df_x, distance_m=distance_m, delay_us=delay_us)
+    #
+    #             datasets = {
+    #                 'x': df_x.to_json(orient='split', date_format='iso'),
+    #                 'y': df_y.to_json(orient='split', date_format='iso'),
+    #             }
+    #             return json.dumps(datasets), True
+    #         else:
+    #             return None, error_div_list
+    #     else:
+    #         return None, False
+    # else:
+    #     return None, False
 
 @app.callback(
     [
