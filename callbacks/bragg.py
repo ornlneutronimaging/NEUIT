@@ -43,9 +43,11 @@ def show_hide_band_input(more_info, style):
     [
         Output(app_id_dict['cif_upload_fb_id'], 'children'),
         Output(app_id_dict['error_id'], 'children'),
+        Output(app_id_dict['manual_input_of_elements'], 'data')
     ],
     [
         Input(app_id_dict['cif_upload_id'], 'filename'),
+        Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
     ],
     [
         State(app_id_dict['cif_upload_id'], 'contents'),
@@ -53,9 +55,13 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['manual_input_of_elements'], 'columns'),
     ],
 )
-def upload_feedback(cif_names, cif_uploads, content_of_table, names_of_columns):
+def upload_feedback(cif_names, add_button_timestamp, cif_uploads, content_of_table, names_of_columns):
     data_fb_list = []
     error_div_list = []
+
+    if cif_names == None:
+        content_of_table.append({c['id']: '' for c in names_of_columns})
+        return [None], [None], content_of_table
 
     if cif_uploads is not None:
         for each_index, each_content in enumerate(cif_uploads):
@@ -87,7 +93,7 @@ def upload_feedback(cif_names, cif_uploads, content_of_table, names_of_columns):
 
                 content_of_table.append(_new_table_entry)
 
-    print(f"{content_of_table =}")
+    # print(f"{content_of_table =}")
 
     if cif_names is not None:
         for each_fname in cif_names:
@@ -102,10 +108,10 @@ def upload_feedback(cif_names, cif_uploads, content_of_table, names_of_columns):
         else:
             test_passed = error_div_list
 
-        return data_fb_list, test_passed
+        return data_fb_list, test_passed, content_of_table
 
     else:
-        return [None], [None]
+        return [None], [None], content_of_table
 
 
 @app.callback(
@@ -305,16 +311,16 @@ def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
         return [None]
 
 
-@app.callback(
-        Output(app_id_dict['manual_input_of_elements'], 'data'),
-    [
-        Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
-    ],
-    [
-        State(app_id_dict['manual_input_of_elements'], 'data'),
-        State(app_id_dict['manual_input_of_elements'], 'columns'),
-    ]
-)
-def update_rows(add_time, data, columns):
-    data.append({c['id']: '' for c in columns})
-    return data
+# @app.callback(
+#         Output(app_id_dict['manual_input_of_elements'], 'data'),
+#     [
+#         Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
+#     ],
+#     [
+#         State(app_id_dict['manual_input_of_elements'], 'data'),
+#         State(app_id_dict['manual_input_of_elements'], 'columns'),
+#     ]
+# )
+# def update_rows(add_time, data, columns):
+#     data.append({c['id']: '' for c in columns})
+#     return data
