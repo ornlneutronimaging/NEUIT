@@ -43,30 +43,41 @@ def show_hide_band_input(more_info, style):
     [
         Output(app_id_dict['cif_upload_fb_id'], 'children'),
         Output(app_id_dict['error_id'], 'children'),
-        Output(app_id_dict['manual_input_of_elements'], 'data')
+        Output(app_id_dict['manual_input_of_elements'], 'data'),
+        Output(app_id_dict['hidden_upload_time_id'], 'children'),
     ],
     [
         Input(app_id_dict['cif_upload_id'], 'filename'),
         Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
     ],
     [
+        State(app_id_dict['hidden_upload_time_id'], 'children'),
         State(app_id_dict['cif_upload_id'], 'contents'),
         State(app_id_dict['manual_input_of_elements'], 'data'),
         State(app_id_dict['manual_input_of_elements'], 'columns'),
     ],
 )
-def upload_feedback(cif_names, add_button_timestamp, cif_uploads, content_of_table, names_of_columns):
+def upload_feedback(cif_names, add_button_timestamp,
+                    prev_upload_time, cif_uploads, content_of_table, names_of_columns):
     data_fb_list = []
     error_div_list = []
 
-    if cif_names == None:
+    print(f"{cif_names =}")
+    print(f"{add_button_timestamp =}")
+    print(f"=============")
+
+    if cif_names is None:
         content_of_table.append({c['id']: '' for c in names_of_columns})
-        return [None], [None], content_of_table
+        return [None], [None], content_of_table, add_button_timestamp
 
     if cif_uploads is not None:
+
+        if add_button_timestamp != prev_upload_time:
+            content_of_table.append({c['id']: '' for c in names_of_columns})
+            return [None], [None], content_of_table, add_button_timestamp
+
         for each_index, each_content in enumerate(cif_uploads):
             _cif_struc = parse_cif_upload(content=each_content)
-            print(_cif_struc)
             for _row in _cif_struc:
 
                 chem_name = _row.element
@@ -108,10 +119,10 @@ def upload_feedback(cif_names, add_button_timestamp, cif_uploads, content_of_tab
         else:
             test_passed = error_div_list
 
-        return data_fb_list, test_passed, content_of_table
+        return data_fb_list, test_passed, content_of_table, prev_upload_time
 
     else:
-        return [None], [None], content_of_table
+        return [None], [None], content_of_table, prev_upload_time
 
 
 @app.callback(
