@@ -62,10 +62,6 @@ def upload_feedback(cif_names, add_button_timestamp,
     data_fb_list = []
     error_div_list = []
 
-    print(f"{cif_names =}")
-    print(f"{add_button_timestamp =}")
-    print(f"=============")
-
     if cif_names is None:
         content_of_table.append({c['id']: '' for c in names_of_columns})
         return [None], [None], content_of_table, add_button_timestamp
@@ -166,6 +162,10 @@ def store_bragg_df_in_json(n_submit, test_passed,
                            cif_uploads, cif_names,
                            temperature_K, distance_m, delay_us,band_min, band_max, band_step,
                            ):
+
+    print("in store bragg df in json")
+    return [], True
+
     if test_passed:
         error_div_list = []
         xs_dict = {}
