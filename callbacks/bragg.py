@@ -148,140 +148,129 @@ def show_hide_band_input(more_info, style):
 #     #     return [None], [None], content_of_table, prev_upload_time, dropdown_list, dropdown_list_index
 
 
-@app.callback(
-    [
-        Output(app_id_dict['cif_dropdown'], 'options'),
-        Output(app_id_dict['cif_dropdown'], 'value')
-    ],
-    [
-        Input(app_id_dict['cif_upload_id'], 'filename'),
-        Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
-    ],
-    [
-        State(app_id_dict['hidden_upload_time_id'], 'children'),
-        State(app_id_dict['cif_upload_id'], 'contents'),
-        State(app_id_dict['cif_dropdown'], 'options'),
-        State(app_id_dict['cif_dropdown'], 'value')
-    ],
-)
-def upload_feedback(cif_names, add_button_timestamp,
-                    prev_upload_time, cif_uploads,
-                    dropdown_list, dropdown_list_selected):
-
-    print(f"in new upload feedback!")
-
-    data_fb_list = []
-    error_div_list = []
-
-    dropdown_list_index = 0
-
-    if cif_names is None:
-
-        # we added a new row, let's keep the same .cif file selected
-        if dropdown_list_selected != 0:
-            dropdown_list_index = dropdown_list_selected
-
-        return dropdown_list, dropdown_list_index
-
-    if cif_uploads is not None:
-
-        if add_button_timestamp != prev_upload_time:
-
-            # we added a new row, let's keep the same .cif file selected
-            if dropdown_list_selected != 0:
-                dropdown_list_index = dropdown_list_selected
-
-            return dropdown_list, dropdown_list_index
-
-    if cif_names is not None:
-        for each_fname in cif_names:
-            if '.cif' in each_fname:
-                data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(each_fname)]))
-                dropdown_list.append(each_fname)
-            else:
-                error_div = html.Div(
-                    ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(each_fname)])
-                error_div_list.append(error_div)
-
-        if len(error_div_list) == 0:
-            test_passed = True
-        else:
-            test_passed = error_div_list
-
-        return dropdown_list, cif_names[-1]
-
-    # else:
-    #
-    #     print('I should not see this!')
-    #     if dropdown_list_selected != 0:
-    #         dropdown_list_index = dropdown_list_selected
-    #
-    #     return [None], [None], content_of_table, prev_upload_time, dropdown_list, dropdown_list_index
-
-
-@app.callback(
-    Output(app_id_dict['cif_dropdown_div'], 'children'),
-    Input(app_id_dict['cif_dropdown'], 'value'),
-)
-def dropdown_list_changed(value):
-    print(f"in dropdown_list_changed!")
-    print(f"value is: {value}")
-    return ""
+# @app.callback(
+#     [
+#         Output(app_id_dict['cif_dropdown'], 'options'),
+#         Output(app_id_dict['cif_dropdown'], 'value'),
+#     ],
+#     [
+#         Input(app_id_dict['cif_upload_id'], 'filename'),
+#         Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
+#     ],
+#     [
+#         State(app_id_dict['hidden_upload_time_id'], 'children'),
+#         State(app_id_dict['cif_upload_id'], 'contents'),
+#         State(app_id_dict['cif_dropdown'], 'options'),
+#         State(app_id_dict['cif_dropdown'], 'value')
+#     ],
+# )
+# def upload_feedback(cif_names, add_button_timestamp,
+#                     prev_upload_time, cif_uploads, dropdown_list, dropdown_list_selected):
+#
+#     print(f"in new upload feedback!")
+#
+#     data_fb_list = []
+#     error_div_list = []
+#
+#     dropdown_list_index = 0
+#
+#     if cif_names is None:
+#
+#         # we added a new row, let's keep the same .cif file selected
+#         if dropdown_list_selected != 0:
+#             dropdown_list_index = dropdown_list_selected
+#
+#         return dropdown_list, dropdown_list_index
+#
+#     if cif_uploads is not None:
+#
+#         if add_button_timestamp != prev_upload_time:
+#
+#             # we added a new row, let's keep the same .cif file selected
+#             if dropdown_list_selected != 0:
+#                 dropdown_list_index = dropdown_list_selected
+#
+#             return dropdown_list, dropdown_list_index
+#
+#     if cif_names is not None:
+#         for each_fname in cif_names:
+#             if '.cif' in each_fname:
+#                 data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(each_fname)]))
+#                 dropdown_list.append(each_fname)
+#             else:
+#                 error_div = html.Div(
+#                     ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(each_fname)])
+#                 error_div_list.append(error_div)
+#
+#         if len(error_div_list) == 0:
+#             test_passed = True
+#         else:
+#             test_passed = error_div_list
+#
+#         return dropdown_list, cif_names[-1]
+#
+#     # else:
+#     #
+#     #     print('I should not see this!')
+#     #     if dropdown_list_selected != 0:
+#     #         dropdown_list_index = dropdown_list_selected
+#     #
+#     #     return [None], [None], content_of_table, prev_upload_time, dropdown_list, dropdown_list_index
 
 
-@app.callback(
-    Output(app_id_dict['output_id'], 'style'),
-    [
-        Input(app_id_dict['submit_button_id'], 'n_clicks'),
-        Input(app_id_dict['error_id'], 'children'),
-        Input(app_id_dict['error_id2'], 'children'),
-    ])
-def show_output_div(n_submit, test_passed, error_in_bem):
-    if n_submit is not None:
-        if test_passed and error_in_bem is True:
-            return {'display': 'block'}
-        else:
-            return {'display': 'none'}
-    else:
-        return {'display': 'none'}
+# @app.callback(
+#     Output(app_id_dict['output_id'], 'style'),
+#     [
+#         Input(app_id_dict['submit_button_id'], 'n_clicks'),
+#         Input(app_id_dict['error_id'], 'children'),
+#         Input(app_id_dict['error_id2'], 'children'),
+#     ])
+# def show_output_div(n_submit, test_passed, error_in_bem):
+#     if n_submit is not None:
+#         if test_passed and error_in_bem is True:
+#             return {'display': 'block'}
+#         else:
+#             return {'display': 'none'}
+#     else:
+#         return {'display': 'none'}
 
 
-# Submit button has been clicked
-@app.callback(
-    [
-        Output(app_id_dict['hidden_df_json_id'], 'children'),
-        Output(app_id_dict['error_id2'], 'children'),
-    ],
-    [
-        Input(app_id_dict['submit_button_id'], 'n_clicks'),
-    ],
-    [
-        State(app_id_dict['error_id'], 'children'),
-        # State(app_id_dict['cif_upload_id'], 'contents'),
-        # State(app_id_dict['cif_upload_id'], 'filename'),
-        State(app_id_dict['manual_input_of_elements'], 'data'),
-        State(app_id_dict['temperature_id'], 'value'),
-        State(app_id_dict['distance_id'], 'value'),
-        State(app_id_dict['delay_id'], 'value'),
-        State(app_id_dict['band_min_id'], 'value'),
-        State(app_id_dict['band_max_id'], 'value'),
-        State(app_id_dict['band_step_id'], 'value'),
-    ])
-def store_bragg_df_in_json(n_submit,
-                           test_passed, data_table,
-                           temperature_K, distance_m, delay_us,band_min, band_max, band_step,
-                           ):
-
-    if test_passed:
-        error_div_list = []
-        xs_dict = {}
-        wavelengths_A = np.arange(band_min, band_max, band_step)
-
-        # looking at the table to create the structure
-        print(f"{data_table =}")
-
-
-    return None, False
+# # Submit button has been clicked
+# @app.callback(
+#     [
+#         Output(app_id_dict['hidden_df_json_id'], 'children'),
+#         Output(app_id_dict['error_id2'], 'children'),
+#     ],
+#     [
+#         Input(app_id_dict['submit_button_id'], 'n_clicks'),
+#     ],
+#     [
+#         State(app_id_dict['error_id'], 'children'),
+#         # State(app_id_dict['cif_upload_id'], 'contents'),
+#         # State(app_id_dict['cif_upload_id'], 'filename'),
+#         State(app_id_dict['manual_input_of_elements'], 'data'),
+#         State(app_id_dict['temperature_id'], 'value'),
+#         State(app_id_dict['distance_id'], 'value'),
+#         State(app_id_dict['delay_id'], 'value'),
+#         State(app_id_dict['band_min_id'], 'value'),
+#         State(app_id_dict['band_max_id'], 'value'),
+#         State(app_id_dict['band_step_id'], 'value'),
+#     ])
+# def store_bragg_df_in_json(n_submit,
+#                            test_passed, data_table,
+#                            temperature_K, distance_m, delay_us,band_min, band_max, band_step,
+#                            ):
+#
+#     if test_passed:
+#         error_div_list = []
+#         xs_dict = {}
+#         wavelengths_A = np.arange(band_min, band_max, band_step)
+#
+#         # looking at the table to create the structure
+#         print(f"{data_table =}")
+#
+#
+#     return None, False
 
 
 
@@ -328,114 +317,114 @@ def store_bragg_df_in_json(n_submit,
     # else:
     #     return None, False
 
-@app.callback(
-    [
-        Output(app_id_dict['plot_div_id'], 'children'),
-        Output(app_id_dict['hidden_df_export_json_id'], 'children'),
-    ],
-    [
-        Input(app_id_dict['hidden_df_json_id'], 'children'),
-        Input(app_id_dict['error_id'], 'children'),
-        Input('x_type', 'value'),
-        Input('y_type', 'value'),
-        Input('plot_scale', 'value'),
-        Input('xs_type', 'value'),
-    ],
-    [
-        State(app_id_dict['cif_upload_id'], 'filename'),
-    ])
-def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fnames):
-    if test_passed:
-        if jsonified_data is not None:
-            df_dict = load_dfs(jsonified_data=jsonified_data)
-            df_x = df_dict['x']
-            df_y = df_dict['y']
-
-            # Form selected Y df
-            to_plot_list = []
-            for each_fname in fnames:
-                _name_only = each_fname.split('.')[0]
-                if 'total' in xs_type:
-                    to_plot_list.append(_name_only + ' (total)')
-                if 'abs' in xs_type:
-                    to_plot_list.append(_name_only + ' (abs)')
-                if 'coh_el' in xs_type:
-                    to_plot_list.append(_name_only + ' (coh el)')
-                if 'coh_inel' in xs_type:
-                    to_plot_list.append(_name_only + ' (coh inel)')
-                if 'inc_el' in xs_type:
-                    to_plot_list.append(_name_only + ' (inc el)')
-                if 'inc_inel' in xs_type:
-                    to_plot_list.append(_name_only + ' (inc inel)')
-            try:
-                df_to_plot = df_y[to_plot_list]
-            except KeyError:
-                return resubmit, [None]
-            if y_type == 'attenuation':
-                df_to_plot = 1 - df_y
-
-            # Add X column
-            x_tag = x_type_to_x_tag(x_type)
-            df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
-            y_label = y_type_to_y_label(y_type)
-
-            jsonized_plot_df = df_to_plot.to_json(orient='split', date_format='iso')
-
-            # Plot in matplotlib
-            fig = plt.figure()
-            ax1 = fig.add_subplot(111)
-            try:
-                ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
-            except TypeError:
-                pass
-            ax1.set_ylabel(y_label)
-
-            # Convert to plotly and format layout
-            plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
-
-            return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
-        else:
-            return plot_loading, [None]
-    else:
-        return plot_loading, [None]
-
-
-@app.callback(
-    [
-        Output(app_id_dict['df_export_tb_div'], 'children'),
-    ],
-    [
-        Input(app_id_dict['display_plot_data_id'], 'value'),
-        Input(app_id_dict['hidden_df_export_json_id'], 'children'),
-    ],
-    [
-        State(app_id_dict['error_id'], 'children'),
-    ])
-def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
-    if display_check == ['display']:
-        if test_passed is True:
-            dataset = json.loads(jsonized_df_export[0])
-            df_to_export = pd.read_json(dataset, orient='split')
-            df_tb_div_list = [
-                html.Hr(),
-                dt.DataTable(
-                    id=app_id_dict['df_export_tb'],
-                    data=df_to_export.to_dict('records'),
-                    columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
-                    export_format='csv',
-                    style_data_conditional=[striped_rows],
-                    fixed_rows={'headers': True, 'data': 0},
-                    style_table={
-                        'maxHeight': '300',
-                        'overflowY': 'scroll',
-                    },
-                )
-            ]
-            return [df_tb_div_list]
-        else:
-            return [None]
-    else:
-        return [None]
+# @app.callback(
+#     [
+#         Output(app_id_dict['plot_div_id'], 'children'),
+#         Output(app_id_dict['hidden_df_export_json_id'], 'children'),
+#     ],
+#     [
+#         Input(app_id_dict['hidden_df_json_id'], 'children'),
+#         Input(app_id_dict['error_id'], 'children'),
+#         Input('x_type', 'value'),
+#         Input('y_type', 'value'),
+#         Input('plot_scale', 'value'),
+#         Input('xs_type', 'value'),
+#     ],
+#     [
+#         State(app_id_dict['cif_upload_id'], 'filename'),
+#     ])
+# def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fnames):
+#     if test_passed:
+#         if jsonified_data is not None:
+#             df_dict = load_dfs(jsonified_data=jsonified_data)
+#             df_x = df_dict['x']
+#             df_y = df_dict['y']
+#
+#             # Form selected Y df
+#             to_plot_list = []
+#             for each_fname in fnames:
+#                 _name_only = each_fname.split('.')[0]
+#                 if 'total' in xs_type:
+#                     to_plot_list.append(_name_only + ' (total)')
+#                 if 'abs' in xs_type:
+#                     to_plot_list.append(_name_only + ' (abs)')
+#                 if 'coh_el' in xs_type:
+#                     to_plot_list.append(_name_only + ' (coh el)')
+#                 if 'coh_inel' in xs_type:
+#                     to_plot_list.append(_name_only + ' (coh inel)')
+#                 if 'inc_el' in xs_type:
+#                     to_plot_list.append(_name_only + ' (inc el)')
+#                 if 'inc_inel' in xs_type:
+#                     to_plot_list.append(_name_only + ' (inc inel)')
+#             try:
+#                 df_to_plot = df_y[to_plot_list]
+#             except KeyError:
+#                 return resubmit, [None]
+#             if y_type == 'attenuation':
+#                 df_to_plot = 1 - df_y
+#
+#             # Add X column
+#             x_tag = x_type_to_x_tag(x_type)
+#             df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
+#             y_label = y_type_to_y_label(y_type)
+#
+#             jsonized_plot_df = df_to_plot.to_json(orient='split', date_format='iso')
+#
+#             # Plot in matplotlib
+#             fig = plt.figure()
+#             ax1 = fig.add_subplot(111)
+#             try:
+#                 ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
+#             except TypeError:
+#                 pass
+#             ax1.set_ylabel(y_label)
+#
+#             # Convert to plotly and format layout
+#             plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
+#
+#             return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
+#         else:
+#             return plot_loading, [None]
+#     else:
+#         return plot_loading, [None]
+#
+#
+# @app.callback(
+#     [
+#         Output(app_id_dict['df_export_tb_div'], 'children'),
+#     ],
+#     [
+#         Input(app_id_dict['display_plot_data_id'], 'value'),
+#         Input(app_id_dict['hidden_df_export_json_id'], 'children'),
+#     ],
+#     [
+#         State(app_id_dict['error_id'], 'children'),
+#     ])
+# def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
+#     if display_check == ['display']:
+#         if test_passed is True:
+#             dataset = json.loads(jsonized_df_export[0])
+#             df_to_export = pd.read_json(dataset, orient='split')
+#             df_tb_div_list = [
+#                 html.Hr(),
+#                 dt.DataTable(
+#                     id=app_id_dict['df_export_tb'],
+#                     data=df_to_export.to_dict('records'),
+#                     columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
+#                     export_format='csv',
+#                     style_data_conditional=[striped_rows],
+#                     fixed_rows={'headers': True, 'data': 0},
+#                     style_table={
+#                         'maxHeight': '300',
+#                         'overflowY': 'scroll',
+#                     },
+#                 )
+#             ]
+#             return [df_tb_div_list]
+#         else:
+#             return [None]
+#     else:
+#         return [None]
 
 
 # @app.callback(
