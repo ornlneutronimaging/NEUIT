@@ -266,6 +266,7 @@ def init_app_ids(app_name: str):
         id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
         id_dict['manual_input_of_elements'] = app_name + '_manual_input_of_elements'
         id_dict['cif_dropdown'] = app_name + '_cif_dropdown'
+        id_dict['cif_dropdown_div'] = app_name + '_cif_dropdown_div'
 
     return id_dict
 

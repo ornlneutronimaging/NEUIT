@@ -180,7 +180,8 @@ layout = html.Div(
                         ]
                 ),
 
-                html.Div(html.P([html.Br()])),
+                html.Div(html.P([html.Br()]),
+                         id=app_id_dict['cif_dropdown_div']),
 
                 html.Button('Add row', id=app_id_dict['add_row_id'], n_clicks_timestamp=0),
 
