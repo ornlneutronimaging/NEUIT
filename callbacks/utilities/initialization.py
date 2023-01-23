@@ -280,6 +280,10 @@ def init_app_ids(app_name: str):
         id_dict['cif_upload_tab3'] = app_name + '_ciff_upload_tab3'
         id_dict['cif_upload_tab4'] = app_name + '_ciff_upload_tab4'
         id_dict['cif_upload_tab5'] = app_name + '_ciff_upload_tab5'
+        id_dict['cif_upload_fb_tab2'] = app_name + '_cif_fb_tab2'
+        id_dict['cif_upload_fb_tab3'] = app_name + '_cif_fb_tab3'
+        id_dict['cif_upload_fb_tab4'] = app_name + '_cif_fb_tab4'
+        id_dict['cif_upload_fb_tab5'] = app_name + '_cif_fb_tab5'
 
     return id_dict
 

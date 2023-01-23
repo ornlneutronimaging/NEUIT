@@ -39,6 +39,7 @@ def show_hide_band_input(more_info, style):
     return style
 
 
+# tab 1
 @app.callback(
         Output(app_id_dict['data_table_tab1'], 'data'),
     [
@@ -53,184 +54,89 @@ def update_rows(add_time, data, columns):
     data.append({c['id']: '' for c in columns})
     return data
 
+# tab 2
+@app.callback(
+    [
+        Output(app_id_dict['cif_upload_fb_tab2'], 'children'),
+        Output(app_id_dict['error_id'], 'children'),
+        Output(app_id_dict['data_table_tab2'], 'data'),
+        Output(app_id_dict['hidden_upload_time_id'], 'children'),
+    ],
+    [
+        Input(app_id_dict['cif_upload_tab2'], 'filename'),
+        Input(app_id_dict['add_row_tab2'], 'n_clicks_timestamp'),
+    ],
+    [
+        State(app_id_dict['hidden_upload_time_id'], 'children'),
+        State(app_id_dict['cif_upload_tab2'], 'contents'),
+        State(app_id_dict['data_table_tab2'], 'data'),
+        State(app_id_dict['data_table_tab2'], 'columns'),
+    ],
+)
+def upload_feedback(cif_names, add_button_timestamp,
+                    prev_upload_time, cif_uploads,
+                    content_of_table, names_of_columns):
 
-# @app.callback(
-#     [
-#         Output(app_id_dict['cif_upload_fb_id'], 'children'),
-#         Output(app_id_dict['error_id'], 'children'),
-#         Output(app_id_dict['manual_input_of_elements'], 'data'),
-#         Output(app_id_dict['hidden_upload_time_id'], 'children'),
-#         Output(app_id_dict['cif_dropdown'], 'options'),
-#         Output(app_id_dict['cif_dropdown'], 'value')
-#     ],
-#     [
-#         Input(app_id_dict['cif_upload_id'], 'filename'),
-#         Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
-#     ],
-#     [
-#         State(app_id_dict['hidden_upload_time_id'], 'children'),
-#         State(app_id_dict['cif_upload_id'], 'contents'),
-#         State(app_id_dict['manual_input_of_elements'], 'data'),
-#         State(app_id_dict['manual_input_of_elements'], 'columns'),
-#         State(app_id_dict['cif_dropdown'], 'options'),
-#         State(app_id_dict['cif_dropdown'], 'value')
-#     ],
-# )
-# def upload_feedback(cif_names, add_button_timestamp,
-#                     prev_upload_time, cif_uploads, content_of_table, names_of_columns,
-#                     dropdown_list, dropdown_list_selected):
-#
-#     print(f"in upload feedback!")
-#
-#     data_fb_list = []
-#     error_div_list = []
-#
-#     dropdown_list_index = 0
-#
-#     if cif_names is None:
-#
-#         # we added a new row, let's keep the same .cif file selected
-#         if dropdown_list_selected != 0:
-#             dropdown_list_index = dropdown_list_selected
-#
-#         content_of_table.append({c['id']: '' for c in names_of_columns})
-#         return [None], [None], content_of_table, add_button_timestamp, dropdown_list, dropdown_list_index
-#
-#     if cif_uploads is not None:
-#
-#         if add_button_timestamp != prev_upload_time:
-#
-#             # we added a new row, let's keep the same .cif file selected
-#             if dropdown_list_selected != 0:
-#                 dropdown_list_index = dropdown_list_selected
-#
-#             content_of_table.append({c['id']: '' for c in names_of_columns})
-#             return [None], [None], content_of_table, add_button_timestamp, dropdown_list, dropdown_list_index
-#
-#         for each_index, each_content in enumerate(cif_uploads):
-#             _cif_struc = parse_cif_upload(content=each_content)
-#             for _row in _cif_struc:
-#
-#                 chem_name = _row.element
-#                 index_number_h = _row.x
-#                 index_number_k = _row.y
-#                 index_number_l = _row.z
-#                 interaxial_angle_alpha = _row.lattice.alpha
-#                 interaxial_angle_beta = _row.lattice.beta
-#                 interaxial_angle_gamma = _row.lattice.gamma
-#                 axial_length_a = _row.lattice.a
-#                 axial_length_b = _row.lattice.b
-#                 axial_length_c = _row.lattice.c
-#
-#                 _new_table_entry = {constants.chem_name: chem_name,
-#                                     constants.index_number_h: index_number_h,
-#                                     constants.index_number_k: index_number_k,
-#                                     constants.index_number_l: index_number_l,
-#                                     constants.interaxial_angle_alpha: interaxial_angle_alpha,
-#                                     constants.interaxial_angle_beta: interaxial_angle_beta,
-#                                     constants.interaxial_angle_gamma: interaxial_angle_gamma,
-#                                     constants.axial_length_a: axial_length_a,
-#                                     constants.axial_length_b: axial_length_b,
-#                                     constants.axial_length_c: axial_length_c}
-#
-#                 content_of_table.append(_new_table_entry)
-#
-#     # print(f"{content_of_table =}")
-#
-#     if cif_names is not None:
-#         for each_fname in cif_names:
-#             if '.cif' in each_fname:
-#                 data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(each_fname)]))
-#                 dropdown_list.append(each_fname)
-#             else:
-#                 error_div = html.Div(
-#                     ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(each_fname)])
-#                 error_div_list.append(error_div)
-#
-#         if len(error_div_list) == 0:
-#             test_passed = True
-#         else:
-#             test_passed = error_div_list
-#
-#         return data_fb_list, test_passed, content_of_table, prev_upload_time, dropdown_list, cif_names[-1]
-#
-#     # else:
-#     #
-#     #     print('I should not see this!')
-#     #     if dropdown_list_selected != 0:
-#     #         dropdown_list_index = dropdown_list_selected
-#     #
-#     #     return [None], [None], content_of_table, prev_upload_time, dropdown_list, dropdown_list_index
+    data_fb_list = []
+    error_div_list = []
 
+    if cif_names is None:
 
-# @app.callback(
-#     [
-#         Output(app_id_dict['cif_dropdown'], 'options'),
-#         Output(app_id_dict['cif_dropdown'], 'value'),
-#     ],
-#     [
-#         Input(app_id_dict['cif_upload_id'], 'filename'),
-#         Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
-#     ],
-#     [
-#         State(app_id_dict['hidden_upload_time_id'], 'children'),
-#         State(app_id_dict['cif_upload_id'], 'contents'),
-#         State(app_id_dict['cif_dropdown'], 'options'),
-#         State(app_id_dict['cif_dropdown'], 'value')
-#     ],
-# )
-# def upload_feedback(cif_names, add_button_timestamp,
-#                     prev_upload_time, cif_uploads, dropdown_list, dropdown_list_selected):
-#
-#     print(f"in new upload feedback!")
-#
-#     data_fb_list = []
-#     error_div_list = []
-#
-#     dropdown_list_index = 0
-#
-#     if cif_names is None:
-#
-#         # we added a new row, let's keep the same .cif file selected
-#         if dropdown_list_selected != 0:
-#             dropdown_list_index = dropdown_list_selected
-#
-#         return dropdown_list, dropdown_list_index
-#
-#     if cif_uploads is not None:
-#
-#         if add_button_timestamp != prev_upload_time:
-#
-#             # we added a new row, let's keep the same .cif file selected
-#             if dropdown_list_selected != 0:
-#                 dropdown_list_index = dropdown_list_selected
-#
-#             return dropdown_list, dropdown_list_index
-#
-#     if cif_names is not None:
-#         for each_fname in cif_names:
-#             if '.cif' in each_fname:
-#                 data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(each_fname)]))
-#                 dropdown_list.append(each_fname)
-#             else:
-#                 error_div = html.Div(
-#                     ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(each_fname)])
-#                 error_div_list.append(error_div)
-#
-#         if len(error_div_list) == 0:
-#             test_passed = True
-#         else:
-#             test_passed = error_div_list
-#
-#         return dropdown_list, cif_names[-1]
-#
-#     # else:
-#     #
-#     #     print('I should not see this!')
-#     #     if dropdown_list_selected != 0:
-#     #         dropdown_list_index = dropdown_list_selected
-#     #
-#     #     return [None], [None], content_of_table, prev_upload_time, dropdown_list, dropdown_list_index
+        content_of_table.append({c['id']: '' for c in names_of_columns})
+        return [None], [None], content_of_table, add_button_timestamp
+
+    if cif_uploads is not None:
+
+        if add_button_timestamp != prev_upload_time:
+
+            content_of_table.append({c['id']: '' for c in names_of_columns})
+            return [None], [None], content_of_table, add_button_timestamp
+
+        else:
+            content_of_table = []
+
+        # for each_index, each_content in enumerate(cif_uploads):
+        #     _cif_struc = parse_cif_upload(content=each_content)
+        _cif_struc = parse_cif_upload(content=cif_uploads)
+        for _row in _cif_struc:
+
+            chem_name = _row.element
+            index_number_h = _row.x
+            index_number_k = _row.y
+            index_number_l = _row.z
+            interaxial_angle_alpha = _row.lattice.alpha
+            interaxial_angle_beta = _row.lattice.beta
+            interaxial_angle_gamma = _row.lattice.gamma
+            axial_length_a = _row.lattice.a
+            axial_length_b = _row.lattice.b
+            axial_length_c = _row.lattice.c
+
+            _new_table_entry = {constants.chem_name: chem_name,
+                                constants.index_number_h: index_number_h,
+                                constants.index_number_k: index_number_k,
+                                constants.index_number_l: index_number_l,
+                                constants.interaxial_angle_alpha: interaxial_angle_alpha,
+                                constants.interaxial_angle_beta: interaxial_angle_beta,
+                                constants.interaxial_angle_gamma: interaxial_angle_gamma,
+                                constants.axial_length_a: axial_length_a,
+                                constants.axial_length_b: axial_length_b,
+                                constants.axial_length_c: axial_length_c}
+
+            content_of_table.append(_new_table_entry)
+
+    if '.cif' in cif_names:
+        data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
+    else:
+        error_div = html.Div(
+            ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(cif_names)])
+        error_div_list.append(error_div)
+
+    if len(error_div_list) == 0:
+        test_passed = True
+    else:
+        test_passed = error_div_list
+
+    return data_fb_list, test_passed, content_of_table, prev_upload_time
 
 
 # @app.callback(
@@ -440,18 +346,3 @@ def update_rows(add_time, data, columns):
 #             return [None]
 #     else:
 #         return [None]
-
-
-# @app.callback(
-#         Output(app_id_dict['manual_input_of_elements'], 'data'),
-#     [
-#         Input(app_id_dict['add_row_id'], 'n_clicks_timestamp'),
-#     ],
-#     [
-#         State(app_id_dict['manual_input_of_elements'], 'data'),
-#         State(app_id_dict['manual_input_of_elements'], 'columns'),
-#     ]
-# )
-# def update_rows(add_time, data, columns):
-#     data.append({c['id']: '' for c in columns})
-#     return data

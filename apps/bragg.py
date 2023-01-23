@@ -26,12 +26,12 @@ bragg_sample_df_default = pd.DataFrame({
 })
 
 
-def tab_content(upload_id=None, add_row_id=None, data_table=None):
+def tab_content(upload_id=None, add_row_id=None, data_table=None, cif_upload_fb=None):
 
     children_array = []
 
     if upload_id:
-        _upload = dcc.Upload(id=app_id_dict['cif_upload_tab2'],
+        _upload = dcc.Upload(id=upload_id,
                              children=html.Div([
                                  'Drag & Drop or ',
                                  html.A('Select File'),
@@ -51,7 +51,7 @@ def tab_content(upload_id=None, add_row_id=None, data_table=None):
                              last_modified=0,
                              )
         children_array.append(_upload)
-        children_array.append(html.Div(id=app_id_dict['cif_upload_fb_id']))
+        children_array.append(html.Div(id=cif_upload_fb))
 
     children_array.append(html.Button('Add row',
                                       id=add_row_id,
@@ -210,6 +210,7 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab2'],
                                                   add_row_id=app_id_dict['add_row_tab2'],
                                                   data_table=app_id_dict['data_table_tab2'],
+                                                  cif_upload_fb=app_id_dict['cif_upload_fb_tab2'],
                                                   )
                              ),
                      dcc.Tab(label='.cif #2',
@@ -217,6 +218,7 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab3'],
                                                   add_row_id=app_id_dict['add_row_tab3'],
                                                   data_table=app_id_dict['data_table_tab3'],
+                                                  cif_upload_fb=app_id_dict['cif_upload_fb_tab3'],
                                                   )
                              ),
                      dcc.Tab(label='.cif #3',
@@ -224,6 +226,7 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab4'],
                                                   add_row_id=app_id_dict['add_row_tab4'],
                                                   data_table=app_id_dict['data_table_tab4'],
+                                                  cif_upload_fb=app_id_dict['cif_upload_fb_tab4'],
                                                   )
                              ),
                      dcc.Tab(label='.cif #4',
@@ -231,6 +234,7 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab5'],
                                                   add_row_id=app_id_dict['add_row_tab5'],
                                                   data_table=app_id_dict['data_table_tab5'],
+                                                  cif_upload_fb=app_id_dict['cif_upload_fb_tab5'],
                                                   )
                              ),
                     ],
@@ -244,6 +248,9 @@ layout = html.Div(
 
         # Hidden div to store df_all json
         html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),
+
+        # Hidden div to store upload time
+        html.Div(id=app_id_dict['hidden_upload_time_id'], style={'display': 'none'}),
 
         # Hidden div to store df_export json
         html.Div(id=app_id_dict['hidden_df_export_json_id'], style={'display': 'none'}),
