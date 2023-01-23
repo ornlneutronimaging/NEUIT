@@ -266,6 +266,20 @@ def init_app_ids(app_name: str):
         id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
         id_dict['manual_input_of_elements'] = app_name + '_manual_input_of_elements'
         id_dict['tabs'] = app_name + '_tabs'
+        id_dict['data_table_tab1'] = app_name + '_data_table_tab1'
+        id_dict['data_table_tab2'] = app_name + '_data_table_tab2'
+        id_dict['data_table_tab3'] = app_name + '_data_table_tab3'
+        id_dict['data_table_tab4'] = app_name + '_data_table_tab4'
+        id_dict['data_table_tab5'] = app_name + '_data_table_tab5'
+        id_dict['add_row_tab1'] = app_name + '_add_row_tab1'
+        id_dict['add_row_tab2'] = app_name + '_add_row_tab2'
+        id_dict['add_row_tab3'] = app_name + '_add_row_tab3'
+        id_dict['add_row_tab4'] = app_name + '_add_row_tab4'
+        id_dict['add_row_tab5'] = app_name + '_add_row_tab5'
+        id_dict['cif_upload_tab2'] = app_name + '_ciff_upload_tab2'
+        id_dict['cif_upload_tab3'] = app_name + '_ciff_upload_tab3'
+        id_dict['cif_upload_tab4'] = app_name + '_ciff_upload_tab4'
+        id_dict['cif_upload_tab5'] = app_name + '_ciff_upload_tab5'
 
     return id_dict
 

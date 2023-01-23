@@ -25,6 +25,57 @@ bragg_sample_df_default = pd.DataFrame({
     interaxial_angle_gamma: [90]
 })
 
+
+def tab_content(upload_id=None, add_row_id=None, data_table=None):
+
+    children_array = []
+
+    if upload_id:
+        _upload = dcc.Upload(id=app_id_dict['cif_upload_tab2'],
+                             children=html.Div([
+                                 'Drag & Drop or ',
+                                 html.A('Select File'),
+                             ]),
+                             style={
+                                'width'       : '100%',
+                                'height'      : '60px',
+                                'lineHeight'  : '60px',
+                                'borderWidth' : '1px',
+                                'borderStyle' : 'dashed',
+                                'borderRadius': '5px',
+                                'textAlign'   : 'center',
+                                'margin'      : '10px'
+                             },
+                             # Allow multiple files to be uploaded
+                             multiple=False,
+                             last_modified=0,
+                             )
+        children_array.append(_upload)
+        children_array.append(html.Div(id=app_id_dict['cif_upload_fb_id']))
+
+    children_array.append(html.Button('Add row',
+                                      id=add_row_id,
+                                      n_clicks_timestamp=0))
+
+    children_array.append(dt.DataTable(
+        data=bragg_sample_df_default.to_dict('records'),
+        # optional - sets the order of columns
+        columns=bragg_sample_header_df.to_dict('records'),
+        editable=True,
+        row_selectable=False,
+        filter_action='none',
+        sort_action='none',
+        row_deletable=True,
+        export_format='csv',
+        css=[{'selector': '.export', 'rule': 'position:absolute; left:0px; bottom:-35px'}],
+        style_cell_conditional=sample_tb_even_10_col,
+        style_data_conditional=[striped_rows],
+        id=data_table)
+    )
+
+    return children_array
+
+
 # Create app layout
 layout = html.Div(
     [
@@ -150,220 +201,40 @@ layout = html.Div(
                  children=[
                      dcc.Tab(label='User-defined',
                              value='tab_user_defined',
-                             children=[
-                                 html.Button('Add row', id=app_id_dict['add_row_id'], n_clicks_timestamp=0),
-                                 dt.DataTable(
-                                         data=bragg_sample_df_default.to_dict('records'),
-                                         # optional - sets the order of columns
-                                         columns=bragg_sample_header_df.to_dict('records'),
-                                         editable=True,
-                                         row_selectable=False,
-                                         filter_action='none',
-                                         sort_action='none',
-                                         row_deletable=True,
-                                         export_format='csv',
-                                         css=[{'selector': '.export',
-                                               'rule'    : 'position:absolute; left:0px; bottom:-35px'}],
-                                         style_cell_conditional=sample_tb_even_10_col,
-                                         style_data_conditional=[striped_rows],
-                                         id=app_id_dict['manual_input_of_elements']
-                                 ),
-                             ]),
+                             children=tab_content(add_row_id=app_id_dict['add_row_tab1'],
+                                                  data_table=app_id_dict['data_table_tab1'],
+                                                  ),
+                             ),
                      dcc.Tab(label='.cif #1',
                              value='tab_cif_1',
-                             children=[
-                                 dcc.Upload(id=app_id_dict['cif_upload_id'],
-                                            children=html.Div([
-                                                'Drag & Drop or ',
-                                                html.A('Select File'),
-                                            ]),
-                                            style={
-                                                'width'       : '100%',
-                                                'height'      : '60px',
-                                                'lineHeight'  : '60px',
-                                                'borderWidth' : '1px',
-                                                'borderStyle' : 'dashed',
-                                                'borderRadius': '5px',
-                                                'textAlign'   : 'center',
-                                                'margin'      : '10px'
-                                            },
-                                            # Allow multiple files to be uploaded
-                                            multiple=False,
-                                            last_modified=0,
-                                            ),
-                                 html.Div(id=app_id_dict['cif_upload_fb_id']),
-                                 html.Button('Add row', id=app_id_dict['add_row_id'], n_clicks_timestamp=0),
-                                 dt.DataTable(
-                                     data=bragg_sample_df_default.to_dict('records'),
-                                     # optional - sets the order of columns
-                                     columns=bragg_sample_header_df.to_dict('records'),
-                                     editable=True,
-                                     row_selectable=False,
-                                     filter_action='none',
-                                     sort_action='none',
-                                     row_deletable=True,
-                                     export_format='csv',
-                                     css=[{'selector': '.export', 'rule': 'position:absolute; left:0px; bottom:-35px'}],
-                                     style_cell_conditional=sample_tb_even_10_col,
-                                     style_data_conditional=[striped_rows],
-                                     id=app_id_dict['manual_input_of_elements']
-                                 ),
-                             ]),
+                             children=tab_content(upload_id=app_id_dict['cif_upload_tab2'],
+                                                  add_row_id=app_id_dict['add_row_tab2'],
+                                                  data_table=app_id_dict['data_table_tab2'],
+                                                  )
+                             ),
                      dcc.Tab(label='.cif #2',
                              value='tab_cif_2',
-                             children=[
-                                 dcc.Upload(id=app_id_dict['cif_upload_id'],
-                                            children=html.Div([
-                                                'Drag & Drop or ',
-                                                html.A('Select File'),
-                                            ]),
-                                            style={
-                                                'width'       : '100%',
-                                                'height'      : '60px',
-                                                'lineHeight'  : '60px',
-                                                'borderWidth' : '1px',
-                                                'borderStyle' : 'dashed',
-                                                'borderRadius': '5px',
-                                                'textAlign'   : 'center',
-                                                'margin'      : '10px'
-                                            },
-                                            # Allow multiple files to be uploaded
-                                            multiple=False,
-                                            last_modified=0,
-                                            ),
-                                 html.Div(id=app_id_dict['cif_upload_fb_id']),
-                                 html.Button('Add row', id=app_id_dict['add_row_id'], n_clicks_timestamp=0),
-                                 dt.DataTable(
-                                         data=bragg_sample_df_default.to_dict('records'),
-                                         # optional - sets the order of columns
-                                         columns=bragg_sample_header_df.to_dict('records'),
-                                         editable=True,
-                                         row_selectable=False,
-                                         filter_action='none',
-                                         sort_action='none',
-                                         row_deletable=True,
-                                         export_format='csv',
-                                         css=[{'selector': '.export',
-                                               'rule'    : 'position:absolute; left:0px; bottom:-35px'}],
-                                         style_cell_conditional=sample_tb_even_10_col,
-                                         style_data_conditional=[striped_rows],
-                                         id=app_id_dict['manual_input_of_elements']
-                                 ),
-                             ]),
+                             children=tab_content(upload_id=app_id_dict['cif_upload_tab3'],
+                                                  add_row_id=app_id_dict['add_row_tab3'],
+                                                  data_table=app_id_dict['data_table_tab3'],
+                                                  )
+                             ),
                      dcc.Tab(label='.cif #3',
                              value='tab_cif_3',
-                             children=[
-                                 dcc.Upload(id=app_id_dict['cif_upload_id'],
-                                            children=html.Div([
-                                                'Drag & Drop or ',
-                                                html.A('Select File'),
-                                            ]),
-                                            style={
-                                                'width'       : '100%',
-                                                'height'      : '60px',
-                                                'lineHeight'  : '60px',
-                                                'borderWidth' : '1px',
-                                                'borderStyle' : 'dashed',
-                                                'borderRadius': '5px',
-                                                'textAlign'   : 'center',
-                                                'margin'      : '10px'
-                                            },
-                                            # Allow multiple files to be uploaded
-                                            multiple=False,
-                                            last_modified=0,
-                                            ),
-                                 html.Div(id=app_id_dict['cif_upload_fb_id']),
-                                 html.Button('Add row', id=app_id_dict['add_row_id'], n_clicks_timestamp=0),
-                                 dt.DataTable(
-                                         data=bragg_sample_df_default.to_dict('records'),
-                                         # optional - sets the order of columns
-                                         columns=bragg_sample_header_df.to_dict('records'),
-                                         editable=True,
-                                         row_selectable=False,
-                                         filter_action='none',
-                                         sort_action='none',
-                                         row_deletable=True,
-                                         export_format='csv',
-                                         css=[{'selector': '.export',
-                                               'rule'    : 'position:absolute; left:0px; bottom:-35px'}],
-                                         style_cell_conditional=sample_tb_even_10_col,
-                                         style_data_conditional=[striped_rows],
-                                         id=app_id_dict['manual_input_of_elements']
-                                 ),
-                             ]),
+                             children=tab_content(upload_id=app_id_dict['cif_upload_tab4'],
+                                                  add_row_id=app_id_dict['add_row_tab4'],
+                                                  data_table=app_id_dict['data_table_tab4'],
+                                                  )
+                             ),
                      dcc.Tab(label='.cif #4',
                              value='tab_cif_4',
-                             children=[
-                                 dcc.Upload(id=app_id_dict['cif_upload_id'],
-                                            children=html.Div([
-                                                'Drag & Drop or ',
-                                                html.A('Select File'),
-                                            ]),
-                                            style={
-                                                'width'       : '100%',
-                                                'height'      : '60px',
-                                                'lineHeight'  : '60px',
-                                                'borderWidth' : '1px',
-                                                'borderStyle' : 'dashed',
-                                                'borderRadius': '5px',
-                                                'textAlign'   : 'center',
-                                                'margin'      : '10px'
-                                            },
-                                            # Allow multiple files to be uploaded
-                                            multiple=False,
-                                            last_modified=0,
-                                            ),
-                                 html.Div(id=app_id_dict['cif_upload_fb_id']),
-                                 html.Button('Add row', id=app_id_dict['add_row_id'], n_clicks_timestamp=0),
-                                 dt.DataTable(
-                                         data=bragg_sample_df_default.to_dict('records'),
-                                         # optional - sets the order of columns
-                                         columns=bragg_sample_header_df.to_dict('records'),
-                                         editable=True,
-                                         row_selectable=False,
-                                         filter_action='none',
-                                         sort_action='none',
-                                         row_deletable=True,
-                                         export_format='csv',
-                                         css=[{'selector': '.export',
-                                               'rule'    : 'position:absolute; left:0px; bottom:-35px'}],
-                                         style_cell_conditional=sample_tb_even_10_col,
-                                         style_data_conditional=[striped_rows],
-                                         id=app_id_dict['manual_input_of_elements']
-                                 ),
-                             ])
-                 ],
-        ),
-
-
-        #
-        #         html.Button('Add row', id=app_id_dict['add_row_id'], n_clicks_timestamp=0),
-        #
-        #         dt.DataTable(
-        #             data=bragg_sample_df_default.to_dict('records'),
-        #             # optional - sets the order of columns
-        #             columns=bragg_sample_header_df.to_dict('records'),
-        #             editable=True,
-        #             row_selectable=False,
-        #             filter_action='none',
-        #             sort_action='none',
-        #             row_deletable=True,
-        #             export_format='csv',
-        #             css=[{'selector': '.export', 'rule': 'position:absolute; left:0px; bottom:-35px'}],
-        #             style_cell_conditional=sample_tb_even_10_col,
-        #             style_data_conditional=[striped_rows],
-        #             id=app_id_dict['manual_input_of_elements']
-        #         ),
-        #         html.Div(html.P([html.Br(), html.Br()])),
-        #         html.Hr(style={'color': 'red'}),
-        #         html.Button('Submit',
-        #                     style={
-        #                         'width': '100%',
-        #                     },
-        #                     id=app_id_dict['submit_button_id'], n_clicks_timestamp=0),
-        #         html.Div(id=app_id_dict['hidden_upload_time_id'], style={'display': 'none'}, children=0),
-        #     ],
-        # ),
+                             children=tab_content(upload_id=app_id_dict['cif_upload_tab5'],
+                                                  add_row_id=app_id_dict['add_row_tab5'],
+                                                  data_table=app_id_dict['data_table_tab5'],
+                                                  )
+                             ),
+                    ],
+                ),
 
         # Error message div1
         html.Div(id=app_id_dict['error_id'], children=None),
@@ -397,3 +268,5 @@ layout = html.Div(
     ],
     style={'margin': '25px'}
 )
+
+
