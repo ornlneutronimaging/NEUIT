@@ -139,89 +139,259 @@ def upload_feedback(cif_names, add_button_timestamp,
     return data_fb_list, test_passed, content_of_table, prev_upload_time
 
 
-# # tab 3
-# @app.callback(
-#     [
-#         Output(app_id_dict['cif_upload_fb_tab3'], 'children'),
-#         Output(app_id_dict['error_tab3'], 'children'),
-#         Output(app_id_dict['data_table_tab3'], 'data'),
-#         Output(app_id_dict['hidden_upload_time_tab3'], 'children'),
-#     ],
-#     [
-#         Input(app_id_dict['cif_upload_tab3'], 'filename'),
-#         Input(app_id_dict['add_row_tab3'], 'n_clicks_timestamp'),
-#     ],
-#     [
-#         State(app_id_dict['hidden_upload_time_tab3'], 'children'),
-#         State(app_id_dict['cif_upload_tab3'], 'contents'),
-#         State(app_id_dict['data_table_tab3'], 'data'),
-#         State(app_id_dict['data_table_tab3'], 'columns'),
-#     ],
-# )
-# def upload_feedback(cif_names, add_button_timestamp,
-#                     prev_upload_time, cif_uploads,
-#                     content_of_table, names_of_columns):
-#
-#     data_fb_list = []
-#     error_div_list = []
-#
-#     if cif_names is None:
-#
-#         content_of_table.append({c['id']: '' for c in names_of_columns})
-#         return [None], [None], content_of_table, add_button_timestamp
-#
-#     if cif_uploads is not None:
-#
-#         if add_button_timestamp != prev_upload_time:
-#
-#             content_of_table.append({c['id']: '' for c in names_of_columns})
-#             return [None], [None], content_of_table, add_button_timestamp
-#
-#         else:
-#             content_of_table = []
-#
-#         # for each_index, each_content in enumerate(cif_uploads):
-#         #     _cif_struc = parse_cif_upload(content=each_content)
-#         _cif_struc = parse_cif_upload(content=cif_uploads)
-#         for _row in _cif_struc:
-#
-#             chem_name = _row.element
-#             index_number_h = _row.x
-#             index_number_k = _row.y
-#             index_number_l = _row.z
-#             interaxial_angle_alpha = _row.lattice.alpha
-#             interaxial_angle_beta = _row.lattice.beta
-#             interaxial_angle_gamma = _row.lattice.gamma
-#             axial_length_a = _row.lattice.a
-#             axial_length_b = _row.lattice.b
-#             axial_length_c = _row.lattice.c
-#
-#             _new_table_entry = {constants.chem_name: chem_name,
-#                                 constants.index_number_h: index_number_h,
-#                                 constants.index_number_k: index_number_k,
-#                                 constants.index_number_l: index_number_l,
-#                                 constants.interaxial_angle_alpha: interaxial_angle_alpha,
-#                                 constants.interaxial_angle_beta: interaxial_angle_beta,
-#                                 constants.interaxial_angle_gamma: interaxial_angle_gamma,
-#                                 constants.axial_length_a: axial_length_a,
-#                                 constants.axial_length_b: axial_length_b,
-#                                 constants.axial_length_c: axial_length_c}
-#
-#             content_of_table.append(_new_table_entry)
-#
-#     if '.cif' in cif_names:
-#         data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
-#     else:
-#         error_div = html.Div(
-#             ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(cif_names)])
-#         error_div_list.append(error_div)
-#
-#     if len(error_div_list) == 0:
-#         test_passed = True
-#     else:
-#         test_passed = error_div_list
-#
-#     return data_fb_list, test_passed, content_of_table, prev_upload_time
+# tab 3
+@app.callback(
+    [
+        Output(app_id_dict['cif_upload_fb_tab3'], 'children'),
+        Output(app_id_dict['error_tab3'], 'children'),
+        Output(app_id_dict['data_table_tab3'], 'data'),
+        Output(app_id_dict['hidden_upload_time_tab3'], 'children'),
+    ],
+    [
+        Input(app_id_dict['cif_upload_tab3'], 'filename'),
+        Input(app_id_dict['add_row_tab3'], 'n_clicks_timestamp'),
+    ],
+    [
+        State(app_id_dict['hidden_upload_time_tab3'], 'children'),
+        State(app_id_dict['cif_upload_tab3'], 'contents'),
+        State(app_id_dict['data_table_tab3'], 'data'),
+        State(app_id_dict['data_table_tab3'], 'columns'),
+    ],
+)
+def upload_feedback(cif_names, add_button_timestamp,
+                    prev_upload_time, cif_uploads,
+                    content_of_table, names_of_columns):
+
+    data_fb_list = []
+    error_div_list = []
+
+    if cif_names is None:
+
+        content_of_table.append({c['id']: '' for c in names_of_columns})
+        return [None], [None], content_of_table, add_button_timestamp
+
+    if cif_uploads is not None:
+
+        if add_button_timestamp != prev_upload_time:
+
+            content_of_table.append({c['id']: '' for c in names_of_columns})
+            return [None], [None], content_of_table, add_button_timestamp
+
+        else:
+            content_of_table = []
+
+        # for each_index, each_content in enumerate(cif_uploads):
+        #     _cif_struc = parse_cif_upload(content=each_content)
+        _cif_struc = parse_cif_upload(content=cif_uploads)
+        for _row in _cif_struc:
+
+            chem_name = _row.element
+            index_number_h = _row.x
+            index_number_k = _row.y
+            index_number_l = _row.z
+            interaxial_angle_alpha = _row.lattice.alpha
+            interaxial_angle_beta = _row.lattice.beta
+            interaxial_angle_gamma = _row.lattice.gamma
+            axial_length_a = _row.lattice.a
+            axial_length_b = _row.lattice.b
+            axial_length_c = _row.lattice.c
+
+            _new_table_entry = {constants.chem_name: chem_name,
+                                constants.index_number_h: index_number_h,
+                                constants.index_number_k: index_number_k,
+                                constants.index_number_l: index_number_l,
+                                constants.interaxial_angle_alpha: interaxial_angle_alpha,
+                                constants.interaxial_angle_beta: interaxial_angle_beta,
+                                constants.interaxial_angle_gamma: interaxial_angle_gamma,
+                                constants.axial_length_a: axial_length_a,
+                                constants.axial_length_b: axial_length_b,
+                                constants.axial_length_c: axial_length_c}
+
+            content_of_table.append(_new_table_entry)
+
+    if '.cif' in cif_names:
+        data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
+    else:
+        error_div = html.Div(
+            ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(cif_names)])
+        error_div_list.append(error_div)
+
+    if len(error_div_list) == 0:
+        test_passed = True
+    else:
+        test_passed = error_div_list
+
+    return data_fb_list, test_passed, content_of_table, prev_upload_time
+
+
+# tab 4
+@app.callback(
+    [
+        Output(app_id_dict['cif_upload_fb_tab4'], 'children'),
+        Output(app_id_dict['error_tab4'], 'children'),
+        Output(app_id_dict['data_table_tab4'], 'data'),
+        Output(app_id_dict['hidden_upload_time_tab4'], 'children'),
+    ],
+    [
+        Input(app_id_dict['cif_upload_tab4'], 'filename'),
+        Input(app_id_dict['add_row_tab4'], 'n_clicks_timestamp'),
+    ],
+    [
+        State(app_id_dict['hidden_upload_time_tab4'], 'children'),
+        State(app_id_dict['cif_upload_tab4'], 'contents'),
+        State(app_id_dict['data_table_tab4'], 'data'),
+        State(app_id_dict['data_table_tab4'], 'columns'),
+    ],
+)
+def upload_feedback(cif_names, add_button_timestamp,
+                    prev_upload_time, cif_uploads,
+                    content_of_table, names_of_columns):
+
+    data_fb_list = []
+    error_div_list = []
+
+    if cif_names is None:
+
+        content_of_table.append({c['id']: '' for c in names_of_columns})
+        return [None], [None], content_of_table, add_button_timestamp
+
+    if cif_uploads is not None:
+
+        if add_button_timestamp != prev_upload_time:
+
+            content_of_table.append({c['id']: '' for c in names_of_columns})
+            return [None], [None], content_of_table, add_button_timestamp
+
+        else:
+            content_of_table = []
+
+        # for each_index, each_content in enumerate(cif_uploads):
+        #     _cif_struc = parse_cif_upload(content=each_content)
+        _cif_struc = parse_cif_upload(content=cif_uploads)
+        for _row in _cif_struc:
+
+            chem_name = _row.element
+            index_number_h = _row.x
+            index_number_k = _row.y
+            index_number_l = _row.z
+            interaxial_angle_alpha = _row.lattice.alpha
+            interaxial_angle_beta = _row.lattice.beta
+            interaxial_angle_gamma = _row.lattice.gamma
+            axial_length_a = _row.lattice.a
+            axial_length_b = _row.lattice.b
+            axial_length_c = _row.lattice.c
+
+            _new_table_entry = {constants.chem_name: chem_name,
+                                constants.index_number_h: index_number_h,
+                                constants.index_number_k: index_number_k,
+                                constants.index_number_l: index_number_l,
+                                constants.interaxial_angle_alpha: interaxial_angle_alpha,
+                                constants.interaxial_angle_beta: interaxial_angle_beta,
+                                constants.interaxial_angle_gamma: interaxial_angle_gamma,
+                                constants.axial_length_a: axial_length_a,
+                                constants.axial_length_b: axial_length_b,
+                                constants.axial_length_c: axial_length_c}
+
+            content_of_table.append(_new_table_entry)
+
+    if '.cif' in cif_names:
+        data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
+    else:
+        error_div = html.Div(
+            ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(cif_names)])
+        error_div_list.append(error_div)
+
+    if len(error_div_list) == 0:
+        test_passed = True
+    else:
+        test_passed = error_div_list
+
+    return data_fb_list, test_passed, content_of_table, prev_upload_time
+
+
+# tab 5
+@app.callback(
+    [
+        Output(app_id_dict['cif_upload_fb_tab5'], 'children'),
+        Output(app_id_dict['error_tab5'], 'children'),
+        Output(app_id_dict['data_table_tab5'], 'data'),
+        Output(app_id_dict['hidden_upload_time_tab5'], 'children'),
+    ],
+    [
+        Input(app_id_dict['cif_upload_tab5'], 'filename'),
+        Input(app_id_dict['add_row_tab5'], 'n_clicks_timestamp'),
+    ],
+    [
+        State(app_id_dict['hidden_upload_time_tab5'], 'children'),
+        State(app_id_dict['cif_upload_tab5'], 'contents'),
+        State(app_id_dict['data_table_tab5'], 'data'),
+        State(app_id_dict['data_table_tab5'], 'columns'),
+    ],
+)
+def upload_feedback(cif_names, add_button_timestamp,
+                    prev_upload_time, cif_uploads,
+                    content_of_table, names_of_columns):
+
+    data_fb_list = []
+    error_div_list = []
+
+    if cif_names is None:
+
+        content_of_table.append({c['id']: '' for c in names_of_columns})
+        return [None], [None], content_of_table, add_button_timestamp
+
+    if cif_uploads is not None:
+
+        if add_button_timestamp != prev_upload_time:
+
+            content_of_table.append({c['id']: '' for c in names_of_columns})
+            return [None], [None], content_of_table, add_button_timestamp
+
+        else:
+            content_of_table = []
+
+        # for each_index, each_content in enumerate(cif_uploads):
+        #     _cif_struc = parse_cif_upload(content=each_content)
+        _cif_struc = parse_cif_upload(content=cif_uploads)
+        for _row in _cif_struc:
+
+            chem_name = _row.element
+            index_number_h = _row.x
+            index_number_k = _row.y
+            index_number_l = _row.z
+            interaxial_angle_alpha = _row.lattice.alpha
+            interaxial_angle_beta = _row.lattice.beta
+            interaxial_angle_gamma = _row.lattice.gamma
+            axial_length_a = _row.lattice.a
+            axial_length_b = _row.lattice.b
+            axial_length_c = _row.lattice.c
+
+            _new_table_entry = {constants.chem_name: chem_name,
+                                constants.index_number_h: index_number_h,
+                                constants.index_number_k: index_number_k,
+                                constants.index_number_l: index_number_l,
+                                constants.interaxial_angle_alpha: interaxial_angle_alpha,
+                                constants.interaxial_angle_beta: interaxial_angle_beta,
+                                constants.interaxial_angle_gamma: interaxial_angle_gamma,
+                                constants.axial_length_a: axial_length_a,
+                                constants.axial_length_b: axial_length_b,
+                                constants.axial_length_c: axial_length_c}
+
+            content_of_table.append(_new_table_entry)
+
+    if '.cif' in cif_names:
+        data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
+    else:
+        error_div = html.Div(
+            ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(cif_names)])
+        error_div_list.append(error_div)
+
+    if len(error_div_list) == 0:
+        test_passed = True
+    else:
+        test_passed = error_div_list
+
+    return data_fb_list, test_passed, content_of_table, prev_upload_time
 
 # @app.callback(
 #     Output(app_id_dict['output_id'], 'style'),

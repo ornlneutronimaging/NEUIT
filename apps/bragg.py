@@ -53,7 +53,7 @@ def tab_content(upload_id=None,
                              },
                              # Allow multiple files to be uploaded
                              multiple=False,
-                             last_modified=0,
+                             # last_modified=0,
                              )
         children_array.append(_upload)
         children_array.append(html.Div(id=cif_upload_fb))
