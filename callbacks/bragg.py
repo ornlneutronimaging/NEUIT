@@ -3,11 +3,12 @@ from dash import dash_table as dt
 from dash import dcc
 from dash import html
 import matplotlib.pyplot as plt
-from bem import xscalc
+from bem import xscalc, matter
 import pandas as pd
 import numpy as np
 import json
 import time
+
 
 import ImagingReso._utilities as ir_util
 from app import app
@@ -17,6 +18,7 @@ from callbacks.utilities.plot import shape_matplot_to_plotly
 from callbacks.utilities.all_apps import y_type_to_y_label, x_type_to_x_tag, load_dfs, update_rows_util
 from callbacks.utilities.bragg import parse_cif_upload
 from callbacks.utilities.resonance import fill_df_x_types
+from callbacks.utilities.constants import *
 
 
 app_name = 'bragg'
@@ -393,23 +395,81 @@ def upload_feedback(cif_names, add_button_timestamp,
 
     return data_fb_list, test_passed, content_of_table, prev_upload_time
 
+
+# submit button clicked
 @app.callback(
     Output(app_id_dict['output_id'], 'style'),
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
-        Input(app_id_dict['data_table_tab1'], 'data'),
-        Input(app_id_dict['data_table_tab2'], 'data'),
-        Input(app_id_dict['data_table_tab3'], 'data'),
-        Input(app_id_dict['data_table_tab4'], 'data'),
-        Input(app_id_dict['data_table_tab5'], 'data'),
-        Input(app_id_dict['error_id'], 'children'),
-    ])
+    ],
+    [
+        State(app_id_dict['data_table_tab1'], 'data'),
+        State(app_id_dict['data_table_tab2'], 'data'),
+        State(app_id_dict['data_table_tab3'], 'data'),
+        State(app_id_dict['data_table_tab4'], 'data'),
+        State(app_id_dict['data_table_tab5'], 'data'),
+        State(app_id_dict['error_id'], 'children'),
+        State(app_id_dict['temperature_id'], 'value'),
+        State(app_id_dict['distance_id'], 'value'),
+        State(app_id_dict['delay_id'], 'value'),
+        State(app_id_dict['band_min_id'], 'value'),
+        State(app_id_dict['band_max_id'], 'value'),
+        State(app_id_dict['band_step_id'], 'value'),
+    ]
+)
 def show_output_div(n_submit, data_tab1, data_tab2,
                     data_tab3, data_tab4, data_tab5,
-                    test_passed):
+                    test_passed,
+                    temperature, distance, delay,
+                    band_min, band_max, band_step):
+
     if n_submit is not None:
+
         if test_passed is True:
+
+            wavelengths_A = np.arange(band_min, band_max, band_step)
+
+            # data_tab_2
+            atoms = []
+            for entry in data_tab2:
+
+                # if no element, continue
+                if not entry[chem_name]:
+                    continue
+                _chem_name = entry[chem_name]
+
+                _h = entry[index_number_h]
+                _k = entry[index_number_k]
+                _l = entry[index_number_l]
+
+                atoms.append(matter.Atoms(_chem_name, (_h, _k, _l)))
+
+                _a = entry[axial_length_a]
+                _b = entry[axial_length_b]
+                _c = entry[axial_length_c]
+
+                _alpha = entry[interaxial_angle_alpha]
+                _beta = entry[interaxial_angle_beta]
+                _gamma = entry[interaxial_angle_gamma]
+
+                print(f"{entry =}")
+
+            # print(f"{data_tab2 =}")
+            # print(f"{data_tab3 =}")
+            # print(f"{data_tab4 =}")
+            # print(f"{data_tab5 =}")
+
+
+
+
+
+
+
             return {'display': 'block'}
+
+
+
+
         else:
             return {'display': 'none'}
     else:
