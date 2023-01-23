@@ -393,21 +393,27 @@ def upload_feedback(cif_names, add_button_timestamp,
 
     return data_fb_list, test_passed, content_of_table, prev_upload_time
 
-# @app.callback(
-#     Output(app_id_dict['output_id'], 'style'),
-#     [
-#         Input(app_id_dict['submit_button_id'], 'n_clicks'),
-#         Input(app_id_dict['error_id'], 'children'),
-#         Input(app_id_dict['error_id2'], 'children'),
-#     ])
-# def show_output_div(n_submit, test_passed, error_in_bem):
-#     if n_submit is not None:
-#         if test_passed and error_in_bem is True:
-#             return {'display': 'block'}
-#         else:
-#             return {'display': 'none'}
-#     else:
-#         return {'display': 'none'}
+@app.callback(
+    Output(app_id_dict['output_id'], 'style'),
+    [
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+        Input(app_id_dict['data_table_tab1'], 'data'),
+        Input(app_id_dict['data_table_tab2'], 'data'),
+        Input(app_id_dict['data_table_tab3'], 'data'),
+        Input(app_id_dict['data_table_tab4'], 'data'),
+        Input(app_id_dict['data_table_tab5'], 'data'),
+        Input(app_id_dict['error_id'], 'children'),
+    ])
+def show_output_div(n_submit, data_tab1, data_tab2,
+                    data_tab3, data_tab4, data_tab5,
+                    test_passed):
+    if n_submit is not None:
+        if test_passed is True:
+            return {'display': 'block'}
+        else:
+            return {'display': 'none'}
+    else:
+        return {'display': 'none'}
 
 
 # # Submit button has been clicked

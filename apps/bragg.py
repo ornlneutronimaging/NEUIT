@@ -12,17 +12,31 @@ from callbacks.utilities.all_apps import bragg_sample_header_df
 app_name = 'bragg'
 app_id_dict = init_app_ids(app_name=app_name)
 
+# bragg_sample_df_default = pd.DataFrame({
+#     chem_name: ['Ni'],
+#     index_number_h: [0.0],
+#     index_number_k: [0.0],
+#     index_number_l: [0.0],
+#     axial_length_a: [3.5238],
+#     axial_length_b: [3.5238],
+#     axial_length_c: [3.5238],
+#     interaxial_angle_alpha: [90],
+#     interaxial_angle_beta: [90],
+#     interaxial_angle_gamma: [90]
+# })
+
+
 bragg_sample_df_default = pd.DataFrame({
-    chem_name: ['Ni'],
-    index_number_h: [0.0],
-    index_number_k: [0.0],
-    index_number_l: [0.0],
-    axial_length_a: [3.5238],
-    axial_length_b: [3.5238],
-    axial_length_c: [3.5238],
-    interaxial_angle_alpha: [90],
-    interaxial_angle_beta: [90],
-    interaxial_angle_gamma: [90]
+    chem_name: [],
+    index_number_h: [],
+    index_number_k: [],
+    index_number_l: [],
+    axial_length_a: [],
+    axial_length_b: [],
+    axial_length_c: [],
+    interaxial_angle_alpha: [],
+    interaxial_angle_beta: [],
+    interaxial_angle_gamma: []
 })
 
 
@@ -261,16 +275,24 @@ layout = html.Div(
                     ],
                 ),
 
-        # # Error message div2
-        # html.Div(id=app_id_dict['error_id2'], children=True),
-
         # Hidden div to store df_all json
         html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),
 
         # Hidden div to store df_export json
         html.Div(id=app_id_dict['hidden_df_export_json_id'], style={'display': 'none'}),
 
-        # Output div
+        html.Div(html.P([html.Br(), html.Br()])),
+
+        # preview button
+        html.Button('Submit',
+                    style={
+                           'width': '100%',
+                           },
+                    id=app_id_dict['submit_button_id'], n_clicks_timestamp=0),
+
+        # Error message div1
+        html.Div(id=app_id_dict['error_id'], children=True),
+
         html.Div(
             [
                 # Plot
@@ -290,5 +312,3 @@ layout = html.Div(
     ],
     style={'margin': '25px'}
 )
-
-
