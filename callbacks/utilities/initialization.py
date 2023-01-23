@@ -123,27 +123,15 @@ sample_tb_even_3_col = [
      'width': '33%'},
 ]
 
-sample_tb_even_10_col = [
+sample_tb_even_4_col = [
     {'if': {'column_id': chem_name},
-     'width': '10%'},
+     'width': '25%'},
     {'if': {'column_id': index_number_h},
-     'width': '10%'},
+     'width': '25%'},
     {'if': {'column_id': index_number_k},
-     'width': '10%'},
+     'width': '25%'},
     {'if': {'column_id': index_number_l},
-     'width': '10%'},
-    {'if': {'column_id': axial_length_a},
-     'width': '10%'},
-    {'if': {'column_id': axial_length_b},
-     'width': '10%'},
-    {'if': {'column_id': axial_length_c},
-     'width': '10%'},
-    {'if': {'column_id': interaxial_angle_alpha},
-     'width': '10%'},
-    {'if': {'column_id': interaxial_angle_beta},
-     'width': '10%'},
-    {'if': {'column_id': interaxial_angle_gamma},
-     'width': '10%'},
+     'width': '25%'},
 ]
 
 iso_tb_even_4_col = [
@@ -266,66 +254,66 @@ def init_app_ids(app_name: str):
         id_dict['display_plot_data_id'] = app_name + '_display_plot_data'
         id_dict['manual_input_of_elements'] = app_name + '_manual_input_of_elements'
         id_dict['tabs'] = app_name + '_tabs'
-        id_dict['data_table_tab1'] = app_name + '_data_table_tab1'
-        id_dict['data_table_tab2'] = app_name + '_data_table_tab2'
-        id_dict['data_table_tab3'] = app_name + '_data_table_tab3'
-        id_dict['data_table_tab4'] = app_name + '_data_table_tab4'
-        id_dict['data_table_tab5'] = app_name + '_data_table_tab5'
-        id_dict['add_row_tab1'] = app_name + '_add_row_tab1'
-        id_dict['add_row_tab2'] = app_name + '_add_row_tab2'
-        id_dict['add_row_tab3'] = app_name + '_add_row_tab3'
-        id_dict['add_row_tab4'] = app_name + '_add_row_tab4'
-        id_dict['add_row_tab5'] = app_name + '_add_row_tab5'
-        id_dict['cif_upload_tab2'] = app_name + '_ciff_upload_tab2'
-        id_dict['cif_upload_tab3'] = app_name + '_ciff_upload_tab3'
-        id_dict['cif_upload_tab4'] = app_name + '_ciff_upload_tab4'
-        id_dict['cif_upload_tab5'] = app_name + '_ciff_upload_tab5'
-        id_dict['cif_upload_fb_tab2'] = app_name + '_cif_fb_tab2'
-        id_dict['cif_upload_fb_tab3'] = app_name + '_cif_fb_tab3'
-        id_dict['cif_upload_fb_tab4'] = app_name + '_cif_fb_tab4'
-        id_dict['cif_upload_fb_tab5'] = app_name + '_cif_fb_tab5'
-        id_dict['error_tab1'] = app_name + '_error_tab1'
-        id_dict['error_tab2'] = app_name + '_error_tab2'
-        id_dict['error_tab3'] = app_name + '_error_tab3'
-        id_dict['error_tab4'] = app_name + '_error_tab4'
-        id_dict['error_tab5'] = app_name + '_error_tab5'
-        id_dict['hidden_upload_time_tab1'] = app_name + '_hidden_upload_time_tab1'
-        id_dict['hidden_upload_time_tab2'] = app_name + '_hidden_upload_time_tab2'
-        id_dict['hidden_upload_time_tab3'] = app_name + '_hidden_upload_time_tab3'
-        id_dict['hidden_upload_time_tab4'] = app_name + '_hidden_upload_time_tab4'
-        id_dict['hidden_upload_time_tab5'] = app_name + '_hidden_upload_time_tab5'
 
-        id_dict['h_tab1'] = app_name + '_h_tab1'
-        id_dict['k_tab1'] = app_name + '_k_tab1'
-        id_dict['l_tab1'] = app_name + '_l_tab1'
+        id_dict['data_table_tab1'] = app_name + '_data_table_tab1'
+        id_dict['add_row_tab1'] = app_name + '_add_row_tab1'
+        id_dict['error_tab1'] = app_name + '_error_tab1'
+        id_dict['hidden_upload_time_tab1'] = app_name + '_hidden_upload_time_tab1'
+        id_dict['a_tab1'] = app_name + '_a_tab1'
+        id_dict['b_tab1'] = app_name + '_b_tab1'
+        id_dict['c_tab1'] = app_name + '_c_tab1'
         id_dict['alpha_tab1'] = app_name + '_alpha_tab1'
         id_dict['beta_tab1'] = app_name + '_beta_tab1'
         id_dict['gamma_tab1'] = app_name + '_gamma_tab1'
 
-        id_dict['h_tab2'] = app_name + '_h_tab2'
-        id_dict['k_tab2'] = app_name + '_k_tab2'
-        id_dict['l_tab2'] = app_name + '_l_tab2'
+        id_dict['data_table_tab2'] = app_name + '_data_table_tab2'
+        id_dict['add_row_tab2'] = app_name + '_add_row_tab2'
+        id_dict['cif_upload_tab2'] = app_name + '_ciff_upload_tab2'
+        id_dict['cif_upload_fb_tab2'] = app_name + '_cif_fb_tab2'
+        id_dict['error_tab2'] = app_name + '_error_tab2'
+        id_dict['hidden_upload_time_tab2'] = app_name + '_hidden_upload_time_tab2'
+        id_dict['a_tab2'] = app_name + '_a_tab2'
+        id_dict['b_tab2'] = app_name + '_b_tab2'
+        id_dict['c_tab2'] = app_name + '_c_tab2'
         id_dict['alpha_tab2'] = app_name + '_alpha_tab2'
         id_dict['beta_tab2'] = app_name + '_beta_tab2'
         id_dict['gamma_tab2'] = app_name + '_gamma_tab2'
 
-        id_dict['h_tab3'] = app_name + '_h_tab3'
-        id_dict['k_tab3'] = app_name + '_k_tab3'
-        id_dict['l_tab3'] = app_name + '_l_tab3'
+        id_dict['data_table_tab3'] = app_name + '_data_table_tab3'
+        id_dict['add_row_tab3'] = app_name + '_add_row_tab3'
+        id_dict['cif_upload_tab3'] = app_name + '_ciff_upload_tab3'
+        id_dict['cif_upload_fb_tab3'] = app_name + '_cif_fb_tab3'
+        id_dict['error_tab3'] = app_name + '_error_tab3'
+        id_dict['hidden_upload_time_tab3'] = app_name + '_hidden_upload_time_tab3'
+        id_dict['a_tab3'] = app_name + '_a_tab3'
+        id_dict['b_tab3'] = app_name + '_b_tab3'
+        id_dict['c_tab3'] = app_name + '_c_tab3'
         id_dict['alpha_tab3'] = app_name + '_alpha_tab3'
         id_dict['beta_tab3'] = app_name + '_beta_tab3'
         id_dict['gamma_tab3'] = app_name + '_gamma_tab3'
 
-        id_dict['h_tab4'] = app_name + '_h_tab4'
-        id_dict['k_tab4'] = app_name + '_k_tab4'
-        id_dict['l_tab4'] = app_name + '_l_tab4'
+        id_dict['data_table_tab4'] = app_name + '_data_table_tab4'
+        id_dict['add_row_tab4'] = app_name + '_add_row_tab4'
+        id_dict['cif_upload_tab4'] = app_name + '_ciff_upload_tab4'
+        id_dict['cif_upload_fb_tab4'] = app_name + '_cif_fb_tab4'
+        id_dict['error_tab4'] = app_name + '_error_tab4'
+        id_dict['hidden_upload_time_tab4'] = app_name + '_hidden_upload_time_tab4'
+        id_dict['a_tab4'] = app_name + '_a_tab4'
+        id_dict['b_tab4'] = app_name + '_b_tab4'
+        id_dict['c_tab4'] = app_name + '_c_tab4'
         id_dict['alpha_tab4'] = app_name + '_alpha_tab4'
         id_dict['beta_tab4'] = app_name + '_beta_tab4'
         id_dict['gamma_tab4'] = app_name + '_gamma_tab4'
 
-        id_dict['h_tab5'] = app_name + '_h_tab5'
-        id_dict['k_tab5'] = app_name + '_k_tab5'
-        id_dict['l_tab5'] = app_name + '_l_tab5'
+        id_dict['data_table_tab5'] = app_name + '_data_table_tab5'
+        id_dict['add_row_tab5'] = app_name + '_add_row_tab5'
+        id_dict['cif_upload_tab5'] = app_name + '_ciff_upload_tab5'
+        id_dict['cif_upload_fb_tab5'] = app_name + '_cif_fb_tab5'
+        id_dict['error_tab5'] = app_name + '_error_tab5'
+        id_dict['hidden_upload_time_tab5'] = app_name + '_hidden_upload_time_tab5'
+        id_dict['a_tab5'] = app_name + '_a_tab5'
+        id_dict['b_tab5'] = app_name + '_b_tab5'
+        id_dict['c_tab5'] = app_name + '_c_tab5'
         id_dict['alpha_tab5'] = app_name + '_alpha_tab5'
         id_dict['beta_tab5'] = app_name + '_beta_tab5'
         id_dict['gamma_tab5'] = app_name + '_gamma_tab5'

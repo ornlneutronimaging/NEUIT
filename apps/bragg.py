@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 from callbacks.bragg import *
 from callbacks.utilities.constants import *
 from callbacks.utilities.initialization import (init_app_ids, temperature_default, distance_default, delay_default,
-                                                init_app_about, init_display_plot_data_check, sample_tb_even_10_col)
+                                                init_app_about, init_display_plot_data_check, sample_tb_even_4_col)
 from callbacks.utilities.plot import bragg_plot_option_div
 from callbacks.utilities.all_apps import bragg_sample_header_df
 
@@ -31,12 +31,6 @@ bragg_sample_df_default = pd.DataFrame({
     index_number_h: [],
     index_number_k: [],
     index_number_l: [],
-    axial_length_a: [],
-    axial_length_b: [],
-    axial_length_c: [],
-    interaxial_angle_alpha: [],
-    interaxial_angle_beta: [],
-    interaxial_angle_gamma: []
 })
 
 
@@ -45,7 +39,13 @@ def tab_content(upload_id=None,
                 data_table=None,
                 cif_upload_fb=None,
                 error_id=None,
-                hidden_upload_time=None):
+                hidden_upload_time=None,
+                a_id=None,
+                b_id=None,
+                c_id=None,
+                alpha_id=None,
+                beta_id=None,
+                gamma_id=None):
 
     children_array = []
 
@@ -87,62 +87,106 @@ def tab_content(upload_id=None,
         row_deletable=True,
         export_format='csv',
         css=[{'selector': '.export', 'rule': 'position:absolute; left:0px; bottom:-35px'}],
-        style_cell_conditional=sample_tb_even_10_col,
+        style_cell_conditional=sample_tb_even_4_col,
         style_data_conditional=[striped_rows],
         id=data_table)
     )
 
-    dbc.Row(
+    children_array.append(html.Div(html.P([html.Br(), html.Br()])))
+
+    children_array.append(dbc.Row(
             [
-            dbc.Col(
-                    html.Div(
-                            [
-                            html.H6('h'),
-                                ## FIXME
-                            dcc.Input(id=app_id_dict['temperature_id'],
-                                      type='number',
-                                      value=temperature_default,
-                                      min=0,
-                                      inputMode='numeric',
-                                      step=0.1,
-                                      ),
-                            ]
-                    ), width=2
-            ),
+                dbc.Col(
+                        html.Div(
+                                [
+                                    html.H6('a (\u212B)'),
+                                    dcc.Input(id=a_id,
+                                              type='number',
+                                              value=3.5238,
+                                              min=0.0001,
+                                              inputMode='numeric',
+                                              step=0.0001,
+                                              ),
+                                ]
+                        ), width=2
+                ),
+                dbc.Col(
+                        html.Div(
+                                [
+                                    html.H6('b (\u212B)'),
+                                    dcc.Input(id=b_id,
+                                              type='number',
+                                              value=3.5238,
+                                              min=0.0001,
+                                              inputMode='numeric',
+                                              step=0.0001,
+                                              ),
+                                ]
+                        ), width=2
+                ),
+                dbc.Col(
+                        html.Div(
+                                [
+                                    html.H6('c (\u212B)'),
+                                    dcc.Input(id=c_id,
+                                              type='number',
+                                              value=3.5238,
+                                              min=0.0001,
+                                              inputMode='numeric',
+                                              step=0.0001,
+                                              ),
+                                ]
+                        ), width=2
+                ),
+            ]
+    ))
 
-            dbc.Col(
-                    html.Div(
-                            [
-                            html.H6('Source-to-detector (m):'),
-                            dcc.Input(id=app_id_dict['distance_id'],
-                                      type='number',
-                                      value=distance_default,
-                                      min=0,
-                                      inputMode='numeric',
-                                      step=0.01,
-                                      ),
-                            ]
-                    ), width=2
-            ),
-
-            dbc.Col(
-                    html.Div(
-                            [
-                            html.H6('Delay (\u03BCs):'),
-                            dcc.Input(id=app_id_dict['delay_id'],
-                                      type='number',
-                                      value=delay_default,
-                                      min=0,
-                                      inputMode='numeric',
-                                      step=0.01,
-                                      ),
-                            ]
-                    ), width=2
-            ),
-        ]
-    ),
-
-
+    children_array.append(dbc.Row(
+            [
+                dbc.Col(
+                        html.Div(
+                                [
+                                    html.H6('alpha (\u00b0)'),
+                                    dcc.Input(id=alpha_id,
+                                              type='number',
+                                              value=90,
+                                              min=0,
+                                              inputMode='numeric',
+                                              step=0.01,
+                                              ),
+                                ]
+                        ), width=2
+                ),
+                dbc.Col(
+                        html.Div(
+                                [
+                                    html.H6('beta (\u00b0)'),
+                                    dcc.Input(id=beta_id,
+                                              type='number',
+                                              value=90,
+                                              min=0,
+                                              inputMode='numeric',
+                                              step=0.01,
+                                              ),
+                                ]
+                        ), width=2
+                ),
+                dbc.Col(
+                        html.Div(
+                                [
+                                    html.H6('gamma (\u00b0)'),
+                                    dcc.Input(id=gamma_id,
+                                              type='number',
+                                              value=90,
+                                              min=0,
+                                              inputMode='numeric',
+                                              step=0.01,
+                                              ),
+                                ]
+                        ), width=2
+                ),
+            ]
+    ))
 
     # Error message div1
     children_array.append(html.Div(id=error_id, children=True))
@@ -164,74 +208,74 @@ layout = html.Div(
                 ),
         html.Hr(style={'borderTop': '3px solid blue'}),
         init_app_about(current_app=app_name, app_id_dict=app_id_dict),
+
         # Experiment input
         html.Div(
-            [
-                html.H3('Global parameters:'),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            html.Div(
-                                [
-                                    html.H6('Temperature (K):'),
-                                    dcc.Input(id=app_id_dict['temperature_id'],
-                                              type='number',
-                                              value=temperature_default,
-                                              min=0,
-                                              inputMode='numeric',
-                                              step=0.1,
-                                              ),
-                                ]
-                            ), width=2
-                        ),
+                [
+                    html.H3('Global parameters:'),
+                    dbc.Row(
+                            [
+                            dbc.Col(
+                                html.Div(
+                                        [
+                                            html.H6('Temperature (K):'),
+                                            dcc.Input(id=app_id_dict['temperature_id'],
+                                                      type='number',
+                                                      value=temperature_default,
+                                                      min=0,
+                                                      inputMode='numeric',
+                                                      step=0.1,
+                                                      ),
+                                        ]
+                                        ), width=2
+                                    ),
 
-                        dbc.Col(
-                            html.Div(
-                                [
-                                    html.H6('Source-to-detector (m):'),
-                                    dcc.Input(id=app_id_dict['distance_id'],
-                                              type='number',
-                                              value=distance_default,
-                                              min=0,
-                                              inputMode='numeric',
-                                              step=0.01,
-                                              ),
-                                ]
-                            ), width=2
-                        ),
+                            dbc.Col(
+                                html.Div(
+                                        [
+                                            html.H6('Source-to-detector (m):'),
+                                            dcc.Input(id=app_id_dict['distance_id'],
+                                                      type='number',
+                                                      value=distance_default,
+                                                      min=0,
+                                                      inputMode='numeric',
+                                                      step=0.01,
+                                                      ),
+                                        ]
+                                        ), width=2
+                                    ),
 
-                        dbc.Col(
-                            html.Div(
-                                [
-                                    html.H6('Delay (\u03BCs):'),
-                                    dcc.Input(id=app_id_dict['delay_id'],
-                                              type='number',
-                                              value=delay_default,
-                                              min=0,
-                                              inputMode='numeric',
-                                              step=0.01,
-                                              ),
-                                ]
-                            ), width=2
-                        ),
-                    ]
+                            dbc.Col(
+                                html.Div(
+                                        [
+                                            html.H6('Delay (\u03BCs):'),
+                                            dcc.Input(id=app_id_dict['delay_id'],
+                                                      type='number',
+                                                      value=delay_default,
+                                                      min=0,
+                                                      inputMode='numeric',
+                                                      step=0.01,
+                                                      ),
+                                        ]
+                                        ), width=2
+                                    ),
+                            ]
+                            ),
+                ]
                 ),
-            ]
-        ),
 
         html.Div(
             [
                 html.H1(''),
-                html.H3('Wavelength band:'),
                 dbc.Row(
                     [
                         dbc.Col(
                             html.Div(
                                 [
-                                    html.H6('Min. (\u212B) :'),
-                                    dcc.Input(id=app_id_dict['band_min_id'], type='number',
+                                    html.H6('Min. (\u212B):'),
+                                    dcc.Input(id=app_id_dict['band_min_id'],
+                                              type='number',
                                               inputMode='numeric',
-                                              placeholder='Min.',
                                               step=0.001,
                                               value=0.05,
                                               ),
@@ -242,7 +286,8 @@ layout = html.Div(
                             html.Div(
                                 [
                                     html.H6('Max. (\u212B):'),
-                                    dcc.Input(id=app_id_dict['band_max_id'], type='number',
+                                    dcc.Input(id=app_id_dict['band_max_id'],
+                                              type='number',
                                               inputMode='numeric',
                                               placeholder='Max.',
                                               step=0.001,
@@ -281,7 +326,13 @@ layout = html.Div(
                              children=tab_content(add_row_id=app_id_dict['add_row_tab1'],
                                                   data_table=app_id_dict['data_table_tab1'],
                                                   error_id=app_id_dict['error_tab1'],
-                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab1']
+                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab1'],
+                                                  a_id=app_id_dict['a_tab1'],
+                                                  b_id=app_id_dict['b_tab1'],
+                                                  c_id=app_id_dict['c_tab1'],
+                                                  alpha_id=app_id_dict['alpha_tab1'],
+                                                  beta_id=app_id_dict['beta_tab1'],
+                                                  gamma_id=app_id_dict['gamma_tab1'],
                                                   ),
                              ),
                      dcc.Tab(label='.cif #1',
@@ -291,7 +342,13 @@ layout = html.Div(
                                                   data_table=app_id_dict['data_table_tab2'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab2'],
                                                   error_id=app_id_dict['error_tab2'],
-                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab2']
+                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab2'],
+                                                  a_id=app_id_dict['a_tab2'],
+                                                  b_id=app_id_dict['b_tab2'],
+                                                  c_id=app_id_dict['c_tab2'],
+                                                  alpha_id=app_id_dict['alpha_tab2'],
+                                                  beta_id=app_id_dict['beta_tab2'],
+                                                  gamma_id=app_id_dict['gamma_tab2'],
                                                   )
                              ),
                      dcc.Tab(label='.cif #2',
@@ -301,7 +358,13 @@ layout = html.Div(
                                                   data_table=app_id_dict['data_table_tab3'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab3'],
                                                   error_id=app_id_dict['error_tab3'],
-                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab3']
+                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab3'],
+                                                  a_id=app_id_dict['a_tab3'],
+                                                  b_id=app_id_dict['b_tab3'],
+                                                  c_id=app_id_dict['c_tab3'],
+                                                  alpha_id=app_id_dict['alpha_tab3'],
+                                                  beta_id=app_id_dict['beta_tab3'],
+                                                  gamma_id=app_id_dict['gamma_tab3'],
                                                   )
                              ),
                      dcc.Tab(label='.cif #3',
@@ -311,7 +374,13 @@ layout = html.Div(
                                                   data_table=app_id_dict['data_table_tab4'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab4'],
                                                   error_id=app_id_dict['error_tab4'],
-                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab4']
+                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab4'],
+                                                  a_id=app_id_dict['a_tab4'],
+                                                  b_id=app_id_dict['b_tab4'],
+                                                  c_id=app_id_dict['c_tab4'],
+                                                  alpha_id=app_id_dict['alpha_tab4'],
+                                                  beta_id=app_id_dict['beta_tab4'],
+                                                  gamma_id=app_id_dict['gamma_tab4'],
                                                   )
                              ),
                      dcc.Tab(label='.cif #4',
@@ -321,7 +390,13 @@ layout = html.Div(
                                                   data_table=app_id_dict['data_table_tab5'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab5'],
                                                   error_id=app_id_dict['error_tab5'],
-                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab5']
+                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab5'],
+                                                  a_id=app_id_dict['a_tab5'],
+                                                  b_id=app_id_dict['b_tab5'],
+                                                  c_id=app_id_dict['c_tab5'],
+                                                  alpha_id=app_id_dict['alpha_tab5'],
+                                                  beta_id=app_id_dict['beta_tab5'],
+                                                  gamma_id=app_id_dict['gamma_tab5'],
                                                   )
                              ),
                     ],
