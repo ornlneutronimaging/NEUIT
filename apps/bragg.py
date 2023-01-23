@@ -92,6 +92,58 @@ def tab_content(upload_id=None,
         id=data_table)
     )
 
+    dbc.Row(
+            [
+            dbc.Col(
+                    html.Div(
+                            [
+                            html.H6('h'),
+                                ## FIXME
+                            dcc.Input(id=app_id_dict['temperature_id'],
+                                      type='number',
+                                      value=temperature_default,
+                                      min=0,
+                                      inputMode='numeric',
+                                      step=0.1,
+                                      ),
+                            ]
+                    ), width=2
+            ),
+
+            dbc.Col(
+                    html.Div(
+                            [
+                            html.H6('Source-to-detector (m):'),
+                            dcc.Input(id=app_id_dict['distance_id'],
+                                      type='number',
+                                      value=distance_default,
+                                      min=0,
+                                      inputMode='numeric',
+                                      step=0.01,
+                                      ),
+                            ]
+                    ), width=2
+            ),
+
+            dbc.Col(
+                    html.Div(
+                            [
+                            html.H6('Delay (\u03BCs):'),
+                            dcc.Input(id=app_id_dict['delay_id'],
+                                      type='number',
+                                      value=delay_default,
+                                      min=0,
+                                      inputMode='numeric',
+                                      step=0.01,
+                                      ),
+                            ]
+                    ), width=2
+            ),
+        ]
+    ),
+
+
+
     # Error message div1
     children_array.append(html.Div(id=error_id, children=True))
 

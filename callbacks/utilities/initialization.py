@@ -295,6 +295,41 @@ def init_app_ids(app_name: str):
         id_dict['hidden_upload_time_tab4'] = app_name + '_hidden_upload_time_tab4'
         id_dict['hidden_upload_time_tab5'] = app_name + '_hidden_upload_time_tab5'
 
+        id_dict['h_tab1'] = app_name + '_h_tab1'
+        id_dict['k_tab1'] = app_name + '_k_tab1'
+        id_dict['l_tab1'] = app_name + '_l_tab1'
+        id_dict['alpha_tab1'] = app_name + '_alpha_tab1'
+        id_dict['beta_tab1'] = app_name + '_beta_tab1'
+        id_dict['gamma_tab1'] = app_name + '_gamma_tab1'
+
+        id_dict['h_tab2'] = app_name + '_h_tab2'
+        id_dict['k_tab2'] = app_name + '_k_tab2'
+        id_dict['l_tab2'] = app_name + '_l_tab2'
+        id_dict['alpha_tab2'] = app_name + '_alpha_tab2'
+        id_dict['beta_tab2'] = app_name + '_beta_tab2'
+        id_dict['gamma_tab2'] = app_name + '_gamma_tab2'
+
+        id_dict['h_tab3'] = app_name + '_h_tab3'
+        id_dict['k_tab3'] = app_name + '_k_tab3'
+        id_dict['l_tab3'] = app_name + '_l_tab3'
+        id_dict['alpha_tab3'] = app_name + '_alpha_tab3'
+        id_dict['beta_tab3'] = app_name + '_beta_tab3'
+        id_dict['gamma_tab3'] = app_name + '_gamma_tab3'
+
+        id_dict['h_tab4'] = app_name + '_h_tab4'
+        id_dict['k_tab4'] = app_name + '_k_tab4'
+        id_dict['l_tab4'] = app_name + '_l_tab4'
+        id_dict['alpha_tab4'] = app_name + '_alpha_tab4'
+        id_dict['beta_tab4'] = app_name + '_beta_tab4'
+        id_dict['gamma_tab4'] = app_name + '_gamma_tab4'
+
+        id_dict['h_tab5'] = app_name + '_h_tab5'
+        id_dict['k_tab5'] = app_name + '_k_tab5'
+        id_dict['l_tab5'] = app_name + '_l_tab5'
+        id_dict['alpha_tab5'] = app_name + '_alpha_tab5'
+        id_dict['beta_tab5'] = app_name + '_beta_tab5'
+        id_dict['gamma_tab5'] = app_name + '_gamma_tab5'
+
     return id_dict
 
 
