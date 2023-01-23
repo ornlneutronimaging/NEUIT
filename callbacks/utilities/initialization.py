@@ -284,6 +284,16 @@ def init_app_ids(app_name: str):
         id_dict['cif_upload_fb_tab3'] = app_name + '_cif_fb_tab3'
         id_dict['cif_upload_fb_tab4'] = app_name + '_cif_fb_tab4'
         id_dict['cif_upload_fb_tab5'] = app_name + '_cif_fb_tab5'
+        id_dict['error_tab1'] = app_name + '_error_tab1'
+        id_dict['error_tab2'] = app_name + '_error_tab2'
+        id_dict['error_tab3'] = app_name + '_error_tab3'
+        id_dict['error_tab4'] = app_name + '_error_tab4'
+        id_dict['error_tab5'] = app_name + '_error_tab5'
+        id_dict['hidden_upload_time_tab1'] = app_name + '_hidden_upload_time_tab1'
+        id_dict['hidden_upload_time_tab2'] = app_name + '_hidden_upload_time_tab2'
+        id_dict['hidden_upload_time_tab3'] = app_name + '_hidden_upload_time_tab3'
+        id_dict['hidden_upload_time_tab4'] = app_name + '_hidden_upload_time_tab4'
+        id_dict['hidden_upload_time_tab5'] = app_name + '_hidden_upload_time_tab5'
 
     return id_dict
 

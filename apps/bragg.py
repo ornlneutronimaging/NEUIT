@@ -26,7 +26,12 @@ bragg_sample_df_default = pd.DataFrame({
 })
 
 
-def tab_content(upload_id=None, add_row_id=None, data_table=None, cif_upload_fb=None):
+def tab_content(upload_id=None,
+                add_row_id=None,
+                data_table=None,
+                cif_upload_fb=None,
+                error_id=None,
+                hidden_upload_time=None):
 
     children_array = []
 
@@ -72,6 +77,12 @@ def tab_content(upload_id=None, add_row_id=None, data_table=None, cif_upload_fb=
         style_data_conditional=[striped_rows],
         id=data_table)
     )
+
+    # Error message div1
+    children_array.append(html.Div(id=error_id, children=True))
+
+    # Hidden div to store upload time
+    children_array.append(html.Div(id=hidden_upload_time, style={'display': 'none'}))
 
     return children_array
 
@@ -203,6 +214,8 @@ layout = html.Div(
                              value='tab_user_defined',
                              children=tab_content(add_row_id=app_id_dict['add_row_tab1'],
                                                   data_table=app_id_dict['data_table_tab1'],
+                                                  error_id=app_id_dict['error_tab1'],
+                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab1']
                                                   ),
                              ),
                      dcc.Tab(label='.cif #1',
@@ -211,6 +224,8 @@ layout = html.Div(
                                                   add_row_id=app_id_dict['add_row_tab2'],
                                                   data_table=app_id_dict['data_table_tab2'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab2'],
+                                                  error_id=app_id_dict['error_tab2'],
+                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab2']
                                                   )
                              ),
                      dcc.Tab(label='.cif #2',
@@ -219,6 +234,8 @@ layout = html.Div(
                                                   add_row_id=app_id_dict['add_row_tab3'],
                                                   data_table=app_id_dict['data_table_tab3'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab3'],
+                                                  error_id=app_id_dict['error_tab3'],
+                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab3']
                                                   )
                              ),
                      dcc.Tab(label='.cif #3',
@@ -227,6 +244,8 @@ layout = html.Div(
                                                   add_row_id=app_id_dict['add_row_tab4'],
                                                   data_table=app_id_dict['data_table_tab4'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab4'],
+                                                  error_id=app_id_dict['error_tab4'],
+                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab4']
                                                   )
                              ),
                      dcc.Tab(label='.cif #4',
@@ -235,22 +254,18 @@ layout = html.Div(
                                                   add_row_id=app_id_dict['add_row_tab5'],
                                                   data_table=app_id_dict['data_table_tab5'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab5'],
+                                                  error_id=app_id_dict['error_tab5'],
+                                                  hidden_upload_time=app_id_dict['hidden_upload_time_tab5']
                                                   )
                              ),
                     ],
                 ),
 
-        # Error message div1
-        html.Div(id=app_id_dict['error_id'], children=None),
-
-        # Error message div2
-        html.Div(id=app_id_dict['error_id2'], children=True),
+        # # Error message div2
+        # html.Div(id=app_id_dict['error_id2'], children=True),
 
         # Hidden div to store df_all json
         html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),
-
-        # Hidden div to store upload time
-        html.Div(id=app_id_dict['hidden_upload_time_id'], style={'display': 'none'}),
 
         # Hidden div to store df_export json
         html.Div(id=app_id_dict['hidden_df_export_json_id'], style={'display': 'none'}),
