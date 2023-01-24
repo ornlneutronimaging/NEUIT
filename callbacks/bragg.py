@@ -63,6 +63,12 @@ def update_rows(add_time, data, columns):
         Output(app_id_dict['error_tab2'], 'children'),
         Output(app_id_dict['data_table_tab2'], 'data'),
         Output(app_id_dict['hidden_upload_time_tab2'], 'children'),
+        Output(app_id_dict['a_tab2'], 'value'),
+        Output(app_id_dict['b_tab2'], 'value'),
+        Output(app_id_dict['c_tab2'], 'value'),
+        Output(app_id_dict['alpha_tab2'], 'value'),
+        Output(app_id_dict['beta_tab2'], 'value'),
+        Output(app_id_dict['gamma_tab2'], 'value')
     ],
     [
         Input(app_id_dict['cif_upload_tab2'], 'filename'),
@@ -85,14 +91,14 @@ def upload_feedback(cif_names, add_button_timestamp,
     if cif_names is None:
 
         content_of_table.append({c['id']: '' for c in names_of_columns})
-        return [None], [None], content_of_table, add_button_timestamp
+        return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
 
     if cif_uploads is not None:
 
         if add_button_timestamp != prev_upload_time:
 
             content_of_table.append({c['id']: '' for c in names_of_columns})
-            return [None], [None], content_of_table, add_button_timestamp
+            return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
 
         else:
             content_of_table = []
@@ -100,29 +106,25 @@ def upload_feedback(cif_names, add_button_timestamp,
         # for each_index, each_content in enumerate(cif_uploads):
         #     _cif_struc = parse_cif_upload(content=each_content)
         _cif_struc = parse_cif_upload(content=cif_uploads)
-        for _row in _cif_struc:
+        for _row_index, _row in enumerate(_cif_struc):
+
+            if _row_index == 0:
+                interaxial_angle_alpha = _row.lattice.alpha
+                interaxial_angle_beta = _row.lattice.beta
+                interaxial_angle_gamma = _row.lattice.gamma
+                axial_length_a = _row.lattice.a
+                axial_length_b = _row.lattice.b
+                axial_length_c = _row.lattice.c
 
             chem_name = _row.element
             index_number_h = _row.x
             index_number_k = _row.y
             index_number_l = _row.z
-            interaxial_angle_alpha = _row.lattice.alpha
-            interaxial_angle_beta = _row.lattice.beta
-            interaxial_angle_gamma = _row.lattice.gamma
-            axial_length_a = _row.lattice.a
-            axial_length_b = _row.lattice.b
-            axial_length_c = _row.lattice.c
 
             _new_table_entry = {constants.chem_name: chem_name,
                                 constants.index_number_h: index_number_h,
                                 constants.index_number_k: index_number_k,
-                                constants.index_number_l: index_number_l,
-                                constants.interaxial_angle_alpha: interaxial_angle_alpha,
-                                constants.interaxial_angle_beta: interaxial_angle_beta,
-                                constants.interaxial_angle_gamma: interaxial_angle_gamma,
-                                constants.axial_length_a: axial_length_a,
-                                constants.axial_length_b: axial_length_b,
-                                constants.axial_length_c: axial_length_c}
+                                constants.index_number_l: index_number_l}
 
             content_of_table.append(_new_table_entry)
 
@@ -138,7 +140,11 @@ def upload_feedback(cif_names, add_button_timestamp,
     else:
         test_passed = error_div_list
 
-    return data_fb_list, test_passed, content_of_table, prev_upload_time
+    return data_fb_list, test_passed, \
+           content_of_table, prev_upload_time, \
+           axial_length_a, axial_length_b, \
+           axial_length_c, interaxial_angle_alpha, \
+           interaxial_angle_beta, interaxial_angle_gamma
 
 
 # tab 3
