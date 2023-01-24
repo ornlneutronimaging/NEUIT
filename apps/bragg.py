@@ -38,7 +38,7 @@ def tab_content(upload_id=None,
                 add_row_id=None,
                 data_table=None,
                 cif_upload_fb=None,
-                error_id=None,
+                no_error_id=None,
                 hidden_upload_time=None,
                 a_id=None,
                 b_id=None,
@@ -194,7 +194,7 @@ def tab_content(upload_id=None,
     ))
 
     # Error message div1
-    children_array.append(html.Div(id=error_id, children=True))
+    children_array.append(html.Div(id=no_error_id, children=True))
 
     # Hidden div to store upload time
     children_array.append(html.Div(id=hidden_upload_time, style={'display': 'none'}))
@@ -330,7 +330,7 @@ layout = html.Div(
                              value='tab_user_defined',
                              children=tab_content(add_row_id=app_id_dict['add_row_tab1'],
                                                   data_table=app_id_dict['data_table_tab1'],
-                                                  error_id=app_id_dict['error_tab1'],
+                                                  no_error_id=app_id_dict['no_error_tab1'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab1'],
                                                   a_id=app_id_dict['a_tab1'],
                                                   b_id=app_id_dict['b_tab1'],
@@ -346,7 +346,7 @@ layout = html.Div(
                                                   add_row_id=app_id_dict['add_row_tab2'],
                                                   data_table=app_id_dict['data_table_tab2'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab2'],
-                                                  error_id=app_id_dict['error_tab2'],
+                                                  no_error_id=app_id_dict['no_error_tab2'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab2'],
                                                   a_id=app_id_dict['a_tab2'],
                                                   b_id=app_id_dict['b_tab2'],
@@ -362,7 +362,7 @@ layout = html.Div(
                                                   add_row_id=app_id_dict['add_row_tab3'],
                                                   data_table=app_id_dict['data_table_tab3'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab3'],
-                                                  error_id=app_id_dict['error_tab3'],
+                                                  no_error_id=app_id_dict['no_error_tab3'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab3'],
                                                   a_id=app_id_dict['a_tab3'],
                                                   b_id=app_id_dict['b_tab3'],
@@ -378,7 +378,7 @@ layout = html.Div(
                                                   add_row_id=app_id_dict['add_row_tab4'],
                                                   data_table=app_id_dict['data_table_tab4'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab4'],
-                                                  error_id=app_id_dict['error_tab4'],
+                                                  no_error_id=app_id_dict['no_error_tab4'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab4'],
                                                   a_id=app_id_dict['a_tab4'],
                                                   b_id=app_id_dict['b_tab4'],
@@ -394,7 +394,7 @@ layout = html.Div(
                                                   add_row_id=app_id_dict['add_row_tab5'],
                                                   data_table=app_id_dict['data_table_tab5'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab5'],
-                                                  error_id=app_id_dict['error_tab5'],
+                                                  no_error_id=app_id_dict['no_error_tab5'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab5'],
                                                   a_id=app_id_dict['a_tab5'],
                                                   b_id=app_id_dict['b_tab5'],
@@ -423,7 +423,7 @@ layout = html.Div(
                     id=app_id_dict['submit_button_id'], n_clicks_timestamp=0),
 
         # Error message div1
-        html.Div(id=app_id_dict['error_id'], children=True),
+        html.Div(id=app_id_dict['no_error_id'], children=True),
 
         html.Div(
             [
