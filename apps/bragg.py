@@ -84,6 +84,7 @@ def tab_content(upload_id=None,
         row_selectable=False,
         filter_action='none',
         sort_action='none',
+        style_cell={'textAlign': 'center'},
         row_deletable=True,
         export_format='csv',
         css=[{'selector': '.export', 'rule': 'position:absolute; left:0px; bottom:-35px'}],
@@ -140,6 +141,8 @@ def tab_content(upload_id=None,
                 ),
             ]
     ))
+
+    children_array.append(html.Div(html.P([html.Br()])))
 
     children_array.append(dbc.Row(
             [
