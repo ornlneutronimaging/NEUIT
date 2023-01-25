@@ -421,17 +421,17 @@ def upload_feedback(cif_names, add_button_timestamp,
            interaxial_angle_beta, interaxial_angle_gamma
 
 
-def clean_data_tab(data_tab2=None):
+def clean_data_tab(data_tab=None):
     '''
     remove all the rows with no chemical formula defined
     '''
-    data_tab2_cleaned = []
-    for _entry in data_tab2:
+    data_tab_cleaned = []
+    for _entry in data_tab:
         if _entry[chem_name] == '':
             continue
         else:
-            data_tab2_cleaned.append(_entry)
-    return data_tab2_cleaned
+            data_tab_cleaned.append(_entry)
+    return data_tab_cleaned
 
 
 def update_xs_dict(xs_dict=None,
@@ -445,6 +445,10 @@ def update_xs_dict(xs_dict=None,
     calculating the structure for the given data_tab
     '''
     print(f"No errors found in {log_label}, working with {log_label}:")
+
+    if not data_tab:
+        print(f"- data_tab is empty!")
+        return
 
     # data_tab
     atoms = []
@@ -486,7 +490,7 @@ def update_xs_dict(xs_dict=None,
     [
         Output(app_id_dict['hidden_df_json_id'], 'children'),
         Output(app_id_dict['no_error_id'], 'children'),
-        Output(app_id_dict['output_id'], 'style')
+        Output(app_id_dict['output_id'], 'style'),
     ],
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
@@ -516,6 +520,7 @@ def update_xs_dict(xs_dict=None,
         State(app_id_dict['alpha_tab3'], 'value'),
         State(app_id_dict['beta_tab3'], 'value'),
         State(app_id_dict['gamma_tab3'], 'value'),
+        State(app_id_dict['no_error_tab3'], 'children'),
 
         State(app_id_dict['data_table_tab4'], 'data'),
         State(app_id_dict['a_tab4'], 'value'),
@@ -541,9 +546,10 @@ def update_xs_dict(xs_dict=None,
         State(app_id_dict['band_step_id'], 'value'),
     ]
 )
-def show_output_div(n_submit, data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, beta_tab1, gamma_tab1,
+def show_output_div(n_submit,
+                    data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, beta_tab1, gamma_tab1,
                     data_tab2, a_tab2, b_tab2, c_tab2, alpha_tab2, beta_tab2, gamma_tab2, no_error_tab2,
-                    data_tab3, a_tab3, b_tab3, c_tab3, alpha_tab3, beta_tab3, gamma_tab3,
+                    data_tab3, a_tab3, b_tab3, c_tab3, alpha_tab3, beta_tab3, gamma_tab3, no_error_tab3,
                     data_tab4, a_tab4, b_tab4, c_tab4, alpha_tab4, beta_tab4, gamma_tab4,
                     data_tab5, a_tab5, b_tab5, c_tab5, alpha_tab5, beta_tab5, gamma_tab5,
                     temperature, distance, delay,
@@ -563,8 +569,13 @@ def show_output_div(n_submit, data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, bet
         if data_tab2 or data_tab3 or data_tab4 or data_tab5 or data_tab1:
            something_to_plot = True
 
-            # print(f"tab2 is empty! Leaving show_output_div.")
-            # return None,  False, {'display': 'none'}
+        update_xs_dict(xs_dict=xs_dict,
+                       data_tab=data_tab1,
+                       log_label='tab1',
+                       a=a_tab1, b=b_tab1, c=c_tab1,
+                       alpha=alpha_tab1, beta=beta_tab1, gamma=gamma_tab1,
+                       temperature=temperature,
+                       wavelengths_A=wavelengths_A)
 
         if no_error_tab2:
             update_xs_dict(xs_dict=xs_dict,
@@ -575,7 +586,15 @@ def show_output_div(n_submit, data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, bet
                            temperature=temperature,
                            wavelengths_A=wavelengths_A)
 
-        # work with other tabs
+        if no_error_tab3:
+            update_xs_dict(xs_dict=xs_dict,
+                           data_tab=data_tab3,
+                           log_label='tab3',
+                           a=a_tab3, b=b_tab3, c=c_tab3,
+                           alpha=alpha_tab3, beta=beta_tab3, gamma=gamma_tab3,
+                           temperature=temperature,
+                           wavelengths_A=wavelengths_A)
+
 
 
 
@@ -728,22 +747,42 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
             to_plot_list = []
 
             _name_only = 'tab2'
-            if 'total' in xs_type:
-                to_plot_list.append(_name_only + ' (total)')
-            if 'abs' in xs_type:
-                to_plot_list.append(_name_only + ' (abs)')
-            if 'coh_el' in xs_type:
-                to_plot_list.append(_name_only + ' (coh el)')
-            if 'coh_inel' in xs_type:
-                to_plot_list.append(_name_only + ' (coh inel)')
-            if 'inc_el' in xs_type:
-                to_plot_list.append(_name_only + ' (inc el)')
-            if 'inc_inel' in xs_type:
-                to_plot_list.append(_name_only + ' (inc inel)')
+            if f'{_name_only} (total)' in df_y.columns:
+
+                if 'total' in xs_type:
+                    to_plot_list.append(_name_only + ' (total)')
+                if 'abs' in xs_type:
+                    to_plot_list.append(_name_only + ' (abs)')
+                if 'coh_el' in xs_type:
+                    to_plot_list.append(_name_only + ' (coh el)')
+                if 'coh_inel' in xs_type:
+                    to_plot_list.append(_name_only + ' (coh inel)')
+                if 'inc_el' in xs_type:
+                    to_plot_list.append(_name_only + ' (inc el)')
+                if 'inc_inel' in xs_type:
+                    to_plot_list.append(_name_only + ' (inc inel)')
+
+            _name_only = 'tab3'
+            if f'{_name_only} (total)' in df_y.columns:
+
+                if 'total' in xs_type:
+                    to_plot_list.append(_name_only + ' (total)')
+                if 'abs' in xs_type:
+                    to_plot_list.append(_name_only + ' (abs)')
+                if 'coh_el' in xs_type:
+                    to_plot_list.append(_name_only + ' (coh el)')
+                if 'coh_inel' in xs_type:
+                    to_plot_list.append(_name_only + ' (coh inel)')
+                if 'inc_el' in xs_type:
+                    to_plot_list.append(_name_only + ' (inc el)')
+                if 'inc_inel' in xs_type:
+                    to_plot_list.append(_name_only + ' (inc inel)')
+
             try:
                 df_to_plot = df_y[to_plot_list]
             except KeyError:
                 return resubmit, [None]
+
             if y_type == 'attenuation':
                 df_to_plot = 1 - df_y
 
@@ -767,7 +806,9 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
             plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
 
             print("about to return html.div")
-            return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
+            return html.Div([dcc.Graph(figure=plotly_fig,
+                                       id=app_id_dict['plot_fig_id'])]), \
+                   [json.dumps(jsonized_plot_df)]
         else:
             print("about to return plot_loading")
             return plot_loading, [None]
