@@ -677,6 +677,7 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
             # Form selected Y df
             to_plot_list = []
 
+            update_list_to_plot(name='tab1', df_y=df_y, to_plot_list=to_plot_list, xs_type=xs_type)
             update_list_to_plot(name='tab2', df_y=df_y, to_plot_list=to_plot_list, xs_type=xs_type)
             update_list_to_plot(name='tab3', df_y=df_y, to_plot_list=to_plot_list, xs_type=xs_type)
             update_list_to_plot(name='tab4', df_y=df_y, to_plot_list=to_plot_list, xs_type=xs_type)
