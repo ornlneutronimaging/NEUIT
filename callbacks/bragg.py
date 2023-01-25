@@ -488,8 +488,6 @@ def show_output_div(n_submit, data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, bet
                     temperature, distance, delay,
                     band_min, band_max, band_step):
 
-    print(f"{no_error_tab2 =}")
-
     if n_submit is not None:
 
         wavelengths_A = np.arange(band_min, band_max, band_step)
@@ -545,13 +543,25 @@ def show_output_div(n_submit, data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, bet
             df_x = fill_df_x_types(df=df_x, distance_m=distance, delay_us=delay)
 
             datasets = {
-                            'x': df_x.to_json(orient='split', date_format='iso'),
-                            'y': df_y.to_json(orient='split', date_format='iso'),
+                        'x': df_x.to_json(orient='split', date_format='iso'),
+                        'y': df_y.to_json(orient='split', date_format='iso'),
                         }
             return json.dumps(datasets), True
 
     else:
         return None,  False
+
+
+@app.callback(
+    Output(app_id_dict['output_id'], 'style'),
+    [
+        Input(app_id_dict['submit_button_id'], 'n_clicks'),
+    ])
+def show_output_div_old(n_submit):
+    if n_submit is not None:
+            return {'display': 'block'}
+    else:
+        return {'display': 'none'}
 
 
 # # Submit button has been clicked
@@ -636,76 +646,76 @@ def show_output_div(n_submit, data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, bet
     # else:
     #     return None, False
 
-# @app.callback(
-#     [
-#         Output(app_id_dict['plot_div_id'], 'children'),
-#         Output(app_id_dict['hidden_df_export_json_id'], 'children'),
-#     ],
-#     [
-#         Input(app_id_dict['output_id'], 'children'),
-#         Input(app_id_dict['error_id'], 'children'),
-#         Input('x_type', 'value'),
-#         Input('y_type', 'value'),
-#         Input('plot_scale', 'value'),
-#         Input('xs_type', 'value'),
-#     ],
-#     )
-# def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
-#     if test_passed:
-#         if jsonified_data is not None:
-#             df_dict = load_dfs(jsonified_data=jsonified_data)
-#             df_x = df_dict['x']
-#             df_y = df_dict['y']
-#
-#             # Form selected Y df
-#             to_plot_list = []
-#
-#             _name_only = 'tab2'
-#             if 'total' in xs_type:
-#                 to_plot_list.append(_name_only + ' (total)')
-#             if 'abs' in xs_type:
-#                 to_plot_list.append(_name_only + ' (abs)')
-#             if 'coh_el' in xs_type:
-#                 to_plot_list.append(_name_only + ' (coh el)')
-#             if 'coh_inel' in xs_type:
-#                 to_plot_list.append(_name_only + ' (coh inel)')
-#             if 'inc_el' in xs_type:
-#                 to_plot_list.append(_name_only + ' (inc el)')
-#             if 'inc_inel' in xs_type:
-#                 to_plot_list.append(_name_only + ' (inc inel)')
-#             try:
-#                 df_to_plot = df_y[to_plot_list]
-#             except KeyError:
-#                 return resubmit, [None]
-#             if y_type == 'attenuation':
-#                 df_to_plot = 1 - df_y
-#
-#             print(f"{df_to_plot =}")
-#
-#             # Add X column
-#             x_tag = x_type_to_x_tag(x_type)
-#             df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
-#             y_label = y_type_to_y_label(y_type)
-#
-#             jsonized_plot_df = df_to_plot.to_json(orient='split', date_format='iso')
-#
-#             # Plot in matplotlib
-#             fig = plt.figure()
-#             ax1 = fig.add_subplot(111)
-#             try:
-#                 ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
-#             except TypeError:
-#                 pass
-#             ax1.set_ylabel(y_label)
-#
-#             # Convert to plotly and format layout
-#             plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
-#
-#             return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
-#         else:
-#             return plot_loading, [None]
-#     else:
-#         return plot_loading, [None]
+@app.callback(
+    [
+        Output(app_id_dict['plot_div_id'], 'children'),
+        Output(app_id_dict['hidden_df_export_json_id'], 'children'),
+    ],
+    [
+        Input(app_id_dict['hidden_df_json_id'], 'children'),
+        Input(app_id_dict['no_error_id'], 'children'),
+        Input('x_type', 'value'),
+        Input('y_type', 'value'),
+        Input('plot_scale', 'value'),
+        Input('xs_type', 'value'),
+    ],
+    )
+def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
+    if test_passed:
+        if jsonified_data is not None:
+            df_dict = load_dfs(jsonified_data=jsonified_data)
+            df_x = df_dict['x']
+            df_y = df_dict['y']
+
+            # Form selected Y df
+            to_plot_list = []
+
+            _name_only = 'tab2'
+            if 'total' in xs_type:
+                to_plot_list.append(_name_only + ' (total)')
+            if 'abs' in xs_type:
+                to_plot_list.append(_name_only + ' (abs)')
+            if 'coh_el' in xs_type:
+                to_plot_list.append(_name_only + ' (coh el)')
+            if 'coh_inel' in xs_type:
+                to_plot_list.append(_name_only + ' (coh inel)')
+            if 'inc_el' in xs_type:
+                to_plot_list.append(_name_only + ' (inc el)')
+            if 'inc_inel' in xs_type:
+                to_plot_list.append(_name_only + ' (inc inel)')
+            try:
+                df_to_plot = df_y[to_plot_list]
+            except KeyError:
+                return resubmit, [None]
+            if y_type == 'attenuation':
+                df_to_plot = 1 - df_y
+
+            # Add X column
+            x_tag = x_type_to_x_tag(x_type)
+            df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
+            y_label = y_type_to_y_label(y_type)
+
+            jsonized_plot_df = df_to_plot.to_json(orient='split', date_format='iso')
+
+            # Plot in matplotlib
+            fig = plt.figure()
+            ax1 = fig.add_subplot(111)
+            try:
+                ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
+            except TypeError:
+                pass
+            ax1.set_ylabel(y_label)
+
+            # Convert to plotly and format layout
+            plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
+
+            print("about to return html.div")
+            return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
+        else:
+            print("about to return plot_loading")
+            return plot_loading, [None]
+    else:
+        return plot_loading, [None]
 
 
 # @app.callback(
@@ -780,39 +790,40 @@ def show_output_div(n_submit, data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, bet
 #         return plot_loading, [None]
 
 
-# @app.callback(
-#     [
-#         Output(app_id_dict['df_export_tb_div'], 'children'),
-#     ],
-#     [
-#         Input(app_id_dict['display_plot_data_id'], 'value'),
-#         Input(app_id_dict['hidden_df_export_json_id'], 'children'),
-#     ],
-#     [
-#         State(app_id_dict['error_id'], 'children'),
-#     ])
-# def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
-#     if display_check == ['display']:
-#         if test_passed is True:
-#             dataset = json.loads(jsonized_df_export[0])
-#             df_to_export = pd.read_json(dataset, orient='split')
-#             df_tb_div_list = [
-#                 html.Hr(),
-#                 dt.DataTable(
-#                     id=app_id_dict['df_export_tb'],
-#                     data=df_to_export.to_dict('records'),
-#                     columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
-#                     export_format='csv',
-#                     style_data_conditional=[striped_rows],
-#                     fixed_rows={'headers': True, 'data': 0},
-#                     style_table={
-#                         'maxHeight': '300',
-#                         'overflowY': 'scroll',
-#                     },
-#                 )
-#             ]
-#             return [df_tb_div_list]
-#         else:
-#             return [None]
-#     else:
-#         return [None]
+@app.callback(
+    [
+        Output(app_id_dict['df_export_tb_div'], 'children'),
+    ],
+    [
+        Input(app_id_dict['display_plot_data_id'], 'value'),
+        Input(app_id_dict['hidden_df_export_json_id'], 'children'),
+    ],
+    [
+        State(app_id_dict['no_error_id'], 'children'),
+    ])
+def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
+
+    if display_check == ['display']:
+        if test_passed is True:
+            dataset = json.loads(jsonized_df_export[0])
+            df_to_export = pd.read_json(dataset, orient='split')
+            df_tb_div_list = [
+                html.Hr(),
+                dt.DataTable(
+                    id=app_id_dict['df_export_tb'],
+                    data=df_to_export.to_dict('records'),
+                    columns=[{'name': each_col, 'id': each_col} for each_col in df_to_export.columns],
+                    export_format='csv',
+                    style_data_conditional=[striped_rows],
+                    fixed_rows={'headers': True, 'data': 0},
+                    style_table={
+                        'maxHeight': '300',
+                        'overflowY': 'scroll',
+                    },
+                )
+            ]
+            return [df_tb_div_list]
+        else:
+            return [None]
+    else:
+        return [None]
