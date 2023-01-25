@@ -421,11 +421,25 @@ def upload_feedback(cif_names, add_button_timestamp,
            interaxial_angle_beta, interaxial_angle_gamma
 
 
+def clean_data_tab(data_tab2=None):
+    '''
+    remove all the rows with no chemical formula defined
+    '''
+    data_tab2_cleaned = []
+    for _entry in data_tab2:
+        if _entry[chem_name] == '':
+            continue
+        else:
+            data_tab2_cleaned.append(_entry)
+    return data_tab2_cleaned
+
+
 # submit button clicked
 @app.callback(
     [
         Output(app_id_dict['hidden_df_json_id'], 'children'),
-        Output(app_id_dict['no_error_id'], 'children')
+        Output(app_id_dict['no_error_id'], 'children'),
+        Output(app_id_dict['output_id'], 'style')
     ],
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
@@ -493,14 +507,19 @@ def show_output_div(n_submit, data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, bet
         wavelengths_A = np.arange(band_min, band_max, band_step)
         xs_dict = {}
 
+        data_tab2 = clean_data_tab(data_tab2)
+        if not data_tab2:
+            print(f"tab2 is empty! Leaving show_output_div.")
+            return None,  False, {'display': 'none'}
+
         if no_error_tab2:
+            print(f"Working with tab2:")
 
             # data_tab_2
             atoms = []
             _name_only = 'tab2'
+            data_tab2 = clean_data_tab(data_tab2)
             for entry in data_tab2:
-
-                print(f"Working with tab2:")
 
                 # if no element, continue
                 if not entry[chem_name]:
@@ -546,22 +565,31 @@ def show_output_div(n_submit, data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, bet
                         'x': df_x.to_json(orient='split', date_format='iso'),
                         'y': df_y.to_json(orient='split', date_format='iso'),
                         }
-            return json.dumps(datasets), True
+            return json.dumps(datasets), True, {'display': 'block'}
 
     else:
-        return None,  False
+        return None,  False, {'display': 'none'}
 
 
-@app.callback(
-    Output(app_id_dict['output_id'], 'style'),
-    [
-        Input(app_id_dict['submit_button_id'], 'n_clicks'),
-    ])
-def show_output_div_old(n_submit):
-    if n_submit is not None:
-            return {'display': 'block'}
-    else:
-        return {'display': 'none'}
+# @app.callback(
+#     Output(app_id_dict['output_id'], 'style'),
+#     [
+#         Input(app_id_dict['submit_button_id'], 'n_clicks'),
+#     ],
+#     [
+#         State(app_id_dict['no_error_id'], 'children'),
+#     ]
+# )
+# def show_output_div_old(n_submit, test_passed):
+#
+#     print("in show output div old")
+#     if not test_passed:
+#         return {'display': 'none'}
+#
+#     if n_submit is not None:
+#         return {'display': 'block'}
+#     else:
+#         return {'display': 'none'}
 
 
 # # Submit button has been clicked
@@ -661,7 +689,9 @@ def show_output_div_old(n_submit):
     ],
     )
 def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
+
     if test_passed:
+
         if jsonified_data is not None:
             df_dict = load_dfs(jsonified_data=jsonified_data)
             df_x = df_dict['x']
