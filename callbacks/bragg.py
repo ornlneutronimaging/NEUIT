@@ -434,6 +434,53 @@ def clean_data_tab(data_tab2=None):
     return data_tab2_cleaned
 
 
+def update_xs_dict(xs_dict=None,
+                   data_tab=None,
+                   a=None, b=None, c=None,
+                   alpha=None, beta=None, gamma=None,
+                   temperature=None,
+                   log_label='tab2',
+                   wavelengths_A=None):
+    '''
+    calculating the structure for the given data_tab
+    '''
+    print(f"No errors found in {log_label}, working with {log_label}:")
+
+    # data_tab
+    atoms = []
+    _name_only = log_label
+    data_tab = clean_data_tab(data_tab)
+    for entry in data_tab:
+
+        # if no element, continue
+        if not entry[chem_name]:
+            continue
+        _chem_name = entry[chem_name]
+
+        _h = entry[index_number_h]
+        _k = entry[index_number_k]
+        _l = entry[index_number_l]
+
+        atoms.append(matter.Atom(_chem_name, (_h, _k, _l)))
+
+    print(f"- calculating lattice")
+    _lattice = matter.Lattice(a=a, b=b, c=c, alpha=alpha, beta=beta, gamma=gamma)
+
+    print(f"- calculating structure")
+    _structure = matter.Structure(atoms, _lattice, sgid=225)
+
+    print(f"- calculating cross-section")
+    _xscalculator = xscalc.XSCalculator(_structure, temperature, max_diffraction_index=4)
+
+    xs_dict[_name_only + ' (total)'] = _xscalculator.xs(wavelengths_A)
+    xs_dict[_name_only + ' (abs)'] = _xscalculator.xs_abs(wavelengths_A)
+    xs_dict[_name_only + ' (coh el)'] = _xscalculator.xs_coh_el(wavelengths_A)
+    xs_dict[_name_only + ' (inc el)'] = _xscalculator.xs_inc_el(wavelengths_A)
+    xs_dict[_name_only + ' (coh inel)'] = _xscalculator.xs_coh_inel(wavelengths_A)
+    xs_dict[_name_only + ' (inc inel)'] = _xscalculator.xs_inc_inel(wavelengths_A)
+    print("- Calculation done!")
+
+
 # submit button clicked
 @app.callback(
     [
@@ -502,70 +549,50 @@ def show_output_div(n_submit, data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, bet
                     temperature, distance, delay,
                     band_min, band_max, band_step):
 
+    something_to_plot = False
     if n_submit is not None:
 
         wavelengths_A = np.arange(band_min, band_max, band_step)
         xs_dict = {}
 
+        data_tab1 = clean_data_tab(data_tab1)
         data_tab2 = clean_data_tab(data_tab2)
-        if not data_tab2:
-            print(f"tab2 is empty! Leaving show_output_div.")
-            return None,  False, {'display': 'none'}
+        data_tab3 = clean_data_tab(data_tab3)
+        data_tab4 = clean_data_tab(data_tab4)
+        data_tab5 = clean_data_tab(data_tab5)
+        if data_tab2 or data_tab3 or data_tab4 or data_tab5 or data_tab1:
+           something_to_plot = True
+
+            # print(f"tab2 is empty! Leaving show_output_div.")
+            # return None,  False, {'display': 'none'}
 
         if no_error_tab2:
-            print(f"Working with tab2:")
+            update_xs_dict(xs_dict=xs_dict,
+                           data_tab=data_tab2,
+                           log_label='tab2',
+                           a=a_tab2, b=b_tab2, c=c_tab2,
+                           alpha=alpha_tab2, beta=beta_tab2, gamma=gamma_tab2,
+                           temperature=temperature,
+                           wavelengths_A=wavelengths_A)
 
-            # data_tab_2
-            atoms = []
-            _name_only = 'tab2'
-            data_tab2 = clean_data_tab(data_tab2)
-            for entry in data_tab2:
+        # work with other tabs
 
-                # if no element, continue
-                if not entry[chem_name]:
-                    continue
-                _chem_name = entry[chem_name]
 
-                _h = entry[index_number_h]
-                _k = entry[index_number_k]
-                _l = entry[index_number_l]
 
-                atoms.append(matter.Atom(_chem_name, (_h, _k, _l)))
 
-            a = a_tab2
-            b = b_tab2
-            c = c_tab2
-            alpha = alpha_tab2
-            beta = beta_tab2
-            gamma = gamma_tab2
+        if not something_to_plot:
+            return None,  False, {'display': 'none'}
 
-            print(f"- calculating lattice")
-            _lattice = matter.Lattice(a=a, b=b, c=c, alpha=alpha, beta=beta, gamma=gamma)
+        df_y = pd.DataFrame.from_dict(xs_dict)
+        df_x = pd.DataFrame()
+        df_x[constants.energy_name] = ir_util.angstroms_to_ev(wavelengths_A)
+        df_x = fill_df_x_types(df=df_x, distance_m=distance, delay_us=delay)
 
-            print(f"- calculating structure")
-            _structure = matter.Structure(atoms, _lattice, sgid=225)
-
-            print(f"- calculating cross-section")
-            _xscalculator = xscalc.XSCalculator(_structure, temperature, max_diffraction_index=4)
-
-            xs_dict[_name_only + ' (total)'] = _xscalculator.xs(wavelengths_A)
-            xs_dict[_name_only + ' (abs)'] = _xscalculator.xs_abs(wavelengths_A)
-            xs_dict[_name_only + ' (coh el)'] = _xscalculator.xs_coh_el(wavelengths_A)
-            xs_dict[_name_only + ' (inc el)'] = _xscalculator.xs_inc_el(wavelengths_A)
-            xs_dict[_name_only + ' (coh inel)'] = _xscalculator.xs_coh_inel(wavelengths_A)
-            xs_dict[_name_only + ' (inc inel)'] = _xscalculator.xs_inc_inel(wavelengths_A)
-            print("- Calculation done!")
-
-            df_y = pd.DataFrame.from_dict(xs_dict)
-            df_x = pd.DataFrame()
-            df_x[constants.energy_name] = ir_util.angstroms_to_ev(wavelengths_A)
-            df_x = fill_df_x_types(df=df_x, distance_m=distance, delay_us=delay)
-
-            datasets = {
-                        'x': df_x.to_json(orient='split', date_format='iso'),
-                        'y': df_y.to_json(orient='split', date_format='iso'),
-                        }
-            return json.dumps(datasets), True, {'display': 'block'}
+        datasets = {
+                    'x': df_x.to_json(orient='split', date_format='iso'),
+                    'y': df_y.to_json(orient='split', date_format='iso'),
+                    }
+        return json.dumps(datasets), True, {'display': 'block'}
 
     else:
         return None,  False, {'display': 'none'}
