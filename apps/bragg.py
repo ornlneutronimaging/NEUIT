@@ -426,11 +426,7 @@ layout = html.Div(
                     id=app_id_dict['submit_button_id'], n_clicks_timestamp=0),
 
         # Error message div1
-        html.Div([
-                    html.H6('Error report:'),
-                 ],
-                 id=app_id_dict['general_processing_errors'],
-                 style={'display': 'none'}),
+        html.Div(id=app_id_dict['general_processing_errors']),
 
         html.Div(
             [

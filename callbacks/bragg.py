@@ -465,7 +465,10 @@ def update_xs_dict(xs_dict=None,
         _k = entry[index_number_k]
         _l = entry[index_number_l]
 
-        atoms.append(matter.Atom(_chem_name, (_h, _k, _l)))
+        try:
+            atoms.append(matter.Atom(_chem_name, (_h, _k, _l)))
+        except ValueError as msg:
+            return f"error in format of h,k and/or l ({msg})"
 
     print(f"- calculating lattice")
     _lattice = matter.Lattice(a=a, b=b, c=c, alpha=alpha, beta=beta, gamma=gamma)
@@ -496,6 +499,7 @@ def update_xs_dict(xs_dict=None,
         Output(app_id_dict['hidden_df_json_id'], 'children'),
         Output(app_id_dict['no_error_id'], 'children'),
         Output(app_id_dict['output_id'], 'style'),
+        Output(app_id_dict['general_processing_errors'], 'children')
     ],
     [
         Input(app_id_dict['submit_button_id'], 'n_clicks'),
@@ -584,7 +588,8 @@ def show_output_div(n_submit,
                                         temperature=temperature,
                                         wavelengths_A=wavelengths_A)
         if tab1_error_msg:
-            None, html.Div("dfdfdfdfd"), {'display': 'none'}
+            return None, False, {'display': 'none'}, [html.H4("Error report:"),
+                                                      html.Div(f" - Tab1: {tab1_error_msg}")]
 
         if no_error_tab2:
             update_xs_dict(xs_dict=xs_dict,
@@ -623,7 +628,7 @@ def show_output_div(n_submit,
                            wavelengths_A=wavelengths_A)
 
         if not something_to_plot:
-            return None,  False, {'display': 'none'}
+            return None,  False, {'display': 'none'}, None
 
         df_y = pd.DataFrame.from_dict(xs_dict)
         df_x = pd.DataFrame()
@@ -634,10 +639,10 @@ def show_output_div(n_submit,
                     'x': df_x.to_json(orient='split', date_format='iso'),
                     'y': df_y.to_json(orient='split', date_format='iso'),
                     }
-        return json.dumps(datasets), True, {'display': 'block'}
+        return json.dumps(datasets), True, {'display': 'block'}, None
 
     else:
-        return None,  False, {'display': 'none'}
+        return None,  False, {'display': 'none'}, None
 
 
 def update_list_to_plot(name='tab2', df_y=None, to_plot_list=None, xs_type=None):
