@@ -652,7 +652,6 @@ def show_output_div(n_submit,
                     'y': df_y.to_json(orient='split', date_format='iso'),
                     }
         return json.dumps(datasets), True, {'display': 'block'}, None
-
     else:
         return None,  False, {'display': 'none'}, None
 
@@ -758,7 +757,6 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
     ])
 def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
 
-    print(f"{display_check =}")
     if display_check == ['display']:
         if test_passed is True:
             dataset = json.loads(jsonized_df_export[0])
@@ -783,3 +781,9 @@ def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
             return [None]
     else:
         return [None]
+
+
+@app.callback(Output("loading-output-2", 'children'), Input(app_id_dict['submit_button_id'], "n_clicks"))
+def loading_icon(value):
+    time.sleep(3)
+    return value

@@ -421,9 +421,17 @@ layout = html.Div(
         # preview button
         html.Button('Submit',
                     style={
-                           'width': '100%',
-                           },
+                        'width': '100%',
+                    },
                     id=app_id_dict['submit_button_id'], n_clicks_timestamp=0),
+
+        dcc.Loading(id='loading',
+                    type='circle',
+                    children=[html.Div([html.Div(id="loading-output-2",
+                                                 style={'display': 'none'},
+                                                 ),
+                                        ])],
+                    ),
 
         # Error message div1
         html.Div(id=app_id_dict['general_processing_errors']),
