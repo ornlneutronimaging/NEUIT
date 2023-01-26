@@ -41,22 +41,6 @@ def show_hide_band_input(more_info, style):
     return style
 
 
-# # tab 1
-# @app.callback(
-#         Output(app_id_dict['data_table_tab1'], 'data'),
-#     [
-#         Input(app_id_dict['add_row_tab1'], 'n_clicks_timestamp'),
-#     ],
-#     [
-#         State(app_id_dict['data_table_tab1'], 'data'),
-#         State(app_id_dict['data_table_tab1'], 'columns'),
-#     ]
-# )
-# def update_rows(add_time, data, columns):
-#     data.append({c['id']: '' for c in columns})
-#     return data
-
-
 # tab 1
 @app.callback(
     [
