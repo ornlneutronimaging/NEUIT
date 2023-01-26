@@ -244,7 +244,7 @@ layout = html.Div(
                                                       value=distance_default,
                                                       min=0,
                                                       inputMode='numeric',
-                                                      step=0.01,
+                                                      step=0.001,
                                                       ),
                                         ]
                                         ), width=2
