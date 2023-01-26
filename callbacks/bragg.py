@@ -474,7 +474,10 @@ def update_xs_dict(xs_dict=None,
     _structure = matter.Structure(atoms, _lattice, sgid=225)
 
     print(f"- calculating cross-section")
-    _xscalculator = xscalc.XSCalculator(_structure, temperature, max_diffraction_index=4)
+    try:
+        _xscalculator = xscalc.XSCalculator(_structure, temperature, max_diffraction_index=4)
+    except AttributeError as msg:
+        return msg
 
     xs_dict[_name_only + ' (total)'] = _xscalculator.xs(wavelengths_A)
     xs_dict[_name_only + ' (abs)'] = _xscalculator.xs_abs(wavelengths_A)
@@ -483,6 +486,8 @@ def update_xs_dict(xs_dict=None,
     xs_dict[_name_only + ' (coh inel)'] = _xscalculator.xs_coh_inel(wavelengths_A)
     xs_dict[_name_only + ' (inc inel)'] = _xscalculator.xs_inc_inel(wavelengths_A)
     print("- Calculation done!")
+
+    return None
 
 
 # submit button clicked
@@ -571,13 +576,15 @@ def show_output_div(n_submit,
         if data_tab2 or data_tab3 or data_tab4 or data_tab5 or data_tab1:
            something_to_plot = True
 
-        update_xs_dict(xs_dict=xs_dict,
-                       data_tab=data_tab1,
-                       log_label='tab1',
-                       a=a_tab1, b=b_tab1, c=c_tab1,
-                       alpha=alpha_tab1, beta=beta_tab1, gamma=gamma_tab1,
-                       temperature=temperature,
-                       wavelengths_A=wavelengths_A)
+        tab1_error_msg = update_xs_dict(xs_dict=xs_dict,
+                                        data_tab=data_tab1,
+                                        log_label='tab1',
+                                        a=a_tab1, b=b_tab1, c=c_tab1,
+                                        alpha=alpha_tab1, beta=beta_tab1, gamma=gamma_tab1,
+                                        temperature=temperature,
+                                        wavelengths_A=wavelengths_A)
+        if tab1_error_msg:
+            None, html.Div("dfdfdfdfd"), {'display': 'none'}
 
         if no_error_tab2:
             update_xs_dict(xs_dict=xs_dict,
@@ -721,78 +728,6 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
         return plot_loading, [None]
 
 
-# @app.callback(
-#     [
-#         Output(app_id_dict['plot_div_id'], 'children'),
-#         Output(app_id_dict['hidden_df_export_json_id'], 'children'),
-#     ],
-#     [
-#         Input(app_id_dict['hidden_df_json_id'], 'children'),
-#         Input(app_id_dict['error_id'], 'children'),
-#         Input('x_type', 'value'),
-#         Input('y_type', 'value'),
-#         Input('plot_scale', 'value'),
-#         Input('xs_type', 'value'),
-#     ],
-#     [
-#         State(app_id_dict['cif_upload_id'], 'filename'),
-#     ])
-# def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type, fnames):
-#     if test_passed:
-#         if jsonified_data is not None:
-#             df_dict = load_dfs(jsonified_data=jsonified_data)
-#             df_x = df_dict['x']
-#             df_y = df_dict['y']
-#
-#             # Form selected Y df
-#             to_plot_list = []
-#             for each_fname in fnames:
-#                 _name_only = each_fname.split('.')[0]
-#                 if 'total' in xs_type:
-#                     to_plot_list.append(_name_only + ' (total)')
-#                 if 'abs' in xs_type:
-#                     to_plot_list.append(_name_only + ' (abs)')
-#                 if 'coh_el' in xs_type:
-#                     to_plot_list.append(_name_only + ' (coh el)')
-#                 if 'coh_inel' in xs_type:
-#                     to_plot_list.append(_name_only + ' (coh inel)')
-#                 if 'inc_el' in xs_type:
-#                     to_plot_list.append(_name_only + ' (inc el)')
-#                 if 'inc_inel' in xs_type:
-#                     to_plot_list.append(_name_only + ' (inc inel)')
-#             try:
-#                 df_to_plot = df_y[to_plot_list]
-#             except KeyError:
-#                 return resubmit, [None]
-#             if y_type == 'attenuation':
-#                 df_to_plot = 1 - df_y
-#
-#             # Add X column
-#             x_tag = x_type_to_x_tag(x_type)
-#             df_to_plot.insert(loc=0, column=x_tag, value=df_x[x_tag])
-#             y_label = y_type_to_y_label(y_type)
-#
-#             jsonized_plot_df = df_to_plot.to_json(orient='split', date_format='iso')
-#
-#             # Plot in matplotlib
-#             fig = plt.figure()
-#             ax1 = fig.add_subplot(111)
-#             try:
-#                 ax1 = df_to_plot.set_index(keys=x_tag).plot(legend=False, ax=ax1)
-#             except TypeError:
-#                 pass
-#             ax1.set_ylabel(y_label)
-#
-#             # Convert to plotly and format layout
-#             plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
-#
-#             return html.Div([dcc.Graph(figure=plotly_fig, id=app_id_dict['plot_fig_id'])]), [json.dumps(jsonized_plot_df)]
-#         else:
-#             return plot_loading, [None]
-#     else:
-#         return plot_loading, [None]
-
-
 @app.callback(
     [
         Output(app_id_dict['df_export_tb_div'], 'children'),
@@ -806,6 +741,7 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
     ])
 def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
 
+    print(f"{display_check =}")
     if display_check == ['display']:
         if test_passed is True:
             dataset = json.loads(jsonized_df_export[0])

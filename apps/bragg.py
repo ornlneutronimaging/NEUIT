@@ -410,6 +410,9 @@ layout = html.Div(
         # Hidden div to store df_all json
         html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),
 
+        # Hidden div to store df_all json
+        html.Div(id=app_id_dict['no_error_id'], style={'display': 'none'}),
+
         # Hidden div to store df_export json
         html.Div(id=app_id_dict['hidden_df_export_json_id'], style={'display': 'none'}),
 
@@ -423,7 +426,11 @@ layout = html.Div(
                     id=app_id_dict['submit_button_id'], n_clicks_timestamp=0),
 
         # Error message div1
-        html.Div(id=app_id_dict['no_error_id'], children=True),
+        html.Div([
+                    html.H6('Error report:'),
+                 ],
+                 id=app_id_dict['general_processing_errors'],
+                 style={'display': 'none'}),
 
         html.Div(
             [
