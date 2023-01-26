@@ -269,6 +269,8 @@ def init_app_ids(app_name: str):
         id_dict['alpha_tab1'] = app_name + '_alpha_tab1'
         id_dict['beta_tab1'] = app_name + '_beta_tab1'
         id_dict['gamma_tab1'] = app_name + '_gamma_tab1'
+        id_dict['download_tab1'] = app_name + '_download_tab1'
+        id_dict['download_button_tab1'] = app_name + '_download_button_tab1'
 
         id_dict['data_table_tab2'] = app_name + '_data_table_tab2'
         id_dict['add_row_tab2'] = app_name + '_add_row_tab2'
@@ -282,6 +284,8 @@ def init_app_ids(app_name: str):
         id_dict['alpha_tab2'] = app_name + '_alpha_tab2'
         id_dict['beta_tab2'] = app_name + '_beta_tab2'
         id_dict['gamma_tab2'] = app_name + '_gamma_tab2'
+        id_dict['download_tab2'] = app_name + '_download_tab2'
+        id_dict['download_button_tab2'] = app_name + '_download_button_tab2'
 
         id_dict['data_table_tab3'] = app_name + '_data_table_tab3'
         id_dict['add_row_tab3'] = app_name + '_add_row_tab3'
@@ -295,6 +299,8 @@ def init_app_ids(app_name: str):
         id_dict['alpha_tab3'] = app_name + '_alpha_tab3'
         id_dict['beta_tab3'] = app_name + '_beta_tab3'
         id_dict['gamma_tab3'] = app_name + '_gamma_tab3'
+        id_dict['download_tab3'] = app_name + '_download_tab3'
+        id_dict['download_button_tab3'] = app_name + '_download_button_tab3'
 
         id_dict['data_table_tab4'] = app_name + '_data_table_tab4'
         id_dict['add_row_tab4'] = app_name + '_add_row_tab4'
@@ -308,6 +314,8 @@ def init_app_ids(app_name: str):
         id_dict['alpha_tab4'] = app_name + '_alpha_tab4'
         id_dict['beta_tab4'] = app_name + '_beta_tab4'
         id_dict['gamma_tab4'] = app_name + '_gamma_tab4'
+        id_dict['download_tab4'] = app_name + '_download_tab4'
+        id_dict['download_button_tab4'] = app_name + '_download_button_tab4'
 
         id_dict['data_table_tab5'] = app_name + '_data_table_tab5'
         id_dict['add_row_tab5'] = app_name + '_add_row_tab5'
@@ -321,6 +329,8 @@ def init_app_ids(app_name: str):
         id_dict['alpha_tab5'] = app_name + '_alpha_tab5'
         id_dict['beta_tab5'] = app_name + '_beta_tab5'
         id_dict['gamma_tab5'] = app_name + '_gamma_tab5'
+        id_dict['download_tab5'] = app_name + '_download_tab5'
+        id_dict['download_button_tab5'] = app_name + '_download_button_tab5'
 
     return id_dict
 

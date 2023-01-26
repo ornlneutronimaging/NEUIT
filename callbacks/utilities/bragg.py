@@ -7,7 +7,7 @@ else:
     from diffpy.structure.parsers import getParser
 
 
-def parse_cif_upload(content):
+def parse_cif_file(content):
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
 
@@ -16,3 +16,14 @@ def parse_cif_upload(content):
     struc = p.parse(cif_s)
     struc.sg = p.spacegroup
     return struc
+
+
+def parse_csv_file(content):
+    content_type, content_string = content.split(',')
+    decoded = base64.b64decode(content_string)
+    csv_s = decoded.decode('utf-8')
+    print(csv_s)
+
+    cif_structure = {}
+
+    return None

@@ -45,7 +45,9 @@ def tab_content(upload_id=None,
                 c_id=None,
                 alpha_id=None,
                 beta_id=None,
-                gamma_id=None):
+                gamma_id=None,
+                download_button_id=None,
+                download_id=None):
 
     children_array = []
 
@@ -192,6 +194,13 @@ def tab_content(upload_id=None,
                 ),
             ]
     ))
+
+    children_array.append(html.Div(html.P([html.Br()])))
+
+    children_array.append(html.Button('Export this structure',
+                                      id=download_button_id,
+                                      n_clicks_timestamp=0))
+    children_array.append(dcc.Download(id=download_id))
 
     # Error message div1
     children_array.append(html.Div(id=no_error_id, children=True))
@@ -340,6 +349,8 @@ layout = html.Div(
                                                   alpha_id=app_id_dict['alpha_tab1'],
                                                   beta_id=app_id_dict['beta_tab1'],
                                                   gamma_id=app_id_dict['gamma_tab1'],
+                                                  download_button_id=app_id_dict['download_button_tab1'],
+                                                  download_id=app_id_dict['download_tab1'],
                                                   ),
                              ),
                      dcc.Tab(label='.cif #2',
@@ -356,6 +367,8 @@ layout = html.Div(
                                                   alpha_id=app_id_dict['alpha_tab2'],
                                                   beta_id=app_id_dict['beta_tab2'],
                                                   gamma_id=app_id_dict['gamma_tab2'],
+                                                  download_id=app_id_dict['download_tab2'],
+                                                  download_button_id=app_id_dict['download_button_tab2'],
                                                   )
                              ),
                      dcc.Tab(label='.cif #3',
@@ -372,6 +385,8 @@ layout = html.Div(
                                                   alpha_id=app_id_dict['alpha_tab3'],
                                                   beta_id=app_id_dict['beta_tab3'],
                                                   gamma_id=app_id_dict['gamma_tab3'],
+                                                  download_id=app_id_dict['download_tab3'],
+                                                  download_button_id=app_id_dict['download_button_tab3'],
                                                   )
                              ),
                      dcc.Tab(label='.cif #4',
@@ -388,6 +403,8 @@ layout = html.Div(
                                                   alpha_id=app_id_dict['alpha_tab4'],
                                                   beta_id=app_id_dict['beta_tab4'],
                                                   gamma_id=app_id_dict['gamma_tab4'],
+                                                  download_id=app_id_dict['download_tab4'],
+                                                  download_button_id=app_id_dict['download_button_tab4'],
                                                   )
                              ),
                      dcc.Tab(label='.cif #5',
@@ -404,10 +421,12 @@ layout = html.Div(
                                                   alpha_id=app_id_dict['alpha_tab5'],
                                                   beta_id=app_id_dict['beta_tab5'],
                                                   gamma_id=app_id_dict['gamma_tab5'],
+                                                  download_id=app_id_dict['download_tab5'],
+                                                  download_button_id=app_id_dict['download_button_tab5'],
                                                   )
                              ),
                  ],
-                ),
+            ),
 
         # Hidden div to store df_all json
         html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),

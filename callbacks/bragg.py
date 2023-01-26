@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import json
 import time
-
+from urllib.parse import quote as urlquote
 
 import ImagingReso._utilities as ir_util
 from app import app
@@ -16,7 +16,7 @@ from callbacks.utilities.initialization import (init_app_ids, striped_rows, plot
 import callbacks.utilities.constants as constants
 from callbacks.utilities.plot import shape_matplot_to_plotly
 from callbacks.utilities.all_apps import y_type_to_y_label, x_type_to_x_tag, load_dfs, update_rows_util
-from callbacks.utilities.bragg import parse_cif_upload
+from callbacks.utilities.bragg import parse_cif_file, parse_csv_file
 from callbacks.utilities.resonance import fill_df_x_types
 from callbacks.utilities.constants import *
 
@@ -67,18 +67,17 @@ def show_hide_band_input(more_info, style):
     ],
 )
 def upload_feedback(cif_names, add_button_timestamp,
-                    prev_upload_time, cif_uploads,
+                    prev_upload_time, file_uploads,
                     content_of_table, names_of_columns):
 
     data_fb_list = []
     error_div_list = []
 
     if cif_names is None:
-
         content_of_table.append({c['id']: '' for c in names_of_columns})
         return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
 
-    if cif_uploads is not None:
+    if file_uploads is not None:
 
         if add_button_timestamp != prev_upload_time:
 
@@ -89,8 +88,13 @@ def upload_feedback(cif_names, add_button_timestamp,
             content_of_table = []
 
         # for each_index, each_content in enumerate(cif_uploads):
-        #     _cif_struc = parse_cif_upload(content=each_content)
-        _cif_struc = parse_cif_upload(content=cif_uploads)
+        #     _cif_struc = parse_cif_file(content=each_content)
+
+        if cif_names.endswith('.cif'):
+            _cif_struc = parse_cif_file(content=file_uploads)
+        elif cif_names.endswith('.csv'):
+            _cif_struc = parse_csv_file(content=file_uploads)
+
         for _row_index, _row in enumerate(_cif_struc):
 
             if _row_index == 0:
@@ -180,8 +184,8 @@ def upload_feedback(cif_names, add_button_timestamp,
             content_of_table = []
 
         # for each_index, each_content in enumerate(cif_uploads):
-        #     _cif_struc = parse_cif_upload(content=each_content)
-        _cif_struc = parse_cif_upload(content=cif_uploads)
+        #     _cif_struc = parse_cif_file(content=each_content)
+        _cif_struc = parse_cif_file(content=cif_uploads)
         for _row_index, _row in enumerate(_cif_struc):
 
             if _row_index == 0:
@@ -272,8 +276,8 @@ def upload_feedback(cif_names, add_button_timestamp,
             content_of_table = []
 
         # for each_index, each_content in enumerate(cif_uploads):
-        #     _cif_struc = parse_cif_upload(content=each_content)
-        _cif_struc = parse_cif_upload(content=cif_uploads)
+        #     _cif_struc = parse_cif_file(content=each_content)
+        _cif_struc = parse_cif_file(content=cif_uploads)
         for _row_index, _row in enumerate(_cif_struc):
 
             if _row_index == 0:
@@ -363,8 +367,8 @@ def upload_feedback(cif_names, add_button_timestamp,
             content_of_table = []
 
         # for each_index, each_content in enumerate(cif_uploads):
-        #     _cif_struc = parse_cif_upload(content=each_content)
-        _cif_struc = parse_cif_upload(content=cif_uploads)
+        #     _cif_struc = parse_cif_file(content=each_content)
+        _cif_struc = parse_cif_file(content=cif_uploads)
         for _row_index, _row in enumerate(_cif_struc):
 
             if _row_index == 0:
@@ -454,8 +458,8 @@ def upload_feedback(cif_names, add_button_timestamp,
             content_of_table = []
 
         # for each_index, each_content in enumerate(cif_uploads):
-        #     _cif_struc = parse_cif_upload(content=each_content)
-        _cif_struc = parse_cif_upload(content=cif_uploads)
+        #     _cif_struc = parse_cif_file(content=each_content)
+        _cif_struc = parse_cif_file(content=cif_uploads)
         for _row_index, _row in enumerate(_cif_struc):
 
             if _row_index == 0:
@@ -862,7 +866,27 @@ def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
         return [None]
 
 
-@app.callback(Output("loading-output-2", 'children'), Input(app_id_dict['submit_button_id'], "n_clicks"))
+# hourglass icon
+@app.callback(Output("loading-output-2", 'children'),
+              Input(app_id_dict['submit_button_id'], "n_clicks"))
 def loading_icon(value):
     time.sleep(3)
     return value
+
+
+# @app.callback(Output("test", 'children'), Input('export_this_structure', 'n_clicks'))
+# def export_tab1_structure(button_clicked):
+#     location = "/download/" + urlquote("remove_me.txt")
+#     html_location = html.A("remove_me.txt", href=location)
+#     data = ['line 1', 'line 2']
+#     with open(location, "w") as f:
+#         for _line in data:
+#             f.write(_line + "\n")
+
+@app.callback(Output(app_id_dict["download_tab1"], "data"),
+              Input(app_id_dict["download_button_tab1"], "n_clicks"),
+              prevent_initial_call=True,
+              )
+def func(n_clicks):
+    return dict(content="Hellow world",
+                filename="remove_me.txt")
