@@ -592,40 +592,52 @@ def show_output_div(n_submit,
                                                       html.Div(f" - Tab1: {tab1_error_msg}")]
 
         if no_error_tab2:
-            update_xs_dict(xs_dict=xs_dict,
-                           data_tab=data_tab2,
-                           log_label='tab2',
-                           a=a_tab2, b=b_tab2, c=c_tab2,
-                           alpha=alpha_tab2, beta=beta_tab2, gamma=gamma_tab2,
-                           temperature=temperature,
-                           wavelengths_A=wavelengths_A)
+            tab2_error_msg = update_xs_dict(xs_dict=xs_dict,
+                                            data_tab=data_tab2,
+                                            log_label='tab2',
+                                            a=a_tab2, b=b_tab2, c=c_tab2,
+                                            alpha=alpha_tab2, beta=beta_tab2, gamma=gamma_tab2,
+                                            temperature=temperature,
+                                            wavelengths_A=wavelengths_A)
+            if tab2_error_msg:
+                return None, False, {'display': 'none'}, [html.H4("Error report:"),
+                                                          html.Div(f" - Tab2: {tab2_error_msg}")]
 
         if no_error_tab3:
-            update_xs_dict(xs_dict=xs_dict,
-                           data_tab=data_tab3,
-                           log_label='tab3',
-                           a=a_tab3, b=b_tab3, c=c_tab3,
-                           alpha=alpha_tab3, beta=beta_tab3, gamma=gamma_tab3,
-                           temperature=temperature,
-                           wavelengths_A=wavelengths_A)
+            tab3_error_msg = update_xs_dict(xs_dict=xs_dict,
+                                            data_tab=data_tab3,
+                                            log_label='tab3',
+                                            a=a_tab3, b=b_tab3, c=c_tab3,
+                                            alpha=alpha_tab3, beta=beta_tab3, gamma=gamma_tab3,
+                                            temperature=temperature,
+                                            wavelengths_A=wavelengths_A)
+            if tab3_error_msg:
+                return None, False, {'display': 'none'}, [html.H4("Error report:"),
+                                                          html.Div(f" - Tab3: {tab3_error_msg}")]
 
         if no_error_tab4:
-            update_xs_dict(xs_dict=xs_dict,
-                           data_tab=data_tab4,
-                           log_label='tab4',
-                           a=a_tab4, b=b_tab4, c=c_tab4,
-                           alpha=alpha_tab4, beta=beta_tab4, gamma=gamma_tab4,
-                           temperature=temperature,
-                           wavelengths_A=wavelengths_A)
+            tab4_error_msg = update_xs_dict(xs_dict=xs_dict,
+                                            data_tab=data_tab4,
+                                            log_label='tab4',
+                                            a=a_tab4, b=b_tab4, c=c_tab4,
+                                            alpha=alpha_tab4, beta=beta_tab4, gamma=gamma_tab4,
+                                            temperature=temperature,
+                                            wavelengths_A=wavelengths_A)
+            if tab4_error_msg:
+                return None, False, {'display': 'none'}, [html.H4("Error report:"),
+                                                          html.Div(f" - Tab4: {tab4_error_msg}")]
 
         if no_error_tab5:
-            update_xs_dict(xs_dict=xs_dict,
-                           data_tab=data_tab5,
-                           log_label='tab5',
-                           a=a_tab5, b=b_tab5, c=c_tab5,
-                           alpha=alpha_tab5, beta=beta_tab5, gamma=gamma_tab5,
-                           temperature=temperature,
-                           wavelengths_A=wavelengths_A)
+            tab5_error_msg = update_xs_dict(xs_dict=xs_dict,
+                                            data_tab=data_tab5,
+                                            log_label='tab5',
+                                            a=a_tab5, b=b_tab5, c=c_tab5,
+                                            alpha=alpha_tab5, beta=beta_tab5, gamma=gamma_tab5,
+                                            temperature=temperature,
+                                            wavelengths_A=wavelengths_A)
+            if tab5_error_msg:
+                return None, False, {'display': 'none'}, [html.H4("Error report:"),
+                                                          html.Div(f" - Tab5: {tab5_error_msg}")]
 
         if not something_to_plot:
             return None,  False, {'display': 'none'}, None
