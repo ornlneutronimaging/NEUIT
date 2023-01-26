@@ -259,6 +259,8 @@ def init_app_ids(app_name: str):
 
         id_dict['data_table_tab1'] = app_name + '_data_table_tab1'
         id_dict['add_row_tab1'] = app_name + '_add_row_tab1'
+        id_dict['cif_upload_tab1'] = app_name + '_ciff_upload_tab1'
+        id_dict['cif_upload_fb_tab1'] = app_name + '_cif_fb_tab1'
         id_dict['no_error_tab1'] = app_name + '_no_error_tab1'
         id_dict['hidden_upload_time_tab1'] = app_name + '_hidden_upload_time_tab1'
         id_dict['a_tab1'] = app_name + '_a_tab1'

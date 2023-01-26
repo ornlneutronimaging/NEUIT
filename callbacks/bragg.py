@@ -41,20 +41,112 @@ def show_hide_band_input(more_info, style):
     return style
 
 
+# # tab 1
+# @app.callback(
+#         Output(app_id_dict['data_table_tab1'], 'data'),
+#     [
+#         Input(app_id_dict['add_row_tab1'], 'n_clicks_timestamp'),
+#     ],
+#     [
+#         State(app_id_dict['data_table_tab1'], 'data'),
+#         State(app_id_dict['data_table_tab1'], 'columns'),
+#     ]
+# )
+# def update_rows(add_time, data, columns):
+#     data.append({c['id']: '' for c in columns})
+#     return data
+
+
 # tab 1
 @app.callback(
-        Output(app_id_dict['data_table_tab1'], 'data'),
     [
+        Output(app_id_dict['cif_upload_fb_tab1'], 'children'),
+        Output(app_id_dict['no_error_tab1'], 'children'),
+        Output(app_id_dict['data_table_tab1'], 'data'),
+        Output(app_id_dict['hidden_upload_time_tab1'], 'children'),
+        Output(app_id_dict['a_tab1'], 'value'),
+        Output(app_id_dict['b_tab1'], 'value'),
+        Output(app_id_dict['c_tab1'], 'value'),
+        Output(app_id_dict['alpha_tab1'], 'value'),
+        Output(app_id_dict['beta_tab1'], 'value'),
+        Output(app_id_dict['gamma_tab1'], 'value')
+    ],
+    [
+        Input(app_id_dict['cif_upload_tab1'], 'filename'),
         Input(app_id_dict['add_row_tab1'], 'n_clicks_timestamp'),
     ],
     [
+        State(app_id_dict['hidden_upload_time_tab1'], 'children'),
+        State(app_id_dict['cif_upload_tab1'], 'contents'),
         State(app_id_dict['data_table_tab1'], 'data'),
         State(app_id_dict['data_table_tab1'], 'columns'),
-    ]
+    ],
 )
-def update_rows(add_time, data, columns):
-    data.append({c['id']: '' for c in columns})
-    return data
+def upload_feedback(cif_names, add_button_timestamp,
+                    prev_upload_time, cif_uploads,
+                    content_of_table, names_of_columns):
+
+    data_fb_list = []
+    error_div_list = []
+
+    if cif_names is None:
+
+        content_of_table.append({c['id']: '' for c in names_of_columns})
+        return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
+
+    if cif_uploads is not None:
+
+        if add_button_timestamp != prev_upload_time:
+
+            content_of_table.append({c['id']: '' for c in names_of_columns})
+            return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
+
+        else:
+            content_of_table = []
+
+        # for each_index, each_content in enumerate(cif_uploads):
+        #     _cif_struc = parse_cif_upload(content=each_content)
+        _cif_struc = parse_cif_upload(content=cif_uploads)
+        for _row_index, _row in enumerate(_cif_struc):
+
+            if _row_index == 0:
+                interaxial_angle_alpha = _row.lattice.alpha
+                interaxial_angle_beta = _row.lattice.beta
+                interaxial_angle_gamma = _row.lattice.gamma
+                axial_length_a = _row.lattice.a
+                axial_length_b = _row.lattice.b
+                axial_length_c = _row.lattice.c
+
+            chem_name = _row.element
+            index_number_h = _row.x
+            index_number_k = _row.y
+            index_number_l = _row.z
+
+            _new_table_entry = {constants.chem_name: chem_name,
+                                constants.index_number_h: index_number_h,
+                                constants.index_number_k: index_number_k,
+                                constants.index_number_l: index_number_l}
+
+            content_of_table.append(_new_table_entry)
+
+    if '.cif' in cif_names:
+        data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
+    else:
+        error_div = html.Div(
+            ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(cif_names)])
+        error_div_list.append(error_div)
+
+    if len(error_div_list) == 0:
+        test_passed = True
+    else:
+        test_passed = error_div_list
+
+    return data_fb_list, test_passed, \
+           content_of_table, prev_upload_time, \
+           axial_length_a, axial_length_b, \
+           axial_length_c, interaxial_angle_alpha, \
+           interaxial_angle_beta, interaxial_angle_gamma
+
 
 # tab 2
 @app.callback(
@@ -512,6 +604,7 @@ def update_xs_dict(xs_dict=None,
         State(app_id_dict['alpha_tab1'], 'value'),
         State(app_id_dict['beta_tab1'], 'value'),
         State(app_id_dict['gamma_tab1'], 'value'),
+        State(app_id_dict['no_error_tab1'], 'children'),
 
         State(app_id_dict['data_table_tab2'], 'data'),
         State(app_id_dict['a_tab2'], 'value'),
@@ -558,7 +651,7 @@ def update_xs_dict(xs_dict=None,
     ]
 )
 def show_output_div(n_submit,
-                    data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, beta_tab1, gamma_tab1,
+                    data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, beta_tab1, gamma_tab1, no_error_tab1,
                     data_tab2, a_tab2, b_tab2, c_tab2, alpha_tab2, beta_tab2, gamma_tab2, no_error_tab2,
                     data_tab3, a_tab3, b_tab3, c_tab3, alpha_tab3, beta_tab3, gamma_tab3, no_error_tab3,
                     data_tab4, a_tab4, b_tab4, c_tab4, alpha_tab4, beta_tab4, gamma_tab4, no_error_tab4,
@@ -580,16 +673,18 @@ def show_output_div(n_submit,
         if data_tab2 or data_tab3 or data_tab4 or data_tab5 or data_tab1:
            something_to_plot = True
 
-        tab1_error_msg = update_xs_dict(xs_dict=xs_dict,
-                                        data_tab=data_tab1,
-                                        log_label='tab1',
-                                        a=a_tab1, b=b_tab1, c=c_tab1,
-                                        alpha=alpha_tab1, beta=beta_tab1, gamma=gamma_tab1,
-                                        temperature=temperature,
-                                        wavelengths_A=wavelengths_A)
-        if tab1_error_msg:
-            return None, False, {'display': 'none'}, [html.H4("Error report:"),
-                                                      html.Div(f" - Tab1: {tab1_error_msg}")]
+
+        if no_error_tab1:
+            tab1_error_msg = update_xs_dict(xs_dict=xs_dict,
+                                            data_tab=data_tab1,
+                                            log_label='tab1',
+                                            a=a_tab1, b=b_tab1, c=c_tab1,
+                                            alpha=alpha_tab1, beta=beta_tab1, gamma=gamma_tab1,
+                                            temperature=temperature,
+                                            wavelengths_A=wavelengths_A)
+            if tab1_error_msg:
+                return None, False, {'display': 'none'}, [html.H4("Error report:"),
+                                                          html.Div(f" - Tab1: {tab1_error_msg}")]
 
         if no_error_tab2:
             tab2_error_msg = update_xs_dict(xs_dict=xs_dict,

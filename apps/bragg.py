@@ -324,12 +324,14 @@ layout = html.Div(
 
         # tabs
         dcc.Tabs(id=app_id_dict['tabs'],
-                 value='tab_user_defined',
+                 value='tab_cif_1',
                  children=[
-                     dcc.Tab(label='User-defined',
-                             value='tab_user_defined',
-                             children=tab_content(add_row_id=app_id_dict['add_row_tab1'],
+                     dcc.Tab(label='.cif #1',
+                             value='tab_cif_1',
+                             children=tab_content(upload_id=app_id_dict['cif_upload_tab1'],
+                                                  add_row_id=app_id_dict['add_row_tab1'],
                                                   data_table=app_id_dict['data_table_tab1'],
+                                                  cif_upload_fb=app_id_dict['cif_upload_fb_tab1'],
                                                   no_error_id=app_id_dict['no_error_tab1'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab1'],
                                                   a_id=app_id_dict['a_tab1'],
@@ -340,8 +342,8 @@ layout = html.Div(
                                                   gamma_id=app_id_dict['gamma_tab1'],
                                                   ),
                              ),
-                     dcc.Tab(label='.cif #1',
-                             value='tab_cif_1',
+                     dcc.Tab(label='.cif #2',
+                             value='tab_cif_2',
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab2'],
                                                   add_row_id=app_id_dict['add_row_tab2'],
                                                   data_table=app_id_dict['data_table_tab2'],
@@ -356,8 +358,8 @@ layout = html.Div(
                                                   gamma_id=app_id_dict['gamma_tab2'],
                                                   )
                              ),
-                     dcc.Tab(label='.cif #2',
-                             value='tab_cif_2',
+                     dcc.Tab(label='.cif #3',
+                             value='tab_cif_3',
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab3'],
                                                   add_row_id=app_id_dict['add_row_tab3'],
                                                   data_table=app_id_dict['data_table_tab3'],
@@ -372,8 +374,8 @@ layout = html.Div(
                                                   gamma_id=app_id_dict['gamma_tab3'],
                                                   )
                              ),
-                     dcc.Tab(label='.cif #3',
-                             value='tab_cif_3',
+                     dcc.Tab(label='.cif #4',
+                             value='tab_cif_4',
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab4'],
                                                   add_row_id=app_id_dict['add_row_tab4'],
                                                   data_table=app_id_dict['data_table_tab4'],
@@ -388,8 +390,8 @@ layout = html.Div(
                                                   gamma_id=app_id_dict['gamma_tab4'],
                                                   )
                              ),
-                     dcc.Tab(label='.cif #4',
-                             value='tab_cif_4',
+                     dcc.Tab(label='.cif #5',
+                             value='tab_cif_5',
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab5'],
                                                   add_row_id=app_id_dict['add_row_tab5'],
                                                   data_table=app_id_dict['data_table_tab5'],
@@ -404,7 +406,7 @@ layout = html.Div(
                                                   gamma_id=app_id_dict['gamma_tab5'],
                                                   )
                              ),
-                    ],
+                 ],
                 ),
 
         # Hidden div to store df_all json
