@@ -909,7 +909,7 @@ def format_data(dict=None):
     if dict is None:
         return ""
 
-    return "Hellow world!"
+    return json.dumps(dict)
 
 
 # export tab1
