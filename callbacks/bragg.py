@@ -88,9 +88,6 @@ def upload_feedback(cif_names, add_button_timestamp,
         else:
             content_of_table = []
 
-        # for each_index, each_content in enumerate(cif_uploads):
-        #     _cif_struc = parse_cif_file(content=each_content)
-
         if cif_names.endswith('.cif'):
             _cif_struc = parse_cif_file(content=file_uploads)
         elif cif_names.endswith('.txt'):
@@ -118,7 +115,7 @@ def upload_feedback(cif_names, add_button_timestamp,
 
             content_of_table.append(_new_table_entry)
 
-    if '.cif' in cif_names:
+    if ('.cif' in cif_names) or ('.txt' in cif_names):
         data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
     else:
         error_div = html.Div(
@@ -163,30 +160,30 @@ def upload_feedback(cif_names, add_button_timestamp,
     ],
 )
 def upload_feedback(cif_names, add_button_timestamp,
-                    prev_upload_time, cif_uploads,
+                    prev_upload_time, file_uploads,
                     content_of_table, names_of_columns):
 
     data_fb_list = []
     error_div_list = []
 
     if cif_names is None:
-
         content_of_table.append({c['id']: '' for c in names_of_columns})
         return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
 
-    if cif_uploads is not None:
+    if file_uploads is not None:
 
         if add_button_timestamp != prev_upload_time:
-
             content_of_table.append({c['id']: '' for c in names_of_columns})
             return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
 
         else:
             content_of_table = []
 
-        # for each_index, each_content in enumerate(cif_uploads):
-        #     _cif_struc = parse_cif_file(content=each_content)
-        _cif_struc = parse_cif_file(content=cif_uploads)
+        if cif_names.endswith('.cif'):
+            _cif_struc = parse_cif_file(content=file_uploads)
+        elif cif_names.endswith('.txt'):
+            _cif_struc = parse_txt_file(content=file_uploads)
+
         for _row_index, _row in enumerate(_cif_struc):
 
             if _row_index == 0:
@@ -209,7 +206,7 @@ def upload_feedback(cif_names, add_button_timestamp,
 
             content_of_table.append(_new_table_entry)
 
-    if '.cif' in cif_names:
+    if ('.cif' in cif_names) or ('.txt' in cif_names):
         data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
     else:
         error_div = html.Div(
@@ -255,30 +252,30 @@ def upload_feedback(cif_names, add_button_timestamp,
     ],
 )
 def upload_feedback(cif_names, add_button_timestamp,
-                    prev_upload_time, cif_uploads,
+                    prev_upload_time, file_uploads,
                     content_of_table, names_of_columns):
 
     data_fb_list = []
     error_div_list = []
 
     if cif_names is None:
-
         content_of_table.append({c['id']: '' for c in names_of_columns})
         return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
 
-    if cif_uploads is not None:
+    if file_uploads is not None:
 
         if add_button_timestamp != prev_upload_time:
-
             content_of_table.append({c['id']: '' for c in names_of_columns})
             return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
 
         else:
             content_of_table = []
 
-        # for each_index, each_content in enumerate(cif_uploads):
-        #     _cif_struc = parse_cif_file(content=each_content)
-        _cif_struc = parse_cif_file(content=cif_uploads)
+        if cif_names.endswith('.cif'):
+            _cif_struc = parse_cif_file(content=file_uploads)
+        elif cif_names.endswith('.txt'):
+            _cif_struc = parse_txt_file(content=file_uploads)
+
         for _row_index, _row in enumerate(_cif_struc):
 
             if _row_index == 0:
@@ -301,7 +298,7 @@ def upload_feedback(cif_names, add_button_timestamp,
 
             content_of_table.append(_new_table_entry)
 
-    if '.cif' in cif_names:
+    if ('.cif' in cif_names) or ('.txt' in cif_names):
         data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
     else:
         error_div = html.Div(
@@ -346,30 +343,30 @@ def upload_feedback(cif_names, add_button_timestamp,
     ],
 )
 def upload_feedback(cif_names, add_button_timestamp,
-                    prev_upload_time, cif_uploads,
+                    prev_upload_time, file_uploads,
                     content_of_table, names_of_columns):
 
     data_fb_list = []
     error_div_list = []
 
     if cif_names is None:
-
         content_of_table.append({c['id']: '' for c in names_of_columns})
         return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
 
-    if cif_uploads is not None:
+    if file_uploads is not None:
 
         if add_button_timestamp != prev_upload_time:
-
             content_of_table.append({c['id']: '' for c in names_of_columns})
             return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
 
         else:
             content_of_table = []
 
-        # for each_index, each_content in enumerate(cif_uploads):
-        #     _cif_struc = parse_cif_file(content=each_content)
-        _cif_struc = parse_cif_file(content=cif_uploads)
+        if cif_names.endswith('.cif'):
+            _cif_struc = parse_cif_file(content=file_uploads)
+        elif cif_names.endswith('.txt'):
+            _cif_struc = parse_txt_file(content=file_uploads)
+
         for _row_index, _row in enumerate(_cif_struc):
 
             if _row_index == 0:
@@ -392,7 +389,7 @@ def upload_feedback(cif_names, add_button_timestamp,
 
             content_of_table.append(_new_table_entry)
 
-    if '.cif' in cif_names:
+    if ('.cif' in cif_names) or ('.txt' in cif_names):
         data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
     else:
         error_div = html.Div(
@@ -437,30 +434,30 @@ def upload_feedback(cif_names, add_button_timestamp,
     ],
 )
 def upload_feedback(cif_names, add_button_timestamp,
-                    prev_upload_time, cif_uploads,
+                    prev_upload_time, file_uploads,
                     content_of_table, names_of_columns):
 
     data_fb_list = []
     error_div_list = []
 
     if cif_names is None:
-
         content_of_table.append({c['id']: '' for c in names_of_columns})
         return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
 
-    if cif_uploads is not None:
+    if file_uploads is not None:
 
         if add_button_timestamp != prev_upload_time:
-
             content_of_table.append({c['id']: '' for c in names_of_columns})
             return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
 
         else:
             content_of_table = []
 
-        # for each_index, each_content in enumerate(cif_uploads):
-        #     _cif_struc = parse_cif_file(content=each_content)
-        _cif_struc = parse_cif_file(content=cif_uploads)
+        if cif_names.endswith('.cif'):
+            _cif_struc = parse_cif_file(content=file_uploads)
+        elif cif_names.endswith('.txt'):
+            _cif_struc = parse_txt_file(content=file_uploads)
+
         for _row_index, _row in enumerate(_cif_struc):
 
             if _row_index == 0:
@@ -483,7 +480,7 @@ def upload_feedback(cif_names, add_button_timestamp,
 
             content_of_table.append(_new_table_entry)
 
-    if '.cif' in cif_names:
+    if ('.cif' in cif_names) or ('.txt' in cif_names):
         data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
     else:
         error_div = html.Div(
