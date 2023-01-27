@@ -55,8 +55,8 @@ app_info_markdown_dict = {
             """),
     'bragg': dcc.Markdown("""
     This tool estimates the energy dependent neutron imaging signals and contrasts,
-    specifically for *Bragg-edges* in the *cold* or *thermal* range. Currently, it only supports
-    dragging and dropping '.cif' files.
+    specifically for *Bragg-edges* in the *cold* or *thermal* range. You can either drag&drop a
+    .cif file, a configuration you previously loaded in this tool or edit manually the tables.
             """),
     'golden_angles': dcc.Markdown("""
     This tool calculates and exports golden angles for CT scans.
