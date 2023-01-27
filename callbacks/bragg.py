@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import json
 import time
+from datetime import datetime
 from urllib.parse import quote as urlquote
 
 import ImagingReso._utilities as ir_util
@@ -874,19 +875,70 @@ def loading_icon(value):
     return value
 
 
-# @app.callback(Output("test", 'children'), Input('export_this_structure', 'n_clicks'))
-# def export_tab1_structure(button_clicked):
-#     location = "/download/" + urlquote("remove_me.txt")
-#     html_location = html.A("remove_me.txt", href=location)
-#     data = ['line 1', 'line 2']
-#     with open(location, "w") as f:
-#         for _line in data:
-#             f.write(_line + "\n")
+def get_current_timestamp():
+    """Convert the unix time stamp into a human readable time format
 
+    Format return will look like  "y2018_m01_d29_h10_mn30"
+    """
+    now = datetime.now()
+    return now.strftime("y%Y_m%m_d%d_h%H_mn%M")
+
+
+def create_table_output_file_name(table=None):
+    '''
+    create the name of the file to use to export the data of this tab
+    '''
+    if table is None:
+        return None
+
+    list_atom = []
+    for _row in table:
+        list_atom.append(_row[chem_name])
+
+    if list_atom == []:
+        return None
+
+    file_name = "_".join(list_atom) + f"_{get_current_timestamp()}.txt"
+    return file_name
+
+
+def format_data(dict=None):
+    '''
+    format the data from a dictionary into a string json
+    '''
+    if dict is None:
+        return ""
+
+    return "Hellow world!"
+
+
+# export tab1
 @app.callback(Output(app_id_dict["download_tab1"], "data"),
               Input(app_id_dict["download_button_tab1"], "n_clicks"),
+              [
+                  State(app_id_dict['data_table_tab1'], 'data'),
+                  State(app_id_dict['a_tab1'], 'value'),
+                  State(app_id_dict['b_tab1'], 'value'),
+                  State(app_id_dict['c_tab1'], 'value'),
+                  State(app_id_dict['alpha_tab1'], 'value'),
+                  State(app_id_dict['beta_tab1'], 'value'),
+                  State(app_id_dict['gamma_tab1'], 'value'),
+              ],
               prevent_initial_call=True,
-              )
-def func(n_clicks):
-    return dict(content="Hellow world",
-                filename="remove_me.txt")
+             )
+def func(n_clicks, data_table, a, b, c, alpha, beta, gamma):
+
+    cleaned_data_table = clean_data_tab(data_tab=data_table)
+
+    _dict = {'table': cleaned_data_table,
+             'a': a, 'b': b, 'c': c,
+             'alpha': alpha, 'beta': beta, 'gamma': gamma}
+
+    output_file_name = create_table_output_file_name(table=cleaned_data_table)
+    if output_file_name is None:
+        return None
+
+    output_data = format_data(dict=_dict)
+
+    return dict(content=output_data,
+                filename=output_file_name)

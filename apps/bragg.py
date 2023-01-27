@@ -90,7 +90,7 @@ def tab_content(upload_id=None,
         style_header={'fontWeight': 'bold',
                       'backgroundColor': 'lightblue'},
         row_deletable=True,
-        export_format='csv',
+        # export_format='csv',
         css=[{'selector': '.export', 'rule': 'position:absolute; left:0px; bottom:-35px'}],
         style_cell_conditional=sample_tb_even_4_col,
         style_data_conditional=[striped_rows],
@@ -197,9 +197,9 @@ def tab_content(upload_id=None,
 
     children_array.append(html.Div(html.P([html.Br()])))
 
-    children_array.append(html.Button('Export this structure',
-                                      id=download_button_id,
-                                      n_clicks_timestamp=0))
+    children_array.append(dbc.Row(html.Button('Export this structure',
+                                              id=download_button_id,
+                                              n_clicks_timestamp=0)))
     children_array.append(dcc.Download(id=download_id))
 
     # Error message div1
@@ -427,6 +427,8 @@ layout = html.Div(
                              ),
                  ],
             ),
+
+        html.Hr(),
 
         # Hidden div to store df_all json
         html.Div(id=app_id_dict['hidden_df_json_id'], style={'display': 'none'}),
