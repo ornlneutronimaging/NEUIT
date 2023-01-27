@@ -942,3 +942,131 @@ def func(n_clicks, data_table, a, b, c, alpha, beta, gamma):
 
     return dict(content=output_data,
                 filename=output_file_name)
+
+
+# export tab2
+@app.callback(Output(app_id_dict["download_tab2"], "data"),
+              Input(app_id_dict["download_button_tab2"], "n_clicks"),
+              [
+                  State(app_id_dict['data_table_tab2'], 'data'),
+                  State(app_id_dict['a_tab2'], 'value'),
+                  State(app_id_dict['b_tab2'], 'value'),
+                  State(app_id_dict['c_tab2'], 'value'),
+                  State(app_id_dict['alpha_tab2'], 'value'),
+                  State(app_id_dict['beta_tab2'], 'value'),
+                  State(app_id_dict['gamma_tab2'], 'value'),
+              ],
+              prevent_initial_call=True,
+             )
+def func(n_clicks, data_table, a, b, c, alpha, beta, gamma):
+
+    cleaned_data_table = clean_data_tab(data_tab=data_table)
+
+    _dict = {'table': cleaned_data_table,
+             'a': a, 'b': b, 'c': c,
+             'alpha': alpha, 'beta': beta, 'gamma': gamma}
+
+    output_file_name = create_table_output_file_name(table=cleaned_data_table)
+    if output_file_name is None:
+        return None
+
+    output_data = format_data(dict=_dict)
+
+    return dict(content=output_data,
+                filename=output_file_name)
+
+
+# export tab3
+@app.callback(Output(app_id_dict["download_tab3"], "data"),
+              Input(app_id_dict["download_button_tab3"], "n_clicks"),
+              [
+                  State(app_id_dict['data_table_tab3'], 'data'),
+                  State(app_id_dict['a_tab3'], 'value'),
+                  State(app_id_dict['b_tab3'], 'value'),
+                  State(app_id_dict['c_tab3'], 'value'),
+                  State(app_id_dict['alpha_tab3'], 'value'),
+                  State(app_id_dict['beta_tab3'], 'value'),
+                  State(app_id_dict['gamma_tab3'], 'value'),
+              ],
+              prevent_initial_call=True,
+             )
+def func(n_clicks, data_table, a, b, c, alpha, beta, gamma):
+
+    cleaned_data_table = clean_data_tab(data_tab=data_table)
+
+    _dict = {'table': cleaned_data_table,
+             'a': a, 'b': b, 'c': c,
+             'alpha': alpha, 'beta': beta, 'gamma': gamma}
+
+    output_file_name = create_table_output_file_name(table=cleaned_data_table)
+    if output_file_name is None:
+        return None
+
+    output_data = format_data(dict=_dict)
+
+    return dict(content=output_data,
+                filename=output_file_name)
+
+
+# export tab4
+@app.callback(Output(app_id_dict["download_tab4"], "data"),
+              Input(app_id_dict["download_button_tab4"], "n_clicks"),
+              [
+                  State(app_id_dict['data_table_tab4'], 'data'),
+                  State(app_id_dict['a_tab4'], 'value'),
+                  State(app_id_dict['b_tab4'], 'value'),
+                  State(app_id_dict['c_tab4'], 'value'),
+                  State(app_id_dict['alpha_tab4'], 'value'),
+                  State(app_id_dict['beta_tab4'], 'value'),
+                  State(app_id_dict['gamma_tab4'], 'value'),
+              ],
+              prevent_initial_call=True,
+             )
+def func(n_clicks, data_table, a, b, c, alpha, beta, gamma):
+
+    cleaned_data_table = clean_data_tab(data_tab=data_table)
+
+    _dict = {'table': cleaned_data_table,
+             'a': a, 'b': b, 'c': c,
+             'alpha': alpha, 'beta': beta, 'gamma': gamma}
+
+    output_file_name = create_table_output_file_name(table=cleaned_data_table)
+    if output_file_name is None:
+        return None
+
+    output_data = format_data(dict=_dict)
+
+    return dict(content=output_data,
+                filename=output_file_name)
+
+
+# export tab5
+@app.callback(Output(app_id_dict["download_tab5"], "data"),
+              Input(app_id_dict["download_button_tab5"], "n_clicks"),
+              [
+                  State(app_id_dict['data_table_tab5'], 'data'),
+                  State(app_id_dict['a_tab5'], 'value'),
+                  State(app_id_dict['b_tab5'], 'value'),
+                  State(app_id_dict['c_tab5'], 'value'),
+                  State(app_id_dict['alpha_tab5'], 'value'),
+                  State(app_id_dict['beta_tab5'], 'value'),
+                  State(app_id_dict['gamma_tab5'], 'value'),
+              ],
+              prevent_initial_call=True,
+             )
+def func(n_clicks, data_table, a, b, c, alpha, beta, gamma):
+
+    cleaned_data_table = clean_data_tab(data_tab=data_table)
+
+    _dict = {'table': cleaned_data_table,
+             'a': a, 'b': b, 'c': c,
+             'alpha': alpha, 'beta': beta, 'gamma': gamma}
+
+    output_file_name = create_table_output_file_name(table=cleaned_data_table)
+    if output_file_name is None:
+        return None
+
+    output_data = format_data(dict=_dict)
+
+    return dict(content=output_data,
+                filename=output_file_name)
