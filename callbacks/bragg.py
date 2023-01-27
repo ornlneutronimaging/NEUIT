@@ -17,7 +17,7 @@ from callbacks.utilities.initialization import (init_app_ids, striped_rows, plot
 import callbacks.utilities.constants as constants
 from callbacks.utilities.plot import shape_matplot_to_plotly
 from callbacks.utilities.all_apps import y_type_to_y_label, x_type_to_x_tag, load_dfs, update_rows_util
-from callbacks.utilities.bragg import parse_cif_file, parse_csv_file
+from callbacks.utilities.bragg import parse_cif_file, parse_txt_file
 from callbacks.utilities.resonance import fill_df_x_types
 from callbacks.utilities.constants import *
 
@@ -93,8 +93,8 @@ def upload_feedback(cif_names, add_button_timestamp,
 
         if cif_names.endswith('.cif'):
             _cif_struc = parse_cif_file(content=file_uploads)
-        elif cif_names.endswith('.csv'):
-            _cif_struc = parse_csv_file(content=file_uploads)
+        elif cif_names.endswith('.txt'):
+            _cif_struc = parse_txt_file(content=file_uploads)
 
         for _row_index, _row in enumerate(_cif_struc):
 
@@ -876,7 +876,7 @@ def loading_icon(value):
 
 
 def get_current_timestamp():
-    """Convert the unix time stamp into a human readable time format
+    """Convert the unix time stamp into a human-readable time format
 
     Format return will look like  "y2018_m01_d29_h10_mn30"
     """
