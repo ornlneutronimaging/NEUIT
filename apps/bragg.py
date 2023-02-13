@@ -25,6 +25,20 @@ app_id_dict = init_app_ids(app_name=app_name)
 #     interaxial_angle_gamma: [90]
 # })
 
+tab_style = {
+    'borderBottom': '1px solid #d6d6d6',
+    # 'padding': '6px',
+    # 'fontWeight': 'bold'
+}
+
+tab_selected_style = {
+    # 'borderTop': '1px solid #d6d6d6',
+    # 'borderBottom': '1px solid #d6d6d6',
+    # 'backgroundColor': '#119DFF',
+    'backgroundColor': 'cyan',
+    'color': 'black',
+    # 'padding': '6px'
+}
 
 bragg_sample_df_default = pd.DataFrame({
     chem_name: [],
@@ -97,7 +111,55 @@ def tab_content(upload_id=None,
         id=data_table)
     )
 
-    children_array.append(html.Div(html.P([html.Br(), html.Br()])))
+    children_array.append(html.Hr())
+
+    children_array.append(dcc.Checklist(
+        [' Texture'],
+        style={'font-size': 20},
+        inline=True,
+    ))
+
+    children_array.append(html.Hr())
+
+    children_array.append(dcc.Checklist(
+        [' Grain size'],
+        style={'font-size': 20},
+        inline=True,
+    ))
+
+    children_array.append(html.Hr())
+
+
+    # #html.Hr(),
+    # children_array.append(html.H2('Texture'))
+    # #html.Div(),
+    #
+    # # children_array.append()
+    #
+    # children_array.append(html.Button('Add row',
+    #                                   id="",
+    #                                   n_clicks_timestamp=0))
+    #
+    # children_array.append(dt.DataTable(
+    #     data=bragg_sample_df_default.to_dict('records'),
+    #     # optional - sets the order of columns
+    #     columns=bragg_sample_header_df.to_dict('records'),
+    #     editable=True,
+    #     row_selectable=False,
+    #     filter_action='none',
+    #     sort_action='none',
+    #     style_cell={'textAlign': 'center'},
+    #     style_header={'fontWeight': 'bold',
+    #                   'backgroundColor': 'lightblue'},
+    #     row_deletable=True,
+    #     # export_format='csv',
+    #     css=[{'selector': '.export', 'rule': 'position:absolute; left:0px; bottom:-35px'}],
+    #     style_cell_conditional=sample_tb_even_4_col,
+    #     style_data_conditional=[striped_rows],
+    #     id=data_table)
+    # )
+    #
+    # children_array.append(html.Div(html.P([html.Br(), html.Br()])))
 
     children_array.append(dbc.Row(
             [
@@ -208,7 +270,10 @@ def tab_content(upload_id=None,
     # Hidden div to store upload time
     children_array.append(html.Div(id=hidden_upload_time, style={'display': 'none'}))
 
-    return children_array
+    col = dbc.Col(children_array,
+                  style={'backgroundColor': 'cyan'})
+
+    return col
 
 
 # Create app layout
@@ -331,12 +396,17 @@ layout = html.Div(
         html.H2('Input elements'),
         html.Div(),
 
+
         # tabs
         dcc.Tabs(id=app_id_dict['tabs'],
                  value='tab_cif_1',
+                 colors={'background': 'white',
+                         'border': 'black'},
                  children=[
                      dcc.Tab(label='.cif #1',
                              value='tab_cif_1',
+                             style=tab_style,
+                             selected_style=tab_selected_style,
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab1'],
                                                   add_row_id=app_id_dict['add_row_tab1'],
                                                   data_table=app_id_dict['data_table_tab1'],
@@ -355,6 +425,8 @@ layout = html.Div(
                              ),
                      dcc.Tab(label='.cif #2',
                              value='tab_cif_2',
+                             style=tab_style,
+                             selected_style=tab_selected_style,
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab2'],
                                                   add_row_id=app_id_dict['add_row_tab2'],
                                                   data_table=app_id_dict['data_table_tab2'],
@@ -373,6 +445,8 @@ layout = html.Div(
                              ),
                      dcc.Tab(label='.cif #3',
                              value='tab_cif_3',
+                             style=tab_style,
+                             selected_style=tab_selected_style,
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab3'],
                                                   add_row_id=app_id_dict['add_row_tab3'],
                                                   data_table=app_id_dict['data_table_tab3'],
@@ -391,6 +465,8 @@ layout = html.Div(
                              ),
                      dcc.Tab(label='.cif #4',
                              value='tab_cif_4',
+                             style=tab_style,
+                             selected_style=tab_selected_style,
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab4'],
                                                   add_row_id=app_id_dict['add_row_tab4'],
                                                   data_table=app_id_dict['data_table_tab4'],
@@ -409,6 +485,8 @@ layout = html.Div(
                              ),
                      dcc.Tab(label='.cif #5',
                              value='tab_cif_5',
+                             style=tab_style,
+                             selected_style=tab_selected_style,
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab5'],
                                                   add_row_id=app_id_dict['add_row_tab5'],
                                                   data_table=app_id_dict['data_table_tab5'],
