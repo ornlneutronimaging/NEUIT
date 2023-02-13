@@ -45,6 +45,20 @@ bragg_sample_header_df = pd.DataFrame({
             ],
     })
 
+bragg_texture_header_df = pd.DataFrame({
+    'name': [index_number_h,
+             index_number_k,
+             index_number_l,
+             r,
+             beta],
+    'id': [index_number_h,
+           index_number_k,
+           index_number_l,
+           r,
+           beta],
+    'type': ['numeric', 'numeric', 'numeric', 'numeric', 'numeric'],
+    })
+
 iso_dict_schema = {
     # layer_name: {'type': 'string', 'empty': False, 'required': True, 'is_chem_name': True, },
     layer_name: {'type': 'string', 'empty': False, 'required': True, 'ENDF_VIII': True, },

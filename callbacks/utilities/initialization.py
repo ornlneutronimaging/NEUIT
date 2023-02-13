@@ -134,6 +134,19 @@ sample_tb_even_4_col = [
      'width': '25%'},
 ]
 
+sample_tb_even_5_col = [
+    {'if': {'column_id': index_number_h},
+     'width': '20%'},
+    {'if': {'column_id': index_number_k},
+     'width': '20%'},
+    {'if': {'column_id': index_number_l},
+     'width': '20%'},
+    {'if': {'column_id': r},
+     'width': '20%'},
+    {'if': {'column_id': beta},
+     'width': '20%'},
+]
+
 iso_tb_even_4_col = [
     {'if': {'column_id': layer_name},
      'width': '25%'},
@@ -258,6 +271,7 @@ def init_app_ids(app_name: str):
         id_dict['general_processing_errors'] = app_name + '_general_processing_errors'
 
         id_dict['data_table_tab1'] = app_name + '_data_table_tab1'
+        id_dict['texture_table_tab1'] = app_name + '_texture_table_tab1'
         id_dict['add_row_tab1'] = app_name + '_add_row_tab1'
         id_dict['cif_upload_tab1'] = app_name + '_ciff_upload_tab1'
         id_dict['cif_upload_fb_tab1'] = app_name + '_cif_fb_tab1'
@@ -273,6 +287,7 @@ def init_app_ids(app_name: str):
         id_dict['download_button_tab1'] = app_name + '_download_button_tab1'
 
         id_dict['data_table_tab2'] = app_name + '_data_table_tab2'
+        id_dict['texture_table_tab2'] = app_name + '_texture_table_tab2'
         id_dict['add_row_tab2'] = app_name + '_add_row_tab2'
         id_dict['cif_upload_tab2'] = app_name + '_ciff_upload_tab2'
         id_dict['cif_upload_fb_tab2'] = app_name + '_cif_fb_tab2'
@@ -288,6 +303,7 @@ def init_app_ids(app_name: str):
         id_dict['download_button_tab2'] = app_name + '_download_button_tab2'
 
         id_dict['data_table_tab3'] = app_name + '_data_table_tab3'
+        id_dict['texture_table_tab3'] = app_name + '_texture_table_tab3'
         id_dict['add_row_tab3'] = app_name + '_add_row_tab3'
         id_dict['cif_upload_tab3'] = app_name + '_ciff_upload_tab3'
         id_dict['cif_upload_fb_tab3'] = app_name + '_cif_fb_tab3'
@@ -303,6 +319,7 @@ def init_app_ids(app_name: str):
         id_dict['download_button_tab3'] = app_name + '_download_button_tab3'
 
         id_dict['data_table_tab4'] = app_name + '_data_table_tab4'
+        id_dict['texture_table_tab4'] = app_name + '_texture_table_tab4'
         id_dict['add_row_tab4'] = app_name + '_add_row_tab4'
         id_dict['cif_upload_tab4'] = app_name + '_ciff_upload_tab4'
         id_dict['cif_upload_fb_tab4'] = app_name + '_cif_fb_tab4'
@@ -318,6 +335,7 @@ def init_app_ids(app_name: str):
         id_dict['download_button_tab4'] = app_name + '_download_button_tab4'
 
         id_dict['data_table_tab5'] = app_name + '_data_table_tab5'
+        id_dict['texture_table_tab5'] = app_name + '_texture_table_tab5'
         id_dict['add_row_tab5'] = app_name + '_add_row_tab5'
         id_dict['cif_upload_tab5'] = app_name + '_ciff_upload_tab5'
         id_dict['cif_upload_fb_tab5'] = app_name + '_cif_fb_tab5'

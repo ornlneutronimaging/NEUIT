@@ -3,9 +3,10 @@ import dash_bootstrap_components as dbc
 from callbacks.bragg import *
 from callbacks.utilities.constants import *
 from callbacks.utilities.initialization import (init_app_ids, temperature_default, distance_default, delay_default,
-                                                init_app_about, init_display_plot_data_check, sample_tb_even_4_col)
+                                                init_app_about, init_display_plot_data_check, sample_tb_even_4_col,
+                                                sample_tb_even_5_col)
 from callbacks.utilities.plot import bragg_plot_option_div
-from callbacks.utilities.all_apps import bragg_sample_header_df
+from callbacks.utilities.all_apps import bragg_sample_header_df, bragg_texture_header_df
 
 # Bragg-edge tool
 
@@ -47,10 +48,17 @@ bragg_sample_df_default = pd.DataFrame({
     index_number_l: [],
 })
 
+texture_df_default = pd.DataFrame({
+    index_number_h: [],
+    index_number_k: [],
+    index_number_l: [],
+})
+
 
 def tab_content(upload_id=None,
                 add_row_id=None,
                 data_table=None,
+                texture_table=None,
                 cif_upload_fb=None,
                 no_error_id=None,
                 hidden_upload_time=None,
@@ -119,13 +127,47 @@ def tab_content(upload_id=None,
         inline=True,
     ))
 
+    children_array.append(html.Button('Add row',
+                                      id='',
+                                      disabled=True,
+                                      n_clicks_timestamp=0))
+
+    children_array.append(dt.DataTable(
+        data=texture_df_default.to_dict('records'),
+        # optional - sets the order of columns
+        columns=bragg_texture_header_df.to_dict('records'),
+        editable=True,
+        row_selectable=False,
+        filter_action='none',
+        sort_action='none',
+        style_cell={'textAlign': 'center'},
+        style_header={'fontWeight': 'bold',
+                      'backgroundColor': 'lightblue'},
+        row_deletable=True,
+        # export_format='csv',
+        css=[{'selector': '.export', 'rule': 'position:absolute; left:0px; bottom:-35px'}],
+        style_cell_conditional=sample_tb_even_5_col,
+        style_data_conditional=[striped_rows],
+        id=texture_table,
+        ),
+    )
+
     children_array.append(html.Hr())
 
-    children_array.append(dcc.Checklist(
-        [' Grain size'],
-        style={'font-size': 20},
-        inline=True,
-    ))
+    children_array.append(
+        dbc.Row([
+            dcc.Checklist(
+                [' Grain size'],
+                style={'font-size': 20},
+                inline=True,
+                ),
+            dcc.Input(id="",
+                      type="number",
+                      value="1e-6",
+                      ),
+            dbc.Label("m")
+        ]),
+    )
 
     children_array.append(html.Hr())
 
@@ -410,6 +452,7 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab1'],
                                                   add_row_id=app_id_dict['add_row_tab1'],
                                                   data_table=app_id_dict['data_table_tab1'],
+                                                  texture_table=app_id_dict['texture_table_tab1'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab1'],
                                                   no_error_id=app_id_dict['no_error_tab1'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab1'],
@@ -430,6 +473,7 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab2'],
                                                   add_row_id=app_id_dict['add_row_tab2'],
                                                   data_table=app_id_dict['data_table_tab2'],
+                                                  texture_table=app_id_dict['texture_table_tab2'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab2'],
                                                   no_error_id=app_id_dict['no_error_tab2'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab2'],
@@ -450,6 +494,7 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab3'],
                                                   add_row_id=app_id_dict['add_row_tab3'],
                                                   data_table=app_id_dict['data_table_tab3'],
+                                                  texture_table=app_id_dict['texture_table_tab3'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab3'],
                                                   no_error_id=app_id_dict['no_error_tab3'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab3'],
@@ -470,6 +515,7 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab4'],
                                                   add_row_id=app_id_dict['add_row_tab4'],
                                                   data_table=app_id_dict['data_table_tab4'],
+                                                  texture_table=app_id_dict['texture_table_tab4'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab4'],
                                                   no_error_id=app_id_dict['no_error_tab4'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab4'],
@@ -490,6 +536,7 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab5'],
                                                   add_row_id=app_id_dict['add_row_tab5'],
                                                   data_table=app_id_dict['data_table_tab5'],
+                                                  texture_table=app_id_dict['texture_table_tab5'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab5'],
                                                   no_error_id=app_id_dict['no_error_tab5'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab5'],
