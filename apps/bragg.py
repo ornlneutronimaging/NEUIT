@@ -52,13 +52,19 @@ texture_df_default = pd.DataFrame({
     index_number_h: [],
     index_number_k: [],
     index_number_l: [],
+    r: [],
+    beta: [],
 })
 
 
 def tab_content(upload_id=None,
                 add_row_id=None,
                 data_table=None,
+                texture_checklist_id=None,
+                texture_add_row_id=None,
                 texture_table=None,
+                grain_size_checklist_id=None,
+                grain_size_input_id=None,
                 cif_upload_fb=None,
                 no_error_id=None,
                 hidden_upload_time=None,
@@ -121,14 +127,16 @@ def tab_content(upload_id=None,
 
     children_array.append(html.Hr())
 
+    # Texture
     children_array.append(dcc.Checklist(
         [' Texture'],
         style={'font-size': 20},
         inline=True,
+        id=texture_checklist_id,
     ))
 
     children_array.append(html.Button('Add row',
-                                      id='',
+                                      id=texture_add_row_id,
                                       disabled=True,
                                       n_clicks_timestamp=0))
 
@@ -154,19 +162,33 @@ def tab_content(upload_id=None,
 
     children_array.append(html.Hr())
 
+    # Grain size
     children_array.append(
         dbc.Row([
             dcc.Checklist(
-                [' Grain size'],
+                [' Grain size (m)'],
                 style={'font-size': 20},
                 inline=True,
+                id=grain_size_checklist_id,
                 ),
-            dcc.Input(id="",
-                      type="number",
-                      value="1e-6",
-                      ),
-            dbc.Label("m")
         ]),
+    )
+
+    children_array.append(
+        dbc.Col(
+            html.Div(
+                [
+                    dcc.Input(id=grain_size_input_id,
+                              type='number',
+                              value=1e-6,
+                              min=1e-8,
+                              inputMode='numeric',
+                              step=1e-6,
+                              disabled=True,
+                              ),
+                ]
+            ), width=2
+        ),
     )
 
     children_array.append(html.Hr())
@@ -452,7 +474,11 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab1'],
                                                   add_row_id=app_id_dict['add_row_tab1'],
                                                   data_table=app_id_dict['data_table_tab1'],
+                                                  texture_checklist_id=app_id_dict['texture_checklist_tab1'],
+                                                  texture_add_row_id=app_id_dict['texture_add_row_tab1'],
                                                   texture_table=app_id_dict['texture_table_tab1'],
+                                                  grain_size_checklist_id=app_id_dict['grain_size_checklist_tab1'],
+                                                  grain_size_input_id=app_id_dict['grain_size_input_tab1'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab1'],
                                                   no_error_id=app_id_dict['no_error_tab1'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab1'],
@@ -473,7 +499,11 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab2'],
                                                   add_row_id=app_id_dict['add_row_tab2'],
                                                   data_table=app_id_dict['data_table_tab2'],
+                                                  texture_checklist_id=app_id_dict['texture_checklist_tab2'],
+                                                  texture_add_row_id=app_id_dict['texture_add_row_tab2'],
                                                   texture_table=app_id_dict['texture_table_tab2'],
+                                                  grain_size_checklist_id=app_id_dict['grain_size_checklist_tab2'],
+                                                  grain_size_input_id=app_id_dict['grain_size_input_tab2'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab2'],
                                                   no_error_id=app_id_dict['no_error_tab2'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab2'],
@@ -494,7 +524,11 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab3'],
                                                   add_row_id=app_id_dict['add_row_tab3'],
                                                   data_table=app_id_dict['data_table_tab3'],
+                                                  texture_checklist_id=app_id_dict['texture_checklist_tab3'],
+                                                  texture_add_row_id=app_id_dict['texture_add_row_tab3'],
                                                   texture_table=app_id_dict['texture_table_tab3'],
+                                                  grain_size_checklist_id=app_id_dict['grain_size_checklist_tab3'],
+                                                  grain_size_input_id=app_id_dict['grain_size_input_tab3'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab3'],
                                                   no_error_id=app_id_dict['no_error_tab3'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab3'],
@@ -515,7 +549,11 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab4'],
                                                   add_row_id=app_id_dict['add_row_tab4'],
                                                   data_table=app_id_dict['data_table_tab4'],
+                                                  texture_checklist_id=app_id_dict['texture_checklist_tab4'],
+                                                  texture_add_row_id=app_id_dict['texture_add_row_tab4'],
                                                   texture_table=app_id_dict['texture_table_tab4'],
+                                                  grain_size_checklist_id=app_id_dict['grain_size_checklist_tab4'],
+                                                  grain_size_input_id=app_id_dict['grain_size_input_tab4'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab4'],
                                                   no_error_id=app_id_dict['no_error_tab4'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab4'],
@@ -536,7 +574,11 @@ layout = html.Div(
                              children=tab_content(upload_id=app_id_dict['cif_upload_tab5'],
                                                   add_row_id=app_id_dict['add_row_tab5'],
                                                   data_table=app_id_dict['data_table_tab5'],
+                                                  texture_checklist_id=app_id_dict['texture_checklist_tab5'],
+                                                  texture_add_row_id=app_id_dict['texture_add_row_tab5'],
                                                   texture_table=app_id_dict['texture_table_tab5'],
+                                                  grain_size_checklist_id=app_id_dict['grain_size_checklist_tab5'],
+                                                  grain_size_input_id=app_id_dict['grain_size_input_tab5'],
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab5'],
                                                   no_error_id=app_id_dict['no_error_tab5'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab5'],

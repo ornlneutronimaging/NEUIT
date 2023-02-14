@@ -1067,3 +1067,33 @@ def func(n_clicks, data_table, a, b, c, alpha, beta, gamma):
 
     return dict(content=output_data,
                 filename=output_file_name)
+
+
+# texture checklist tab1
+@app.callback([
+                Output(app_id_dict['texture_add_row_tab1'], "disabled"),
+                Output(app_id_dict['texture_table_tab1'], "editable")
+                ],
+              Input(app_id_dict['texture_checklist_tab1'], "value"))
+def method(checklist_tab1_value):
+
+    # button is unchecked
+    if not checklist_tab1_value:
+        return True, False
+
+    # button is checked
+    if checklist_tab1_value[0].strip() == 'Texture':
+        return False, True
+
+# grain size checklist tab1
+@app.callback(
+    Output(app_id_dict['grain_size_input_tab1'], "disabled"),
+    Input(app_id_dict['grain_size_checklist_tab1'], "value"))
+def method_grain_size_tab1(checklist_value):
+
+    # button is unchecked
+    if not checklist_value:
+        return True
+
+    # button is checked
+    return False
