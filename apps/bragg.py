@@ -68,6 +68,7 @@ def tab_content(upload_id=None,
                 cif_upload_fb=None,
                 no_error_id=None,
                 hidden_upload_time=None,
+                hidden_texture_add_row_time=None,
                 a_id=None,
                 b_id=None,
                 c_id=None,
@@ -331,8 +332,11 @@ def tab_content(upload_id=None,
     # Error message div1
     children_array.append(html.Div(id=no_error_id, children=True))
 
-    # Hidden div to store upload time
+    # Hidden div to store last time we click the add row
     children_array.append(html.Div(id=hidden_upload_time, style={'display': 'none'}))
+
+    # Hidden div to store last time we click the texture add row
+    children_array.append(html.Div(id=hidden_texture_add_row_time, style={'display': 'none'}))
 
     col = dbc.Col(children_array,
                   style={'backgroundColor': 'cyan'})
@@ -482,6 +486,8 @@ layout = html.Div(
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab1'],
                                                   no_error_id=app_id_dict['no_error_tab1'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab1'],
+                                                  hidden_texture_add_row_time=app_id_dict[
+                                                      'hidden_texture_add_row_time_tab1'],
                                                   a_id=app_id_dict['a_tab1'],
                                                   b_id=app_id_dict['b_tab1'],
                                                   c_id=app_id_dict['c_tab1'],
@@ -507,6 +513,8 @@ layout = html.Div(
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab2'],
                                                   no_error_id=app_id_dict['no_error_tab2'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab2'],
+                                                  hidden_texture_add_row_time=app_id_dict[
+                                                      'hidden_texture_add_row_time_tab2'],
                                                   a_id=app_id_dict['a_tab2'],
                                                   b_id=app_id_dict['b_tab2'],
                                                   c_id=app_id_dict['c_tab2'],
@@ -532,6 +540,8 @@ layout = html.Div(
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab3'],
                                                   no_error_id=app_id_dict['no_error_tab3'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab3'],
+                                                  hidden_texture_add_row_time=app_id_dict[
+                                                      'hidden_texture_add_row_time_tab3'],
                                                   a_id=app_id_dict['a_tab3'],
                                                   b_id=app_id_dict['b_tab3'],
                                                   c_id=app_id_dict['c_tab3'],
@@ -557,6 +567,8 @@ layout = html.Div(
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab4'],
                                                   no_error_id=app_id_dict['no_error_tab4'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab4'],
+                                                  hidden_texture_add_row_time=app_id_dict[
+                                                      'hidden_texture_add_row_time_tab4'],
                                                   a_id=app_id_dict['a_tab4'],
                                                   b_id=app_id_dict['b_tab4'],
                                                   c_id=app_id_dict['c_tab4'],
@@ -582,6 +594,8 @@ layout = html.Div(
                                                   cif_upload_fb=app_id_dict['cif_upload_fb_tab5'],
                                                   no_error_id=app_id_dict['no_error_tab5'],
                                                   hidden_upload_time=app_id_dict['hidden_upload_time_tab5'],
+                                                  hidden_texture_add_row_time=app_id_dict[
+                                                      'hidden_texture_add_row_time_tab5'],
                                                   a_id=app_id_dict['a_tab5'],
                                                   b_id=app_id_dict['b_tab5'],
                                                   c_id=app_id_dict['c_tab5'],

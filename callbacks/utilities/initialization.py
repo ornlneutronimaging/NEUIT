@@ -270,6 +270,7 @@ def init_app_ids(app_name: str):
         id_dict['tabs'] = app_name + '_tabs'
         id_dict['general_processing_errors'] = app_name + '_general_processing_errors'
 
+        # tab1
         id_dict['data_table_tab1'] = app_name + '_data_table_tab1'
         id_dict['texture_checklist_tab1'] = app_name + "_texture_checklist_tab1"
         id_dict['texture_table_tab1'] = app_name + '_texture_table_tab1'
@@ -281,6 +282,7 @@ def init_app_ids(app_name: str):
         id_dict['cif_upload_fb_tab1'] = app_name + '_cif_fb_tab1'
         id_dict['no_error_tab1'] = app_name + '_no_error_tab1'
         id_dict['hidden_upload_time_tab1'] = app_name + '_hidden_upload_time_tab1'
+        id_dict['hidden_texture_add_row_time_tab1'] = app_name + '_hidden_texture_add_row_time_tab1'
         id_dict['a_tab1'] = app_name + '_a_tab1'
         id_dict['b_tab1'] = app_name + '_b_tab1'
         id_dict['c_tab1'] = app_name + '_c_tab1'
@@ -301,6 +303,7 @@ def init_app_ids(app_name: str):
         id_dict['cif_upload_fb_tab2'] = app_name + '_cif_fb_tab2'
         id_dict['no_error_tab2'] = app_name + 'no_error_tab2'
         id_dict['hidden_upload_time_tab2'] = app_name + '_hidden_upload_time_tab2'
+        id_dict['hidden_texture_add_row_time_tab2'] = app_name + '_hidden_texture_add_row_time_tab2'
         id_dict['a_tab2'] = app_name + '_a_tab2'
         id_dict['b_tab2'] = app_name + '_b_tab2'
         id_dict['c_tab2'] = app_name + '_c_tab2'
@@ -321,6 +324,7 @@ def init_app_ids(app_name: str):
         id_dict['cif_upload_fb_tab3'] = app_name + '_cif_fb_tab3'
         id_dict['no_error_tab3'] = app_name + '_no_error_tab3'
         id_dict['hidden_upload_time_tab3'] = app_name + '_hidden_upload_time_tab3'
+        id_dict['hidden_texture_add_row_time_tab3'] = app_name + '_hidden_texture_add_row_time_tab3'
         id_dict['a_tab3'] = app_name + '_a_tab3'
         id_dict['b_tab3'] = app_name + '_b_tab3'
         id_dict['c_tab3'] = app_name + '_c_tab3'
@@ -341,6 +345,7 @@ def init_app_ids(app_name: str):
         id_dict['cif_upload_fb_tab4'] = app_name + '_cif_fb_tab4'
         id_dict['no_error_tab4'] = app_name + '_no_error_tab4'
         id_dict['hidden_upload_time_tab4'] = app_name + '_hidden_upload_time_tab4'
+        id_dict['hidden_texture_add_row_time_tab4'] = app_name + '_hidden_texture_add_row_time_tab4'
         id_dict['a_tab4'] = app_name + '_a_tab4'
         id_dict['b_tab4'] = app_name + '_b_tab4'
         id_dict['c_tab4'] = app_name + '_c_tab4'
@@ -361,6 +366,7 @@ def init_app_ids(app_name: str):
         id_dict['cif_upload_fb_tab5'] = app_name + '_cif_fb_tab5'
         id_dict['no_error_tab5'] = app_name + '_no_error_tab5'
         id_dict['hidden_upload_time_tab5'] = app_name + '_hidden_upload_time_tab5'
+        id_dict['hidden_texture_add_row_time_tab5'] = app_name + '_hidden_texture_add_row_time_tab5'
         id_dict['a_tab5'] = app_name + '_a_tab5'
         id_dict['b_tab5'] = app_name + '_b_tab5'
         id_dict['c_tab5'] = app_name + '_c_tab5'

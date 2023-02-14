@@ -54,38 +54,75 @@ def show_hide_band_input(more_info, style):
         Output(app_id_dict['c_tab1'], 'value'),
         Output(app_id_dict['alpha_tab1'], 'value'),
         Output(app_id_dict['beta_tab1'], 'value'),
-        Output(app_id_dict['gamma_tab1'], 'value')
+        Output(app_id_dict['gamma_tab1'], 'value'),
+        Output(app_id_dict['hidden_texture_add_row_time_tab1'], 'children'),
+        Output(app_id_dict['texture_table_tab1'], 'data')
     ],
     [
         Input(app_id_dict['cif_upload_tab1'], 'filename'),
         Input(app_id_dict['add_row_tab1'], 'n_clicks_timestamp'),
+        Input(app_id_dict['texture_add_row_tab1'], 'n_clicks_timestamp'),
     ],
     [
         State(app_id_dict['hidden_upload_time_tab1'], 'children'),
         State(app_id_dict['cif_upload_tab1'], 'contents'),
         State(app_id_dict['data_table_tab1'], 'data'),
         State(app_id_dict['data_table_tab1'], 'columns'),
+        State(app_id_dict['hidden_texture_add_row_time_tab1'], 'children'),
+        State(app_id_dict['texture_table_tab1'], 'data'),
+        State(app_id_dict['texture_table_tab1'], 'columns')
     ],
 )
-def upload_feedback(cif_names, add_button_timestamp,
-                    prev_upload_time, file_uploads,
-                    content_of_table, names_of_columns):
+def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestamp,
+                    prev_upload_time, file_uploads, content_of_table, names_of_columns, prev_texture_add_row_time,
+                    texture_content_of_table, names_of_texture_columns):
 
     data_fb_list = []
     error_div_list = []
 
-    if cif_names is None:
-        content_of_table.append({c['id']: '' for c in names_of_columns})
-        return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
+    print(f"before: {texture_content_of_table =}")
 
+    # print(f"{prev_texture_add_row_time =}")
+    # print(f"{texture_add_button_timestamp =}")
+    #
+    # print(f"")
+    # print(f"{add_button_timestamp =}")
+    # print(f"{prev_upload_time =}")
+    #
+    # print(f"{cif_names =}")
+    # print(f"{names_of_texture_columns =}")
+
+    # we did not import a cif name, we need to add a row
+    if cif_names is None:
+
+        if add_button_timestamp != prev_upload_time:
+            # we need to add a row in the top table
+            content_of_table.append({c['id']: '' for c in names_of_columns})
+            return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90, \
+                   texture_add_button_timestamp, texture_content_of_table
+
+        else:
+            print("we clicked add texture row")
+            # we need to add a row in the texture table
+            texture_content_of_table.append({c['id']: '' for c in names_of_texture_columns})
+            print(f"after: {texture_content_of_table =}")
+            return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90, \
+                   texture_add_button_timestamp, texture_content_of_table
+
+    # we are importing a file
     if file_uploads is not None:
 
         if add_button_timestamp != prev_upload_time:
-
+            # we really clicked the add a row button
             content_of_table.append({c['id']: '' for c in names_of_columns})
-            return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90
+            return [None], [None], content_of_table, add_button_timestamp, 3.5238, 3.5238, 3.5238, 90, 90, 90, \
+                   texture_add_button_timestamp, texture_content_of_table
+
+        elif texture_add_button_timestamp != prev_texture_add_row_time:
+            print("we clicked add texture row!")
 
         else:
+            # we did not click add a row button
             content_of_table = []
 
         if cif_names.endswith('.cif'):
@@ -131,7 +168,8 @@ def upload_feedback(cif_names, add_button_timestamp,
            content_of_table, prev_upload_time, \
            axial_length_a, axial_length_b, \
            axial_length_c, interaxial_angle_alpha, \
-           interaxial_angle_beta, interaxial_angle_gamma
+           interaxial_angle_beta, interaxial_angle_gamma, \
+           prev_texture_add_row_time, texture_content_of_table
 
 
 # tab 2
