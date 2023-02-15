@@ -6,6 +6,8 @@ from dash import dash_table as dt
 import io
 import json
 import base64
+from datetime import datetime
+from bem import xscalc, matter
 
 import ImagingReso._utilities as ir_util
 from ImagingReso.resonance import Resonance
@@ -611,3 +613,130 @@ def _extract_df(datasets):
     for each_name in df_name_list:
         df_dict[each_name] = pd.read_json(datasets[each_name], orient='split')
     return df_dict
+
+
+def get_current_timestamp():
+    """Convert the unix time stamp into a human-readable time format
+
+    Format return will look like  "y2018_m01_d29_h10_mn30"
+    """
+    now = datetime.now()
+    return now.strftime("y%Y_m%m_d%d_h%H_mn%M")
+
+
+def create_table_output_file_name(table=None):
+    '''
+    create the name of the file to use to export the data of this tab
+    '''
+    if table is None:
+        return None
+
+    list_atom = []
+    for _row in table:
+        list_atom.append(_row[chem_name])
+
+    if list_atom == []:
+        return None
+
+    file_name = "_".join(list_atom) + f"_{get_current_timestamp()}.txt"
+    return file_name
+
+
+def format_data(dict=None):
+    '''
+    format the data from a dictionary into a string json
+    '''
+    if dict is None:
+        return ""
+
+    return json.dumps(dict)
+
+
+def clean_data_tab(data_tab=None):
+    '''
+    remove all the rows with no chemical formula defined
+    '''
+    data_tab_cleaned = []
+    for _entry in data_tab:
+        if _entry[chem_name] == '':
+            continue
+        else:
+            data_tab_cleaned.append(_entry)
+    return data_tab_cleaned
+
+
+def update_xs_dict(xs_dict=None,
+                   data_tab=None,
+                   a=None, b=None, c=None,
+                   alpha=None, beta=None, gamma=None,
+                   temperature=None,
+                   log_label='tab2',
+                   wavelengths_A=None):
+    '''
+    calculating the structure for the given data_tab
+    '''
+    print(f"No errors found in {log_label}, working with {log_label}:")
+
+    if not data_tab:
+        print(f"- data_tab is empty!")
+        return
+
+    # data_tab
+    atoms = []
+    _name_only = log_label
+    data_tab = clean_data_tab(data_tab)
+    for entry in data_tab:
+
+        # if no element, continue
+        if not entry[chem_name]:
+            continue
+        _chem_name = entry[chem_name]
+
+        _h = entry[index_number_h]
+        _k = entry[index_number_k]
+        _l = entry[index_number_l]
+
+        try:
+            atoms.append(matter.Atom(_chem_name, (_h, _k, _l)))
+        except ValueError as msg:
+            return f"error in format of h,k and/or l ({msg})"
+
+    print(f"- calculating lattice")
+    _lattice = matter.Lattice(a=a, b=b, c=c, alpha=alpha, beta=beta, gamma=gamma)
+
+    print(f"- calculating structure")
+    _structure = matter.Structure(atoms, _lattice, sgid=225)
+
+    print(f"- calculating cross-section")
+    try:
+        _xscalculator = xscalc.XSCalculator(_structure, temperature, max_diffraction_index=4)
+    except AttributeError as msg:
+        return msg
+
+    xs_dict[_name_only + ' (total)'] = _xscalculator.xs(wavelengths_A)
+    xs_dict[_name_only + ' (abs)'] = _xscalculator.xs_abs(wavelengths_A)
+    xs_dict[_name_only + ' (coh el)'] = _xscalculator.xs_coh_el(wavelengths_A)
+    xs_dict[_name_only + ' (inc el)'] = _xscalculator.xs_inc_el(wavelengths_A)
+    xs_dict[_name_only + ' (coh inel)'] = _xscalculator.xs_coh_inel(wavelengths_A)
+    xs_dict[_name_only + ' (inc inel)'] = _xscalculator.xs_inc_inel(wavelengths_A)
+    print("- Calculation done!")
+
+    return None
+
+
+def update_list_to_plot(name='tab2', df_y=None, to_plot_list=None, xs_type=None):
+
+    if f'{name} (total)' in df_y.columns:
+
+        if 'total' in xs_type:
+            to_plot_list.append(name + ' (total)')
+        if 'abs' in xs_type:
+            to_plot_list.append(name + ' (abs)')
+        if 'coh_el' in xs_type:
+            to_plot_list.append(name + ' (coh el)')
+        if 'coh_inel' in xs_type:
+            to_plot_list.append(name + ' (coh inel)')
+        if 'inc_el' in xs_type:
+            to_plot_list.append(name + ' (inc el)')
+        if 'inc_inel' in xs_type:
+            to_plot_list.append(name + ' (inc inel)')

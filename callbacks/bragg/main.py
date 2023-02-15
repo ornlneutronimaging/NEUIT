@@ -1,22 +1,20 @@
 from dash.dependencies import Input, Output, State
 from dash import dash_table as dt
-from dash import dcc
-from dash import html
 import matplotlib.pyplot as plt
-from bem import xscalc, matter
 import pandas as pd
 import numpy as np
 import json
 import time
-from datetime import datetime
-from urllib.parse import quote as urlquote
 
 import ImagingReso._utilities as ir_util
 from app import app
 from callbacks.utilities.initialization import (init_app_ids, striped_rows, plot_loading, resubmit)
 import callbacks.utilities.constants as constants
 from callbacks.utilities.plot import shape_matplot_to_plotly
-from callbacks.utilities.all_apps import y_type_to_y_label, x_type_to_x_tag, load_dfs, update_rows_util
+from callbacks.utilities.all_apps import (y_type_to_y_label, x_type_to_x_tag, load_dfs,
+                                          create_table_output_file_name, format_data,
+                                          clean_data_tab, update_xs_dict, update_list_to_plot)
+
 from callbacks.utilities.bragg import parse_cif_file, parse_txt_file
 from callbacks.utilities.resonance import fill_df_x_types
 from callbacks.utilities.constants import *
@@ -42,141 +40,171 @@ def show_hide_band_input(more_info, style):
     return style
 
 
-# tab 1
-@app.callback(
-    [
-        Output(app_id_dict['cif_upload_fb_tab1'], 'children'),
-        Output(app_id_dict['no_error_tab1'], 'children'),
-        Output(app_id_dict['data_table_tab1'], 'data'),
-        Output(app_id_dict['hidden_upload_time_tab1'], 'children'),
-        Output(app_id_dict['a_tab1'], 'value'),
-        Output(app_id_dict['b_tab1'], 'value'),
-        Output(app_id_dict['c_tab1'], 'value'),
-        Output(app_id_dict['alpha_tab1'], 'value'),
-        Output(app_id_dict['beta_tab1'], 'value'),
-        Output(app_id_dict['gamma_tab1'], 'value'),
-        Output(app_id_dict['hidden_texture_add_row_time_tab1'], 'children'),
-        Output(app_id_dict['texture_table_tab1'], 'data')
-    ],
-    [
-        Input(app_id_dict['cif_upload_tab1'], 'filename'),
-        Input(app_id_dict['add_row_tab1'], 'n_clicks_timestamp'),
-        Input(app_id_dict['texture_add_row_tab1'], 'n_clicks_timestamp'),
-    ],
-    [
-        State(app_id_dict['hidden_upload_time_tab1'], 'children'),
-        State(app_id_dict['cif_upload_tab1'], 'contents'),
-        State(app_id_dict['data_table_tab1'], 'data'),
-        State(app_id_dict['data_table_tab1'], 'columns'),
-        State(app_id_dict['hidden_texture_add_row_time_tab1'], 'children'),
-        State(app_id_dict['texture_table_tab1'], 'data'),
-        State(app_id_dict['texture_table_tab1'], 'columns'),
-        State(app_id_dict['a_tab1'], 'value'),
-        State(app_id_dict['b_tab1'], 'value'),
-        State(app_id_dict['c_tab1'], 'value'),
-        State(app_id_dict['alpha_tab1'], 'value'),
-        State(app_id_dict['beta_tab1'], 'value'),
-        State(app_id_dict['gamma'], 'value'),
-    ],
-)
-def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestamp,
-                    prev_upload_time, file_uploads, content_of_table, names_of_columns, prev_texture_add_row_time,
-                    texture_content_of_table, names_of_texture_columns,
-                    a, b, c, alpha, beta, gamma):
-
-    data_fb_list = []
-    error_div_list = []
-
-    print(f"before: {texture_content_of_table =}")
-
-    # print(f"{prev_texture_add_row_time =}")
-    # print(f"{texture_add_button_timestamp =}")
-    #
-    # print(f"")
-    # print(f"{add_button_timestamp =}")
-    # print(f"{prev_upload_time =}")
-    #
-    # print(f"{cif_names =}")
-    # print(f"{names_of_texture_columns =}")
-
-    # we did not import a cif name, we need to add a row
-    if cif_names is None:
-
-        if add_button_timestamp != prev_upload_time:
-            # we need to add a row in the top table
-            content_of_table.append({c['id']: '' for c in names_of_columns})
-            return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
-                   texture_add_button_timestamp, texture_content_of_table
-
-        else:
-            print("we clicked add texture row")
-            # we need to add a row in the texture table
-            texture_content_of_table.append({c['id']: '' for c in names_of_texture_columns})
-            print(f"after: {texture_content_of_table =}")
-            return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
-                   texture_add_button_timestamp, texture_content_of_table
-
-    # we are importing a file
-    if file_uploads is not None:
-
-        if add_button_timestamp != prev_upload_time:
-            # we really clicked the add a row button
-            content_of_table.append({c['id']: '' for c in names_of_columns})
-            return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
-                   texture_add_button_timestamp, texture_content_of_table
-
-        elif texture_add_button_timestamp != prev_texture_add_row_time:
-            print("we clicked add texture row!")
-
-        else:
-            # we did not click add a row button
-            content_of_table = []
-
-        if cif_names.endswith('.cif'):
-            _cif_struc = parse_cif_file(content=file_uploads)
-        elif cif_names.endswith('.txt'):
-            _cif_struc = parse_txt_file(content=file_uploads)
-
-        for _row_index, _row in enumerate(_cif_struc):
-
-            if _row_index == 0:
-                interaxial_angle_alpha = _row.lattice.alpha
-                interaxial_angle_beta = _row.lattice.beta
-                interaxial_angle_gamma = _row.lattice.gamma
-                axial_length_a = _row.lattice.a
-                axial_length_b = _row.lattice.b
-                axial_length_c = _row.lattice.c
-
-            chem_name = _row.element
-            index_number_h = _row.x
-            index_number_k = _row.y
-            index_number_l = _row.z
-
-            _new_table_entry = {constants.chem_name: chem_name,
-                                constants.index_number_h: index_number_h,
-                                constants.index_number_k: index_number_k,
-                                constants.index_number_l: index_number_l}
-
-            content_of_table.append(_new_table_entry)
-
-    if ('.cif' in cif_names) or ('.txt' in cif_names):
-        data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
-    else:
-        error_div = html.Div(
-            ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(cif_names)])
-        error_div_list.append(error_div)
-
-    if len(error_div_list) == 0:
-        test_passed = True
-    else:
-        test_passed = error_div_list
-
-    return data_fb_list, test_passed, \
-           content_of_table, prev_upload_time, \
-           axial_length_a, axial_length_b, \
-           axial_length_c, interaxial_angle_alpha, \
-           interaxial_angle_beta, interaxial_angle_gamma, \
-           prev_texture_add_row_time, texture_content_of_table
+# # tab 1
+# @app.callback(
+#     [
+#         Output(app_id_dict['cif_upload_fb_tab1'], 'children'),
+#         Output(app_id_dict['no_error_tab1'], 'children'),
+#         Output(app_id_dict['data_table_tab1'], 'data'),
+#         Output(app_id_dict['hidden_upload_time_tab1'], 'children'),
+#         Output(app_id_dict['a_tab1'], 'value'),
+#         Output(app_id_dict['b_tab1'], 'value'),
+#         Output(app_id_dict['c_tab1'], 'value'),
+#         Output(app_id_dict['alpha_tab1'], 'value'),
+#         Output(app_id_dict['beta_tab1'], 'value'),
+#         Output(app_id_dict['gamma_tab1'], 'value'),
+#         Output(app_id_dict['hidden_texture_add_row_time_tab1'], 'children'),
+#         Output(app_id_dict['texture_table_tab1'], 'data')
+#     ],
+#     [
+#         Input(app_id_dict['cif_upload_tab1'], 'filename'),
+#         Input(app_id_dict['add_row_tab1'], 'n_clicks_timestamp'),
+#         Input(app_id_dict['texture_add_row_tab1'], 'n_clicks_timestamp'),
+#     ],
+#     [
+#         State(app_id_dict['hidden_upload_time_tab1'], 'children'),
+#         State(app_id_dict['cif_upload_tab1'], 'contents'),
+#         State(app_id_dict['data_table_tab1'], 'data'),
+#         State(app_id_dict['data_table_tab1'], 'columns'),
+#         State(app_id_dict['hidden_texture_add_row_time_tab1'], 'children'),
+#         State(app_id_dict['texture_table_tab1'], 'data'),
+#         State(app_id_dict['texture_table_tab1'], 'columns'),
+#         State(app_id_dict['a_tab1'], 'value'),
+#         State(app_id_dict['b_tab1'], 'value'),
+#         State(app_id_dict['c_tab1'], 'value'),
+#         State(app_id_dict['alpha_tab1'], 'value'),
+#         State(app_id_dict['beta_tab1'], 'value'),
+#         State(app_id_dict['gamma_tab1'], 'value'),
+#     ],
+# )
+# def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestamp,
+#                     prev_upload_time, file_uploads, content_of_table, names_of_columns, prev_texture_add_row_time,
+#                     texture_content_of_table, names_of_texture_columns,
+#                     a, b, c, alpha, beta, gamma):
+#
+#     data_fb_list = []
+#     error_div_list = []
+#
+#     print(f"before: {texture_content_of_table =}")
+#
+#     # print(f"{prev_texture_add_row_time =}")
+#     # print(f"{texture_add_button_timestamp =}")
+#     #
+#     # print(f"")
+#     # print(f"{add_button_timestamp =}")
+#     # print(f"{prev_upload_time =}")
+#     #
+#     # print(f"{cif_names =}")
+#     # print(f"{names_of_texture_columns =}")
+#
+#     # we did not import a cif name, we need to add a row
+#     if cif_names is None:
+#
+#         if add_button_timestamp != prev_upload_time:
+#             # we need to add a row in the top table
+#             content_of_table.append({c['id']: '' for c in names_of_columns})
+#             return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
+#                    texture_add_button_timestamp, texture_content_of_table
+#
+#         else:
+#             # we need to add a row in the texture table
+#             texture_content_of_table.append({c['id']: '' for c in names_of_texture_columns})
+#             return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
+#                    texture_add_button_timestamp, texture_content_of_table
+#
+#     # we are importing a file
+#     if file_uploads is not None:
+#
+#         if add_button_timestamp != prev_upload_time:
+#             # we really clicked the add a row button
+#             content_of_table.append({c['id']: '' for c in names_of_columns})
+#             return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
+#                    texture_add_button_timestamp, texture_content_of_table
+#
+#         elif texture_add_button_timestamp != prev_texture_add_row_time:
+#             print("we clicked add texture row!")
+#
+#         else:
+#             # we did not click add a row button
+#             content_of_table = []
+#
+#         if cif_names.endswith('.cif'):
+#             _cif_struc = parse_cif_file(content=file_uploads)
+#         elif cif_names.endswith('.txt'):
+#             _cif_struc = parse_txt_file(content=file_uploads)
+#
+#         for _row_index, _row in enumerate(_cif_struc):
+#
+#             if _row_index == 0:
+#                 interaxial_angle_alpha = _row.lattice.alpha
+#                 interaxial_angle_beta = _row.lattice.beta
+#                 interaxial_angle_gamma = _row.lattice.gamma
+#                 axial_length_a = _row.lattice.a
+#                 axial_length_b = _row.lattice.b
+#                 axial_length_c = _row.lattice.c
+#
+#             chem_name = _row.element
+#             index_number_h = _row.x
+#             index_number_k = _row.y
+#             index_number_l = _row.z
+#
+#             _new_table_entry = {constants.chem_name: chem_name,
+#                                 constants.index_number_h: index_number_h,
+#                                 constants.index_number_k: index_number_k,
+#                                 constants.index_number_l: index_number_l}
+#
+#             content_of_table.append(_new_table_entry)
+#
+#     if ('.cif' in cif_names) or ('.txt' in cif_names):
+#         data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
+#     else:
+#         error_div = html.Div(
+#             ["\u274C Type error: '{}' is not supported, only '.cif' is ""supported.".format(cif_names)])
+#         error_div_list.append(error_div)
+#
+#     if len(error_div_list) == 0:
+#         test_passed = True
+#     else:
+#         test_passed = error_div_list
+#
+#     return data_fb_list, test_passed, \
+#            content_of_table, prev_upload_time, \
+#            axial_length_a, axial_length_b, \
+#            axial_length_c, interaxial_angle_alpha, \
+#            interaxial_angle_beta, interaxial_angle_gamma, \
+#            prev_texture_add_row_time, texture_content_of_table
+#
+#
+# # export tab1
+# @app.callback(Output(app_id_dict["download_tab1"], "data"),
+#               Input(app_id_dict["download_button_tab1"], "n_clicks"),
+#               [
+#                   State(app_id_dict['data_table_tab1'], 'data'),
+#                   State(app_id_dict['a_tab1'], 'value'),
+#                   State(app_id_dict['b_tab1'], 'value'),
+#                   State(app_id_dict['c_tab1'], 'value'),
+#                   State(app_id_dict['alpha_tab1'], 'value'),
+#                   State(app_id_dict['beta_tab1'], 'value'),
+#                   State(app_id_dict['gamma_tab1'], 'value'),
+#               ],
+#               prevent_initial_call=True,
+#              )
+# def func(n_clicks, data_table, a, b, c, alpha, beta, gamma):
+#
+#     cleaned_data_table = clean_data_tab(data_tab=data_table)
+#
+#     _dict = {'table': cleaned_data_table,
+#              'a': a, 'b': b, 'c': c,
+#              'alpha': alpha, 'beta': beta, 'gamma': gamma}
+#
+#     output_file_name = create_table_output_file_name(table=cleaned_data_table)
+#     if output_file_name is None:
+#         return None
+#
+#     output_data = format_data(dict=_dict)
+#
+#     return dict(content=output_data,
+#                 filename=output_file_name)
 
 
 # tab 2
@@ -544,76 +572,76 @@ def upload_feedback(cif_names, add_button_timestamp,
            interaxial_angle_beta, interaxial_angle_gamma
 
 
-def clean_data_tab(data_tab=None):
-    '''
-    remove all the rows with no chemical formula defined
-    '''
-    data_tab_cleaned = []
-    for _entry in data_tab:
-        if _entry[chem_name] == '':
-            continue
-        else:
-            data_tab_cleaned.append(_entry)
-    return data_tab_cleaned
-
-
-def update_xs_dict(xs_dict=None,
-                   data_tab=None,
-                   a=None, b=None, c=None,
-                   alpha=None, beta=None, gamma=None,
-                   temperature=None,
-                   log_label='tab2',
-                   wavelengths_A=None):
-    '''
-    calculating the structure for the given data_tab
-    '''
-    print(f"No errors found in {log_label}, working with {log_label}:")
-
-    if not data_tab:
-        print(f"- data_tab is empty!")
-        return
-
-    # data_tab
-    atoms = []
-    _name_only = log_label
-    data_tab = clean_data_tab(data_tab)
-    for entry in data_tab:
-
-        # if no element, continue
-        if not entry[chem_name]:
-            continue
-        _chem_name = entry[chem_name]
-
-        _h = entry[index_number_h]
-        _k = entry[index_number_k]
-        _l = entry[index_number_l]
-
-        try:
-            atoms.append(matter.Atom(_chem_name, (_h, _k, _l)))
-        except ValueError as msg:
-            return f"error in format of h,k and/or l ({msg})"
-
-    print(f"- calculating lattice")
-    _lattice = matter.Lattice(a=a, b=b, c=c, alpha=alpha, beta=beta, gamma=gamma)
-
-    print(f"- calculating structure")
-    _structure = matter.Structure(atoms, _lattice, sgid=225)
-
-    print(f"- calculating cross-section")
-    try:
-        _xscalculator = xscalc.XSCalculator(_structure, temperature, max_diffraction_index=4)
-    except AttributeError as msg:
-        return msg
-
-    xs_dict[_name_only + ' (total)'] = _xscalculator.xs(wavelengths_A)
-    xs_dict[_name_only + ' (abs)'] = _xscalculator.xs_abs(wavelengths_A)
-    xs_dict[_name_only + ' (coh el)'] = _xscalculator.xs_coh_el(wavelengths_A)
-    xs_dict[_name_only + ' (inc el)'] = _xscalculator.xs_inc_el(wavelengths_A)
-    xs_dict[_name_only + ' (coh inel)'] = _xscalculator.xs_coh_inel(wavelengths_A)
-    xs_dict[_name_only + ' (inc inel)'] = _xscalculator.xs_inc_inel(wavelengths_A)
-    print("- Calculation done!")
-
-    return None
+# def clean_data_tab(data_tab=None):
+#     '''
+#     remove all the rows with no chemical formula defined
+#     '''
+#     data_tab_cleaned = []
+#     for _entry in data_tab:
+#         if _entry[chem_name] == '':
+#             continue
+#         else:
+#             data_tab_cleaned.append(_entry)
+#     return data_tab_cleaned
+#
+#
+# def update_xs_dict(xs_dict=None,
+#                    data_tab=None,
+#                    a=None, b=None, c=None,
+#                    alpha=None, beta=None, gamma=None,
+#                    temperature=None,
+#                    log_label='tab2',
+#                    wavelengths_A=None):
+#     '''
+#     calculating the structure for the given data_tab
+#     '''
+#     print(f"No errors found in {log_label}, working with {log_label}:")
+#
+#     if not data_tab:
+#         print(f"- data_tab is empty!")
+#         return
+#
+#     # data_tab
+#     atoms = []
+#     _name_only = log_label
+#     data_tab = clean_data_tab(data_tab)
+#     for entry in data_tab:
+#
+#         # if no element, continue
+#         if not entry[chem_name]:
+#             continue
+#         _chem_name = entry[chem_name]
+#
+#         _h = entry[index_number_h]
+#         _k = entry[index_number_k]
+#         _l = entry[index_number_l]
+#
+#         try:
+#             atoms.append(matter.Atom(_chem_name, (_h, _k, _l)))
+#         except ValueError as msg:
+#             return f"error in format of h,k and/or l ({msg})"
+#
+#     print(f"- calculating lattice")
+#     _lattice = matter.Lattice(a=a, b=b, c=c, alpha=alpha, beta=beta, gamma=gamma)
+#
+#     print(f"- calculating structure")
+#     _structure = matter.Structure(atoms, _lattice, sgid=225)
+#
+#     print(f"- calculating cross-section")
+#     try:
+#         _xscalculator = xscalc.XSCalculator(_structure, temperature, max_diffraction_index=4)
+#     except AttributeError as msg:
+#         return msg
+#
+#     xs_dict[_name_only + ' (total)'] = _xscalculator.xs(wavelengths_A)
+#     xs_dict[_name_only + ' (abs)'] = _xscalculator.xs_abs(wavelengths_A)
+#     xs_dict[_name_only + ' (coh el)'] = _xscalculator.xs_coh_el(wavelengths_A)
+#     xs_dict[_name_only + ' (inc el)'] = _xscalculator.xs_inc_el(wavelengths_A)
+#     xs_dict[_name_only + ' (coh inel)'] = _xscalculator.xs_coh_inel(wavelengths_A)
+#     xs_dict[_name_only + ' (inc inel)'] = _xscalculator.xs_inc_inel(wavelengths_A)
+#     print("- Calculation done!")
+#
+#     return None
 
 
 # submit button clicked
@@ -782,24 +810,6 @@ def show_output_div(n_submit,
         return None,  False, {'display': 'none'}, None
 
 
-def update_list_to_plot(name='tab2', df_y=None, to_plot_list=None, xs_type=None):
-
-    if f'{name} (total)' in df_y.columns:
-
-        if 'total' in xs_type:
-            to_plot_list.append(name + ' (total)')
-        if 'abs' in xs_type:
-            to_plot_list.append(name + ' (abs)')
-        if 'coh_el' in xs_type:
-            to_plot_list.append(name + ' (coh el)')
-        if 'coh_inel' in xs_type:
-            to_plot_list.append(name + ' (coh inel)')
-        if 'inc_el' in xs_type:
-            to_plot_list.append(name + ' (inc el)')
-        if 'inc_inel' in xs_type:
-            to_plot_list.append(name + ' (inc inel)')
-
-
 @app.callback(
     [
         Output(app_id_dict['plot_div_id'], 'children'),
@@ -915,75 +925,6 @@ def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
 def loading_icon(value):
     time.sleep(3)
     return value
-
-
-def get_current_timestamp():
-    """Convert the unix time stamp into a human-readable time format
-
-    Format return will look like  "y2018_m01_d29_h10_mn30"
-    """
-    now = datetime.now()
-    return now.strftime("y%Y_m%m_d%d_h%H_mn%M")
-
-
-def create_table_output_file_name(table=None):
-    '''
-    create the name of the file to use to export the data of this tab
-    '''
-    if table is None:
-        return None
-
-    list_atom = []
-    for _row in table:
-        list_atom.append(_row[chem_name])
-
-    if list_atom == []:
-        return None
-
-    file_name = "_".join(list_atom) + f"_{get_current_timestamp()}.txt"
-    return file_name
-
-
-def format_data(dict=None):
-    '''
-    format the data from a dictionary into a string json
-    '''
-    if dict is None:
-        return ""
-
-    return json.dumps(dict)
-
-
-# export tab1
-@app.callback(Output(app_id_dict["download_tab1"], "data"),
-              Input(app_id_dict["download_button_tab1"], "n_clicks"),
-              [
-                  State(app_id_dict['data_table_tab1'], 'data'),
-                  State(app_id_dict['a_tab1'], 'value'),
-                  State(app_id_dict['b_tab1'], 'value'),
-                  State(app_id_dict['c_tab1'], 'value'),
-                  State(app_id_dict['alpha_tab1'], 'value'),
-                  State(app_id_dict['beta_tab1'], 'value'),
-                  State(app_id_dict['gamma_tab1'], 'value'),
-              ],
-              prevent_initial_call=True,
-             )
-def func(n_clicks, data_table, a, b, c, alpha, beta, gamma):
-
-    cleaned_data_table = clean_data_tab(data_tab=data_table)
-
-    _dict = {'table': cleaned_data_table,
-             'a': a, 'b': b, 'c': c,
-             'alpha': alpha, 'beta': beta, 'gamma': gamma}
-
-    output_file_name = create_table_output_file_name(table=cleaned_data_table)
-    if output_file_name is None:
-        return None
-
-    output_data = format_data(dict=_dict)
-
-    return dict(content=output_data,
-                filename=output_file_name)
 
 
 # export tab2
@@ -1112,33 +1053,3 @@ def func(n_clicks, data_table, a, b, c, alpha, beta, gamma):
 
     return dict(content=output_data,
                 filename=output_file_name)
-
-
-# texture checklist tab1
-@app.callback([
-                Output(app_id_dict['texture_add_row_tab1'], "disabled"),
-                Output(app_id_dict['texture_table_tab1'], "editable")
-                ],
-              Input(app_id_dict['texture_checklist_tab1'], "value"))
-def method(checklist_tab1_value):
-
-    # button is unchecked
-    if not checklist_tab1_value:
-        return True, False
-
-    # button is checked
-    if checklist_tab1_value[0].strip() == 'Texture':
-        return False, True
-
-# grain size checklist tab1
-@app.callback(
-    Output(app_id_dict['grain_size_input_tab1'], "disabled"),
-    Input(app_id_dict['grain_size_checklist_tab1'], "value"))
-def method_grain_size_tab1(checklist_value):
-
-    # button is unchecked
-    if not checklist_value:
-        return True
-
-    # button is checked
-    return False

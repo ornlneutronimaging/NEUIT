@@ -1,6 +1,8 @@
 import dash_bootstrap_components as dbc
 
-from callbacks.bragg import *
+# from callbacks.bragg import *
+from callbacks.bragg.main import *
+from callbacks.bragg.tab1 import *
 from callbacks.utilities.constants import *
 from callbacks.utilities.initialization import (init_app_ids, temperature_default, distance_default, delay_default,
                                                 init_app_about, init_display_plot_data_check, sample_tb_even_4_col,
