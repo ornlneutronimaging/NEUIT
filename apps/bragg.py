@@ -169,7 +169,7 @@ def tab_content(upload_id=None,
     children_array.append(
         dbc.Row([
             dcc.Checklist(
-                [' Grain size (m)'],
+                [grain_size_flag],
                 style={'font-size': 20},
                 inline=True,
                 id=grain_size_checklist_id,

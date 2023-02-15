@@ -29,8 +29,8 @@ app_id_dict = init_app_ids(app_name=app_name)
         Output(app_id_dict['gamma_tab1'], 'value'),
         Output(app_id_dict['hidden_texture_add_row_time_tab1'], 'children'),
         Output(app_id_dict['texture_table_tab1'], 'data'),
-        # Output(app_id_dict['grain_size_checklist_tab1'], 'value'),
-        Output(app_id_dict['grain_size_input_tab1'], 'value')
+        Output(app_id_dict['grain_size_input_tab1'], 'value'),
+        Output(app_id_dict['grain_size_checklist_tab1'], 'value'),
     ],
     [
         Input(app_id_dict['cif_upload_tab1'], 'filename'),
@@ -64,17 +64,7 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
     data_fb_list = []
     error_div_list = []
 
-    print(f"{grain_size_checklist_flag =}")
-
-    # print(f"{prev_texture_add_row_time =}")
-    # print(f"{texture_add_button_timestamp =}")
-    #
-    # print(f"")
-    # print(f"{add_button_timestamp =}")
-    # print(f"{prev_upload_time =}")
-    #
-    # print(f"{cif_names =}")
-    # print(f"{names_of_texture_columns =}")
+    grain_size_checklist_flag = [None] if not grain_size_checklist_flag else grain_size_checklist_flag
 
     # we did not import a cif name, we need to add a row
     if cif_names is None:
@@ -83,12 +73,12 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
             # we need to add a row in the top table
             content_of_table.append({c['id']: '' for c in names_of_columns})
             return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
-                   texture_add_button_timestamp, texture_content_of_table, grain_size_value
+                   texture_add_button_timestamp, texture_content_of_table, grain_size_value, grain_size_checklist_flag
         else:
             # we need to add a row in the texture table
             texture_content_of_table.append({c['id']: '' for c in names_of_texture_columns})
             return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
-                   texture_add_button_timestamp, texture_content_of_table, grain_size_value
+                   texture_add_button_timestamp, texture_content_of_table, grain_size_value, grain_size_checklist_flag
 
     # we are importing a file
     if file_uploads is not None:
@@ -97,12 +87,12 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
             # we really clicked the add a row button
             content_of_table.append({c['id']: '' for c in names_of_columns})
             return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
-                   texture_add_button_timestamp, texture_content_of_table, grain_size_value
+                   texture_add_button_timestamp, texture_content_of_table, grain_size_value, grain_size_checklist_flag
 
         elif texture_add_button_timestamp != prev_texture_add_row_time:
             texture_content_of_table.append({c['id']: '' for c in names_of_texture_columns})
             return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
-                   texture_add_button_timestamp, texture_content_of_table, grain_size_value
+                   texture_add_button_timestamp, texture_content_of_table, grain_size_value, grain_size_checklist_flag
 
         # we did not click add a row button
         content_of_table = []
@@ -154,7 +144,7 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
         # fill grain size
         if grain_size:
 
-            grain_size_checklist_flag = grain_size.flag
+            grain_size_checklist_flag = grain_size.flag if grain_size.flag else None
             grain_size_value = grain_size.value
 
     if ('.cif' in cif_names) or ('.txt' in cif_names):
@@ -175,7 +165,7 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
            axial_length_c, interaxial_angle_alpha, \
            interaxial_angle_beta, interaxial_angle_gamma, \
            prev_texture_add_row_time, texture_content_of_table, \
-           grain_size_value
+           grain_size_value, grain_size_checklist_flag
 
 
 # export
@@ -228,7 +218,7 @@ def func(n_clicks, data_table, texture_flag, texture_table, grain_size_flag, gra
 # texture checklist
 @app.callback([
                 Output(app_id_dict['texture_add_row_tab1'], "disabled"),
-                Output(app_id_dict['texture_table_tab1'], "editable")
+                Output(app_id_dict['texture_table_tab1'], "editable"),
                 ],
               Input(app_id_dict['texture_checklist_tab1'], "value"))
 def method(checklist_tab1_value):
@@ -247,8 +237,6 @@ def method(checklist_tab1_value):
     Output(app_id_dict['grain_size_input_tab1'], "disabled"),
     Input(app_id_dict['grain_size_checklist_tab1'], "value"))
 def method_grain_size_tab1(checklist_value):
-
-    print(f"{checklist_value =}")
 
     # button is unchecked
     if not checklist_value:
