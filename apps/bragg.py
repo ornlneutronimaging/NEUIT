@@ -186,7 +186,6 @@ def tab_content(upload_id=None,
                               value=1e-6,
                               min=1e-8,
                               inputMode='numeric',
-                              step=1e-6,
                               disabled=True,
                               ),
                 ]

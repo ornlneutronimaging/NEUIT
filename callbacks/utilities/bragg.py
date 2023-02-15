@@ -8,6 +8,7 @@ else:
     from diffpy.structure.parsers import getParser
 
 from .constants import (index_number_l, index_number_k, index_number_h,
+                        r, beta, texture_flag,
                         interaxial_angle_beta, interaxial_angle_gamma, interaxial_angle_alpha,
                         chem_name)
 
@@ -21,7 +22,7 @@ def parse_cif_file(content):
     p = getParser('cif')
     struc = p.parse(cif_s)
     struc.sg = p.spacegroup
-    return struc
+    return struc, None, None
 
 
 class Lattice:
@@ -57,6 +58,32 @@ class Structure:
         self.z = z
 
 
+class Texture:
+    h = None
+    k = None
+    l = None
+    r = None
+    beta = None
+    flag = None
+
+    def __init__(self, h=None, k=None, l=None, r=None, beta=None, flag=None):
+        self.h = h
+        self.k = k
+        self.l = l
+        self.r = r
+        self.beta = beta
+        self.flag = flag
+
+
+class GrainSize:
+    flag = None
+    value = None
+
+    def __init__(self, flag=None, value=None):
+        self.flag = flag
+        self.value = value
+
+
 def parse_txt_file(content):
     '''
     parse the ascii file (created by exporting the structure within each tab
@@ -82,4 +109,19 @@ def parse_txt_file(content):
                                z=_entry[index_number_l])
         cif_structure.append(_structure)
 
-    return cif_structure
+    texture_table = dictionary['texture_table']
+    texture_list = []
+    for _index, _entry in enumerate(texture_table):
+
+        _texture = Texture(h=_entry[index_number_h],
+                           k=_entry[index_number_k],
+                           l=_entry[index_number_l],
+                           r=_entry[r],
+                           beta=_entry[beta],
+                           flag=dictionary[texture_flag])
+        texture_list.append(_texture)
+
+    grain_size = GrainSize(value=dictionary['grain_size'],
+                           flag=dictionary['grain_size_flag'])
+
+    return cif_structure, texture_list, grain_size

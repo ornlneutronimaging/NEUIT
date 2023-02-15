@@ -28,7 +28,9 @@ app_id_dict = init_app_ids(app_name=app_name)
         Output(app_id_dict['beta_tab1'], 'value'),
         Output(app_id_dict['gamma_tab1'], 'value'),
         Output(app_id_dict['hidden_texture_add_row_time_tab1'], 'children'),
-        Output(app_id_dict['texture_table_tab1'], 'data')
+        Output(app_id_dict['texture_table_tab1'], 'data'),
+        # Output(app_id_dict['grain_size_checklist_tab1'], 'value'),
+        Output(app_id_dict['grain_size_input_tab1'], 'value')
     ],
     [
         Input(app_id_dict['cif_upload_tab1'], 'filename'),
@@ -43,6 +45,8 @@ app_id_dict = init_app_ids(app_name=app_name)
         State(app_id_dict['hidden_texture_add_row_time_tab1'], 'children'),
         State(app_id_dict['texture_table_tab1'], 'data'),
         State(app_id_dict['texture_table_tab1'], 'columns'),
+        State(app_id_dict['grain_size_checklist_tab1'], 'value'),
+        State(app_id_dict['grain_size_input_tab1'], 'value'),
         State(app_id_dict['a_tab1'], 'value'),
         State(app_id_dict['b_tab1'], 'value'),
         State(app_id_dict['c_tab1'], 'value'),
@@ -54,12 +58,13 @@ app_id_dict = init_app_ids(app_name=app_name)
 def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestamp,
                     prev_upload_time, file_uploads, content_of_table, names_of_columns, prev_texture_add_row_time,
                     texture_content_of_table, names_of_texture_columns,
+                    grain_size_checklist_flag, grain_size_value,
                     a, b, c, alpha, beta, gamma):
 
     data_fb_list = []
     error_div_list = []
 
-    print(f"before: {texture_content_of_table =}")
+    print(f"{grain_size_checklist_flag =}")
 
     # print(f"{prev_texture_add_row_time =}")
     # print(f"{texture_add_button_timestamp =}")
@@ -78,13 +83,12 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
             # we need to add a row in the top table
             content_of_table.append({c['id']: '' for c in names_of_columns})
             return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
-                   texture_add_button_timestamp, texture_content_of_table
-
+                   texture_add_button_timestamp, texture_content_of_table, grain_size_value
         else:
             # we need to add a row in the texture table
             texture_content_of_table.append({c['id']: '' for c in names_of_texture_columns})
             return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
-                   texture_add_button_timestamp, texture_content_of_table
+                   texture_add_button_timestamp, texture_content_of_table, grain_size_value
 
     # we are importing a file
     if file_uploads is not None:
@@ -93,20 +97,23 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
             # we really clicked the add a row button
             content_of_table.append({c['id']: '' for c in names_of_columns})
             return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
-                   texture_add_button_timestamp, texture_content_of_table
+                   texture_add_button_timestamp, texture_content_of_table, grain_size_value
 
         elif texture_add_button_timestamp != prev_texture_add_row_time:
-            print("we clicked add texture row!")
+            texture_content_of_table.append({c['id']: '' for c in names_of_texture_columns})
+            return [None], [None], content_of_table, add_button_timestamp, a, b, c, alpha, beta, gamma, \
+                   texture_add_button_timestamp, texture_content_of_table, grain_size_value
 
-        else:
-            # we did not click add a row button
-            content_of_table = []
+        # we did not click add a row button
+        content_of_table = []
+        texture_content_of_table = []
 
         if cif_names.endswith('.cif'):
-            _cif_struc = parse_cif_file(content=file_uploads)
+            _cif_struc, texture_list, grain_size = parse_cif_file(content=file_uploads)
         elif cif_names.endswith('.txt'):
-            _cif_struc = parse_txt_file(content=file_uploads)
+            _cif_struc, texture_list, grain_size = parse_txt_file(content=file_uploads)
 
+        # fill top structure table
         for _row_index, _row in enumerate(_cif_struc):
 
             if _row_index == 0:
@@ -129,6 +136,27 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
 
             content_of_table.append(_new_table_entry)
 
+        # fill texture table
+        if texture_list:
+
+            for _row_index, _texture in enumerate(texture_list):
+
+                if _row_index == 0:
+                    texture_flag = _texture.flag
+
+                _new_table_entry = {constants.index_number_h: _texture.h,
+                                    constants.index_number_k: _texture.k,
+                                    constants.index_number_l: _texture.l,
+                                    constants.r: _texture.r,
+                                    constants.beta: _texture.beta}
+                texture_content_of_table.append(_new_table_entry)
+
+        # fill grain size
+        if grain_size:
+
+            grain_size_checklist_flag = grain_size.flag
+            grain_size_value = grain_size.value
+
     if ('.cif' in cif_names) or ('.txt' in cif_names):
         data_fb_list.append(html.Div(['\u2705 Data file "{}" uploaded.'.format(cif_names)]))
     else:
@@ -146,7 +174,8 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
            axial_length_a, axial_length_b, \
            axial_length_c, interaxial_angle_alpha, \
            interaxial_angle_beta, interaxial_angle_gamma, \
-           prev_texture_add_row_time, texture_content_of_table
+           prev_texture_add_row_time, texture_content_of_table, \
+           grain_size_value
 
 
 # export
@@ -154,6 +183,10 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
               Input(app_id_dict["download_button_tab1"], "n_clicks"),
               [
                   State(app_id_dict['data_table_tab1'], 'data'),
+                  State(app_id_dict['texture_checklist_tab1'], 'value'),
+                  State(app_id_dict['texture_table_tab1'], 'data'),
+                  State(app_id_dict['grain_size_checklist_tab1'], 'value'),
+                  State(app_id_dict['grain_size_input_tab1'], 'value'),
                   State(app_id_dict['a_tab1'], 'value'),
                   State(app_id_dict['b_tab1'], 'value'),
                   State(app_id_dict['c_tab1'], 'value'),
@@ -163,13 +196,24 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
               ],
               prevent_initial_call=True,
              )
-def func(n_clicks, data_table, a, b, c, alpha, beta, gamma):
+def func(n_clicks, data_table, texture_flag, texture_table, grain_size_flag, grain_size_value,
+         a, b, c, alpha, beta, gamma):
+
+    print(f"in exporting tab1")
+    print(f"-> {texture_flag =}")
+    print(f"-> {texture_table =}")
+    print(f"-> {grain_size_flag =}")
+    print(f"-> {grain_size_value =}")
 
     cleaned_data_table = clean_data_tab(data_tab=data_table)
 
     _dict = {'table': cleaned_data_table,
              'a': a, 'b': b, 'c': c,
-             'alpha': alpha, 'beta': beta, 'gamma': gamma}
+             'alpha': alpha, 'beta': beta, 'gamma': gamma,
+             'grain_size': grain_size_value,
+             'grain_size_flag': grain_size_flag,
+             'texture_table': texture_table,
+             'texture_flag': texture_flag}
 
     output_file_name = create_table_output_file_name(table=cleaned_data_table)
     if output_file_name is None:
@@ -203,6 +247,8 @@ def method(checklist_tab1_value):
     Output(app_id_dict['grain_size_input_tab1'], "disabled"),
     Input(app_id_dict['grain_size_checklist_tab1'], "value"))
 def method_grain_size_tab1(checklist_value):
+
+    print(f"{checklist_value =}")
 
     # button is unchecked
     if not checklist_value:
