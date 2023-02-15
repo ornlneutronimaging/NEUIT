@@ -132,7 +132,8 @@ def tab_content(upload_id=None,
 
     # Texture
     children_array.append(dcc.Checklist(
-        [' Texture'],
+        [texture_flag],
+        [],
         style={'font-size': 20},
         inline=True,
         id=texture_checklist_id,

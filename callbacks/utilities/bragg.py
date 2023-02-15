@@ -109,6 +109,11 @@ def parse_txt_file(content):
                                z=_entry[index_number_l])
         cif_structure.append(_structure)
 
+    if len(dictionary[texture_flag]) == 2:
+        _texture_flag = dictionary[texture_flag]
+    else:
+        _texture_flag = [None]
+
     texture_table = dictionary['texture_table']
     texture_list = []
     for _index, _entry in enumerate(texture_table):
@@ -118,7 +123,7 @@ def parse_txt_file(content):
                            l=_entry[index_number_l],
                            r=_entry[r],
                            beta=_entry[beta],
-                           flag=dictionary[texture_flag])
+                           flag=_texture_flag)
         texture_list.append(_texture)
 
     grain_size = GrainSize(value=dictionary['grain_size'],
