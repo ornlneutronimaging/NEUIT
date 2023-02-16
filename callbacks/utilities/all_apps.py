@@ -8,6 +8,7 @@ import json
 import base64
 from datetime import datetime
 from bem import xscalc, matter
+from bem import xtaloriprobmodel as xopm
 
 import ImagingReso._utilities as ir_util
 from ImagingReso.resonance import Resonance
@@ -657,6 +658,9 @@ def clean_data_tab(data_tab=None):
     remove all the rows with no chemical formula defined
     '''
     data_tab_cleaned = []
+    if not data_tab:
+        return data_tab_cleaned
+
     for _entry in data_tab:
         if _entry[chem_name] == '':
             continue
@@ -665,13 +669,65 @@ def clean_data_tab(data_tab=None):
     return data_tab_cleaned
 
 
+def clean_texture_data(data=None):
+    '''
+    remove all rows with missing r or missing beta
+    '''
+    data_cleaned = []
+    if not data:
+        return data_cleaned
+
+    for _entry in data:
+        if _entry[index_number_h] == '':
+            continue
+
+        if _entry[index_number_k] == '':
+            continue
+
+        if _entry[index_number_l] == '':
+            continue
+
+        if (_entry[r] == '') and (_entry[beta] == ''):
+            continue
+
+        data_cleaned.append(_entry)
+
+    return data_cleaned
+
+
+def boolean_value_of_texture_checklist_to_flag(data=None, flag=None):
+    '''
+    convert a DASH flag value into a boolean
+    '''
+    if data == []:
+        return False
+    elif len(flag) == 1:
+        return False
+
+    return True
+
+
+def boolean_value_of_grain_size_checklist_to_flag(flag=None):
+    '''
+    convert dash checklist value into boolean
+    '''
+    if len(flag) == 1:
+        return False
+
+    return True
+
+
 def update_xs_dict(xs_dict=None,
                    data_tab=None,
                    a=None, b=None, c=None,
                    alpha=None, beta=None, gamma=None,
                    temperature=None,
                    log_label='tab2',
-                   wavelengths_A=None):
+                   wavelengths_A=None,
+                   texture_flag=False,
+                   texture_data=None,
+                   grain_size_flag=False,
+                   grain_size=None):
     '''
     calculating the structure for the given data_tab
     '''
@@ -680,6 +736,12 @@ def update_xs_dict(xs_dict=None,
     if not data_tab:
         print(f"- data_tab is empty!")
         return
+
+    print(f"{texture_flag =}")
+    print(f"{texture_data =}")
+    print(f"{grain_size_flag = }")
+    print(f"{grain_size =}")
+
 
     # data_tab
     atoms = []
@@ -708,10 +770,44 @@ def update_xs_dict(xs_dict=None,
     _structure = matter.Structure(atoms, _lattice, sgid=225)
 
     print(f"- calculating cross-section")
-    try:
-        _xscalculator = xscalc.XSCalculator(_structure, temperature, max_diffraction_index=4)
-    except AttributeError as msg:
-        return msg
+    # try:
+
+    if texture_flag:
+
+        texture_model = xopm.MarchDollase()
+        for _row in texture_data:
+            h = _row[index_number_h]
+            k = _row[index_number_k]
+            l = _row[index_number_l]
+
+            if _row[r]:
+                texture_model.r[(h, k, l)] = _row[r]
+
+            if _row[beta]:
+                texture_model.r[(h, k, l)] = _row[beta]
+
+        if grain_size_flag:
+            _xscalculator = xscalc.XSCalculator(_structure, temperature,
+                                                texture_model,
+                                                max_diffraction_index=4,
+                                                size=grain_size)
+
+        else:
+            _xscalculator = xscalc.XSCalculator(_structure, temperature,
+                                                texture_model,
+                                                max_diffraction_index=4)
+
+    elif grain_size_flag:
+        _xscalculator = xscalc.XSCalculator(_structure, temperature,
+                                            max_diffraction_index=4,
+                                            size=grain_size)
+
+    else:
+        _xscalculator = xscalc.XSCalculator(_structure, temperature,
+                                            max_diffraction_index=4)
+
+    # except AttributeError as msg:
+    #     return msg
 
     xs_dict[_name_only + ' (total)'] = _xscalculator.xs(wavelengths_A)
     xs_dict[_name_only + ' (abs)'] = _xscalculator.xs_abs(wavelengths_A)

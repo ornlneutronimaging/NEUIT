@@ -13,7 +13,9 @@ import callbacks.utilities.constants as constants
 from callbacks.utilities.plot import shape_matplot_to_plotly
 from callbacks.utilities.all_apps import (y_type_to_y_label, x_type_to_x_tag, load_dfs,
                                           create_table_output_file_name, format_data,
-                                          clean_data_tab, update_xs_dict, update_list_to_plot)
+                                          clean_data_tab, update_xs_dict, update_list_to_plot,
+                                          clean_texture_data, boolean_value_of_texture_checklist_to_flag,
+                                          boolean_value_of_grain_size_checklist_to_flag)
 
 from callbacks.utilities.bragg import parse_cif_file, parse_txt_file
 from callbacks.utilities.resonance import fill_df_x_types
@@ -60,6 +62,10 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['beta_tab1'], 'value'),
         State(app_id_dict['gamma_tab1'], 'value'),
         State(app_id_dict['no_error_tab1'], 'children'),
+        State(app_id_dict['texture_checklist_tab1'], 'value'),
+        State(app_id_dict['texture_table_tab1'], 'value'),
+        State(app_id_dict['grain_size_checklist_tab1'], 'value'),
+        State(app_id_dict['grain_size_input_tab1'], 'value'),
 
         State(app_id_dict['data_table_tab2'], 'data'),
         State(app_id_dict['a_tab2'], 'value'),
@@ -69,6 +75,10 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['beta_tab2'], 'value'),
         State(app_id_dict['gamma_tab2'], 'value'),
         State(app_id_dict['no_error_tab2'], 'children'),
+        State(app_id_dict['texture_checklist_tab2'], 'value'),
+        State(app_id_dict['texture_table_tab2'], 'value'),
+        State(app_id_dict['grain_size_checklist_tab2'], 'value'),
+        State(app_id_dict['grain_size_input_tab2'], 'value'),
 
         State(app_id_dict['data_table_tab3'], 'data'),
         State(app_id_dict['a_tab3'], 'value'),
@@ -78,6 +88,10 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['beta_tab3'], 'value'),
         State(app_id_dict['gamma_tab3'], 'value'),
         State(app_id_dict['no_error_tab3'], 'children'),
+        State(app_id_dict['texture_checklist_tab3'], 'value'),
+        State(app_id_dict['texture_table_tab3'], 'value'),
+        State(app_id_dict['grain_size_checklist_tab3'], 'value'),
+        State(app_id_dict['grain_size_input_tab3'], 'value'),
 
         State(app_id_dict['data_table_tab4'], 'data'),
         State(app_id_dict['a_tab4'], 'value'),
@@ -87,6 +101,10 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['beta_tab4'], 'value'),
         State(app_id_dict['gamma_tab4'], 'value'),
         State(app_id_dict['no_error_tab4'], 'children'),
+        State(app_id_dict['texture_checklist_tab4'], 'value'),
+        State(app_id_dict['texture_table_tab4'], 'value'),
+        State(app_id_dict['grain_size_checklist_tab4'], 'value'),
+        State(app_id_dict['grain_size_input_tab4'], 'value'),
 
         State(app_id_dict['data_table_tab5'], 'data'),
         State(app_id_dict['a_tab5'], 'value'),
@@ -96,6 +114,10 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['beta_tab5'], 'value'),
         State(app_id_dict['gamma_tab5'], 'value'),
         State(app_id_dict['no_error_tab5'], 'children'),
+        State(app_id_dict['texture_checklist_tab5'], 'value'),
+        State(app_id_dict['texture_table_tab5'], 'value'),
+        State(app_id_dict['grain_size_checklist_tab5'], 'value'),
+        State(app_id_dict['grain_size_input_tab5'], 'value'),
 
         State(app_id_dict['temperature_id'], 'value'),
         State(app_id_dict['distance_id'], 'value'),
@@ -109,10 +131,20 @@ def show_hide_band_input(more_info, style):
 
 def show_output_div(n_submit,
                     data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, beta_tab1, gamma_tab1, no_error_tab1,
+                    texture_flag_tab1, texture_data_tab1,
+                    grain_size_flag_tab1, grain_size_tab1,
                     data_tab2, a_tab2, b_tab2, c_tab2, alpha_tab2, beta_tab2, gamma_tab2, no_error_tab2,
+                    texture_flag_tab2, texture_data_tab2,
+                    grain_size_flag_tab2, grain_size_tab2,
                     data_tab3, a_tab3, b_tab3, c_tab3, alpha_tab3, beta_tab3, gamma_tab3, no_error_tab3,
+                    texture_flag_tab3, texture_data_tab3,
+                    grain_size_flag_tab3, grain_size_tab3,
                     data_tab4, a_tab4, b_tab4, c_tab4, alpha_tab4, beta_tab4, gamma_tab4, no_error_tab4,
+                    texture_flag_tab4, texture_data_tab4,
+                    grain_size_flag_tab4, grain_size_tab4,
                     data_tab5, a_tab5, b_tab5, c_tab5, alpha_tab5, beta_tab5, gamma_tab5, no_error_tab5,
+                    texture_flag_tab5, texture_data_tab5,
+                    grain_size_flag_tab5, grain_size_tab5,
                     temperature, distance, delay,
                     band_min, band_max, band_step):
 
@@ -130,6 +162,23 @@ def show_output_div(n_submit,
         if data_tab2 or data_tab3 or data_tab4 or data_tab5 or data_tab1:
            something_to_plot = True
 
+        texture_data_tab1 = clean_texture_data(texture_data_tab1)
+        texture_data_tab2 = clean_texture_data(texture_data_tab2)
+        texture_data_tab3 = clean_texture_data(texture_data_tab3)
+        texture_data_tab4 = clean_texture_data(texture_data_tab4)
+        texture_data_tab5 = clean_texture_data(texture_data_tab5)
+
+        texture_flag_tab1 = boolean_value_of_texture_checklist_to_flag(texture_data_tab1, texture_flag_tab1)
+        texture_flag_tab2 = boolean_value_of_texture_checklist_to_flag(texture_data_tab2, texture_flag_tab2)
+        texture_flag_tab3 = boolean_value_of_texture_checklist_to_flag(texture_data_tab3, texture_flag_tab3)
+        texture_flag_tab4 = boolean_value_of_texture_checklist_to_flag(texture_data_tab4, texture_flag_tab4)
+        texture_flag_tab5 = boolean_value_of_texture_checklist_to_flag(texture_data_tab5, texture_flag_tab5)
+
+        grain_size_flag_tab1 = boolean_value_of_grain_size_checklist_to_flag(grain_size_flag_tab1)
+        grain_size_flag_tab2 = boolean_value_of_grain_size_checklist_to_flag(grain_size_flag_tab2)
+        grain_size_flag_tab3 = boolean_value_of_grain_size_checklist_to_flag(grain_size_flag_tab3)
+        grain_size_flag_tab4 = boolean_value_of_grain_size_checklist_to_flag(grain_size_flag_tab4)
+        grain_size_flag_tab5 = boolean_value_of_grain_size_checklist_to_flag(grain_size_flag_tab5)
 
         if no_error_tab1:
             tab1_error_msg = update_xs_dict(xs_dict=xs_dict,
@@ -138,7 +187,12 @@ def show_output_div(n_submit,
                                             a=a_tab1, b=b_tab1, c=c_tab1,
                                             alpha=alpha_tab1, beta=beta_tab1, gamma=gamma_tab1,
                                             temperature=temperature,
-                                            wavelengths_A=wavelengths_A)
+                                            wavelengths_A=wavelengths_A,
+                                            texture_flag=texture_flag_tab1,
+                                            texture_data=texture_data_tab1,
+                                            grain_size_flag=grain_size_flag_tab1,
+                                            grain_size=grain_size_tab1,
+                                            )
             if tab1_error_msg:
                 return None, False, {'display': 'none'}, [html.H4("Error report:"),
                                                           html.Div(f" - Tab1: {tab1_error_msg}")]
@@ -150,7 +204,12 @@ def show_output_div(n_submit,
                                             a=a_tab2, b=b_tab2, c=c_tab2,
                                             alpha=alpha_tab2, beta=beta_tab2, gamma=gamma_tab2,
                                             temperature=temperature,
-                                            wavelengths_A=wavelengths_A)
+                                            wavelengths_A=wavelengths_A,
+                                            texture_flag=texture_flag_tab2,
+                                            texture_data=texture_data_tab2,
+                                            grain_size_flag=grain_size_flag_tab2,
+                                            grain_size=grain_size_tab2,
+                                            )
             if tab2_error_msg:
                 return None, False, {'display': 'none'}, [html.H4("Error report:"),
                                                           html.Div(f" - Tab2: {tab2_error_msg}")]
@@ -162,7 +221,12 @@ def show_output_div(n_submit,
                                             a=a_tab3, b=b_tab3, c=c_tab3,
                                             alpha=alpha_tab3, beta=beta_tab3, gamma=gamma_tab3,
                                             temperature=temperature,
-                                            wavelengths_A=wavelengths_A)
+                                            wavelengths_A=wavelengths_A,
+                                            texture_flag=texture_flag_tab3,
+                                            texture_data=texture_data_tab3,
+                                            grain_size_flag=grain_size_flag_tab3,
+                                            grain_size=grain_size_tab3,
+                                            )
             if tab3_error_msg:
                 return None, False, {'display': 'none'}, [html.H4("Error report:"),
                                                           html.Div(f" - Tab3: {tab3_error_msg}")]
@@ -174,7 +238,12 @@ def show_output_div(n_submit,
                                             a=a_tab4, b=b_tab4, c=c_tab4,
                                             alpha=alpha_tab4, beta=beta_tab4, gamma=gamma_tab4,
                                             temperature=temperature,
-                                            wavelengths_A=wavelengths_A)
+                                            wavelengths_A=wavelengths_A,
+                                            texture_flag=texture_flag_tab4,
+                                            texture_data=texture_data_tab4,
+                                            grain_size_flag=grain_size_flag_tab4,
+                                            grain_size=grain_size_tab4,
+                                            )
             if tab4_error_msg:
                 return None, False, {'display': 'none'}, [html.H4("Error report:"),
                                                           html.Div(f" - Tab4: {tab4_error_msg}")]
@@ -186,7 +255,12 @@ def show_output_div(n_submit,
                                             a=a_tab5, b=b_tab5, c=c_tab5,
                                             alpha=alpha_tab5, beta=beta_tab5, gamma=gamma_tab5,
                                             temperature=temperature,
-                                            wavelengths_A=wavelengths_A)
+                                            wavelengths_A=wavelengths_A,
+                                            texture_flag=texture_flag_tab5,
+                                            texture_data=texture_data_tab5,
+                                            grain_size_flag=grain_size_flag_tab5,
+                                            grain_size=grain_size_tab5,
+                                            )
             if tab5_error_msg:
                 return None, False, {'display': 'none'}, [html.H4("Error report:"),
                                                           html.Div(f" - Tab5: {tab5_error_msg}")]
