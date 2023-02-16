@@ -738,11 +738,6 @@ def update_xs_dict(xs_dict=None,
         print(f"- data_tab is empty!")
         return
 
-    print(f"{texture_flag =}")
-    print(f"{texture_data =}")
-    print(f"{grain_size_flag = }")
-    print(f"{grain_size =}")
-
     # data_tab
     atoms = []
     _name_only = log_label
@@ -770,62 +765,55 @@ def update_xs_dict(xs_dict=None,
     _structure = matter.Structure(atoms, _lattice, sgid=225)
 
     print(f"- calculating cross-section")
-    # try:
 
-    print(f"{type(grain_size) =}")
+    try:
 
-    if texture_flag:
+        if texture_flag:
 
-        print(f" with texture flag")
+            texture_model = xopm.MarchDollase()
+            for _row in texture_data:
 
-        texture_model = xopm.MarchDollase()
-        for _row in texture_data:
+                print(f"{_row =}")
+                h = _row[index_number_h]
+                k = _row[index_number_k]
+                l = _row[index_number_l]
 
-            print(f"{_row =}")
-            h = _row[index_number_h]
-            k = _row[index_number_k]
-            l = _row[index_number_l]
+                if _row[r]:
+                    texture_model.r[(h, k, l)] = _row[r]
 
-            if _row[r]:
-                texture_model.r[(h, k, l)] = _row[r]
+                if _row['beta']:
+                    texture_model.r[(h, k, l)] = _row['beta']
 
-            if _row['beta']:
-                texture_model.r[(h, k, l)] = _row['beta']
+            if grain_size_flag:
+                _xscalculator = xscalc.XSCalculator(_structure, temperature,
+                                                    texture_model,
+                                                    # max_diffraction_index=4,
+                                                    size=grain_size)
 
-        if grain_size_flag:
-            print(f" with grain size")
-            print(f"-> {grain_size =}")
+            else:
+                _xscalculator = xscalc.XSCalculator(_structure, temperature,
+                                                    texture_model,
+                                                    max_diffraction_index=4)
+
+        elif grain_size_flag:
             _xscalculator = xscalc.XSCalculator(_structure, temperature,
-                                                texture_model,
                                                 # max_diffraction_index=4,
                                                 size=grain_size)
 
         else:
-            print(f" no grain size")
             _xscalculator = xscalc.XSCalculator(_structure, temperature,
-                                                texture_model,
                                                 max_diffraction_index=4)
 
-    elif grain_size_flag:
-        print(f" with grain size and no texture")
-        _xscalculator = xscalc.XSCalculator(_structure, temperature,
-                                            # max_diffraction_index=4,
-                                            size=grain_size)
-
-    else:
-        print(f" no grain size or texture")
-        _xscalculator = xscalc.XSCalculator(_structure, temperature,
-                                            max_diffraction_index=4)
-
-    # except AttributeError as msg:
-    #     return msg
+    except AttributeError as msg:
+        return msg
 
     xs_dict[_name_only + ' (total)'] = [np.real(_value) for _value in _xscalculator.xs(wavelengths_A)]
     xs_dict[_name_only + ' (abs)'] = [np.real(_value) for _value in _xscalculator.xs_abs(wavelengths_A)]
-    xs_dict[_name_only + ' (coh el)'] = _xscalculator.xs_coh_el(wavelengths_A)
-    xs_dict[_name_only + ' (inc el)'] = _xscalculator.xs_inc_el(wavelengths_A)
-    xs_dict[_name_only + ' (coh inel)'] = _xscalculator.xs_coh_inel(wavelengths_A)
-    xs_dict[_name_only + ' (inc inel)'] = _xscalculator.xs_inc_inel(wavelengths_A)
+    xs_dict[_name_only + ' (coh el)'] = [np.real(_value) for _value in _xscalculator.xs_coh_el(wavelengths_A)]
+    xs_dict[_name_only + ' (inc el)'] = [np.real(_value) for _value in _xscalculator.xs_inc_el(wavelengths_A)]
+    xs_dict[_name_only + ' (coh inel)'] = [np.real(_value) for _value in _xscalculator.xs_coh_inel(wavelengths_A)]
+    xs_dict[_name_only + ' (inc inel)'] = [np.real(_value) for _value in _xscalculator.xs_inc_inel(wavelengths_A)]
+
     print("- Calculation done!")
 
     return None
