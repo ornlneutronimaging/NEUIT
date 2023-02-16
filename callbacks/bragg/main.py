@@ -63,7 +63,7 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['gamma_tab1'], 'value'),
         State(app_id_dict['no_error_tab1'], 'children'),
         State(app_id_dict['texture_checklist_tab1'], 'value'),
-        State(app_id_dict['texture_table_tab1'], 'value'),
+        State(app_id_dict['texture_table_tab1'], 'data'),
         State(app_id_dict['grain_size_checklist_tab1'], 'value'),
         State(app_id_dict['grain_size_input_tab1'], 'value'),
 
@@ -76,7 +76,7 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['gamma_tab2'], 'value'),
         State(app_id_dict['no_error_tab2'], 'children'),
         State(app_id_dict['texture_checklist_tab2'], 'value'),
-        State(app_id_dict['texture_table_tab2'], 'value'),
+        State(app_id_dict['texture_table_tab2'], 'data'),
         State(app_id_dict['grain_size_checklist_tab2'], 'value'),
         State(app_id_dict['grain_size_input_tab2'], 'value'),
 
@@ -89,7 +89,7 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['gamma_tab3'], 'value'),
         State(app_id_dict['no_error_tab3'], 'children'),
         State(app_id_dict['texture_checklist_tab3'], 'value'),
-        State(app_id_dict['texture_table_tab3'], 'value'),
+        State(app_id_dict['texture_table_tab3'], 'data'),
         State(app_id_dict['grain_size_checklist_tab3'], 'value'),
         State(app_id_dict['grain_size_input_tab3'], 'value'),
 
@@ -102,7 +102,7 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['gamma_tab4'], 'value'),
         State(app_id_dict['no_error_tab4'], 'children'),
         State(app_id_dict['texture_checklist_tab4'], 'value'),
-        State(app_id_dict['texture_table_tab4'], 'value'),
+        State(app_id_dict['texture_table_tab4'], 'data'),
         State(app_id_dict['grain_size_checklist_tab4'], 'value'),
         State(app_id_dict['grain_size_input_tab4'], 'value'),
 
@@ -115,7 +115,7 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['gamma_tab5'], 'value'),
         State(app_id_dict['no_error_tab5'], 'children'),
         State(app_id_dict['texture_checklist_tab5'], 'value'),
-        State(app_id_dict['texture_table_tab5'], 'value'),
+        State(app_id_dict['texture_table_tab5'], 'data'),
         State(app_id_dict['grain_size_checklist_tab5'], 'value'),
         State(app_id_dict['grain_size_input_tab5'], 'value'),
 
@@ -127,8 +127,6 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['band_step_id'], 'value'),
     ]
 )
-
-
 def show_output_div(n_submit,
                     data_tab1, a_tab1, b_tab1, c_tab1, alpha_tab1, beta_tab1, gamma_tab1, no_error_tab1,
                     texture_flag_tab1, texture_data_tab1,
@@ -163,6 +161,8 @@ def show_output_div(n_submit,
            something_to_plot = True
 
         texture_data_tab1 = clean_texture_data(texture_data_tab1)
+        print(f"after cleaning data: {texture_data_tab1 = }")
+
         texture_data_tab2 = clean_texture_data(texture_data_tab2)
         texture_data_tab3 = clean_texture_data(texture_data_tab3)
         texture_data_tab4 = clean_texture_data(texture_data_tab4)

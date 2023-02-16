@@ -701,6 +701,7 @@ def boolean_value_of_texture_checklist_to_flag(data=None, flag=None):
     '''
     if data == []:
         return False
+
     elif len(flag) == 1:
         return False
 
@@ -742,7 +743,6 @@ def update_xs_dict(xs_dict=None,
     print(f"{grain_size_flag = }")
     print(f"{grain_size =}")
 
-
     # data_tab
     atoms = []
     _name_only = log_label
@@ -774,8 +774,12 @@ def update_xs_dict(xs_dict=None,
 
     if texture_flag:
 
+        print(f" with texture flag")
+
         texture_model = xopm.MarchDollase()
         for _row in texture_data:
+
+            print(f"{_row =}")
             h = _row[index_number_h]
             k = _row[index_number_k]
             l = _row[index_number_l]
@@ -783,26 +787,30 @@ def update_xs_dict(xs_dict=None,
             if _row[r]:
                 texture_model.r[(h, k, l)] = _row[r]
 
-            if _row[beta]:
-                texture_model.r[(h, k, l)] = _row[beta]
+            if _row['beta']:
+                texture_model.r[(h, k, l)] = _row['beta']
 
         if grain_size_flag:
+            print(f" with grain size")
             _xscalculator = xscalc.XSCalculator(_structure, temperature,
                                                 texture_model,
                                                 max_diffraction_index=4,
                                                 size=grain_size)
 
         else:
+            print(f" no grain size")
             _xscalculator = xscalc.XSCalculator(_structure, temperature,
                                                 texture_model,
                                                 max_diffraction_index=4)
 
     elif grain_size_flag:
+        print(f" with grain size and no texture")
         _xscalculator = xscalc.XSCalculator(_structure, temperature,
                                             max_diffraction_index=4,
                                             size=grain_size)
 
     else:
+        print(f" no grain size or texture")
         _xscalculator = xscalc.XSCalculator(_structure, temperature,
                                             max_diffraction_index=4)
 
