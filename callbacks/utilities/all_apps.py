@@ -772,6 +772,8 @@ def update_xs_dict(xs_dict=None,
     print(f"- calculating cross-section")
     # try:
 
+    print(f"{type(grain_size) =}")
+
     if texture_flag:
 
         print(f" with texture flag")
@@ -792,9 +794,10 @@ def update_xs_dict(xs_dict=None,
 
         if grain_size_flag:
             print(f" with grain size")
+            print(f"-> {grain_size =}")
             _xscalculator = xscalc.XSCalculator(_structure, temperature,
                                                 texture_model,
-                                                max_diffraction_index=4,
+                                                # max_diffraction_index=4,
                                                 size=grain_size)
 
         else:
@@ -806,7 +809,7 @@ def update_xs_dict(xs_dict=None,
     elif grain_size_flag:
         print(f" with grain size and no texture")
         _xscalculator = xscalc.XSCalculator(_structure, temperature,
-                                            max_diffraction_index=4,
+                                            # max_diffraction_index=4,
                                             size=grain_size)
 
     else:
@@ -817,8 +820,8 @@ def update_xs_dict(xs_dict=None,
     # except AttributeError as msg:
     #     return msg
 
-    xs_dict[_name_only + ' (total)'] = _xscalculator.xs(wavelengths_A)
-    xs_dict[_name_only + ' (abs)'] = _xscalculator.xs_abs(wavelengths_A)
+    xs_dict[_name_only + ' (total)'] = [np.real(_value) for _value in _xscalculator.xs(wavelengths_A)]
+    xs_dict[_name_only + ' (abs)'] = [np.real(_value) for _value in _xscalculator.xs_abs(wavelengths_A)]
     xs_dict[_name_only + ' (coh el)'] = _xscalculator.xs_coh_el(wavelengths_A)
     xs_dict[_name_only + ' (inc el)'] = _xscalculator.xs_inc_el(wavelengths_A)
     xs_dict[_name_only + ' (coh inel)'] = _xscalculator.xs_coh_inel(wavelengths_A)
