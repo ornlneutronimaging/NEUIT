@@ -869,12 +869,10 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
             # Convert to plotly and format layout
             plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
 
-            print("about to return html.div")
             return html.Div([dcc.Graph(figure=plotly_fig,
                                        id=app_id_dict['plot_fig_id'])]), \
                    [json.dumps(jsonized_plot_df)]
         else:
-            print("about to return plot_loading")
             return plot_loading, [None]
     else:
         return plot_loading, [None]
