@@ -286,6 +286,7 @@ def show_output_div(n_submit,
     [
         Output(app_id_dict['plot_div_id'], 'children'),
         Output(app_id_dict['hidden_df_export_json_id'], 'children'),
+        Output(app_id_dict['export_all_button_div_id'], 'children')
     ],
     [
         Input(app_id_dict['hidden_df_json_id'], 'children'),
@@ -317,7 +318,7 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
             try:
                 df_to_plot = df_y[to_plot_list]
             except KeyError:
-                return resubmit, [None]
+                return resubmit, [None], [None]
 
             if y_type == 'attenuation':
                 df_to_plot = 1 - df_y
@@ -342,12 +343,16 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
             plotly_fig = shape_matplot_to_plotly(fig=fig, y_type=y_type, plot_scale=plot_scale)
 
             return html.Div([dcc.Graph(figure=plotly_fig,
-                                       id=app_id_dict['plot_fig_id'])]), \
-                   [json.dumps(jsonized_plot_df)]
+                                       id=app_id_dict['plot_fig_id']),
+                             ]), \
+                   [json.dumps(jsonized_plot_df)], \
+                   html.Div([html.Button('Export all',
+                                id=app_id_dict['export_all_button_id'],
+                                style={'width': '100%'})])
         else:
-            return plot_loading, [None]
+            return plot_loading, [None], [None]
     else:
-        return plot_loading, [None]
+        return plot_loading, [None], [None]
 
 
 @app.callback(

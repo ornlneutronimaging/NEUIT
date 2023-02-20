@@ -441,7 +441,6 @@ layout = html.Div(
         html.H2('Input elements'),
         html.Div(),
 
-
         # tabs
         dcc.Tabs(id=app_id_dict['tabs'],
                  value='tab_cif_1',
@@ -634,6 +633,10 @@ layout = html.Div(
 
                 # Transmission at CG-1D and stack info
                 html.Div(id=app_id_dict['result_id']),
+
+                # div where button to export all will be displayed
+                html.Div(id=app_id_dict['export_all_button_div_id'],
+                         style={'display': 'none'}),
             ],
             id=app_id_dict['output_id'],
             style={'display': 'none'},
