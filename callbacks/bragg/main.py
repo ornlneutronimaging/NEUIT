@@ -12,10 +12,9 @@ from callbacks.utilities.initialization import (init_app_ids, striped_rows, plot
 import callbacks.utilities.constants as constants
 from callbacks.utilities.plot import shape_matplot_to_plotly
 from callbacks.utilities.all_apps import (y_type_to_y_label, x_type_to_x_tag, load_dfs,
-                                          create_table_output_file_name, format_data,
                                           clean_data_tab, update_xs_dict, update_list_to_plot,
                                           clean_texture_data, boolean_value_of_texture_checklist_to_flag,
-                                          boolean_value_of_grain_size_checklist_to_flag)
+                                          boolean_value_of_grain_size_checklist_to_flag, create_full_export_file_name)
 
 from callbacks.utilities.bragg import parse_cif_file, parse_txt_file
 from callbacks.utilities.resonance import fill_df_x_types
@@ -403,35 +402,169 @@ def loading_icon(value):
 
 
 # export all button
-@app.callback([Output(app_id_dict['output_of_export_all_button_id'], "children"),
-               Output(app_id_dict["download_all_data"], "data")],
+@app.callback(Output(app_id_dict["download_all_data"], "data"),
               Input(app_id_dict['export_all_button_id'], "n_clicks"),
-              State(app_id_dict['hidden_df_json_id'], 'children'),
+              [
+                  State(app_id_dict['hidden_df_json_id'], 'children'),
+
+                  State(app_id_dict['data_table_tab1'], 'data'),
+                  State(app_id_dict['texture_checklist_tab1'], 'value'),
+                  State(app_id_dict['texture_table_tab1'], 'data'),
+                  State(app_id_dict['grain_size_checklist_tab1'], 'value'),
+                  State(app_id_dict['grain_size_input_tab1'], 'value'),
+                  State(app_id_dict['a_tab1'], 'value'),
+                  State(app_id_dict['b_tab1'], 'value'),
+                  State(app_id_dict['c_tab1'], 'value'),
+                  State(app_id_dict['alpha_tab1'], 'value'),
+                  State(app_id_dict['beta_tab1'], 'value'),
+                  State(app_id_dict['gamma_tab1'], 'value'),
+
+                  State(app_id_dict['data_table_tab2'], 'data'),
+                  State(app_id_dict['texture_checklist_tab2'], 'value'),
+                  State(app_id_dict['texture_table_tab2'], 'data'),
+                  State(app_id_dict['grain_size_checklist_tab2'], 'value'),
+                  State(app_id_dict['grain_size_input_tab2'], 'value'),
+                  State(app_id_dict['a_tab2'], 'value'),
+                  State(app_id_dict['b_tab2'], 'value'),
+                  State(app_id_dict['c_tab2'], 'value'),
+                  State(app_id_dict['alpha_tab2'], 'value'),
+                  State(app_id_dict['beta_tab2'], 'value'),
+                  State(app_id_dict['gamma_tab2'], 'value'),
+
+                  State(app_id_dict['data_table_tab3'], 'data'),
+                  State(app_id_dict['texture_checklist_tab3'], 'value'),
+                  State(app_id_dict['texture_table_tab3'], 'data'),
+                  State(app_id_dict['grain_size_checklist_tab3'], 'value'),
+                  State(app_id_dict['grain_size_input_tab3'], 'value'),
+                  State(app_id_dict['a_tab3'], 'value'),
+                  State(app_id_dict['b_tab3'], 'value'),
+                  State(app_id_dict['c_tab3'], 'value'),
+                  State(app_id_dict['alpha_tab3'], 'value'),
+                  State(app_id_dict['beta_tab3'], 'value'),
+                  State(app_id_dict['gamma_tab3'], 'value'),
+
+                  State(app_id_dict['data_table_tab4'], 'data'),
+                  State(app_id_dict['texture_checklist_tab4'], 'value'),
+                  State(app_id_dict['texture_table_tab4'], 'data'),
+                  State(app_id_dict['grain_size_checklist_tab4'], 'value'),
+                  State(app_id_dict['grain_size_input_tab4'], 'value'),
+                  State(app_id_dict['a_tab4'], 'value'),
+                  State(app_id_dict['b_tab4'], 'value'),
+                  State(app_id_dict['c_tab4'], 'value'),
+                  State(app_id_dict['alpha_tab4'], 'value'),
+                  State(app_id_dict['beta_tab4'], 'value'),
+                  State(app_id_dict['gamma_tab4'], 'value'),
+
+                  State(app_id_dict['data_table_tab5'], 'data'),
+                  State(app_id_dict['texture_checklist_tab5'], 'value'),
+                  State(app_id_dict['texture_table_tab5'], 'data'),
+                  State(app_id_dict['grain_size_checklist_tab5'], 'value'),
+                  State(app_id_dict['grain_size_input_tab5'], 'value'),
+                  State(app_id_dict['a_tab5'], 'value'),
+                  State(app_id_dict['b_tab5'], 'value'),
+                  State(app_id_dict['c_tab5'], 'value'),
+                  State(app_id_dict['alpha_tab5'], 'value'),
+                  State(app_id_dict['beta_tab5'], 'value'),
+                  State(app_id_dict['gamma_tab5'], 'value'),
+              ],
               )
-def export_all(n_clicks, jsonified_data):
+def export_all(n_clicks, jsonified_data,
+               data_table_tab1, texture_flag_tab1, texture_table_tab1, grain_size_flag_tab1, grain_size_value_tab1,
+               a_tab1, b_tab1, c_tab1, alpha_tab1, beta_tab1, gamma_tab1,
+               data_table_tab2, texture_flag_tab2, texture_table_tab2, grain_size_flag_tab2, grain_size_value_tab2,
+               a_tab2, b_tab2, c_tab2, alpha_tab2, beta_tab2, gamma_tab2,
+               data_table_tab3, texture_flag_tab3, texture_table_tab3, grain_size_flag_tab3, grain_size_value_tab3,
+               a_tab3, b_tab3, c_tab3, alpha_tab3, beta_tab3, gamma_tab3,
+               data_table_tab4, texture_flag_tab4, texture_table_tab4, grain_size_flag_tab4, grain_size_value_tab4,
+               a_tab4, b_tab4, c_tab4, alpha_tab4, beta_tab4, gamma_tab4,
+               data_table_tab5, texture_flag_tab5, texture_table_tab5, grain_size_flag_tab5, grain_size_value_tab5,
+               a_tab5, b_tab5, c_tab5, alpha_tab5, beta_tab5, gamma_tab5,
+               ):
+    '''
+    Export all data plotted from all tabs + metadata of each tab into json file
+    '''
 
     if n_clicks is None:
-        return None, None
-
-    print("Exporting all data!")
+        return None
 
     if jsonified_data is not None:
         df_dict = load_dfs(jsonified_data=jsonified_data)
 
-    import pprint
-    pprint.pprint(f"{df_dict}")
+    _dict = {'x': {}, 'y': {}}
+    for _key in df_dict['x'].keys():
+        _dict['x'][_key] = np.array(df_dict['x'][_key]).tolist()
+    for _key in df_dict['y'].keys():
+        _dict['y'][_key] = np.array(df_dict['y'][_key]).tolist()
 
-    # _dict  = dict(hidden_df_json)
+    cleaned_data_table_tab1 = clean_data_tab(data_tab=data_table_tab1)
+    if cleaned_data_table_tab1:
+        _dict_tab1 = {'table': cleaned_data_table_tab1,
+                      'a': a_tab1, 'b': b_tab1, 'c': c_tab1,
+                      'alpha': alpha_tab1, 'beta': beta_tab1, 'gamma': gamma_tab1,
+                      'grain_size': grain_size_value_tab1,
+                      'grain_size_flag': grain_size_flag_tab1,
+                      'texture_table': texture_table_tab1,
+                      constants.texture_flag: texture_flag_tab1}
+    else:
+        _dict_tab1 = None
 
-    # dataset = json.loads(hidden_df_json)
-    # df_to_export = pd.read_json(dataset, orient='split')
+    cleaned_data_table_tab2 = clean_data_tab(data_tab=data_table_tab2)
+    if cleaned_data_table_tab2:
+        _dict_tab2 = {'table': cleaned_data_table_tab2,
+                      'a': a_tab2, 'b': b_tab2, 'c': c_tab2,
+                      'alpha': alpha_tab2, 'beta': beta_tab2, 'gamma': gamma_tab2,
+                      'grain_size': grain_size_value_tab2,
+                      'grain_size_flag': grain_size_flag_tab2,
+                      'texture_table': texture_table_tab2,
+                      constants.texture_flag: texture_flag_tab2}
+    else:
+        _dict_tab2 = None
 
-    # import pprint
-    # pprint.pprint(df_to_export)
+    cleaned_data_table_tab3 = clean_data_tab(data_tab=data_table_tab3)
+    if cleaned_data_table_tab3:
+        _dict_tab3 = {'table': cleaned_data_table_tab3,
+                      'a': a_tab3, 'b': b_tab3, 'c': c_tab3,
+                      'alpha': alpha_tab3, 'beta': beta_tab3, 'gamma': gamma_tab3,
+                      'grain_size': grain_size_value_tab3,
+                      'grain_size_flag': grain_size_flag_tab3,
+                      'texture_table': texture_table_tab3,
+                      constants.texture_flag: texture_flag_tab3}
+    else:
+        _dict_tab3 = None
 
+    cleaned_data_table_tab4 = clean_data_tab(data_tab=data_table_tab4)
+    if cleaned_data_table_tab4:
+        _dict_tab4 = {'table': cleaned_data_table_tab4,
+                      'a': a_tab4, 'b': b_tab4, 'c': c_tab4,
+                      'alpha': alpha_tab4, 'beta': beta_tab4, 'gamma': gamma_tab4,
+                      'grain_size': grain_size_value_tab4,
+                      'grain_size_flag': grain_size_flag_tab4,
+                      'texture_table': texture_table_tab4,
+                      constants.texture_flag: texture_flag_tab4}
+    else:
+        _dict_tab4 = None
 
-    # return dict(content=jsonized_plot_df,
-#             filename="test_json.txt")
+    cleaned_data_table_tab5 = clean_data_tab(data_tab=data_table_tab5)
+    if cleaned_data_table_tab5:
+        _dict_tab5 = {'table': cleaned_data_table_tab5,
+                      'a': a_tab5, 'b': b_tab5, 'c': c_tab5,
+                      'alpha': alpha_tab5, 'beta': beta_tab5, 'gamma': gamma_tab5,
+                      'grain_size': grain_size_value_tab5,
+                      'grain_size_flag': grain_size_flag_tab5,
+                      'texture_table': texture_table_tab5,
+                      constants.texture_flag: texture_flag_tab5}
+    else:
+        _dict_tab5 = None
 
+    master_dict = {'data': _dict,
+                   'tab1': _dict_tab1,
+                   'tab2': _dict_tab2,
+                   'tab3': _dict_tab3,
+                   'tab4': _dict_tab4,
+                   'tab5': _dict_tab5}
 
-    return None, None,
+    output_data = json.dumps(master_dict)
+    output_file_name = create_full_export_file_name()
+
+    return dict(content=output_data,
+                filename=output_file_name)

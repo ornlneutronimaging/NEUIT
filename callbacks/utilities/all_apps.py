@@ -643,6 +643,14 @@ def create_table_output_file_name(table=None):
     return file_name
 
 
+def create_full_export_file_name():
+    '''
+    Create the name of the file to export all tabs
+    '''
+    file_name = "full_session" + f"_{get_current_timestamp()}.txt"
+    return file_name
+
+
 def format_data(dict=None):
     '''
     format the data from a dictionary into a string json
