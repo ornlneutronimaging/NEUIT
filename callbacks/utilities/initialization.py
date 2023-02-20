@@ -271,6 +271,8 @@ def init_app_ids(app_name: str):
         id_dict['general_processing_errors'] = app_name + '_general_processing_errors'
         id_dict['export_all_button_div_id'] = app_name + '_export_all_button_div_id'
         id_dict['export_all_button_id'] = app_name + '_export_all_button_id'
+        id_dict['output_of_export_all_button_id'] = app_name + '_output_of_export_all_button_id'
+        id_dict['download_all_data'] = app_name + '_download_all_data'
 
         # tab1
         id_dict['data_table_tab1'] = app_name + '_data_table_tab1'

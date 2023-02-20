@@ -636,7 +636,13 @@ layout = html.Div(
 
                 # div where button to export all will be displayed
                 html.Div(id=app_id_dict['export_all_button_div_id'],
+                         ),
+
+                html.Div(id=app_id_dict['output_of_export_all_button_id'],
                          style={'display': 'none'}),
+
+                dcc.Download(id=app_id_dict['download_all_data']),
+
             ],
             id=app_id_dict['output_id'],
             style={'display': 'none'},

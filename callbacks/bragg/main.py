@@ -346,9 +346,9 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
                                        id=app_id_dict['plot_fig_id']),
                              ]), \
                    [json.dumps(jsonized_plot_df)], \
-                   html.Div([html.Button('Export all',
-                                id=app_id_dict['export_all_button_id'],
-                                style={'width': '100%'})])
+                   html.Div([html.Button('Export all data as ASCII',
+                             id=app_id_dict['export_all_button_id'],
+                             style={'width': '100%'})])
         else:
             return plot_loading, [None], [None]
     else:
@@ -400,3 +400,38 @@ def display_plot_data_tb(display_check, jsonized_df_export, test_passed):
 def loading_icon(value):
     time.sleep(3)
     return value
+
+
+# export all button
+@app.callback([Output(app_id_dict['output_of_export_all_button_id'], "children"),
+               Output(app_id_dict["download_all_data"], "data")],
+              Input(app_id_dict['export_all_button_id'], "n_clicks"),
+              State(app_id_dict['hidden_df_json_id'], 'children'),
+              )
+def export_all(n_clicks, jsonified_data):
+
+    if n_clicks is None:
+        return None, None
+
+    print("Exporting all data!")
+
+    if jsonified_data is not None:
+        df_dict = load_dfs(jsonified_data=jsonified_data)
+
+    import pprint
+    pprint.pprint(f"{df_dict}")
+
+    # _dict  = dict(hidden_df_json)
+
+    # dataset = json.loads(hidden_df_json)
+    # df_to_export = pd.read_json(dataset, orient='split')
+
+    # import pprint
+    # pprint.pprint(df_to_export)
+
+
+    # return dict(content=jsonized_plot_df,
+#             filename="test_json.txt")
+
+
+    return None, None,
