@@ -89,9 +89,10 @@ def tab_content(upload_id=None,
     if upload_id:
         _upload = dcc.Upload(id=upload_id,
                              children=html.Div([
-                                 'Drag & Drop or ',
-                                 html.A('Select File'),
-                             ]),
+                                 html.B('Drag'), ' & ', html.B('Drop'), ' or ', html.B('Select File'),
+                                 ' (', html.I('.cif'), ' or previously ', html.I('exported structure'),
+                                 ' from this page)',
+                                        ]),
                              style={
                                 'width'       : '100%',
                                 'height'      : '60px',
@@ -477,7 +478,7 @@ layout = html.Div(
                  colors={'background': 'white',
                          'border': 'black'},
                  children=[
-                     dcc.Tab(label='.cif #1',
+                     dcc.Tab(label='Structure #1',
                              value='tab_cif_1',
                              style=tab_style,
                              selected_style=tab_selected_style,
@@ -504,7 +505,7 @@ layout = html.Div(
                                                   download_id=app_id_dict['download_tab1'],
                                                   ),
                              ),
-                     dcc.Tab(label='.cif #2',
+                     dcc.Tab(label='Structure #2',
                              value='tab_cif_2',
                              style=tab_style,
                              selected_style=tab_selected_style,
@@ -531,7 +532,7 @@ layout = html.Div(
                                                   download_button_id=app_id_dict['download_button_tab2'],
                                                   )
                              ),
-                     dcc.Tab(label='.cif #3',
+                     dcc.Tab(label='Structure #3',
                              value='tab_cif_3',
                              style=tab_style,
                              selected_style=tab_selected_style,
@@ -558,7 +559,7 @@ layout = html.Div(
                                                   download_button_id=app_id_dict['download_button_tab3'],
                                                   )
                              ),
-                     dcc.Tab(label='.cif #4',
+                     dcc.Tab(label='Structure #4',
                              value='tab_cif_4',
                              style=tab_style,
                              selected_style=tab_selected_style,
@@ -585,7 +586,7 @@ layout = html.Div(
                                                   download_button_id=app_id_dict['download_button_tab4'],
                                                   )
                              ),
-                     dcc.Tab(label='.cif #5',
+                     dcc.Tab(label='Structure #5',
                              value='tab_cif_5',
                              style=tab_style,
                              selected_style=tab_selected_style,
