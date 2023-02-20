@@ -82,7 +82,9 @@ def tab_content(upload_id=None,
                 beta_id=None,
                 gamma_id=None,
                 download_button_id=None,
-                download_id=None):
+                download_id=None,
+                export_label_prefix=None,
+                ):
 
     children_array = []
 
@@ -201,38 +203,6 @@ def tab_content(upload_id=None,
 
     children_array.append(html.Hr())
 
-
-    # #html.Hr(),
-    # children_array.append(html.H2('Texture'))
-    # #html.Div(),
-    #
-    # # children_array.append()
-    #
-    # children_array.append(html.Button('Add row',
-    #                                   id="",
-    #                                   n_clicks_timestamp=0))
-    #
-    # children_array.append(dt.DataTable(
-    #     data=bragg_sample_df_default.to_dict('records'),
-    #     # optional - sets the order of columns
-    #     columns=bragg_sample_header_df.to_dict('records'),
-    #     editable=True,
-    #     row_selectable=False,
-    #     filter_action='none',
-    #     sort_action='none',
-    #     style_cell={'textAlign': 'center'},
-    #     style_header={'fontWeight': 'bold',
-    #                   'backgroundColor': 'lightblue'},
-    #     row_deletable=True,
-    #     # export_format='csv',
-    #     css=[{'selector': '.export', 'rule': 'position:absolute; left:0px; bottom:-35px'}],
-    #     style_cell_conditional=sample_tb_even_4_col,
-    #     style_data_conditional=[striped_rows],
-    #     id=data_table)
-    # )
-    #
-    # children_array.append(html.Div(html.P([html.Br(), html.Br()])))
-
     children_array.append(dbc.Row(
             [
                 dbc.Col(
@@ -331,7 +301,7 @@ def tab_content(upload_id=None,
 
     children_array.append(html.Div(html.P([html.Br()])))
 
-    children_array.append(dbc.Row(html.Button('Export this structure',
+    children_array.append(dbc.Row(html.Button('Export structure ' + export_label_prefix,
                                               id=download_button_id,
                                               n_clicks_timestamp=0)))
     children_array.append(dcc.Download(id=download_id))
@@ -503,6 +473,7 @@ layout = html.Div(
                                                   gamma_id=app_id_dict['gamma_tab1'],
                                                   download_button_id=app_id_dict['download_button_tab1'],
                                                   download_id=app_id_dict['download_tab1'],
+                                                  export_label_prefix="#1",
                                                   ),
                              ),
                      dcc.Tab(label='Structure #2',
@@ -530,6 +501,7 @@ layout = html.Div(
                                                   gamma_id=app_id_dict['gamma_tab2'],
                                                   download_id=app_id_dict['download_tab2'],
                                                   download_button_id=app_id_dict['download_button_tab2'],
+                                                  export_label_prefix="#2",
                                                   )
                              ),
                      dcc.Tab(label='Structure #3',
@@ -557,6 +529,7 @@ layout = html.Div(
                                                   gamma_id=app_id_dict['gamma_tab3'],
                                                   download_id=app_id_dict['download_tab3'],
                                                   download_button_id=app_id_dict['download_button_tab3'],
+                                                  export_label_prefix="#3",
                                                   )
                              ),
                      dcc.Tab(label='Structure #4',
@@ -584,6 +557,7 @@ layout = html.Div(
                                                   gamma_id=app_id_dict['gamma_tab4'],
                                                   download_id=app_id_dict['download_tab4'],
                                                   download_button_id=app_id_dict['download_button_tab4'],
+                                                  export_label_prefix="#4",
                                                   )
                              ),
                      dcc.Tab(label='Structure #5',
@@ -611,6 +585,7 @@ layout = html.Div(
                                                   gamma_id=app_id_dict['gamma_tab5'],
                                                   download_id=app_id_dict['download_tab5'],
                                                   download_button_id=app_id_dict['download_button_tab5'],
+                                                  export_label_prefix="#5",
                                                   )
                              ),
                  ],
