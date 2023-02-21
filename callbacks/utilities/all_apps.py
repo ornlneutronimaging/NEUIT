@@ -774,6 +774,9 @@ def update_xs_dict(xs_dict=None,
 
     print(f"- calculating cross-section")
 
+    # convert from mm to m
+    grain_size_m = 1e-3 * grain_size
+
     try:
 
         if texture_flag:
@@ -796,7 +799,7 @@ def update_xs_dict(xs_dict=None,
                 _xscalculator = xscalc.XSCalculator(_structure, temperature,
                                                     texture_model,
                                                     # max_diffraction_index=4,
-                                                    size=grain_size)
+                                                    size=grain_size_m)
 
             else:
                 _xscalculator = xscalc.XSCalculator(_structure, temperature,
@@ -806,7 +809,7 @@ def update_xs_dict(xs_dict=None,
         elif grain_size_flag:
             _xscalculator = xscalc.XSCalculator(_structure, temperature,
                                                 # max_diffraction_index=4,
-                                                size=grain_size)
+                                                size=grain_size_m)
 
         else:
             _xscalculator = xscalc.XSCalculator(_structure, temperature,
