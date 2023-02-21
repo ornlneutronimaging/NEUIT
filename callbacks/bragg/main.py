@@ -345,7 +345,7 @@ def plot(jsonified_data, test_passed, x_type, y_type, plot_scale, xs_type):
                                        id=app_id_dict['plot_fig_id']),
                              ]), \
                    [json.dumps(jsonized_plot_df)], \
-                   html.Div([html.Button('Export all data as ASCII',
+                   html.Div([html.Button('Export all data as JSON file format',
                              id=app_id_dict['export_all_button_id'],
                              style={'width': '100%'})])
         else:
