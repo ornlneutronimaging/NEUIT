@@ -35,14 +35,14 @@ sample_header_df = pd.DataFrame({
 
 bragg_sample_header_df = pd.DataFrame({
     'name': [chem_name,
-             index_number_h,
-             index_number_k,
-             index_number_l,
+             index_number_a,
+             index_number_b,
+             index_number_c,
              ],
     'id': [chem_name,
-             index_number_h,
-             index_number_k,
-             index_number_l,
+             index_number_a,
+             index_number_b,
+             index_number_c,
            ],
     'type': ['text', 'numeric', 'numeric', 'numeric',
             ],
@@ -757,12 +757,12 @@ def update_xs_dict(xs_dict=None,
             continue
         _chem_name = entry[chem_name]
 
-        _h = entry[index_number_h]
-        _k = entry[index_number_k]
-        _l = entry[index_number_l]
+        _a = entry[index_number_a]
+        _b = entry[index_number_b]
+        _c = entry[index_number_c]
 
         try:
-            atoms.append(matter.Atom(_chem_name, (_h, _k, _l)))
+            atoms.append(matter.Atom(_chem_name, (_a, _b, _c)))
         except ValueError as msg:
             return f"error in format of h,k and/or l ({msg})"
 

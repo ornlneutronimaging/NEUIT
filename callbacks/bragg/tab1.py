@@ -127,14 +127,14 @@ def upload_feedback(cif_names, add_button_timestamp, texture_add_button_timestam
                 axial_length_c = _row.lattice.c
 
             chem_name = _row.element
-            index_number_h = _row.x
-            index_number_k = _row.y
-            index_number_l = _row.z
+            index_number_a = _row.x
+            index_number_b = _row.y
+            index_number_c = _row.z
 
             _new_table_entry = {constants.chem_name: chem_name,
-                                constants.index_number_h: index_number_h,
-                                constants.index_number_k: index_number_k,
-                                constants.index_number_l: index_number_l}
+                                constants.index_number_a: index_number_a,
+                                constants.index_number_b: index_number_b,
+                                constants.index_number_c: index_number_c}
 
             content_of_table.append(_new_table_entry)
 

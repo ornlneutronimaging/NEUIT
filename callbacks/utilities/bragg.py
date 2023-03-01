@@ -8,6 +8,7 @@ else:
     from diffpy.structure.parsers import getParser
 
 from .constants import (index_number_l, index_number_k, index_number_h,
+                        index_number_a, index_number_b, index_number_c,
                         r, beta, texture_flag,
                         interaxial_angle_beta, interaxial_angle_gamma, interaxial_angle_alpha,
                         chem_name)
@@ -104,9 +105,9 @@ def parse_txt_file(content):
 
         _structure = Structure(element=_entry[chem_name],
                                lattice=lattice,
-                               x=_entry[index_number_h],
-                               y=_entry[index_number_k],
-                               z=_entry[index_number_l])
+                               x=_entry[index_number_a],
+                               y=_entry[index_number_b],
+                               z=_entry[index_number_c])
         cif_structure.append(_structure)
 
     if len(dictionary[texture_flag]) == 2:

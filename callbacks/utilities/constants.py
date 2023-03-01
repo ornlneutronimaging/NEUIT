@@ -6,6 +6,9 @@ peak_wave = {'imaging': 2.53,  # AA
              'snap': 1.8,
              'venus': 1.8,
              }
+index_number_a = 'a'
+index_number_b = 'b'
+index_number_c = 'c'
 index_number_h = 'h'
 index_number_k = 'k'
 index_number_l = 'l'
