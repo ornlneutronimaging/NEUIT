@@ -213,11 +213,11 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, datab
         beamline_name = 'SNAP (BL-3), SNS'
     elif beamline == 'venus':
         beamline_name = 'VENUS (BL-10), SNS'
-    elif beamline == 'imaging_crop':
-        beamline_name = u'IMAGING (CG-1D) \u2264 5.35 \u212B, HFIR'
+    elif beamline == 'mars_crop':
+        beamline_name = u'MARS (CG-1D) \u2264 5.35 \u212B, HFIR'
         disclaimer = markdown_disclaimer_hfir
-    else:  # beamline == 'imaging':
-        beamline_name = 'IMAGING (CG-1D), HFIR'
+    else:  # beamline == 'mars':
+        beamline_name = 'MARS (CG-1D), HFIR'
         disclaimer = markdown_disclaimer_hfir
     # Modify input for testing
     sample_tb_dict = force_dict_to_numeric(input_dict_list=sample_tb_rows)
@@ -244,7 +244,7 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, datab
         html.P('Attenuation (total): {} %'.format(round(100 - total_trans, 3))),
         # html.Div(sample_stack_div_list),
     ]
-    if beamline in ['imaging', 'imaging_crop']:
+    if beamline in ['mars', 'mars_crop']:
         output_div_list.append(
             html.P(u'Transmission (at {} \u212B): {} %'.format(peak_wave[beamline], round(total_trans_at_peak, 3))))
         output_div_list.append(html.P(
@@ -255,13 +255,13 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, datab
 
 def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_min, band_max, band_type, database):
     _main_path = os.path.abspath(os.path.dirname(__file__))
-    _path_to_beam_shape = {'imaging': 'static/instrument_file/beam_flux_cg1d.txt',
-                           'imaging_crop': 'static/instrument_file/beam_flux_cg1d_crop.txt',
-                           'snap': 'static/instrument_file/beam_flux_snap.txt',
+    _path_to_beam_shape = {'mars': 'static/instrument_file/beam_flux_cg1d.txt',
+                           'mars_crop': 'static/instrument_file/beam_flux_cg1d_crop.txt',
+                           'venus': 'static/instrument_file/beam_flux_snap.txt',
                            # 'venus': 'static/instrument_file/beam_flux_venus.txt',
                            }
     df_flux_raw = _load_beam_shape(_path_to_beam_shape[beamline])
-    if beamline in ['imaging', 'imaging_crop']:
+    if beamline in ['mars', 'mars_crop']:
         e_min = df_flux_raw['energy_eV'].min()
         e_max = df_flux_raw['energy_eV'].max()
     else:
@@ -295,9 +295,11 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
     o_signal = o_reso.stack_signal
     _total_trans = _calculate_transmission(flux_df=df_flux, trans_array=o_reso.total_signal[trans_tag])
 
-    if beamline in ['imaging', 'imaging_crop']:
+    if beamline in ['mars', 'mars_crop']:
         wave = ir_util.ev_to_angstroms(energy).round(2)
-        peak_neutron_idx = np.where(wave == peak_wave[beamline])[0][0]
+        _wave_dif = np.abs(wave - peak_wave[beamline])
+        _wave_dif_min = min(_wave_dif)
+        peak_neutron_idx = np.where(_wave_dif == _wave_dif_min)[0][0]
         _peak = wave[peak_neutron_idx]
         _total_trans_at_peak = round(o_reso.total_signal[trans_tag][peak_neutron_idx] * 100, 6)
     else:
@@ -307,17 +309,17 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
         _current_layer_thickness = o_stack[each_layer]['thickness']['value']
         if len(o_stack.keys()) == 1:
             _current_layer_trans = _total_trans
-            if beamline in ['imaging', 'imaging_crop']:
+            if beamline in ['mars', 'mars_crop']:
                 _current_layer_trans_at_peak = _total_trans_at_peak
         else:
             _current_layer_trans = _calculate_transmission(flux_df=df_flux,
                                                            trans_array=o_signal[each_layer][trans_tag])
-            if beamline in ['imaging', 'imaging_crop']:
+            if beamline in ['mars', 'mars_crop']:
                 _current_layer_trans_at_peak = o_signal[each_layer][trans_tag][peak_neutron_idx]
         o_stack[each_layer][trans_tag] = _current_layer_trans
         o_stack[each_layer][mu_tag] = _transmission_to_mu_per_cm(transmission=_current_layer_trans,
                                                                  thickness=_current_layer_thickness)
-        if beamline in ['imaging', 'imaging_crop']:
+        if beamline in ['mars', 'mars_crop']:
             o_stack[each_layer][trans_at_peak_tag] = _current_layer_trans_at_peak
             o_stack[each_layer][mu_at_peak_tag] = _transmission_to_mu_per_cm(
                 transmission=_current_layer_trans_at_peak,
@@ -328,7 +330,7 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
             o_stack[each_layer][each_ele][trans_tag] = _current_ele_trans
             o_stack[each_layer][each_ele][mu_tag] = _transmission_to_mu_per_cm(transmission=_current_ele_trans,
                                                                                thickness=_current_layer_thickness)
-            if beamline in ['imaging', 'imaging_crop']:
+            if beamline in ['mars', 'mars_crop']:
                 _current_ele_trans_at_peak = round(o_signal[each_layer][each_ele][trans_tag][peak_neutron_idx] * 100, 6)
                 o_stack[each_layer][each_ele][trans_at_peak_tag] = _current_ele_trans_at_peak
                 o_stack[each_layer][each_ele][mu_at_peak_tag] = _transmission_to_mu_per_cm(
@@ -360,7 +362,7 @@ def form_sample_stack_table_div(o_stack, beamline, full_stack=True):
 
     # For short sample stack output
     if full_stack:
-        if beamline in ['imaging', 'imaging_crop']:
+        if beamline in ['mars', 'mars_crop']:
             output_header_df = output_stack_header_df_wave
         else:
             output_header_df = output_stack_header_df
@@ -380,7 +382,7 @@ def form_sample_stack_table_div(o_stack, beamline, full_stack=True):
         layer_dict[molar_name] = round(o_stack[layer]['molar_mass']['value'], 4)
         layer_dict[number_density_name] = '{:0.3e}'.format(o_stack[layer]['atoms_per_cm3'])
         layer_dict[mu_per_cm_name] = round(o_stack[layer]['mu_per_cm'], 4)
-        if beamline in ['imaging', 'imaging_crop']:
+        if beamline in ['mars', 'mars_crop']:
             layer_dict[mu_per_cm_at_peak_name] = round(o_stack[layer]['mu_per_cm_peak'], 4)
 
         _df_layer = pd.DataFrame([layer_dict])
@@ -437,7 +439,7 @@ def form_sample_stack_table_div(o_stack, beamline, full_stack=True):
                 editable_list.append(False)
                 iso_dict[mu_per_cm_name_id] = round(o_stack[layer][ele]['mu_per_cm'], 4)
 
-                if beamline in ['imaging', 'imaging_crop']:
+                if beamline in ['mars', 'mars_crop']:
                     # Add mu_per_cm_at_peak
                     name_list.append(mu_per_cm_at_peak_name)
                     mu_per_cm_at_peak_id = 'column_' + str(_i + 4)

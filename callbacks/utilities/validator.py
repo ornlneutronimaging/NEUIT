@@ -154,7 +154,7 @@ def validate_energy_input(range_tb_df: pd.DataFrame, test_passed_list: list, out
 
 
 def validate_band_width_input(beamline, band_width, band_type, test_passed_list: list, output_div_list: list):
-    if beamline in ['imaging', 'imaging_crop']:
+    if beamline in ['mars', 'mars_crop']:
         test_passed_list.append(True)
         output_div_list.append(None)
     else:

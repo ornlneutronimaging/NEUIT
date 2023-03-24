@@ -38,13 +38,13 @@ layout = html.Div(
                                     dcc.Dropdown(
                                         id=app_id_dict['beamline_id'],
                                         options=[
-                                            {'label': 'IMAGING (CG-1D), HFIR', 'value': 'imaging'},
-                                            {'label': u'IMAGING (CG-1D) \u2264 5.35 \u212B, HFIR',
-                                             'value': 'imaging_crop'},
-                                            {'label': 'SNAP (BL-3), SNS', 'value': 'snap'},
-                                            # {'label': 'SNS, VENUS (BL-10)', 'value': 'venus'},
+                                            {'label': 'MARS (CG-1D), HFIR', 'value': 'mars'},
+                                            {'label': u'MARS (CG-1D) \u2264 5.35 \u212B, HFIR',
+                                             'value': 'mars_crop'},
+                                            # {'label': 'SNAP (BL-3), SNS', 'value': 'snap'},
+                                            {'label': 'VENUS (BL-10), SNS', 'value': 'venus'},
                                         ],
-                                        value='imaging',
+                                        value='mars',
                                         searchable=False,
                                         clearable=False,
                                     )

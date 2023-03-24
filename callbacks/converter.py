@@ -211,12 +211,12 @@ def output(n_submit, test_passed, database, compos_tb_rows, iso_tb_rows, iso_cha
         transmission_div_list, o_stack = form_transmission_result_div(sample_tb_rows=_sample_df.to_dict('records'),
                                                                       iso_tb_rows=_iso_tb_df.to_dict('records'),
                                                                       iso_changed=iso_changed,
-                                                                      beamline='imaging_crop',
+                                                                      beamline='mars_crop',
                                                                       band_min=None,
                                                                       band_max=None,
                                                                       band_type='energy',
                                                                       database=database)
-        sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack, beamline='imaging_crop', full_stack=False)
+        sample_stack_div_list = form_sample_stack_table_div(o_stack=o_stack, beamline='mars_crop', full_stack=False)
 
         compos_output_df, ele_list, mol_list = convert_input_to_composition(compos_df=_compos_df,
                                                                             compos_type=compos_type,

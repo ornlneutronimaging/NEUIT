@@ -42,7 +42,7 @@ def show_hide_band_input(more_info, style):
         State(app_id_dict['band_div_id'], 'style'),
     ])
 def show_hide_band_input(beamline, style):
-    if beamline in ['imaging', 'imaging_crop']:
+    if beamline in ['mars', 'mars_crop']:
         style['display'] = 'none'
     else:
         style['display'] = 'block'
@@ -195,7 +195,7 @@ def error(n_submit, database, sample_tb_rows, iso_tb_rows, iso_changed, beamline
         if all(test_passed_list):
             for each_chem in sample_tb_dict[constants.chem_name]:
                 if each_chem in ir_util.h_bond_list:
-                    if beamline == 'imaging':
+                    if beamline == 'mars':
                         test_passed_list.append(False)
                         output_div_list.append(
                             html.P(
@@ -203,8 +203,8 @@ def error(n_submit, database, sample_tb_rows, iso_tb_rows, iso_changed, beamline
                                 u"bonded H cross-sections in '{}'']".format(
                                     each_chem)))
                         output_div_list.append(
-                            html.P(u"Please use spectrum: ['IMAGING (CG-1D) \u2264 5.35 \u212B, HFIR']"))
-                    elif beamline == 'imaging_crop':
+                            html.P(u"Please use spectrum: ['MARS (CG-1D) \u2264 5.35 \u212B, HFIR']"))
+                    elif beamline == 'mars_crop':
                         test_passed_list.append(True)
                     else:
                         if band_type == 'lambda':
@@ -263,12 +263,12 @@ def output_transmission_and_stack(n_submit, test_passed, database, sample_tb_row
                                                                 band_max=band_max,
                                                                 band_type=band_type,
                                                                 database=database)
-        if beamline != 'imaging':  # add CG-1D anyway if not selected
+        if beamline not in ['mars', 'mars_crop']:  # add CG-1D anyway if not selected
             try:
                 trans_div_list_tof, o_stack_cg1d = form_transmission_result_div(sample_tb_rows=sample_tb_rows,
                                                                                 iso_tb_rows=iso_tb_rows,
                                                                                 iso_changed=iso_changed,
-                                                                                beamline='imaging',
+                                                                                beamline='mars',
                                                                                 band_min=band_min,
                                                                                 band_max=band_max,
                                                                                 band_type=band_type,
