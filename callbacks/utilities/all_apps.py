@@ -240,16 +240,25 @@ def form_transmission_result_div(sample_tb_rows, iso_tb_rows, iso_changed, datab
     output_div_list = [
         html.Hr(),
         html.H3('Result at ' + beamline_name),
-        html.P('Transmission (total): {} %'.format(round(total_trans, 3))),
-        html.P('Attenuation (total): {} %'.format(round(100 - total_trans, 3))),
-        # html.Div(sample_stack_div_list),
+        disclaimer,
+        dcc.Markdown('''**Transmission** (total): {} %  \n **Attenuation** (total): {} %
+        '''.format(
+            round(total_trans, 3),
+            round(100 - total_trans, 3)
+        )
+        ),
     ]
     if beamline in ['mars', 'mars_crop']:
         output_div_list.append(
-            html.P(u'Transmission (at {} \u212B): {} %'.format(peak_wave[beamline], round(total_trans_at_peak, 3))))
-        output_div_list.append(html.P(
-            u'Attenuation (at {} \u212B): {} %'.format(peak_wave[beamline], round(100 - total_trans_at_peak, 3))))
-    output_div_list.append(disclaimer)
+            dcc.Markdown(u'''**Transmission** (at peak {} \u212B): {} %  \n **Attenuation** (at peak {} \u212B): {} %
+            '''.format(peak_wave[beamline],
+                       round(total_trans_at_peak, 3),
+                       peak_wave[beamline],
+                       round(100 - total_trans_at_peak, 3)
+                       )
+                         )
+        )
+    output_div_list.append(markdown_disclaimer_hydrogen)
     return output_div_list, o_stack
 
 

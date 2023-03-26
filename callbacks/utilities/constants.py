@@ -68,6 +68,13 @@ markdown_disclaimer_hfir = dcc.Markdown('''
 **Disclaimer**: estimations are solely based on the energy/wavelength dependent total cross-sections 
 from **ENDF/B** database and the **measured** beam spectrum at this beamline.''')
 
+markdown_disclaimer_hydrogen = dcc.Markdown('''
+**Note**: inelastic scattering for **lighter isotopes (H, D)** is both temperature and material dependent and will 
+not be included in the calculations. In particular, **attenuation** and **attenuation coefficient** are going to be
+significantly **underestimated**.  \n Attenuation of 5 mm thick H2O is estimated to be 76.2 %, but the
+measured attenuation at MARS is ~90 %.  \n Attenuation of 5 mm thick D2O is estimated to be 20.6 %, but the 
+measured attenuation at MARS is ~30 %.''')
+
 label_sample = html.Label(['When omitted, natural densities will be used. List of densities can be found ',
                            html.A("here.", href='http://periodictable.com/Properties/A/Density.al.html',
                                   target="_blank")])
