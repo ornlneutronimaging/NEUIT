@@ -11,7 +11,7 @@ from .constants import (index_number_l, index_number_k, index_number_h,
                         index_number_a, index_number_b, index_number_c,
                         r, beta, texture_flag,
                         interaxial_angle_beta, interaxial_angle_gamma, interaxial_angle_alpha,
-                        chem_name)
+                        atom)
 
 
 
@@ -103,7 +103,7 @@ def parse_txt_file(content):
 
     for _index, _entry in enumerate(table):
 
-        _structure = Structure(element=_entry[chem_name],
+        _structure = Structure(element=_entry[atom],
                                lattice=lattice,
                                x=_entry[index_number_a],
                                y=_entry[index_number_b],

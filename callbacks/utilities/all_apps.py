@@ -34,7 +34,7 @@ sample_header_df = pd.DataFrame({
 })
 
 bragg_sample_header_df = pd.DataFrame({
-    'name': [chem_name,
+    'name': [atom,
              index_number_a,
              index_number_b,
              index_number_c,

@@ -48,7 +48,7 @@ tab_selected_style = {
 }
 
 bragg_sample_df_default = pd.DataFrame({
-    chem_name: [],
+    atom: [],
     index_number_h: [],
     index_number_k: [],
     index_number_l: [],
