@@ -1,3 +1,5 @@
+import pprint
+
 import pandas as pd
 import os
 from scipy.interpolate import interp1d
@@ -316,15 +318,15 @@ def calculate_transmission(sample_tb_df, iso_tb_df, iso_changed, beamline, band_
 
     for each_layer in o_stack.keys():
         _current_layer_thickness = o_stack[each_layer]['thickness']['value']
-        if len(o_stack.keys()) == 1:
+        if len(o_stack.keys()) == 1:  # only 1 layer
             _current_layer_trans = _total_trans
             if beamline in ['mars', 'mars_crop']:
                 _current_layer_trans_at_peak = _total_trans_at_peak
-        else:
+        else:  # more than 1 layer
             _current_layer_trans = _calculate_transmission(flux_df=df_flux,
                                                            trans_array=o_signal[each_layer][trans_tag])
             if beamline in ['mars', 'mars_crop']:
-                _current_layer_trans_at_peak = o_signal[each_layer][trans_tag][peak_neutron_idx]
+                _current_layer_trans_at_peak = round(o_signal[each_layer][trans_tag][peak_neutron_idx] * 100, 6)
         o_stack[each_layer][trans_tag] = _current_layer_trans
         o_stack[each_layer][mu_tag] = _transmission_to_mu_per_cm(transmission=_current_layer_trans,
                                                                  thickness=_current_layer_thickness)
