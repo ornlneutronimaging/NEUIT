@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-conda -y install dash
-conda -y install dash-table
+conda install -y dash
+conda install -y dash-table
 pip install ImagingReso
-conda -y install braggedgemodeling
-conda -y install matplotlib
-conda -y install numpy
-conda -y install pandas
-conda -y install cerberus
-conda -y install unicorn
-conda -y install dash-bootstrap-components
+conda install -y braggedgemodeling
+conda install -y matplotlib
+conda install -y numpy
+conda install -y pandas
+conda install -y cerberus
+conda install -y unicorn
+conda install -y dash-bootstrap-components
